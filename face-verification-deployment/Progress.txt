@@ -1,0 +1,97 @@
+Cosmix face deployment execution ledger - 19 October 2026
+
+Authority: the user's detailed pasted task and subsequent explicit instruction
+to continue after reviewing the proposed disk expansion. No Git commits/pushes.
+
+Plan:
+1. Verify and preserve disk/LVM metadata, extend only existing /dev/sda3, PV,
+   root LV and ext4; recheck capacity and existing workloads.
+2. Deploy the official five CompreFace 1.2.0 services with verified immutable
+   digests, a dedicated project/network/volume, memory/log limits, protected
+   secrets, private TLS and a localhost-only maintenance endpoint.
+3. Verify health, UI, API authentication, restart/persistence and workloads.
+4. Review an existing Silent Face-compatible ONNX release's provenance,
+   license, hash, graph, preprocessing, live class and runtime compatibility.
+5. Use existing Cosmix Clean Architecture/capture/session/retention adapters;
+   connect them to the deployed engine and reviewed artifacts. Do not recreate
+   attendance/authentication or invent approved biometric thresholds/policies.
+6. Run real service/runtime checks and existing offline regression checks.
+   Mark real-person/printed-photo/screen-replay acceptance NOT RUN unless
+   authorized consented material and approved thresholds become available.
+7. Record exact deployed paths, versions, ports, credentials retrieval,
+   environment variables, remaining gates and project-only rollback.
+
+Task 1: COMPLETE at 18:30:45 PKT.
+Backed up partition/GPT/LVM metadata under:
+  /root/cosmix-face-disk-backup-20261019
+Off-host metadata archive:
+  C:/Users/Huma.Khan/.codex/backups/cosmix-face-20261019/cosmix-face-disk-backup-20261019.tar.gz
+Archive SHA256: 7e0ba58538f3722f971cefecabf81376f9e460f35936cdc2a80a3ecea732727e
+This is a metadata recovery copy, not a full VM/data snapshot. No VM snapshot
+was asserted or fabricated. The user authorized continuing the disk proposal.
+growpart dry run verified unchanged partition start/UUID and the expected end.
+Actual growpart preserved all partition identities and extended partition 3 to
+sector 83886046; sgdisk -v found no GPT problems. pvresize, lvextend and
+resize2fs succeeded. Root now 38G, 27G available, 26% used.
+Both pre-existing hello-world containers remain stopped and unchanged.
+
+Ruling: use the active nested backend in Cosmix_Erp_software/cosmix-backend.
+It contains the actual attendance/capture/CompreFace/ONNX implementation, while
+the separate Downloads/cosmix-backend checkout is an older employee branch.
+Preserve existing dirty work and make only narrowly scoped integration edits.
+No worktree/branch/commit operation is needed for server deployment.
+
+Tasks 2-5: INSTALLED / CONNECTED; latest continuation 20 October 2026.
+Official pinned CompreFace 1.2.0 runs as five services in the dedicated project.
+LAN UI/API: https://192.168.1.50:8000; HTTP 127.0.0.1:8001 is maintenance only.
+Three authenticated detection/verification/recognition services were created.
+Their metadata and keys survived the controlled Postgres restart on 19 October.
+The frontend was found detached from its Docker network on 20 October; only
+that project's frontend was recreated. All five containers run again; frontend
+restart count remained zero over the subsequent checks. Root now has 20G free.
+
+MiniFASNetV1SE and MiniFASNetV2 release assets are hash-pinned and installed on
+Ubuntu and the backend workstation. Real .NET 10 CPU inference passed on both.
+No additional Python liveness runtime was installed.
+
+The user explicitly requested removing the test/PoC restriction and delegated
+initial thresholds/use durations on 20 October. Removed Development-only
+selection and PocApproved; retained authentication, capture/session binding,
+real liveness/matching, encryption and retention checks. Provisioned private
+models, API keys, pinned CA, independent encryption keys and operational values.
+
+The user selected local Cosmix_Testing. It exists on instance
+(localdb)\CosmixUat_d893653346 and has 24 applied migrations. Corrected the
+stale Cosmix_Development pipe connection without applying migrations. Started
+the backend at https://localhost:7240 using the normal face profile/configuration.
+Both /health/live and /health/ready return 200; unauthenticated face capability
+returns 401. Swagger returns 200. No isolated testing-host guard was bypassed.
+
+Task 6: Executed Release build (0 warnings/errors), 397 existing offline checks,
+20 real-model/adapter checks, 54 composition checks, 4 real TLS checks and 11 LAN
+service/configuration checks. Real-person/mobile/print/replay attendance tests
+remain NOT RUN. Initial thresholds are operational choices, not calibrated
+accuracy claims. Physical biometric disposal was not enabled.
+
+Task 7: Current endpoints, settings, operations, scope and remaining checks are
+recorded in Deployment-Status-20261020.txt. No Git commit/push/merge/PR was made.
+
+20 October - mock deep verification complete:
+- Three confirmed defects fixed; additional mixed malformed-response case fixed.
+- Fresh Release0 warnings/errors;665 automated assertions +4 running API smoke checks pass.
+- Verified local API refreshed and running; CompreFace network healthy/restarts0.
+- See Deep-Verification-20261020.txt for evidence, mobile contract and remaining gaps.
+- No real face/camera/print/replay or authenticated SQL attendance test performed.
+
+20 October - CompreFace login UI correction:
+- /core/status404 caused by custom Nginx core-block rule; exact read-only status proxy deployed.
+- Graceful frontend reload;14 live checks +13 document/JS/CSS dependency checks pass.
+- Owner accepted Windows certificate dialog; verified deployment CA is in CurrentUser Root.
+- Normal Windows .NET HTTPS validates200/OK. Browser visual automation unavailable/blocked.
+- Details and rollback:WebUi-Fix-20261020.txt. Mobile work remains deferred.
+
+20 October - sign-up correction:
+- Removed exact registration403 deny; existing private-LAN proxy now forwards native sign-up.
+- Actual synthetic register201/login200/profile200/own-account cleanup:9checks pass.
+- Live service/configuration diagnostics:16pass. Native optional demo404 is expected after first owner registration.
+- Details:Signup-Fix-20261020.txt. No real employee, existing role/app/key or mobile change.

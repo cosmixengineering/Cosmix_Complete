@@ -1,0 +1,11 @@
+{
+  "status": "DRAFT layout verified pending final checkpoint render",
+  "pages": 6,
+  "font_pt": 11,
+  "page_size": "Letter",
+  "render_method": "Packaged render_docx.py failed with missing LibreOffice; hidden owned read-only Word export and bundled Poppler",
+  "every_page_visually_inspected": true,
+  "layout": "PASS no clipped or overlapping text; readable line-wise developer items",
+  "content_review": "Four corrections queued in exporter; final fields pending integration owner",
+  "reference_unchanged": true
+}

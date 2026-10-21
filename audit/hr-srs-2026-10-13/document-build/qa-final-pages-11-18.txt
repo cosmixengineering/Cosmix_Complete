@@ -1,0 +1,13 @@
+FINAL VISUAL QA — PAGES 11–18
+Individually viewed every final-page-11.png through final-page-18.png using tools.view_image, detail=original. No source, render, Word or LibreOffice changes. This final-render record supersedes the earlier QA for these sections.
+
+11 PASS — Part B introduction and whole B01 task/acceptance are readable; no orphan heading, clipping or overlap. No single-criterion spillover page.
+12 PASS — Whole B02 and B03 tasks/acceptance remain together; text and footer have clear margins.
+13 PASS — Whole B04 and B05 tasks/acceptance are readable; long metadata remains inside the text area.
+14 PASS — Whole B06 and B07 tasks/acceptance are readable. B07.3 is clearly its own separately spaced paragraph; the earlier inline-numbering observation is withdrawn.
+15 PASS — Whole B08 heading, numbered actions and both acceptance criteria appear together. Deliberate space at the end of Part B; no blank page or isolated acceptance spillover.
+16 PASS — Part C introduction, C01/C02 tasks and acceptance are readable with adequate footer clearance.
+17 PASS — Whole C03/C04 tasks and acceptance remain together. C04.T1 now reads 'counts 30,...'; no glued count token.
+18 PASS — Whole C05/C06 tasks and acceptance remain together. 'A waits 10:00-10:20' and 'B arrives 10:45' spacing is corrected.
+
+Result: all eight final pages pass. No clipping, overlaps, orphan headings, blank pages or isolated test paragraphs found. No tables occur on these pages, so table readability is not applicable. No layout repair requested.

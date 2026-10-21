@@ -1,0 +1,39 @@
+SRS acceptance criteria audit
+Date: 13 October 2026 Asia/Karachi
+Statuses describe current source traceability and delivery gaps. No criterion is claimed fully passed by this audit; no authenticated end-to-end UAT was run.
+
+AC-001 | Partial; not end-to-end accepted
+Real draft/submission/Admin approval and dormant account code exists. Current frontend initial/additional role assignment omits backend-required Reason. Live complete hiring also previously blocked by clean-document scanning. See EmployeeAccessSetup.tsx:516, AccessContracts.cs:47, frontend docs/Verification.md:28.
+
+AC-002 | Not delivered end-to-end
+Backend face challenge/single-use punch safeguards exist; React Native App returns null. Production provider registration returns UnconfiguredFaceVerificationProvider; reviewed model/device/liveness acceptance not established.
+
+AC-003 | Backend implementation substantial; web/mobile acceptance incomplete
+Immutable raw events and separate approved correction/session revisions implemented. Reachable HR correction page is prepared-only; authenticated fresh SQL persistence was not exercised by this audit.
+
+AC-004 | Partial
+Ordinary/late policy and overtime calculations exist. Office punch boundary provenance and office schema are unfinished. Meal allowance, waiting, KPI and other special policy producers remain incomplete.
+
+AC-005 | Backend partial; employee workflow unavailable
+Site geofence/configuration and punch review statuses exist; current mobile flow absent and current web operations disconnected. Current office capture has no corresponding office boundary path.
+
+AC-005A | Partial
+Operational/Red zone backend events, separate audit records, warning context and notifications exist. Full Green/Amber/Red employee client and Amber exception workflow absent.
+
+AC-005B | Partial
+Real in-app site report intake/review endpoints exist. No functioning employee React Native app; routed web site report workspace remains prepared-only.
+
+AC-006 | Not complete
+Complete own salary/deduction/allowance/advance/loan data views missing. Frontend EmployeeSelfServicePage renders PreparedWorkspace; mobile is blank. Some own attendance/leave/OT read APIs exist.
+
+AC-007 | Partial
+Protected financial inputs/manual handoff receipts exist. Approved OT financial consumption, full carry-forward and positive month lock/payroll closure are unavailable. No automatic bank payment is required in first release.
+
+AC-008 | Partial
+Some factual protected exports exist; not all fourteen SRS reports. Reachable web exports disabled. Full report producer/API/background/UI acceptance incomplete.
+
+AC-009 | Substantial backend implementation; not freshly accepted live
+Effective status transitions, token/access/punch rejection and retained history code exist. Retirement/reactivation/rehire/archive lifecycle coverage incomplete. No live account/status write was performed by audit.
+
+AC-010 | Partial
+Authentication/HR/scheduling/attendance/policy/decision/export code records audit evidence. Missing feature producers and generic user audit/report flows prevent whole-platform acceptance.

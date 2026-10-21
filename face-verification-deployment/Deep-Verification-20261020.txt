@@ -1,0 +1,184 @@
+COSMIX FACE VERIFICATION - MOCK REVIEW AND MOBILE HANDOFF
+20 October 2026
+
+Outcome
+-------
+Three confirmed defects fixed, with an additional malformed-response case found
+and fixed during independent review. Integrated Release build: zero warnings,
+zero errors. 665 automated assertions passed, plus four running-API smoke checks.
+The updated local API is running. Real employee enrollment, genuine camera,
+printed-photo and screen/video replay acceptance were NOT RUN.
+
+The owner explicitly requested mock testing before mobile development. All test
+images were synthetic. No employee identity/photo was borrowed or fabricated,
+no camera was activated, and no enrollment or attendance was written to SQL.
+This report supersedes the earlier verification counts in Deployment-Status.
+
+Confirmed defects and fixes
+--------------------------
+1. Ordinary capture rejection was classified as provider outage.
+   CompreFace 1.2.0 HTTP400/code28 and31, valid empty/multiple detection results,
+   and valid low-confidence detection now remain ordinary rejection. They cannot
+   pass identity/liveness. Wrong/missing credentials, unknown errors, malformed
+   JSON/schema/coordinates/scores, redirects and transport faults stay unavailable.
+   Remote error messages are not echoed. Production adapter response limits,
+   duplicate-key rejection and private-CA/destination checks remain enforced.
+   Initial RED: 15 failing assertions. Added mixed low-confidence + malformed
+   comparison regressions exposed six more failures; the complete comparison
+   schema, score and source/target bounds are now validated before applying the
+   low-confidence classification. Independent re-review found no new defect.
+
+2. A saved successful verification receipt retained CanSubmitCheckIn=true after
+   the proof had expired/been consumed or the enrollment/configuration changed.
+   Replays now preserve their historical outcome/reason/expiry/version while
+   recomputing current submission eligibility under fresh session/device and
+   permission checks. Both early receipt replay and final concurrent receipt
+   reconciliation receive this check. A final clock check covers expiry during
+   authorization/audit. Check In still independently validates/consumes proof.
+   RED: eight stale-readiness scenarios failed; an extra authorization-time expiry
+   regression also failed before its fix. Updated application fixture:180 pass.
+
+3. Provider-disabled capture configuration could select the raw encrypted vault
+   without the retention controller, although capture upload could remain enabled.
+   Storage selection now always applies the retention controller. Missing policy/
+   journal, untracked objects and expired use permission fail closed independently
+   of provider selection. The approved configured path remains usable.
+   RED:3 pass/18 fail. GREEN:21 pass/0 fail with real private TEMP encryption.
+
+Verification evidence
+---------------------
+Fresh solution build: VerifiedBuild; 0 warnings/0 errors.
+Offline fixtures against those fresh assemblies:
+  VerifySelfHostedFaceProvider                 129
+  VerifyFaceStorageLifecycle                   66
+  VerifyFaceCaptureProtection                  33
+  VerifyFaceReadiness                          10
+  VerifyEnrollmentJournal                      19
+  VerifyCaptureService                        180
+  VerifyFaceCaptureSelection                   21
+Real pinned ONNX + mocked face/evidence workflow118
+Real models and deployment/DI selection         20
+Attendance composition                         54
+Private TLS handshakes                           4
+Real LAN services + private saved configuration 11
+TOTAL                                         665 passed, zero failed
+
+These are assertions, not 665 independent real-person trials. Workflow identity
+responses were mocked. A deliberately low, synthetic-only V1 threshold exercises
+the positive path on flat pixels; it was never persisted to operational settings.
+The real V2 spoof verdict and strict V1 threshold reject those same pixels.
+
+New checks cover enrollment reference copying and buffer clearing; actor/session/
+employee/device/challenge binding; wrong-match and changed comparison bounds;
+no-face/multi-face/low-confidence versus credential/outage/malformed classification;
+corrupt PNG compressed payload through the actual decoder; queued cancellation;
+four subsequent concurrent real native runs; refusal after disposal; nonuniform
+BGR/NCHW ordering; and manually calculated interior/edge/clamped crop rectangles.
+The intentional corrupt PNG test emits a libpng decode error and correctly fails
+closed before comparison. This is expected fixture behavior.
+
+Live diagnostics used the pinned private CA, not disabled certificate validation:
+  CompreFace health/login HTTP200.
+  Real blank PNG detection + verification HTTP400/code28.
+  Missing service key HTTP400/code20; incorrect key HTTP404/code10.
+  New backend adapter classifies real no-face as409 face_not_detected.
+  Both configured ONNX models load; encrypted vault + journal readiness passes.
+  All five own Docker containers running; core/Postgres healthy.
+  Frontend on cosmix-face_face-private, restart count0, up about48min at final check.
+Four separate loopback developer API smoke checks:
+  /health/live200, /health/ready200, /swagger/index.html200,
+  unauthenticated /api/v1/attendance/face/capability401.
+SQL readiness confirms connectivity to the configured Cosmix_Testing database;
+it is not a full schema, transaction, employee authentication or punch acceptance.
+Six runtime files were hash-checked against the fresh verified Release build.
+
+Reproduction and logs
+---------------------
+Backend: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix-backend
+Run docs/attendance-capture/RunFaceSidecarChecks.ps1 for the seven offline fixtures.
+It builds Release and uses external temporary projects, not repository test projects.
+Additional opt-in sources:
+  docs/attendance-capture/VerifyProviderWorkflow.cs (argument:pinned model directory)
+  docs/attendance-capture/VerifyDeploymentAdapters.cs
+  docs/attendance-capture/VerifyDeployedFaceServices.cs (private configuration argument)
+  docs/attendance-completion/VerifyAttendanceComposition.cs
+Local external projects/builds/logs:
+  C:/Users/Huma.Khan/.codex/artifacts/cosmix-face-deep-20261020/
+  verified-build.log, provider-red.log, provider-mixed-red.log, provider-green.log,
+  deployment-green.log, composition-green.log, tls-green.log, live-green.log,
+  api-smoke.log, OfflineChecks/*.log, CaptureSelection/{red,green}.log,
+  ReplayReadiness/green.log.
+No secrets, model binaries or test projects were added to Git. Scoped diff checks
+passed. Unrelated HR changes were preserved. No commit/push/migration was made.
+
+Mobile integration
+------------------
+Use the ERP API, not a model URL:
+  Local developer Swagger: https://localhost:7240/swagger/index.html
+  Private CompreFace server/UI: https://192.168.1.50:8000
+  ONNX models run inside .NET on CPU; they have no separate HTTP URL.
+The mobile app must not receive CompreFace keys or biometric storage locators.
+
+Follow docs/attendance-capture/Face-Capture-Client-Contract.md:
+  current mobile JWT/device -> capability -> challenge -> upload -> verify ->
+  original geofenced Check In with the bound punch key, challenge and attempt.
+  Check Out uses its existing flow without face proof.
+  Authorized web MFA/CSRF operator performs enrollment for an existing device.
+  Preserve exact retry keys/bodies; never treat historical Passed or capture upload
+  as punch success. Use current canSubmitCheckIn and let Check In consume proof.
+  Canonicalize image orientation; use <=512KiB JPEG/opaque RGB PNG, no HEIC/EXIF.
+  Honor server expiry/retry limits and all authentication/configuration failures.
+The physical phone cannot use this laptop's localhost URL. A reachable HTTPS ERP
+address/certificate and device networking setup are still needed for device UAT.
+Web enrollment currently exposes metadata only; the camera upload UI is not built.
+The mobile project currently has no camera/attendance implementation.
+
+Remaining gaps and acceptance limits
+------------------------------------
+Before operational attendance acceptance:
+  A. Enroll a consenting real employee using the real authorized session/device.
+     Test genuine camera, other person, no/multiple face, print, phone-screen/video
+     replay, blur/dark/backlight, reconnect/timeouts, enrollment replacement and
+     revocation, exact proof expiry and duplicate Check In against real SQL.
+     The initial .85 match/.90 detection/.90 per-model liveness thresholds are
+     owner-delegated starting settings; they have no measured FAR/FRR here.
+  B. Mock transaction fixtures do not prove SQL rollback/locking/crash recovery,
+     particularly failure after prior enrollment revocation during replacement.
+  C. Concurrent verify requests before a receipt exists can repeat inference;
+     finalization/proof consumption stay single-use. The app should serialize
+     unresolved verify requests. Server exactly-once execution/load acceptance
+     remains unproven, and rate/concurrency capacity requires measurement.
+  D. Configuration capability does not read enrollment storage-use metadata.
+     At storage-use expiry, an active enrollment can still report configuration
+     readiness; verify rejects with face_evidence_use_expired and can leave the
+     challenge Pending. The client needs explicit expiry/re-enrollment handling;
+     a richer metadata eligibility contract is a future backend improvement.
+  E. Storage use expiry denies reads; physical deletion/orphan cleanup, backup/key
+     retention and full data restore have not been enabled/accepted. Ciphertext
+     is not claimed to be erased at120sec/90days.
+  F. Added tests cover queue cancellation and concurrent native calls, not every
+     running-native cancellation/disposal race. Crop/tensor expected values pass;
+     full spatial resize parity with an upstream golden output remains unproven.
+     One malformed PNG codec case passes; this is not a complete codec corpus.
+  G. API is a local developer process, not supervised Ubuntu ERP hosting. Phone
+     networking, certificate deployment, restart supervision, backup/restore and
+     concurrent load testing remain needed. Ubuntu has about5.3GiB RAM/no swap;
+     no capacity guarantee is made by these sequential/small mock runs.
+
+Independent reviews of workflow and provider/parser/storage composition completed.
+No additional proven punch bypass or malformed-response success was found in that
+review. This statement is bounded to reviewed source and executed fixtures; it is
+not a claim that the system has no possible bugs or is production accepted.
+
+20 October - CompreFace login UI correction:
+- /core/status404 caused by custom Nginx core-block rule; exact read-only status proxy deployed.
+- Graceful frontend reload;14 live checks +13 document/JS/CSS dependency checks pass.
+- Owner accepted Windows certificate dialog; verified deployment CA is in CurrentUser Root.
+- Normal Windows .NET HTTPS validates200/OK. Browser visual automation unavailable/blocked.
+- Details and rollback:WebUi-Fix-20261020.txt. Mobile work remains deferred.
+
+20 October - sign-up correction:
+- Removed exact registration403 deny; existing private-LAN proxy now forwards native sign-up.
+- Actual synthetic register201/login200/profile200/own-account cleanup:9checks pass.
+- Live service/configuration diagnostics:16pass. Native optional demo404 is expected after first owner registration.
+- Details:Signup-Fix-20261020.txt. No real employee, existing role/app/key or mobile change.

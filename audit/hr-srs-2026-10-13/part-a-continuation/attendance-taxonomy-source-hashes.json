@@ -1,0 +1,66 @@
+[
+  {
+    "Path": "src/Cosmix.Application/Attendance/Rosters/RosterStaffTaxonomy.cs",
+    "Sha256": "8C89816D229ACEA12B07D29DDEEB07C069A11EA37DCC0E18BA819C6BCD568B64"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Rosters/RosterContracts.cs",
+    "Sha256": "DCF58DF0906E7879A215913854D564E54661F1E3876FF22987CBCC93D66CC977"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Rosters/EmployeeRosterResolver.cs",
+    "Sha256": "06895AD28E69D0EDDBE05A22E5882EEAC866027785197B1E0D9B62E86FDF76A2"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Rosters/OfficeRosterResolver.cs",
+    "Sha256": "0FAAFAAAAFE179A3277B2BCA5CC7E2EBFD9AC4EC677298FF694C09F7197FC7A1"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Rosters/SiteRosterResolver.cs",
+    "Sha256": "4DEBA8B5E8831C6AE5BB5351B7C99F688785BBA794C89010CA9E1D595798B75E"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Offices/OfficeAttendanceSourceReader.cs",
+    "Sha256": "350B1B2C7459F91A2A28B548BF52B3EA3AB24F984EA8D9A1B41BD74C623AE1A0"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeTaxonomy.cs",
+    "Sha256": "F2C64B44A9E4356FE32D1FEE7C21C399F9EEF7E265D4CDC14E93E7D295288D57"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeSources.cs",
+    "Sha256": "968FDD19148ADC1DD161582D95C04D187C546E112347AE099C28CFA1832292D4"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeEligibilityService.cs",
+    "Sha256": "FE234A180EDE52FFC89C1C0F6A4E387B0A654A15A9024DCC576049FE5A0B8F15"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeRules.cs",
+    "Sha256": "BF517DF9301176D760A70B5CE78544F468E8043F0D7F3C49DC2EA09F1B9403D9"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeService.cs",
+    "Sha256": "3335381BFED0E164A113ECD6CFB78C2266316F8CBF02347F53E6EA595D09A951"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeQueriesAndBulk.cs",
+    "Sha256": "0E5B5114375EAFB2E0117BD6174C4E686364FA055AD5B67D393E722EEA0B5510"
+  },
+  {
+    "Path": "src/Cosmix.Infrastructure/Repositories/Attendance/OvertimeRepository.cs",
+    "Sha256": "C584A3746B07128A39166C6E0BFFB45F08BE3296258DB33139F3FE7D3E7E3C0B"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Calculation/AttendanceCalculationSnapshotProducer.cs",
+    "Sha256": "D0FF3EB7B5DC66B97559D7F1B8BED8FB8ED4CC20A2568680B898AFC295A76F93"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/PayrollInputs/AttendancePayrollInputProducer.cs",
+    "Sha256": "CA734B2EBB6C7FE23B03DD2D9DA01921218059A1DFD5E9F2E6993ADE2B66228F"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/PayrollInputs/AttendancePayrollInputService.cs",
+    "Sha256": "69CC41CF6483F8354B46B2182E0153F75D02E1A02EC931FDC2099395B6B5CD46"
+  }
+]

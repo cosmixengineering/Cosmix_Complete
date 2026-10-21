@@ -1,0 +1,1450 @@
+SOFTWARE REQUIREMENTS SPECIFICATION (SRS)
+HMS ERP / FSM SYSTEM
+Document Status: Draft for Management Review
+Version: 0.1
+Purpose: Consolidation of all currently identified functional, operational, automation, AI, integration, reporting, security, and workflow requirements.
+1. DOCUMENT PURPOSE
+This Software Requirements Specification defines the proposed requirements for the HMS ERP / FSM platform.
+The system is intended to integrate the company's major operations within one centralized platform, including:
+CRM
+Intake and communication
+Estimation
+Engineering
+Commercial operations
+Procurement
+Stores / Material Management
+Projects
+Manufacturing
+Fulfillment
+Field operations
+After-sales
+HR / People
+Accounts and Finance
+Master Data
+Administration
+Reporting
+AI-assisted automation
+Integrations
+This document is a draft baseline and must be reviewed and approved by authorized management before it becomes the final development scope.
+2. REQUIREMENT APPROVAL & PROJECT GOVERNANCE
+The final SRS must be reviewed and approved by the CEO or authorized management before full development proceeds.
+Existing mockups, staff interviews, notes, and proposed workflows shall be considered preliminary until management approval.
+The approved SRS shall become the official reference for:
+Development scope
+Workflow design
+Database design
+ERD preparation
+API requirements
+AI implementation
+Development phases
+Monthly deliverables
+Project timeline
+Testing
+User acceptance
+A reliable development timeline shall only be finalized after the functional scope and automation requirements have been approved.
+3. SYSTEM OBJECTIVE
+The HMS platform shall operate as an integrated:
+ERP + CRM + Estimation + Engineering + Procurement + Inventory/MM + Manufacturing + Project Management + Field Service Management + HR + Finance + Communication + AI Automation Platform.
+The objective is to provide one controlled business flow from the first customer inquiry through costing, quotation, procurement, project execution, delivery, service, accounting, and after-sales activities.
+4. HIGH-LEVEL BUSINESS FLOW
+The proposed primary business workflow shall be:
+Inbox
+→ Email / Message Viewer
+→ Classification
+→ Analysis
+→ Auto / Assisted Reply
+→ Processing Hierarchy
+→ CRM / Lead
+→ BOQ
+→ Store Availability
+→ Costing
+→ AUX / Engineering
+→ Technical Submittal
+→ Quotation
+→ Customer PO vs Quotation
+→ Project
+→ Procurement / Store / Manufacturing
+→ Delivery Advice
+→ Delivery
+→ OTP Confirmation
+→ Field Installation / Service
+→ After-Sales
+→ Invoice / Finance
+The exact workflow shall remain configurable according to the final approved business process.
+5. DASHBOARD & MANAGEMENT INFORMATION
+The system shall provide:
+Main Dashboard
+Management / CEO Dashboard
+Department Dashboards
+KPI Dashboard
+Operational Alerts
+Pending Approvals
+Delayed Tasks
+Sales Status
+Procurement Status
+Stock Status
+Project Status
+Financial Status
+Field Staff Status
+Complaint Status
+Important Reminders
+5.1 AI on Dashboard
+AI shall be able to:
+Summarize important operational activities.
+Identify unusual KPI changes.
+Detect delays.
+Highlight operational risks.
+Identify exceptions requiring management attention.
+Provide management summaries.
+Suggest possible causes of abnormal performance.
+Recommend areas requiring investigation.
+Every AI recommendation should allow authorized users to view the underlying records/data used to generate the recommendation.
+6. KPI MANAGEMENT
+The system should support configurable Key Performance Indicators.
+Possible KPIs include:
+Lead conversion rate
+Quotation conversion
+Average BOQ preparation time
+Procurement processing time
+Stock turnover
+Stock aging
+Project delays
+On-time delivery
+Field-job completion
+Complaint resolution time
+Outstanding receivables
+Attendance
+Department productivity
+Each KPI may contain:
+Target
+Actual value
+Trend
+Responsible owner
+Threshold
+Status
+Supporting records
+AI may identify declining KPI trends and provide possible contributing factors.
+7. OPERATIONAL ALERTS
+The system shall generate configurable operational alerts for conditions such as:
+Low stock
+Predicted shortage
+Overstock
+Delayed procurement
+Delayed delivery
+Overdue project
+Pending approval
+Complaint SLA breach
+Field staff check-in failure
+Red-zone violation
+Expiring insurance
+Expiring certification
+Overdue invoice
+Integration/API failure
+Abnormal financial transaction
+Abnormal stock movement
+Alerts may support:
+Information
+Warning
+High
+Critical
+AI may prioritize alerts, identify probable causes, and recommend corrective actions.
+8. UNIFIED INTAKE / INBOX
+The system shall provide a centralized inbox for all applicable incoming requests.
+Possible sources include:
+Email
+Website
+Social media
+SMS
+Integrated messaging channels
+Manual inquiry
+Referral
+Marketing campaigns
+The system shall maintain:
+Original message
+Message source
+Customer/company
+Date/time
+Attachments
+Status
+Assigned department
+Assigned user
+Processing history
+The original customer request must always remain unchanged.
+9. AI INBOX CLASSIFICATION & ANALYSIS
+AI shall be capable of reading and analyzing incoming requests.
+Possible classification keywords/categories include:
+Supply
+Installation
+Maintenance
+Repair
+AMC
+Complaint
+Quotation
+Price
+Project
+Replacement
+City
+Brand
+Capacity
+Delivery
+Urgency
+AI should extract applicable data including:
+Customer
+Company
+Contact
+City
+Product
+Quantity
+Service required
+Technical specification
+Urgency
+Required date
+Project information
+Proposed AI flow:
+Incoming Query
+→ AI Reads
+→ AI Classifies
+→ AI Extracts
+→ AI Analyzes
+→ AI Determines Intent
+→ AI Identifies Missing Information
+→ AI Prepares Response
+→ Routing / Human Approval
+10. ORIGINAL QUERY & AI INTERPRETATION
+The system shall separately maintain:
+Original Query
+Original Attachments
+AI Classification
+AI Extracted Information
+AI Interpretation
+AI Suggested Correction
+Normalized Data
+Human-Approved Final Data
+AI shall not silently overwrite customer-provided information.
+All corrections and transformations shall remain auditable.
+11. AI RESPONSE ENGINE
+The response generated by AI should depend on the type of inquiry.
+For example:
+Quotation Inquiry
+AI may request:
+Quantity
+Delivery location
+Technical specification
+Required delivery date
+Installation Inquiry
+AI may request:
+Equipment details
+Installation location
+Installation type
+Quantity
+Site conditions
+Complaint
+AI may request:
+Customer/project
+Equipment
+Fault description
+Location
+Urgency
+AI may prepare draft replies.
+Automatic sending shall only occur for workflows specifically approved by management.
+Sensitive technical/commercial responses may require human approval.
+12. PROCESSING HIERARCHY
+The system shall provide configurable processing and approval hierarchies.
+Routing may depend on:
+Inquiry type
+Product
+Department
+City
+Customer
+Priority
+Project
+Transaction value
+Required approval
+AI may recommend routing based on the content of the request.
+Management-defined rules shall determine the final authorized workflow.
+13. CRM
+CRM shall include:
+Companies
+Contacts
+Leads
+Prospects
+Lead history
+Customer inquiry history
+Quotation history
+Project history
+Complaint history
+AI may:
+Match new inquiries with existing customers.
+Identify possible duplicate customers.
+Summarize customer history.
+Assign lead priority.
+Analyze engagement history.
+14. LEAD SOURCE / MARKETING ATTRIBUTION
+The CRM shall record the origin of each lead.
+Possible lead-source fields include:
+Source channel
+Referral
+Referring person
+Referring company
+Salesperson
+Existing customer referral
+Website
+Social-media platform
+Advertisement
+Email campaign
+SEO
+SEO keyword
+Search phrase
+Landing page
+Campaign code
+City
+Reports should identify:
+Highest-performing lead sources
+SEO keywords generating inquiries
+SEO keywords generating quotations
+Campaign conversion
+Lead-to-sale conversion
+City-wise demand
+Product/service demand
+AI may analyze lead-source performance and identify trends.
+15. ESTIMATION
+The Estimation module shall include:
+BOQ
+BOQ Items
+BOQ revisions
+Costing
+Dual Store concept
+Store availability
+Cost / BOQ via Hub
+Comments
+Attachments
+Selection
+Proposed workflow:
+Requirement
+→ AI Extraction
+→ Technical Requirement
+→ BOQ
+→ Store Check
+→ Selection
+→ Costing
+→ Estimator Review
+16. AI-ASSISTED BOQ
+AI may assist the estimator by:
+Reading customer requirements.
+Extracting equipment requirements.
+Suggesting BOQ items.
+Identifying quantity.
+Identifying missing information.
+Matching requirements with available products.
+Checking stock.
+Identifying shortages.
+Comparing alternatives.
+Final BOQ approval shall remain with an authorized user.
+17. ITEM / EQUIPMENT SELECTION
+Item selection shall be available during estimation/costing.
+Selection may consider:
+Required capacity
+Customer specification
+Technical compatibility
+Availability
+Local stock
+International stock
+Price
+Lead time
+Previous approved selections
+Alternative products
+The system should provide multiple selectable options.
+A dropdown/selection interface should be available.
+Each selection shall support:
+Selected option
+Comments
+Reason
+Selected by
+Date/time
+Approval where required
+AI may recommend the most appropriate option and explain why.
+18. ENGINEERING
+Engineering functionality shall include:
+Conversions
+Technical review
+AUX stage
+Technical selection
+Technical corrections
+Submittals
+Submittal revisions
+Attachments
+Approval status
+AI may:
+Detect specification mismatch.
+Compare customer specifications with available products.
+Identify missing technical information.
+Read technical documents.
+Summarize datasheets.
+Suggest equivalent internal products.
+Final technical approval shall remain with authorized engineering staff.
+19. DATA NORMALIZATION
+The system should support standardization of customer-supplied information.
+Example:
+Customer input:
+Horizontal
+Internal company format:
+Vertical
+The system shall preserve:
+Original value
+Suggested value
+Conversion reason
+Applicable rule
+User decision
+Final approved value
+AI may detect:
+Non-standard terminology
+Typing/spelling issues
+Missing fields
+Incorrect formatting
+Unit differences
+Important technical specifications shall not be changed without review where required.
+20. UNIT CONVERSION MASTER
+The system shall contain approved unit-conversion rules.
+Possible examples:
+Ton ↔ BTU/hr
+kW ↔ Ton
+CFM ↔ CMM
+mm ↔ inch
+meter ↔ feet
+kg ↔ lb
+°C ↔ °F
+L/s ↔ CFM
+Pressure conversions
+Configuration shall include:
+From unit
+To unit
+Factor/formula
+Category
+Effective date
+Status
+Approved by
+AI shall use approved conversion formulas rather than generating its own conversion factors.
+21. AUTO CALCULATOR & COMPARISON ENGINE
+The Auto Calculator shall operate across relevant:
+Estimation
+Costing
+Quotations
+Procurement
+Purchase Orders
+Sales Invoices
+Vendor Bills
+Finance
+Commercial comparisons
+It shall calculate:
+Quantity × Rate
+Item-wise total
+Subtotal
+Discount
+Margin
+Markup
+Additional charges
+Freight
+Logistics
+Installation
+Service charges
+Taxes
+GST
+Withholding Tax
+Other deductions
+Final payable
+Final receivable
+Any relevant change shall automatically recalculate affected values.
+22. MULTI-CURRENCY CALCULATION
+The Auto Calculator shall support multiple currencies.
+The system shall maintain:
+Original Currency
+Original Amount
+Exchange Rate
+Converted Amount
+Rate Date
+Rate Source
+Authorized users may override exchange rates where permitted.
+Every override shall record:
+Original rate
+New rate
+Reason
+User
+Date/time
+23. TAX / GST / DEDUCTION CALCULATION
+The system shall automatically apply configured tax rules.
+Applicable calculations may include:
+GST
+Sales Tax
+Withholding Tax
+NTN-related rules
+Other configured taxes
+Other applicable deductions
+Both tax-inclusive and tax-exclusive transactions should be supported.
+Calculation should show:
+Base amount
+Tax rate
+Tax amount
+Deductions
+Final amount
+24. ALTERNATIVE COMPARISON ENGINE
+The system shall allow comparison of sourcing alternatives.
+Examples:
+Local Store
+Cost
+Tax
+Availability
+Delivery
+Lead time
+International Store
+Foreign currency amount
+Exchange rate
+Converted amount
+Freight
+Taxes/duties
+Total landed cost
+Lead time
+Local Procurement
+Supplier rate
+Tax
+Availability
+Delivery
+Final cost
+Lead time
+Comparison criteria may include:
+Final cost
+Currency
+Exchange rate
+Taxes
+Discount
+Freight
+Logistics
+Availability
+Lead time
+Supplier
+Store
+Margin
+Final selling price
+AI may identify:
+Most economical option
+Fastest option
+Lowest landed cost
+Best availability
+Best commercial option
+Final selection remains with an authorized user unless management approves automatic selection.
+25. COMMERCIAL
+Commercial functionality shall include:
+Quotations
+Quotation Items
+Quotation revisions
+Commercial Hub
+Customer PO linkage
+Commercial Margins
+Discounts
+Terms
+Delivery terms
+Payment terms
+Attachments
+Comments
+26. COMMERCIAL HUB
+The Commercial Hub should provide one centralized workspace for:
+BOQ
+Costing
+Quotation
+Quotation revisions
+Customer PO
+PO vs Quote comparison
+Approval
+Comments
+Attachments
+Project reference
+27. CUSTOMER PO vs QUOTATION
+The system shall compare the received customer PO against the approved quotation.
+Comparison shall include:
+Items
+Quantity
+Rate
+Discount
+Tax
+Total
+Technical specification
+Delivery terms
+Payment terms
+Scope
+Exclusions
+AI may:
+Read customer PO documents.
+Extract values.
+Compare PO against quotation.
+Highlight differences.
+Generate mismatch summary.
+Applicable differences shall require authorized review/approval.
+28. PROCUREMENT
+Procurement shall include:
+Purchase Requirements
+Suppliers
+Ordering Agencies
+Supplier Quotations
+Procurement POs
+PO Items
+Expected delivery
+Procurement status
+Approvals
+Vendor performance where required
+AI may analyze supplier quotations using:
+Price
+Delivery time
+Currency
+Availability
+Previous supplier performance
+Terms
+Quality indicators
+AI may recommend options.
+Final supplier selection shall remain with authorized personnel where approval is required.
+29. STORE ROUTING
+For each requirement, the system may consider:
+Local Store
+International Store
+Physical Store
+Virtual Store
+Local Procurement
+International Procurement
+Alternative Item
+Management Decision
+The system should display:
+Available quantity
+Cost
+Store
+Lead time
+Alternative availability
+User shall have:
+Dropdown options
+Selection
+Comment section
+Approval where applicable
+AI may recommend the most appropriate source.
+30. STORES / MATERIAL MANAGEMENT
+Stores/MM functionality shall include:
+Item list
+Physical Stores
+Virtual Stores
+Local Stores
+International Stores
+On-Hand inventory
+Stock Adjustment
+Stock Transfer
+Stock Movement
+Goods Receipt
+Goods Issue
+Return
+Project Issue
+Material Consumption
+Stock history
+31. STOCK TRANSFER
+The system shall provide a dedicated Stock Transfer function.
+Information shall include:
+From Store
+To Store
+Item
+Quantity
+Transfer Date
+Status
+Request
+Approval
+Comments
+Transfer history
+AI may recommend transfer instead of procurement when another store has excess stock.
+32. STOCK AGING
+The system shall provide Stock Aging analysis.
+It should identify:
+Slow-moving stock
+Non-moving stock
+Old stock
+Excess stock
+Overstocked items
+Item age
+Store-wise aging
+Category-wise aging
+Quantity/value aging
+AI may identify inventory likely to become obsolete or non-moving.
+33. PREDICTIVE INVENTORY MANAGEMENT
+AI should analyze future stock requirements using applicable data including:
+Historical consumption
+Current projects
+Confirmed orders
+Open quotations
+Procurement lead time
+Seasonal demand
+Existing stock
+Pending procurement
+Planned production
+AI may:
+Forecast shortages.
+Predict demand.
+Identify overstock risk.
+Recommend early procurement.
+Recommend delaying procurement.
+Identify expected market shortages.
+Consider possible price movement where reliable data exists.
+Recommend stock redistribution.
+Recommendations should show supporting reasons/data.
+Authorized personnel shall make final purchasing decisions.
+34. PROJECTS
+The Projects module shall include:
+Project Track
+Project Status
+Milestones
+Tasks
+Project documents
+Project team
+Related customer
+Related BOQ
+Related quotation
+Customer PO
+Procurement
+Inventory
+Manufacturing
+Field Jobs
+Delivery
+Invoices
+Complaints
+AI may:
+Analyze project health.
+Predict delays.
+Identify blocked tasks.
+Detect missing dependencies.
+Summarize project progress.
+Recommend management attention.
+35. MANUFACTURING
+Manufacturing shall include:
+Production Orders
+Related Project
+Related BOQ
+Material requirements
+Material consumption
+Production status
+Planned production date
+Finished goods
+AI may assist with:
+Production planning
+Material forecasts
+Production priorities
+Shortage detection
+Delay detection
+36. FULFILLMENT
+Fulfillment shall include:
+Delivery Advice
+Delivery
+Customer/site
+Project
+Items
+Quantities
+Delivery date
+Delivery status
+Delivered by
+Delivery proof
+OTP verification
+AI may:
+Identify delivery risk.
+Prioritize deliveries.
+Identify late deliveries.
+Assist logistics scheduling.
+37. FIELD SERVICE MANAGEMENT
+Field functionality shall include:
+Field Jobs
+Installation
+Commissioning
+Maintenance
+Repair
+Inspection
+Service Visit
+Field Force Stub
+Logistics Mobile Web
+Technician Assignment
+Job Start
+Job Completion
+Material Usage
+Attachments/evidence
+Site information
+AI may recommend technician assignment based on:
+Skills
+Location
+Availability
+Certification
+Workload
+Job priority
+38. GPS FIELD TRACKING
+Where permitted by company policy, the system may support:
+GPS tracking
+Site verification
+Route information
+Check-in/out location
+Field history
+AI may detect:
+Route deviation
+Unusual movement
+Extended inactivity
+Deviation from assigned location
+Tracking must follow authorized working-time and privacy policies.
+39. NON-GPS GROUND STAFF TRACKING
+If continuous GPS is not used, operational presence may be determined through:
+Site assignment
+QR check-in
+NFC
+Biometric
+Supervisor confirmation
+Job Start
+Job Completion
+Customer OTP
+Stock issue
+Stock return
+Mobile activity
+Delivery confirmation
+This represents operational/work-status tracking and not exact live physical location.
+40. RED / RESTRICTED ZONES
+The system may support:
+Green Zone
+Yellow Zone
+Red Zone
+When an applicable red-zone violation occurs:
+Detection
+→ Staff Alert
+→ Supervisor Alert
+→ Event Record
+→ Explanation / Comment
+→ Escalation
+Repeated incidents may be highlighted by AI.
+41. AFTER-SALES COMPLAINTS
+The system shall manage:
+Customer Complaint
+Project reference
+Equipment
+Site
+Original inquiry
+Priority
+Assignment
+Technician
+Field Job
+Resolution
+Escalation
+Complaint history
+AI may:
+Read complaints.
+Categorize complaints.
+Identify urgency.
+Link complaint with project/equipment.
+Suggest likely resolution.
+Recommend technician.
+Draft customer response.
+42. PEOPLE / HR EMPLOYEE MASTER
+Employee information may include:
+Employee ID
+Full Name
+CNIC / Passport
+Date of Birth
+Personal Phone
+Company-provided Contact Number
+Personal Email
+Company-provided Email
+Address
+Department
+Designation
+Reporting Manager
+Branch
+Assigned Site
+Joining Date
+Employment Status
+Shift
+Working Hours
+Emergency Contact
+Assigned Assets
+Documents
+Certifications
+43. EMPLOYEE MEDICAL & INSURANCE
+The system may maintain, where authorized:
+Medical/emergency information
+Medical certificate
+Insurance provider
+Insurance policy number
+Insurance coverage
+Start date
+Expiry date
+Insurance status
+Supporting documents
+Sensitive health information shall have restricted access.
+AI may:
+Detect missing mandatory documentation.
+Generate expiry reminders.
+Identify expiring insurance/certification.
+AI shall not make medical diagnoses.
+44. HR POLICY LOCKS
+HR shall be able to define system-enforced policies.
+Examples:
+Shift restrictions
+Attendance rules
+Overtime approval
+Leave restrictions
+Certification requirement
+Insurance requirement
+Site eligibility
+Access restrictions
+Attendance correction approval
+Project/site certification requirement
+A policy lock may contain:
+Policy
+→ Condition
+→ Applicable Employee/Role/Site
+→ System Action
+→ Approval
+→ Exception
+Policy overrides must require:
+Authorized user
+Reason
+Date/time
+Audit entry
+45. HELP DESK
+The system shall provide internal Helpdesk functionality.
+Include:
+Ticket
+Employee
+Category
+Priority
+Status
+Assignment
+Escalation
+Resolution
+History
+AI may:
+Classify tickets.
+Suggest solutions.
+Route tickets.
+Identify repeated problems.
+46. ACCOUNTS & FINANCE
+Accounts shall include:
+Sales Invoices
+Vendor Bills
+Chart of Accounts
+Journals
+Journal Entries
+Journal Lines
+Trial Balance
+Accounts Receivable Aging
+Accounts Payable Aging
+Fiscal Periods
+Period Closing
+AI may:
+Detect unusual financial entries.
+Identify overdue receivables.
+Identify possible duplicate invoices/bills.
+Flag unusual vendor billing.
+Produce management financial summaries.
+47. MASTER DATA
+Master Data shall centrally maintain reusable configuration including:
+Items
+Categories
+Units
+Unit Conversion
+Stores
+Store Types
+Physical / Virtual Store Types
+Local / International Store Types
+Departments
+Designations
+Commercial Margins
+Site Staff Policies
+Policy Slots
+Taxes
+GST
+Currencies
+Exchange Rates
+Lead Sources
+SEO Sources
+Status Masters
+Other reference data
+AI shall use approved Master Data but shall not independently change controlled Master Data unless an approved workflow exists.
+48. SITE STAFF POLICY / POLICY SLOTS
+The system shall support:
+Site Staff Policy
+Site Type
+Employee Category
+Policy Slot
+Shift timing
+Start Time
+End Time
+Policy restrictions
+Exceptions
+Approvals
+Status
+49. USER ACCESS CONTROL
+Administration shall support:
+Users
+Roles
+Permissions
+Module access
+Screen access
+View rights
+Create rights
+Edit rights
+Delete rights
+Approval rights
+Authorization limits
+User activation/deactivation
+AI must operate within the permissions of the workflow and must not bypass security roles.
+50. APPROVAL HIERARCHY
+The system shall support:
+Department hierarchy
+Reporting hierarchy
+Processing hierarchy
+Multi-level approval
+Value-based approval
+Conditional approval
+Escalation
+Reassignment
+AI may recommend/escalate according to approved rules.
+51. CHANNELS & INTEGRATIONS
+Integration capability may include:
+Email
+SMS
+Social media
+Website
+Incoming APIs
+Outgoing APIs
+External services
+Third-party software
+Mailbox integration
+The system shall maintain:
+Integration logs
+Status
+Errors
+Failed messages
+Retry history
+52. OUTGOING APIs & COMMUNICATION
+The system should be able to send authorized communications/data externally.
+Possible communication includes:
+Customer Email
+Supplier Email
+SMS
+Notifications
+Social messages
+External API messages
+Record:
+Recipient
+Channel
+Message/data
+Sender
+Date/time
+Related transaction
+Delivery status
+Error status
+AI may draft communications.
+Automatic sending shall follow configured approval rules.
+53. HOSTINGER INTEGRATION
+The system shall support required Hostinger-related integration where applicable.
+Possible scope may include:
+Hosting
+Domain
+Email
+Database
+Application deployment
+Other hosted services
+The final services and technical access shall be defined during final SRS approval.
+54. IMPORT / EXPORT
+The system shall provide an Import / Export facility.
+Possible functionality:
+Import data
+Export data
+File validation
+Field mapping
+Import errors
+Import history
+Export history
+Permissions
+AI may assist:
+Mapping incoming fields.
+Detecting duplicate records.
+Identifying inconsistent records.
+Important transformations should require user confirmation.
+55. AUDIT LOG
+The system shall maintain an enterprise-wide Audit Log.
+Audit events may include:
+User actions
+AI actions
+Automated actions
+Approvals
+Rejections
+Data changes
+Stock adjustments
+Financial changes
+Login/security activity
+Policy overrides
+Rate changes
+Tax changes
+Store selections
+AI normalization
+AI recommendation
+Manual overrides
+Communication history
+Where appropriate, the system should store:
+Original value
+Revised value
+User
+Reason
+Date/time
+AI may analyze audit history for repeated or unusual activity.
+56. SPECIAL TASKS
+The system shall provide a Special Tasks area.
+Include:
+Task
+Owner
+Assignee
+Priority
+Due Date
+Status
+Comments
+Attachments
+Reminder
+Escalation
+Completion
+History
+AI may:
+Prioritize tasks.
+Detect overdue items.
+Summarize pending work.
+Recommend escalation.
+57. QUALITY ASSURANCE
+Quality Assurance functionality may include:
+QA Checklist
+QA Inspection
+QA Approval
+Rejection
+Correction
+Evidence
+Attachments
+Responsible Person
+Status
+Comments
+Revision History
+QA may be linked with:
+BOQ
+Engineering
+Procurement
+Manufacturing
+Delivery
+Field Jobs
+Project Completion
+AI may assist by checking completeness and identifying missing information.
+Final QA approval remains with authorized personnel.
+58. COMMENTS & DECISION RECORDS
+Important workflow stages shall support:
+Comments
+Reason
+Attachments
+Selection
+Selected By
+Date/time
+Approval
+Rejection Reason
+Override Reason
+This applies particularly to:
+AI Recommendations
+Equipment Selection
+Engineering Conversion
+Store Selection
+Procurement Selection
+Quote Changes
+PO Mismatches
+Margin Overrides
+Price Overrides
+Stock Adjustments
+Tax Overrides
+Exchange-rate Overrides
+HR Policy Overrides
+59. HELP SCREEN / AI ASSISTANT
+A help function shall be available across system sessions/pages.
+It may provide:
+Page explanation
+Field guidance
+Workflow guidance
+FAQs
+User instructions
+Support information
+An AI assistant may provide contextual support such as:
+“What should I do next?”
+“What does this field mean?”
+“Why is this approval pending?”
+“What documents are missing?”
+The help shown may depend on the user's role and current page.
+60. NOTIFICATIONS & REMINDERS
+The system shall support reminders for:
+Tasks
+Approvals
+Escalations
+Follow-ups
+Stock reorder
+Stock shortage
+Project milestones
+Deliveries
+Insurance expiry
+Certification expiry
+Birthdays
+Major events
+Company events
+Other configured dates
+AI may:
+Prioritize reminders.
+Group related alerts.
+Generate daily summaries.
+Reduce duplicate low-value notifications according to approved rules.
+61. REPORTING
+Required reporting areas may include:
+Dashboard
+KPIs
+Sales
+Quotations
+Procurement
+Stock
+Stock Aging
+Stock Movements
+Project Track
+Trial Balance
+AR Aging
+AP Aging
+Lead Sources
+SEO Performance
+Inquiry Analysis
+Field Staff
+Complaints
+HR
+Tasks
+Audit
+AI Recommendations
+AI Analysis
+AI may support natural-language reporting such as:
+“Show projects delayed by more than 15 days.”
+or:
+“Show items likely to run out next month.”
+AI may also summarize reports and highlight important changes.
+62. WEB & MOBILE SCOPE
+The system shall support:
+Main Web ERP
+Responsive/mobile interfaces
+Logistics Mobile Web
+Field operations interface
+Job updates
+Check-in/out
+GPS where authorized
+OTP
+Attachments
+Notifications
+Ground-staff work-status tracking
+Offline capability may be included where specifically approved and required.
+63. ENTERPRISE AI CAPABILITIES
+AI implementation may include:
+Inquiry classification
+Intent extraction
+Data extraction
+Auto-reply
+Customer identification
+Lead prioritization
+SEO/source analysis
+BOQ assistance
+Equipment selection
+Data normalization
+Unit conversion
+Cost analysis
+Quotation assistance
+PO comparison
+Procurement comparison
+Supplier recommendation
+Store recommendation
+Inventory forecasting
+Stock aging analysis
+Shortage prediction
+Price-risk analysis
+Project risk analysis
+Technician assignment
+Complaint analysis
+Financial anomaly detection
+KPI analysis
+Operational alerts
+Report generation
+Management summaries
+Document analysis
+Task prioritization
+Audit-log analysis
+64. AI GOVERNANCE
+For each major AI function, the final SRS shall identify:
+Input
+→ AI Analysis
+→ AI Recommendation
+→ Human Review
+→ Approval where required
+→ System Action
+→ Audit Record
+AI should primarily:
+Analyze
+Assist
+Recommend
+Predict
+Prioritize
+Summarize
+Automate repetitive approved tasks
+Sensitive actions should remain human-controlled unless management explicitly approves automation.
+These include:
+Final technical specifications
+Final quotations
+Discounts
+Commercial margins
+Supplier selection
+Stock adjustments
+Financial entries
+HR-sensitive decisions
+Policy overrides
+65. SYSTEM SECURITY & DATA CONTROL
+The system shall provide:
+Role-based access
+Restricted sensitive information
+Authentication
+Authorization
+Audit logging
+User status control
+Module restrictions
+Approval restrictions
+Sensitive HR/medical-data restrictions
+AI shall not bypass normal authorization mechanisms.
+66. DATA HISTORY & TRACEABILITY
+The system should preserve applicable history for:
+Customer inquiries
+BOQ revisions
+Quotation revisions
+PO changes
+Item selections
+Store decisions
+Stock movements
+Project changes
+Approval decisions
+Employee assignments
+Policies
+Rates
+Taxes
+AI recommendations
+User overrides
+This will provide complete traceability from the original request through final execution.
+67. CURRENT PROPOSED END-TO-END AI WORKFLOW
+Email / Website / Social Media / Referral / SEO
+↓
+Unified Inbox
+↓
+Original Query Preserved
+↓
+AI Reads & Extracts Data
+↓
+AI Classification
+↓
+AI Intent / Keyword Analysis
+↓
+Customer / Lead Identification
+↓
+Lead Source Attribution
+↓
+AI Response / Missing-Information Request
+↓
+Processing Hierarchy
+↓
+CRM / Lead
+↓
+AI Technical Normalization
+↓
+Unit Conversion
+↓
+BOQ
+↓
+AI Item / Equipment Selection
+↓
+Physical / Virtual / Local / International Store Check
+↓
+Alternative Comparison
+↓
+Automatic Costing
+↓
+Engineering / AUX
+↓
+Technical Submittal
+↓
+Quotation
+↓
+Customer PO
+↓
+AI PO vs Quote Comparison
+↓
+Project Creation
+↓
+Predictive Stock Analysis
+↓
+Stock Transfer / Procurement / Manufacturing
+↓
+Supplier / Source Comparison
+↓
+Delivery Advice
+↓
+Delivery + OTP
+↓
+Field Job
+↓
+Technician Assignment
+↓
+Installation / Service
+↓
+After-Sales
+↓
+Complaint Analysis
+↓
+Sales Invoice / Vendor Bills / Accounts
+↓
+Dashboard / KPI / AI Management Analysis
+68. ITEMS REQUIRING MANAGEMENT CONFIRMATION
+The following items remain open and should be finalized before technical implementation:
+Exact meaning and workflow of AUX.
+Exact definition of Dual Stores.
+Exact physical vs virtual store rules.
+Exact local vs international store structure.
+Required social-media integrations.
+Required Hostinger services.
+Exact Import / Export scope.
+GPS tracking rules and authorized timings.
+Red-zone definitions and actions.
+Exact employee medical data required.
+Tax and GST rules.
+Exchange-rate source.
+Sources for market-price prediction.
+Sources for stock-shortage prediction.
+Which AI actions may execute automatically.
+Which AI actions require human approval.
+Approval limits for discounts/margins.
+Approval levels for procurement.
+Exact QA checkpoints.
+Mandatory vs future-phase functionality.
+69. FINAL APPROVAL PROCESS
+After management reviews this SRS:
+Management Corrections
+→ Requirements Finalization
+→ Department Validation
+→ CEO / Authorized Management Sign-Off
+→ Scope Freeze / Baseline
+→ Development Phase Planning
+→ Monthly Deliverables
+→ Final Timeline
+→ Detailed Workflows
+→ Database Design
+→ Technical Architecture
+→ ERD
+→ Development
+70. DOCUMENT STATUS
+This document represents the consolidated Draft HMS Software Requirements Specification based on all requirements identified to date.
+It is intended to become the formal project baseline only after:
+Department-level review
+Management corrections
+Identification of mandatory vs future features
+AI automation approval
+Final scope confirmation
+CEO / authorized management sign-off
+After approval, the final SRS shall be used to prepare the detailed workflow architecture, data model, database structure, technical architecture, development roadmap, and Entity Relationship Diagram (ERD).

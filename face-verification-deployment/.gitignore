@@ -1,0 +1,6 @@
+.env
+tls/
+credentials*
+*.key
+*.pfx
+*.onnx

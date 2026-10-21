@@ -1,0 +1,41 @@
+Current integration and delivery findings
+13 October 2026 Asia/Karachi
+
+1. Attendance setup routes were connected during the audit and are now partially delivered
+Latest AppRoutes imports/mounts ShiftsPage, SiteRostersPage, SiteGeofencesPage and OfficeRostersPage, redirects the old shifts-rosters path and exports the pages via modules/attendance/index.ts. AppLayout now links these actual routes. Typed office roster form uses the matching branch endpoint and timeline/shift version/reason fields.
+This supersedes the earlier audit snapshot where these pages were unreachable. Office schema/migration and actual office capture/calculation remain incomplete, so the grouped setup workflow scores partial rather than complete.
+Seventeen other administrative workspaces remain disconnected; PreparedWorkspace explicitly states Service not connected and does not load/save/submit business records. EmployeeSelfServicePage still uses the same prepared shell. This affects attendance operations, leave/OT/policy operations, zones/site reports, financial flows/reports and own-service UI.
+
+2. Current frontend role-assignment request is incompatible with the latest backend
+Evidence: cosmix-backend/src/Cosmix.Application/Authentication/Access/AccessContracts.cs:47-53 adds JsonRequired + Required Reason to AssignAccessRoleRequest. AccessManagementService.cs:143 invokes RequireReason, :342-345 rejects missing/blank/oversized values with invalid_access_reason.
+Frontend EmployeeAccessSetup.tsx:516-528 omits reason from the initial assignment payload; AdditionalRoleAssignment.tsx:92-102 also omits it; schemas/access-setup.ts:82-91 defines no reason field.
+Impact: current initial/additional access requests are rejected by current backend validation. Employee activation/access AC-001 is not a complete connected flow. This is a static request/contract trace, not an observed authenticated HTTP response; no live account write was made.
+
+3. Current Office roster source has no supplied corresponding migration/snapshot
+Evidence: DbContext.cs:76-77 has OfficeRosterAssignment/End DbSets. OfficeRosterConfigurations.cs maps both tables/FKs. The current migrations and CosmixDbContextModelSnapshot contain no OfficeRoster entries.
+OfficeRosterRepository.cs:71-101 inspects the required SQL tables/columns/FKs/indexes and rejects absence with office_roster_schema_required 503 (:108).
+ShiftVersionPublication.cs:15-16 and ShiftService.cs:101-102,122-123 consume this dependency for shift publication. It can block existing site-shift changes until the new schema exists, even though Release compilation succeeds.
+Impact: office scheduling is partially implemented source; deployment is incomplete. This audit did not connect to or inspect the live database and does not assert actual table presence there.
+
+4. Office roster resolution is real; office attendance boundary provenance remains unfinished
+Evidence: EmployeeRosterResolver and OfficeRosterResolver provide office versus site schedule dispatch. AttendanceCaptureService.cs:61-69 still resolves site geofences and EmployeeSites; siteMatches requires a single employee site matching selected.SiteId. No Office attendance boundary path exists in this capture flow.
+Impact: do not confuse an office shift schedule with completed office check-in/calculation/evidence coverage. This requires a real office boundary/history path, not a fabricated site.
+
+5. Face security code is substantial, but real production check-in is unavailable
+Evidence: Infrastructure/Repositories/Attendance/AttendanceCaptureRegistration.cs:28-30 returns UnconfiguredFaceVerificationProvider outside Development or when disabled. Self-hosted CompreFace and ONNX liveness adapters are development-only source with approved-model/provider/device acceptance still pending.
+Mobile src/app/App.tsx:3 returns null; src contains no other business source file.
+Impact: FACE-003 / AC-002 live-person matching/device flow cannot be passed. No real provider/model inference/camera/replay/liveness checks were run in this audit. Check-Out has no added face requirement in backend capture.
+
+6. Positive full month close/payroll finalization remains deliberately blocked
+Evidence: Application/Attendance/PayrollInputs/AttendanceMonthLockFinancialReader.cs:54-56 unconditionally adds legal_payroll_activation_required for every retained financial input; :86-87 rejects retained verification with month_lock_legal_activation_unavailable. Missing approved financial consumption/carry-forward and legal activation remain visible dependencies.
+Current no-charge handoff is implemented for an issue-free saved zero-line input. Do not repeat older documentation's blanket claim that it is absent. No-charge handoff is not posting, settlement, payment or full month-finalization acceptance.
+Impact: ATT-010, AC-007 and payroll-ready closure remain partial. SRS requires controlled reopening; current later-approved project policy forbids reopening and relies on controlled forward adjustments, which still need full financial implementation. Treat this as a documented requirement deviation, not a reason to silently change product policy during this audit.
+
+7. FINAL latest source checks after concurrent formatting changes
+Backend Release build PASS 0 warnings/0 errors, TEMP output. Its inspected backend evidence hashes remain unchanged.
+Final complete npm run verify PASS: ESLint, Prettier formatting, TypeScript and Vite production build; 2247 modules. Existing large JavaScript chunk warning remains.
+Earlier audit snapshots failed lint1/format10, then passed lint/failed format15. Those failures are historical and superseded by the final successful full command after concurrent formatting changes. This auditor did not alter product source.
+No authenticated employee/attendance/SQL/mobile/provider acceptance was run.
+
+8. Earlier profile-snapshot suspicion was checked and not confirmed
+EmployeeDetailPage.tsx:147 reads employees/{id}/current/{section}; EmployeeHiringPage redirects approved employees away from the retained draft. Current profile updates use their proper API. Do not report a stale-profile bug without this trace.

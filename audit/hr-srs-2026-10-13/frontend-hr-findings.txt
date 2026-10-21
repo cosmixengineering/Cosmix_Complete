@@ -1,0 +1,478 @@
+HR WEB FRONTEND AUDIT -- 13 October 2026
+
+REFRESHED SNAPSHOT: 2026-10-13 15:09:25 +05:00. Another chat changed product source
+during this audit. The current findings below supersede the earlier route
+unreachability, 38% web score, and lint/10-file-format failure observations.
+This auditor made no product changes. FINAL verification refresh: after concurrent formatting changes, the parent reran full npm run verify and it PASSED lint, formatting, TypeScript and Vite2247 modules. Earlier lint/format failure observations below are historical and superseded. The reviewed functional scope and39.39% score are unchanged.
+
+Audit scope and limits
+Web root (W): C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix_frotned
+Backend root (B): C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix-backend
+SRS: audit/hr-srs-2026-10-13/srs-extracted.txt, supplied v1.2 baseline.
+Read AGENTS.md, README.md and module instructions. This audit is static and read-only
+apart from this requested findings artifact. No product files, tests, database,
+providers, accounts or API business records were changed. No API writes were made.
+The parent owns fresh build/check execution. Endpoint evidence below establishes
+source existence and client wiring, not deployed-schema or live behavioral success.
+Historical implementation reports are useful context but current code wins.
+
+Result and reproducible score
+For all HR WEB scope, the estimate is about 40% source-integrated business coverage:
+11 Implemented + 4 Partial + 18 Missing/Unconnected across 33 equal groups.
+Formula: (11*1 + 4*0.5 + 18*0)/33 = 39.39%.
+For the narrower employee/organization administrative workspace (groups 1-14),
+the estimate is 86%: 11 Implemented + 2 Partial + 1 Missing; 12/14 = 85.71%.
+These are explicit audit estimates, not official effort-weighted percentages and
+not UAT pass rates. Equal groups prevent UI/file volume from masquerading as
+completed business scope. The administrative estimate must not be presented as
+completion of the full SRS HR/Attendance panel.
+
+Implemented (1): reachable UI with real reads/writes and matching backend routes,
+with no identified contract blocker for that group's central workflow.
+Partial (0.5): a usable subset exists but material pieces are absent/broken.
+Missing/Unconnected (0): no reachable, API-backed business workflow; prepared
+drafts, empty tables and any unreachable page code score zero.
+No mobile face capture, GPS capture, offline queue, mobile storage or mobile-only
+screens are in this denominator. Web face administration is included, as are
+authorized web attendance review, Accounts handoff, notifications and reports.
+Own web views are included under SRS 1.2 (employee self-service web/mobile views),
+not by counting the React Native application's screens against the web project.
+NFR/security/deployment/UAT acceptance is reported as a separate gate, not assigned
+invented partial-credit numbers.
+
+Most consequential findings
+
+1. Most menus are honest but nonoperational prepared controls.
+   W/src/app/router/AppRoutes.tsx:48 sends /hr/workspaces/:workspaceId to
+   HrPreparedWorkspacePage. That component selects a definition and always renders
+   PreparedWorkspace (W/src/modules/hr/pages/HrPreparedWorkspacePage.tsx:11-16).
+   W/src/modules/hr/components/workspaces/PreparedWorkspace.tsx:38 says
+   "Service not connected"; :60 says records/results are unavailable and drafts
+   are not saved/submitted; :87 disables filtering; :113 shows "Records
+   unavailable"; :128 renders every verified result as "Unavailable".
+   PreparedForm.tsx:172 disables the actual submit/save action; :182 calls review
+   "Not submitted". No business API exists in this renderer. ReportActions.tsx:21
+   disables Export and :27 disables Print. Calendars/rosters/registers and boundary
+   drawings are presentation helpers, not loaded business records.
+   There are now 17 disconnected administrative workspaces: three attendance,
+   five operations, seven people-service and two reporting workspaces. Eighteen
+   definitions remain, but shifts-rosters is redirected to the real scheduling
+   route. The employee self-service page is an additional disconnected surface.
+
+2. New scheduling implementation is now routed; overall setup remains Partial.
+   W/src/modules/attendance/pages/ShiftsPage.tsx:18, SiteRostersPage.tsx:95 and
+   SiteGeofencesPage.tsx:167 define real pages and clients. AppRoutes.tsx:8 imports
+   them through the attendance module; :40-46 registers shifts, site roster,
+   site geofence and new office roster routes. :47 redirects the old prepared
+   shifts-rosters route to /hr/attendance/shifts. Attendance/index.ts:1-5 exports
+   these pages/access helper. Sidebar AppLayout.tsx:21-26 links real scheduling;
+   :74 excludes shifts-rosters from prepared menus. References.tsx:251 now targets
+   registered site routes. This supersedes the earlier unreachable-code finding.
+   OfficeRostersPage.tsx:21,38,72 reads office references and real branch roster
+   history; OfficeRosterForm.tsx:24-40 sends matching assignment/replace/end bodies
+   with timeline, shift version and reason. Response schemas match
+   B/src/Cosmix.Application/Attendance/Rosters/OfficeRosterContracts.cs:12-25.
+   The office source is not deployment-complete: OfficeRosterRepository.cs:71-108
+   requires physical schema and fails closed with office_roster_schema_required
+   (503), and no matching office roster migration/snapshot is present. Parent's
+   backend audit also traces this gate into shift publication. Site setup has
+   substantial integrated UI; office setup and fresh live acceptance still block
+   declaring the entire scheduling group complete.
+
+3. Initial and additional access assignment violate the latest backend contract.
+   W/src/modules/hr/components/approvals/EmployeeAccessSetup.tsx:516-528 submits
+   roleId, scopes, dates, versions and configureAsInitialAccess, with no reason.
+   AdditionalRoleAssignment.tsx:89-102 does the same for additional access.
+   W/src/modules/hr/schemas/access-setup.ts:82-91 has no reason property.
+   B/src/Cosmix.Application/Authentication/Access/AccessContracts.cs:47-53 makes
+   Reason JsonRequired/Required (nonempty, max 1000). AccessManagementService.cs:143
+   calls RequireReason; :342-346 rejects null/blank/control-character reasons as
+   invalid_access_reason. Thus both current web bodies are rejected rather than
+   creating assignments. This is a deterministic static contract finding; no live
+   write was performed. EmployeeAccessSetup.tsx:246 and :255 require initial
+   access before mobile provisioning and first web credentials, so a new employee
+   cannot complete AC-001 through the present web flow. Existing accounts with
+   already-assigned initial access can still use the connected provisioning subset.
+
+4. Several prepared workflow definitions are stale relative to confirmed backend
+   behavior. W/workspaces paths here mean src/modules/hr/workspaces.
+   operations.ts:200/254 offers Amber exceptions/access decisions whereas
+   B/src/Cosmix.Api/Controllers/Attendance/ZonesControllers.cs:20 creates the
+   current Operational/Red model. operations.ts:591 offers month reopening,
+   whereas MonthLocksController.cs:15-28 exposes preview/finalize/detail only and
+   the current work-order preserves no-reopen rules. operations.ts:449 offers a
+   separate policy version approval/activation, whereas
+   AttendancePoliciesController.cs:42-53 implements direct HR publication without
+   a second reviewer. attendance.ts:129-153 lists individual/team/category/
+   department populations; the current approved office/site source must be
+   reconciled before these fields are wired. These are currently disabled draft
+   models, not active API requests or runtime data-corruption findings.
+
+5. Current approved employee details do use current values, not frozen hiring
+   snapshots. EmployeeHiringPage.tsx:84-87 redirects approved records to the
+   current detail page. EmployeeDetailPage.tsx:147 loads current/{section}; salary
+   and status use dedicated compensation/lifecycle endpoints. The backend's
+   retained hiring ProfileReference is therefore not a stale-data bug in these
+   routed current-detail flows. However, certifications/assets/SIM and archive
+   continuation remain disconnected after hire; draft collection is not a
+   post-hire issue/return/renewal/expiry workflow.
+
+Scored WEB feature matrix
+Each W/B citation below is relative to the roots above. A range indicates nearby
+supporting source, not a claim that a whole file or folder is completed.
+
+01 | Shared web authentication, MFA/recovery, own sessions/devices | Implemented | 1
+SRS 4, AUTH-001..008 (web aspects).
+W/src/app/router/AppRoutes.tsx:24-30; src/auth/adapter.ts:6-56;
+src/auth/AccountSessions.tsx:143-168,233; src/services/api/http-client.ts:84-93,184.
+B/src/Cosmix.Api/Controllers/Authentication/WebAuthenticationController.cs;
+WebPasswordController.cs; CurrentAccountController.cs:15-27.
+Real cookie/CSRF transport, login/SMS challenge, password recovery and session/device
+read/revoke flow; no fabricated login/token. SMS, provisioned accounts and production
+configuration still need live acceptance. These source features do not certify
+all deployment security/NFR requirements.
+
+02 | Organization masters | Implemented | 1
+SRS 6.1, 13 Organization.
+W/src/modules/hr/pages/OrganizationPage.tsx:21-35,81;
+components/organization/MasterEditor.tsx:55-68; OrganizationHistory.tsx:21.
+B/src/Cosmix.Api/Controllers/HR/OrganizationMasterControllerBase.cs plus Departments,
+Designations, Cities, Branches, StaffCategories and EmploymentTypes controllers.
+Real paged list/search, create/edit/status and reason/version/history support.
+
+03 | Holiday calendars and effective revisions | Implemented | 1
+SRS 6.1, LEAVE-010.
+W/src/modules/hr/components/organization/HolidayCalendars.tsx:22,116,174-215.
+B/src/Cosmix.Api/Controllers/HR/HolidayCalendarsController.cs.
+Real calendars, notification reference and revision/history controls; not merely
+the prepared attendance-calendar view.
+
+04 | Employee directory/search/navigation | Implemented | 1
+SRS 5, 13 Employees.
+W/src/modules/hr/pages/EmployeesPage.tsx:23-26,97-115.
+B/src/Cosmix.Api/Controllers/HR/EmployeesController.cs:19-26;
+src/Cosmix.Infrastructure/Repositories/HR/EmployeeHiringRepository.cs:20-31.
+Server pagination/search/onboarding filter, employee number display and correct
+hiring/current navigation. Numeric directory search is exact employee number,
+not substring, so the approval review's numeric lookup is not an ambiguity bug.
+
+05 | Employee draft and complete personal/employment profile | Partial | 0.5
+SRS 5.1, HR-001..003; controlled gender/marital fields and shift assignment.
+W/src/modules/hr/pages/EmployeeHiringPage.tsx:35-38;
+components/hiring/ProfileForm.tsx:60-74,113-119,220-227,265,346,435.
+B/src/Cosmix.Api/Controllers/HR/EmployeesController.cs:21-28;
+src/Cosmix.Application/HR/Employees/EmployeeFormContracts.cs.
+Draft creation and incomplete saves, identity/contact/address/emergency,
+employment references, background, draft certificates/assets/SIM are real.
+Gender/marital status are unrestricted text rather than controlled selections.
+Proposed shift is only displayed read-only when already present; an HR user cannot
+choose it in the hiring form. Effective office/site scheduling now has its own
+routed controls but has the separate group 15 readiness limits. The server generates
+employee numbers; crypto UUIDs are form-entry/operation keys, not employee numbers.
+
+06 | Restricted hiring financial and medical sections | Implemented | 1
+SRS 5.1 Compensation/Bank/Medical, ROLE-004.
+W/src/modules/hr/components/hiring/SensitiveForms.tsx:43-53,130-138,304-311;
+schemas/hiring.ts:113 onward financial/bank/medical contracts.
+B/src/Cosmix.Api/Controllers/HR/EmployeesController.cs:30-38.
+Separate protected reads/writes for salary/wage/payment/bank/previous salary and
+authorized medical information. Server permissions remain authoritative.
+
+07 | Private employee document upload/review/verification/download | Implemented | 1
+SRS 5.1 Documents, 13 Employee Files (core evidence subset).
+W/src/modules/hr/components/documents/EmployeeDocuments.tsx:55,82-87,102-142;
+components/approvals/SubmissionDocuments.tsx:27,42;
+api/hr-api.ts:32-47.
+B/src/Cosmix.Api/Controllers/HR/EmployeeDocumentsController.cs:17-42;
+src/Cosmix.Application/HR/Employees/EmployeeDocumentService.cs:145-151.
+Real multipart upload, issued/expiry metadata, scan status/rescan, verification,
+private review/download, and post-hire proposal-evidence support. Document expiry
+reminders and renew/expire lifecycle are counted separately in groups 14 and 31.
+Scanner availability and protected file behavior are live acceptance gates.
+
+08 | Hiring readiness, submit, frozen review and Admin decision | Implemented | 1
+SRS HR-002, APR-002/003, first part of AC-001.
+W/src/modules/hr/components/hiring/SubmissionReview.tsx:51-64,117-141;
+pages/HiringApprovalsPage.tsx:27;
+components/approvals/HiringSubmissionReview.tsx:62-105,128-143.
+B/src/Cosmix.Api/Controllers/HR/EmployeesController.cs:40-60.
+Real validation, immutable submitted sections/document snapshot, current document
+availability/version check, decision history, reason and self-approval presentation
+checks. Completion of account/mobile activation is group 9, which is broken.
+
+09 | Employee account, initial/additional role and login-channel setup | Partial | 0.5
+SRS 5.1 System, HR-004, AUTH-007, AC-001.
+W/src/modules/hr/components/approvals/EmployeeAccessSetup.tsx:128-148,243-265,
+516-528,579-583,634-638; AdditionalRoleAssignment.tsx:89-102.
+B/src/Cosmix.Api/Controllers/Authentication/AccessController.cs:39-90;
+src/Cosmix.Application/Authentication/Access/AccessContracts.cs:47-53.
+Access/account/role reads and existing-account provisioning are wired. New role
+assignments omit required reason and fail. Revoke assignment, channel recovery/
+enable-disable and reset-initial-password backend actions have no current UI.
+System-role administration is intentionally delegated to separate administration,
+whose module is still architecture-only. This materially blocks end-to-end hiring.
+
+10 | Current basic/protected employee sections, change request and history | Implemented | 1
+SRS HR-004, APR-002/003, ROLE-004.
+W/src/modules/hr/pages/EmployeeDetailPage.tsx:147-150;
+components/employee/ChangeForm.tsx:80-102;
+components/requests/ChangeRequests.tsx:125-134,164-180,198-219;
+RequestDecisionForm.tsx:18-25,122-137; ChangeHistory.tsx:16-24.
+B/src/Cosmix.Api/Controllers/HR/EmployeeUpdatesController.cs:17-56.
+Current and scheduled values, basic updates, identity/employment/bank/medical/
+document requests, requester cancel, Admin approve/return/reject, current version
+refresh and before/after history are real. This is not the prepared own-profile UI.
+
+11 | Compensation request/review/effective history | Implemented | 1
+SRS HR-004, Compensation.
+W/src/modules/hr/components/requests/EmployeeWorkflows.tsx:26-32;
+SalaryRequestForm.tsx:50; WorkflowRequests.tsx:45,128;
+RequestDecisionForm.tsx:122-137.
+B/src/Cosmix.Api/Controllers/HR/EmployeeCompensationController.cs:17-52.
+Dedicated restricted current/scheduled salary, wage/payment, dated request,
+review and history; proposed amounts do not silently replace current compensation.
+Employee payslip/deduction self-service is a separate missing scope.
+
+12 | Employment status requests/decision/history | Implemented | 1
+SRS HR-005, AC-009 web administration.
+W/src/modules/hr/components/requests/EmployeeWorkflows.tsx:122-128;
+StatusRequestForm.tsx:49; WorkflowRequests.tsx:128.
+B/src/Cosmix.Api/Controllers/HR/EmployeeLifecycleController.cs:17-54.
+Current/scheduled lifecycle, reason/effective-date requests, separate review and
+preserved status history. Whether effective suspension terminates live sessions
+and blocks punches is backend/mobile live acceptance, not proved by these screens.
+
+13 | Site master and dated employee site assignment | Implemented | 1
+SRS 6.1 sites, HR-004 site history.
+W/src/modules/hr/pages/SitesPage.tsx; components/sites/SitesWorkspace.tsx:31-38;
+SiteEditor.tsx:29-35; components/employee/EmployeeSiteAssignments.tsx:48-53,75-79,184.
+B/src/Cosmix.Api/Controllers/Attendance/SitesController.cs:18-42;
+src/Cosmix.Api/Controllers/HR/EmployeeAssignmentsController.cs:16-25.
+Site identity/address/client/project/supervisor/start-end/status CRUD and history,
+real effective assignment/reassignment. Attendance geofences are group 15; the
+site master does not supply them. Initial site selection exists at hiring review.
+
+14 | Post-hire certificates/SIM/assets/archival lifecycle | Missing | 0
+SRS 5.1 and HR-006/007.
+W/src/modules/hr/workspaces/people-services.ts:32-141 defines only prepared tabs.
+Draft certificates/assets/SIM fields do save in hiring, but there are no connected
+approved-record issue/return/renewal/expiry/archive flows. Generic documents and
+employment termination are not equivalent to these workflows.
+
+15 | Reachable shift/office-site roster/temporary change/geofence administration | Partial | 0.5
+SRS 6.2, SHIFT-001..004, ATT-006.
+W/src/modules/attendance/pages/ShiftsPage.tsx:18;
+SiteRostersPage.tsx:25-29,95; SiteGeofencesPage.tsx:31-37,167;
+components/rosters/SiteRosterForm.tsx:36-64;
+components/geofences/SiteBoundaryForm.tsx:56;
+W/src/app/router/AppRoutes.tsx:8,40-47; attendance/index.ts:1-5;
+pages/OfficeRostersPage.tsx:21,38,72;
+components/rosters/OfficeRosterForm.tsx:24-40; schemas/office-rosters.ts:4-9.
+B/src/Cosmix.Api/Controllers/Attendance/ShiftsController.cs:17-52;
+SiteRostersController.cs:16-116; SiteGeofencesController.cs:18-48;
+OfficeRostersController.cs:9-29.
+Shifts/site rosters/site geofences and office rosters are now reachable. Old prepared
+shifts-rosters redirects to the real shifts route. New office assignment/replace/end
+and response DTO fields match the backend. The known missing office schema/migration
+gate produces 503 and also affects existing shift publication; fresh real scheduling
+acceptance remains unverified. Partial credit is for integrated setup UI and matching
+contracts, not proof of deployed office scheduling or attendance calculations.
+
+16 | Daily/monthly attendance, source punches/sessions and recalculation | Missing | 0
+SRS ATT-001/009, 7.1, 15 Daily/Monthly/Punch audit.
+W/src/modules/hr/workspaces/attendance.ts:298-397; PreparedWorkspace.tsx:113,128.
+B/src/Cosmix.Api/Controllers/Attendance/AttendanceSummariesController.cs:15-27;
+AttendanceAuditController.cs:17-29; AttendanceReportsController.cs:16-39.
+No actual daily/calendar/register/punch/session query, source trail or calculation
+client. The current server's available factual vs financial distinctions must be
+honored rather than rendering missing results as zero/present/absent.
+
+17 | Attendance exceptions/manual correction review and decision | Missing | 0
+SRS ATT-007/008, 7.3, AC-003/005.
+W/src/modules/hr/workspaces/attendance.ts:399-487 is prepared-only.
+B/src/Cosmix.Api/Controllers/Attendance/AttendanceExceptionsControllers.cs;
+AttendanceCorrectionReviewControllers.cs:9-93; MyAttendanceCorrectionsController.cs.
+No queue/evidence preview/source fingerprint/current version/decision/recalculated
+trail client; generic hiring/employee-change approval does not cover attendance.
+
+18 | Face enrollment/re-enrollment/revoke/attempt administration | Missing | 0
+SRS HR-008, FACE-006..008 (web administration only).
+W/src/modules/hr/workspaces/attendance.ts:219-292,610-613.
+B/src/Cosmix.Api/Controllers/Attendance/FaceVerificationController.cs:40-73.
+No connected enrollment, retained attempt history, capture/revoke or approved
+alternative-path admin UI. Profile-photo document upload is not face enrollment.
+Real provider/liveness acceptance belongs to the separate operational gate.
+
+19 | Operational zone configuration/assignment/event review | Missing | 0
+SRS ZONE-001..010 web responsibilities.
+W/src/modules/hr/workspaces/operations.ts:58-270,696-699.
+B/src/Cosmix.Api/Controllers/Attendance/ZonesControllers.cs:9-46.
+Local coordinate editor/drawing is not server-persisted/versioned boundaries,
+assignments, monitoring configuration, scoped event evidence or human review.
+
+20 | Site report queue, evidence and human review | Missing | 0
+SRS 7.1, SITE-007, AC-005B authorized web view.
+W/src/modules/hr/workspaces/operations.ts:275-314,702-705.
+B/src/Cosmix.Api/Controllers/Attendance/SiteReportsController.cs:47-58;
+SiteReportReviewController.cs:15-35.
+No actual assigned queue/detail/evidence download/decision client.
+
+21 | Effective attendance policies/assignments and impact assessments | Missing | 0
+SRS 8.1/8.2, OFF/SITE rules, HR-004, SHIFT-004.
+W/src/modules/hr/workspaces/operations.ts:320-565,708-717.
+B/src/Cosmix.Api/Controllers/HR/AttendancePoliciesController.cs:16-63;
+AttendancePolicySettingsController.cs:15-34.
+No actual settings validation, immutable publication preview/fingerprint,
+version/assignment history or rule/result display. Waiting/KPI/studying forms
+also cannot save or calculate. Pending management definitions are not invented.
+
+22 | Leave settings/balances/request/evidence/review/calendar/extensions | Missing | 0
+SRS 9, LEAVE-001..013.
+W/src/modules/hr/workspaces/people-services.ts:148-438.
+B/src/Cosmix.Api/Controllers/HR/LeaveSettingsController.cs:16-32;
+LeavesController.cs:17-89.
+Ordinary types, policies, exact interval preview, self balances and direct Admin
+review/cancellation have real backend routes but no web clients. Team calendar,
+encashment, extra-six benefit and recovery commitments are also prepared-only;
+backend readiness for these extensions is separately audited.
+
+23 | Overtime eligibility/request/bulk review/financial status | Missing | 0
+SRS OT-001..005, 12/15.
+W/src/modules/hr/workspaces/attendance.ts:511-599,623-626.
+B/src/Cosmix.Api/Controllers/Attendance/OvertimeControllers.cs:15-103;
+OvertimeEligibilityControllers.cs:14-44.
+No live request/source preview/review/payable or explicit affected-employee bulk
+UI. Server eligibility/rate provenance cannot be replaced by a draft field.
+
+24 | Meal/outstation allowance eligibility/claim/review/payment status | Missing | 0
+SRS ALLOW-001..004, 10.1.
+W/src/modules/hr/workspaces/people-services.ts:442-599.
+No operational client/API-backed workflow. Models and draft inputs alone do not
+establish engine eligibility, prevention of duplicate claims or settlement.
+
+25 | Vehicle fuel/mileage/service/tuning/overhaul/custody/accident workflows | Missing | 0
+SRS VEH-001..009.
+W/src/modules/hr/workspaces/people-services.ts:604-940.
+No connected route/distance evidence, mileage ledger, reimbursement decision,
+maintenance milestone, issue/return or insurance/liability business flow.
+
+26 | Advances/loans/repayment and employee financial/payslip views | Missing | 0
+SRS 1.1/1.2, Role Employee, 11.1 own financial views.
+W/src/modules/hr/workspaces/people-services.ts:944-1088.
+No actual loan/advance submission/review/repayment ledger/payslip query. The real
+HR compensation-edit screen is an administrative salary master, not a payslip.
+
+27 | Month lock and Accounts payroll input/handoff/receipts/adjustments | Missing | 0
+SRS ATT-010, 12.1, 15 Payroll handoff, AC-007.
+W/src/modules/hr/workspaces/operations.ts:567-689,720-723.
+B/src/Cosmix.Api/Controllers/Attendance/MonthLocksController.cs:15-28;
+AttendancePayrollInputsController.cs:17-34;
+AttendancePayrollAttestationsController.cs:19-27;
+AttendanceCarryForwardControllers.cs:57-109.
+No connected readiness preview/finalization, locked input revisions, Finance
+receipt reconciliation or carry-forward web workflow. Reopen draft is stale;
+current backend no-reopen policy must be respected.
+
+28 | Configurable approval matrix and time-bound delegation | Missing | 0
+SRS APR-001/004.
+W/src/modules/hr/workspaces/people-services.ts:1093-1258.
+Existing hiring/change/salary/status decisions are real, but no configurable
+approval routing/delegation service consumer. Fixed approved authorities should
+not be described as a delivered configurable approval matrix.
+
+29 | All 14 SRS reports and real XLSX/PDF/CSV report-job/export/download | Missing | 0
+SRS 15, REP-001..003, AC-008.
+W/src/modules/hr/workspaces/reporting.ts:28-287 lists 14 report definitions;
+components/workspaces/ReportActions.tsx:21-27; reporting.ts:369 export-jobs.
+B/src/Cosmix.Api/Controllers/Attendance/AttendanceReportsController.cs:16-62
+has factual attendance/dashboard/job/status/download sources, unused by web.
+No generated report, job polling, protected report download or permitted export
+columns are implemented in the web panel. Private employee document download
+is a working separate function and must not be counted as report export.
+
+30 | Cross-workflow business/security/export/sensitive-access audit viewer | Partial | 0.5
+SRS 12.2, 15 Audit, AC-010.
+W/src/modules/hr/components/organization/OrganizationHistory.tsx:21;
+components/employee/ChangeHistory.tsx:16-24; hiring/SubmissionReview.tsx:57;
+components/requests/ChangeRequests.tsx:155-163 show working per-record histories.
+W/src/modules/hr/workspaces/reporting.ts:407-477 is prepared-only broad audit.
+Employee/organization decision/change histories supply a real subset; attendance,
+exports, access/security and generic scoped audit search are not connected.
+
+31 | In-app notification inbox/read state and document-expiry reminders | Missing | 0
+SRS HR-007, APR-005, 13 Notifications.
+W/src/modules/hr/workspaces/people-services.ts:1262-1333;
+self-service.ts:328-342.
+B/src/Cosmix.Api/Controllers/Notifications/MyNotificationsController.cs:9-36.
+Real own notification/read endpoints exist but no client reads/marks notifications.
+No connected employee document/certification expiry reminder workflow.
+
+32 | Employee's own WEB profile/attendance/shift/request/financial views | Missing | 0
+SRS 1.2 self-service web/mobile, ROLE-003, AC-006 web aspect.
+W/src/modules/hr/pages/EmployeeSelfServicePage.tsx:16-24 sends the fixed current
+employee ID into PreparedWorkspace, not a data source.
+W/src/modules/hr/workspaces/self-service.ts:16-342 defines 12 disconnected tabs.
+B has /me/attendance state/punches/sessions/calendar, /me/shift, own correction,
+leave, OT, site-report, zone and notification routes. No self-service business
+read/request is integrated. Own account/session security (group 1) is functional.
+
+33 | Supervisor/team/site-scoped authorized operational web views | Missing | 0
+SRS ROLE-002, 2 Site Supervisor, 1.2 supervisor-limited views.
+W/src/modules/hr/hooks/use-hr-access.ts:4-7 accepts only All scope.
+HrPreparedWorkspacePage.tsx:15 and AppLayout.tsx:77-80 require All HR employee-read
+for the remaining prepared operational workspaces. The newly routed site roster
+screen supports matching Site/All roster grants; AppLayout.tsx:22-24 exposes that
+menu to scoped roster users. There is still no actual supervisor team attendance,
+exceptions, site report verification or operational zone review client. Group 33
+measures these operational views; roster setup is group 15. This is missing intended
+access coverage, not a claimed server-side authorization bypass. Backend remains
+responsible for scope enforcement.
+
+Acceptance/release blockers
+- AC-001: complete employee activation cannot pass from current UI for new initial
+  role setup, due to mandatory-reason contract regression. Hiring approval itself
+  is connected; do not conflate that with mobile/account activation.
+- AC-002/003/005/005A/005B web portions: no usable web attendance source/review,
+  correction, face administration, zone and site reporting clients.
+- AC-004: no effective policy configuration/result display web workflow.
+- AC-006: own web business data still unavailable.
+- AC-007: Accounts cannot consume HR locked inputs through the current panel.
+- AC-008: all report exports remain disabled UI controls.
+- AC-009: status change administration exists, but effective punch/session
+  revocation and preserved source history require backend/mobile live checks.
+- AC-010: real employee/organization histories are visible; broad business,
+  attendance/export/sensitive-access audit UI remains partial.
+- Parent reran npm run verify after the concurrent source changes: lint PASS;
+  format:check FAIL, 15 files, including AppRoutes/AppLayout/new office files.
+  The previous common.ts no-control-regex failure is superseded by explicit
+  character checks in common.ts:9-12. Parent separately reran npm run build:
+  PASS, 2247 transformed modules. Build success does not clear the formatting
+  failure or prove live business acceptance.
+- Authenticated browser acceptance, fixture-complete employee lifecycle,
+  real scanner/private file behavior, SMS delivery, scope/IDOR checks, report
+  jobs/downloads, deployment schema and production provider configuration remain
+  unverified in this audit. Historical acceptance notes are not fresh evidence.
+
+Recommended reporting sentence
+"The narrow employee administration workspace is about 86% source-integrated,
+but the full HR/Attendance web scope is about 40% (39.4%) under an explicit 33-group
+workflow score. Most remaining menus are unsaved prepared forms. Current release
+acceptance is blocked by initial access assignment contract drift and pending authenticated onboarding/schema acceptance; operational attendance and payroll web flows are
+still mostly unconnected. Scheduling now has real routes and clients but its office
+schema/migration gate remains. These estimates are not production/UAT completion rates."
+
+Refreshed source hashes (SHA256, captured 2026-10-13 15:09:25 +05:00)
+W/src/app/router/AppRoutes.tsx
+23965597EB292179916C782C33BFDDBED498CFBD7404D6FC13926E1CE1237FB7
+W/src/layouts/AppLayout.tsx
+6BA8FF87B686D253B19DCB43247839AE2B63F54A9182B2A2C99A85CAB5D49448
+W/src/modules/attendance/index.ts
+7470337510563D260EF5A73C3E0F057F84F61F5DF718E55E84A777DFB28015A3
+W/src/modules/attendance/pages/OfficeRostersPage.tsx
+443BFB1D8ABA9810964A5A8E81BBF8FB1A3254E6C6D119B80AAF715DA6B1FB63
+W/src/modules/attendance/components/rosters/OfficeRosterForm.tsx
+CF802EE9D400B19C09E39201E62EDB7BC00B2C840D51D1DDE56EA1940E7FA01C
+W/src/modules/attendance/schemas/office-rosters.ts
+9D8A4B2CF741FDA744726545259E2890F53E9DF77B3F1E4F5C139FE43398FF4A
+W/src/modules/attendance/schemas/common.ts
+6B0ACD545B8E05573DA6EF8E8F0E6D93CFCBF19352625E92169CF23E6FEDB2EB

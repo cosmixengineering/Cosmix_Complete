@@ -1,0 +1,173 @@
+COSMIX FACE VERIFICATION - PHASE 1 INSPECTION AND DEPLOYMENT HOLD
+Inspection date: 19 October 2026, approximately 15:55-15:57 Asia/Karachi
+Target: 192.168.1.50, SSH port 22
+Account: dockeruser1
+
+DECISION
+Deployment has NOT started. Available RAM is insufficient to safely start the
+unmodified official CompreFace stack alongside a liveness component. No packages,
+models, images, containers, volumes, directories, or ERP code were installed or
+changed on the server. No service was restarted. No disk changes were made.
+
+SERVER COMPATIBILITY
+Hostname: ubuntu
+OS: Ubuntu 26.04.1 LTS, kernel 7.0.0-38-generic
+Architecture: x86_64
+Hypervisor: VMware
+CPU: 2 virtual CPUs, Intel Xeon E5-2660 v3; AVX and AVX2 present.
+The CPU instruction requirement documented for default CompreFace is met.
+Container and ONNX Runtime compatibility have not been tested on this host.
+
+MEMORY
+Total: 3,563,859,968 bytes (approximately 3.32 GiB)
+Used at final sample: 2,919,329,792 bytes (approximately 2.72 GiB)
+Available at final sample: 644,530,176 bytes (approximately 615 MiB)
+Swap: none
+Several GNOME desktop processes and desktop applications are using memory.
+None were stopped or changed.
+Official CompreFace master .env currently sets API -Xmx4g and admin -Xmx1g.
+These are heap maxima, not guaranteed allocations or an official RAM minimum.
+They exclude the recognition service, database, OS, and ONNX liveness runtime.
+Starting that stack with approximately 615 MiB available risks memory exhaustion.
+
+STORAGE
+Root device: /dev/mapper/ubuntu--vg-ubuntu--lv, ext4
+Filesystem size: 19,145,666,560 bytes (approximately 17.83 GiB)
+Used at final sample: 9,808,674,816 bytes
+Available: 8,408,719,360 bytes (approximately 7.83 GiB)
+Reported use: 54%; the earlier 97% measurement is not current.
+Before/after inspection: approximately 54% used / 7.9G available in df -h;
+no deployment storage was consumed. Small normal OS activity may vary usage.
+Docker data: /var/lib/docker, on the same root filesystem.
+/dev/sda: 40 GiB virtual disk; /dev/sda3 is approximately 18.2 GiB.
+LVM: ubuntu-vg / ubuntu-lv; zero free extents in the existing volume group.
+Approximately 20 GiB lies beyond the last current partition on /dev/sda.
+Read-only fdisk reported a GPT size mismatch and backup GPT not at disk end.
+No GPT repair, partition write, resize, filesystem operation, or cleanup occurred.
+/dev/sdb: another 40 GiB disk; no partition table listed. Its ownership and
+contents are not established; it must not be treated as disposable or formatted.
+Image extraction, model, database, log, and update capacity still require sizing.
+
+ACCESS AND DOCKER
+SSH password authentication succeeded using the user-provided credential.
+The credential is not recorded in this report or any repository file.
+dockeruser1 belongs to the sudo group but not the docker group.
+Direct Docker socket access was denied.
+Initial sudo -n true required interactive authentication; this did NOT establish
+that sudo permissions were missing.
+Authenticated sudo -l confirmed (ALL : ALL) ALL; subsequent sudo -n true passed.
+Docker inspection used existing sudo permissions; no sudoers/group edits occurred.
+Docker Engine: 29.9.1, build dfc520d
+Docker Compose: v5.6.0
+Docker service: active; privileged Docker API inspection succeeded.
+Storage driver: overlayfs
+Running containers: 0
+Existing containers preserved:
+  jovial_noyce - hello-world - Exited (0), approximately 2 days old
+  upbeat_wu   - hello-world - Exited (0), approximately 2 days old
+Existing images: hello-world:latest only (pre-existing, not pulled by this task)
+Docker system df: images 36.94 kB; containers 8.192 kB; local volumes 0;
+build cache 0. All existing objects were preserved.
+Existing networks: bridge, host, none
+Default bridge: 172.17.0.0/16; gateway 172.17.0.1
+
+PORTS AND DEPLOYMENT LOCATIONS
+Observed listeners: SSH 22; remote desktop 3389; loopback DNS 53 and CUPS 631.
+TCP port 8000 was not listening at inspection time.
+CompreFace URL: none; http://192.168.1.50:8000 is only a proposed future URL.
+/opt/cosmix and /opt/cosmix/face-verification do not exist; neither was created.
+/opt and /srv are root-owned; deployment there requires existing sudo access.
+No ERP compose files or .csproj files were found in the limited /opt, /srv,
+/home, /var/www scan (maximum depth 4). No ERP-named deployment directories
+were found by the limited name scan. This is not proof no ERP exists elsewhere.
+No matching Cosmix/.NET/SQL Server/nginx/Apache/Postgres service was found in
+the inspected systemd unit listing. Docker and containerd were active.
+
+SAFE RESOURCE PROPOSAL - NOT EXECUTED
+1. Have the VMware administrator allocate 8 GiB RAM and preferably 4 vCPUs as
+   a starting test allocation. This is an engineering proposal, not a vendor
+   minimum or validated production capacity. Check hypervisor capacity first;
+   coordinate downtime if hot-add is unavailable. Do not power off this VM
+   without approval.
+2. Obtain an approved recoverable VM backup/snapshot and confirm storage owners.
+3. With explicit disk-change approval, verify and repair the expanded /dev/sda
+   GPT layout, grow partition 3 into the already available tail space, then grow
+   its LVM PV, root LV, and ext4 filesystem. Expected root capacity would be
+   approximately 38 GiB; exact capacity must be checked before execution.
+4. Keep /dev/sdb and all existing Docker objects untouched. No deletion is
+   proposed. Disk expansion is not easily reversed; rollback requires a tested
+   recovery method, not an attempt to shrink the live root filesystem.
+5. Repeat Phase 1 resource checks after any approved resource change. Only then
+   select and size an official versioned release and proceed with Phase 2.
+
+COMPREFACE STATUS
+Installed: No CompreFace installation found in the inspected Docker inventory;
+           no installation performed by this task.
+Running: No
+Release selected: Not yet; official master configuration was read for sizing.
+Container names / network / volume: none created
+Deployment directory / Compose / environment files: none created
+Browser URL: not active
+API status: not deployed / not tested
+Persistence and controlled restart: NOT RUN
+
+ONNX LIVENESS STATUS
+Model selected: No
+License and commercial-use assessment: not started
+Model downloaded: No
+Runtime installed by this task: No; pre-existing .NET runtime not assessed
+Inference tested: NOT RUN
+Real anti-spoofing tests: NOT RUN
+No passive liveness capability or protection is claimed.
+
+ERP INTEGRATION STATUS
+Interfaces implemented by this task: none
+Actual API integration: not started
+End-to-end attendance verification: NOT RUN
+Backend repository instructions and Git status were inspected locally only.
+Existing uncommitted employee-related changes were preserved.
+No attendance, authentication, employee, database, migration, or API files changed.
+No Git commits, pushes, merges, or PRs were created.
+Repository implementation and architecture inspection remain pending after the
+server resource gate; existing face-verification contracts were not assessed.
+
+SECURITY AND TESTS
+No new credentials, API keys, public endpoints, or biometric storage were created.
+TLS, JWT integration, server-to-server authentication, challenge binding, rate
+limits, file validation, biometric encryption/retention/deletion, enrollment
+authorization, auditing, and fail-closed behavior remain unimplemented/unverified
+for this proposed integration.
+The required test cases are all NOT RUN because deployment is held:
+  1. Genuine authorized employee capture
+  2. Unregistered face
+  3. Wrong employee face
+  4. Printed photograph
+  5. Screen replay
+  6. Blurry image
+  7. Multiple faces
+  8. No face
+  9. Invalid file format
+ 10. Invalid/expired verification session
+ 11. CompreFace unavailable
+ 12. Liveness unavailable
+ 13. Repeated verification attempts
+ 14. Persistence following controlled restart
+No consented capture dataset, approved model, or validated thresholds were used.
+Models, licensing, secure credential provisioning, policy values, and real attack
+validation remain further gates. Passive image liveness cannot guarantee
+protection against sophisticated replays, deepfakes, or capture injection.
+
+ROLLBACK AND NEXT ACTION
+No deployment rollback is required: nothing was installed or reconfigured.
+Existing services, databases, images, containers, and volumes were preserved.
+Next required external action: arrange the proposed VMware memory allocation,
+then repeat read-only resource inspection. Disk expansion requires separate
+explicit approval and the backup/recovery preparation described above.
+The system is NOT production-ready.
+
+OFFICIAL SOURCES CHECKED
+https://github.com/exadel-inc/CompreFace
+https://github.com/exadel-inc/CompreFace/blob/master/docs/Installation-options.md
+https://github.com/exadel-inc/CompreFace/blob/master/docs/Configuration.md
+https://raw.githubusercontent.com/exadel-inc/CompreFace/master/.env
+https://raw.githubusercontent.com/exadel-inc/CompreFace/master/docker-compose.yml

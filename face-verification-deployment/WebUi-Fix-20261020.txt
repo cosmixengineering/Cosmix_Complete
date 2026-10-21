@@ -1,0 +1,59 @@
+COMPRE FACE LOGIN /core/status404 FIX - 20 OCTOBER2026
+
+Cause and correction
+--------------------
+The screenshot's repeated404 is reproducible. The core itself returns200 with
+status=OK, but the custom Nginx /core/404 rule also blocked /core/status. The
+official1.2.0 login bootstrap depends on its status and plugin metadata. Earlier
+login HTTP200 diagnostics checked the document only and missed this dependency.
+
+Added the internal frscore upstream and an exact /core/status location forwarding
+to the real core /status. Only GET/HEAD are allowed. The remaining raw /core/
+paths still404; POST /core/status403; anonymous administration remains401.
+No fabricated health response, raw core inference exposure or API-key change.
+
+Deployment
+----------
+Local source: face-verification-deployment/nginx.conf.
+Live source: /opt/cosmix/face-verification/nginx.conf.
+Both SHA256:38d64e08d40dc1c40389073642cb14076903f128080e23e88db13a80722fce9a.
+Candidate syntax validated inside the existing frontend before activation, then
+live configuration validated and Nginx gracefully reloaded. Containers/SQL/models
+were not restarted or reconfigured. Existing clients/API are preserved.
+Server rollback source: nginx.conf.before-ui-status-20261020 in that same folder.
+Rollback uses overwrite of the existing mounted file, nginx -t, then nginx -s reload;
+renaming a replacement file would leave the old bind-mounted inode in the container.
+
+Certificate warning
+-------------------
+The private CA was not originally trusted by Chrome's Windows user. The exact
+previously pinned public CA was verified before import:
+  PEM SHA256:bcf8c0667a307f3c6e46928d97ea8394884a144cc02d4f674e268a11e697d89f
+  Subject:O=Cosmix local deployment,CN=Cosmix Face Local CA
+  Certificate thumbprint:B1736F96864483E60EDE4625BA3A69C89A0656F6
+The owner accepted the Windows Security Warning. It is now present in CurrentUser
+Root; LocalMachine trust and existing certificates were not changed. The backend
+still uses its independent pinned private-root policy and normal hostname checks.
+Normal Invoke-WebRequest HTTPS validation now succeeds200/statusOK without any
+certificate-validation bypass. PrivateCA has no public CRL: default Windows curl
+requires revocation information and returned CRYPT_E_NO_REVOCATION_CHECK. No global
+revocation policy was changed. Other laptops/phones need their own certificate trust.
+
+Verification
+------------
+Updated docs/attendance-capture/VerifyDeployedFaceServices.cs:
+  Before fix:12pass/2fail (bootstrap200JSON and read-only status missing).
+  After fix:14pass/0fail. Existing real no-face and credential rejection behavior,
+  model/vault readiness and pinned privateTLS checks still pass.
+Separate anonymous document/dependency check:13pass, including all seven declared
+JS/CSS files, real core status/plugin metadata, raw-core denial and admin auth.
+Default Windows HTTPS validation:pass after verified CurrentUser CA trust.
+Logs in C:/Users/Huma.Khan/.codex/artifacts/cosmix-face-deep-20261020/:
+  ui-status-red.log,ui-status-green.log,ui-assets-green.log,ui-user-trust.log.
+
+Visual browser automation was unavailable (browser tool asset initialization
+failed; automatic approval review blocked direct headless Chrome launch with only
+"blocked by policy" as its reason). No rendered-browser/login-session success is
+claimed. The safer HTTP/dependency checks above validate the corrected failure.
+Refresh https://192.168.1.50:8000/login?redirect=%2F using Ctrl+Shift+R in the user's
+browser; no mobile feature was started and no real employee biometric was used.

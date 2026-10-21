@@ -1,0 +1,65 @@
+HR SRS audit verification record
+Date: 13 October 2026 Asia/Karachi
+Authoritative supplied requirement source: C:/Users/Huma.Khan/Downloads/HR_Attendance_Employee_Mobile_SRS_v1.2.docx
+Primary backend assessed: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix-backend
+Primary web assessed: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix_frotned
+Mobile assessed: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix_mobile
+No product source, SQL/database, settings, account, provider or Git write performed by this audit. Build outputs were produced in frontend dist/obj and a temporary backend output directory. Audit text files are separate.
+
+Fresh checks executed during this audit:
+1. dotnet build Cosmix.Backend.sln -c Release --no-restore -m:1 -p:UseSharedCompilation=false -p:OutDir=<temporary audit output>/ -v:minimal: PASS; 0 warnings, 0 errors; all four assemblies built.
+2. npm.cmd run verify: FAIL; ESLint src/modules/attendance/schemas/common.ts:9:23 no-control-regex; one error, no warnings. Verify stopped before formatting/build.
+3. npm.cmd run build: PASS; TypeScript and Vite; 2211 modules transformed. Existing >500kB JavaScript chunk warning remains.
+4. npm.cmd run format:check: FAIL; ten attendance module files require formatting. No formatting changes applied.
+5. Source-only comparison of nested and external backend (.cs/.csproj, bin/obj excluded): nested 711 files, external 405 files, nested-only 306, external-only 0, differing shared files 53. Counts support choosing nested copy; are not completion metrics.
+6. Mobile src inventory: only src/app/App.tsx is a non-.gitkeep file, and its entry returns null. No business UI/API workflow counted.
+
+Not executed in this audit:
+Authenticated browser or API acceptance; real SMS; ClamAV live detection; SQL connection/migration/transactions/concurrency; biometric inference/liveness/replay/device acceptance; native Android/iOS build; load or restore drill. Existing dated verification documents are historical evidence, not fresh passed tests.
+
+Source SHA256 at audit inspection:
+cosmix_frotned/src/app/router/AppRoutes.tsx | 2f0c18f83296595fdaba197b9e18eb9ef3a6bbc6c430c9be28a4d9c60668b763
+cosmix_frotned/src/modules/hr/components/workspaces/PreparedWorkspace.tsx | 9d9b88a3013aab377601211e4aab00901afb3494cb12a946266dca5b19d0d938
+cosmix_frotned/src/modules/hr/components/approvals/EmployeeAccessSetup.tsx | 210b28e350afb7760281122e5b79ba52e949f72e69a6a6847a7af1add0ae6431
+cosmix_frotned/src/modules/hr/components/approvals/AdditionalRoleAssignment.tsx | f43fb40622b4fec5a8e09b438c29e77cdc6688fca5fc24c95c34af64da137377
+cosmix_frotned/src/modules/hr/schemas/access-setup.ts | 4f2ef8e5dc863de3a86a6ec345e8c739b600974c7b60be377920da3da38fbced
+cosmix_frotned/src/modules/attendance/schemas/common.ts | 6abb5b8664c0035f5e4a44360b55229ebca93bb661f226c1b8aba74f49a4bd07
+cosmix_mobile/src/app/App.tsx | 0b5e3e858d9ec81d2c4fed98850a4502c4fc8890d09c797e62758745ad6beb1b
+cosmix-backend/src/Cosmix.Application/Authentication/Access/AccessContracts.cs | 1d3aff2737fcb15a9fe4f7c7edcbec0dbea30e13c22b89ac205f8f8b946b21fc
+cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendanceMonthLockFinancialReader.cs | 9e49d5ca84176ac4149e0f0106d4e800deb8a700ea3b245ff4b20382cd77e63c
+cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/AttendanceCaptureRegistration.cs | 599c0f5def263ea4cb1188a89ebf39444a125343209d6ab0da08ab3a4752cd61
+cosmix-backend/src/Cosmix.Infrastructure/Database/CosmixDbContext.cs | 3052da6442d90d2d4a8a26fc8f86083191ae913d603071834688b7e81498b255
+cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/CosmixDbContextModelSnapshot.cs | a889e0f68a0ca5603ed114e3ea22bf8ce4557f2c70fe682eb15f83e88d6197ac
+
+Latest refresh after concurrent source changes
+The AppRoutes and common schema hashes changed during consolidation. Current scheduling routes and a new office roster page were inspected; web reviewer updated feature group15 from Missing to Partial. This changes the web source score from37.88% to39.39%; the narrower employee admin score remains85.71%.
+Latest npm run verify: lint PASS, formatting FAIL15 files; no build phase reached. Latest independent npm run build: PASS2247 modules, TypeScript/Vite with existing large chunk warning. Initial lint1/format10 failures above are historical and superseded. No source fixes were made by this audit.
+Current endpoint/guard proof still shows missing required role-assignment Reason, absent office migration/snapshot, office capture provenance gap, production face provider unavailability and legal month-lock gate.
+Refreshed final source hashes:
+cosmix_frotned/src/app/router/AppRoutes.tsx | 23965597eb292179916c782c33bfddbed498cfbd7404d6fc13926e1ce1237fb7
+cosmix_frotned/src/layouts/AppLayout.tsx | 6ba8ff87b686d253b19dcb43247839ae2b63f54a9182b2a2c99a85cab5d49448
+cosmix_frotned/src/modules/attendance/schemas/common.ts | 6b0acd545b8e05573da6ef8e8f0e6d93cfcbf19352625e92169cf23e6fedb2eb
+cosmix_frotned/src/modules/attendance/index.ts | 7470337510563d260ef5a73c3e0f057f84f61f5df718e55e84a777dfb28015a3
+cosmix_frotned/src/modules/attendance/pages/OfficeRostersPage.tsx | 443bfb1d8aba9810964a5a8e81bbf8fb1a3254e6c6d119b80aaf715da6b1fb63
+cosmix_frotned/src/modules/attendance/components/rosters/OfficeRosterForm.tsx | cf802ee9d400b19c09e39201e62edb7bc00b2c840d51d1dde56ea1940e7fa01c
+
+FINAL complete verification result
+Fresh npm.cmd run verify exited0: ESLint PASS, Prettier PASS all matched files, TypeScript PASS, Vite production build PASS2247 modules. Existing large combined chunk warning remains. Prior failures are superseded, not erased. Final source review found formatting-only changes in the inspected setup/router/schema paths; functional scope/Reason blocker/office migration gap are unchanged. No product source edits by this audit.
+
+Final source SHA256 snapshot:
+cosmix_frotned/src/app/router/AppRoutes.tsx | 91f660d74febfb8a660e3118efcea3957389078848e6e1e78a11a91166aa098f
+cosmix_frotned/src/modules/hr/components/workspaces/PreparedWorkspace.tsx | 9d9b88a3013aab377601211e4aab00901afb3494cb12a946266dca5b19d0d938
+cosmix_frotned/src/modules/hr/components/approvals/EmployeeAccessSetup.tsx | 210b28e350afb7760281122e5b79ba52e949f72e69a6a6847a7af1add0ae6431
+cosmix_frotned/src/modules/hr/components/approvals/AdditionalRoleAssignment.tsx | f43fb40622b4fec5a8e09b438c29e77cdc6688fca5fc24c95c34af64da137377
+cosmix_frotned/src/modules/hr/schemas/access-setup.ts | 4f2ef8e5dc863de3a86a6ec345e8c739b600974c7b60be377920da3da38fbced
+cosmix_frotned/src/modules/attendance/schemas/common.ts | 6ba48fffcb4587b8e1cf6f07a49c723e73403f6c9bfeea61d2c6a147d1255707
+cosmix_mobile/src/app/App.tsx | 0b5e3e858d9ec81d2c4fed98850a4502c4fc8890d09c797e62758745ad6beb1b
+cosmix-backend/src/Cosmix.Application/Authentication/Access/AccessContracts.cs | 1d3aff2737fcb15a9fe4f7c7edcbec0dbea30e13c22b89ac205f8f8b946b21fc
+cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendanceMonthLockFinancialReader.cs | 9e49d5ca84176ac4149e0f0106d4e800deb8a700ea3b245ff4b20382cd77e63c
+cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/AttendanceCaptureRegistration.cs | 599c0f5def263ea4cb1188a89ebf39444a125343209d6ab0da08ab3a4752cd61
+cosmix-backend/src/Cosmix.Infrastructure/Database/CosmixDbContext.cs | 3052da6442d90d2d4a8a26fc8f86083191ae913d603071834688b7e81498b255
+cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/CosmixDbContextModelSnapshot.cs | 51895d5397de4653e313ca6eb442ad620b62cf10818cc79f7003f5b82420d41a
+cosmix_frotned/src/layouts/AppLayout.tsx | 850c095f97a5407d6ff5b3af364ae76507fd6c289428eb211a2e4b4f0f253121
+cosmix_frotned/src/modules/attendance/index.ts | 7470337510563d260ef5a73c3e0f057f84f61f5df718e55e84a777dfb28015a3
+cosmix_frotned/src/modules/attendance/pages/OfficeRostersPage.tsx | 189a0d1991af92ba7f4a586658c16debcaac7c78711ce81e45b6594cc998fd6c
+cosmix_frotned/src/modules/attendance/components/rosters/OfficeRosterForm.tsx | 418b17a6f52d94e83f6d024a0756af1331064594c82fe1c0d0027ffcc7caa787

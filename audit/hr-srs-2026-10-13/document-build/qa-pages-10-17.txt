@@ -1,0 +1,20 @@
+VISUAL QA — WORD PDF RENDER, PAGES 10–17
+Each of page-10.png through page-17.png was individually opened using tools.view_image with detail=original. No thumbnail-only review. Source document, PDF, PNGs, Word/LibreOffice and build files were not changed. Only this QA record was written.
+
+Page 10 — PASS. A05/A06/A07 headings have following text, paragraphs and acceptance criteria remain legible, body/footer have clearance. No clipping, overlap or orphan heading. A07.T2 continues on page 11; see that pagination issue.
+
+Page 11 — PAGINATION DEFECT. Only A07.T2, a two-line acceptance paragraph, appears at the top; virtually all remaining body area is blank. Part B begins page 12. This is an undesirable near-empty spillover page. Recommended repair: fit A07.T2 on page 10 by adjusting preceding layout, or move more A07 content to page 11. Text/footer itself is readable and unclipped.
+
+Page 12 — PASS. Part B heading, owner/dependencies/current state/touchpoints, B01 and B02 have readable line wrapping and margin clearance. B02 Acceptance stays with its first criterion. No clipping, overlap or orphan heading.
+
+Page 13 — PASS. B03/B04/B05 headings stay with metadata and actionable text. Long SRS metadata line remains within the text area. No clipping, overlap or unreadable text. B05 acceptance starts on the following page as a coherent continuation, not a dangling heading.
+
+Page 14 — NUMBERED-LINE DEFECT. B07.3 is embedded in B07.2's paragraph immediately after the ending phrase 'accepted punch.' rather than starting its own actionable paragraph. The render reads '...accepted punch.B07.3 Publish...'. Split B07.3 into a new paragraph with the same task formatting and spacing. Other body text and headings are legible; no clipping/overlap/orphan heading.
+
+Page 15 — PASS WITH SPARSITY NOTE. B08.2/B08.3 and both acceptance criteria continue correctly and are readable. The lower roughly three-quarters of the page is blank because the next part starts a new page; this is a sparse chapter ending, less severe than page 11's single-paragraph spillover. No entirely blank page, clipping, overlap or orphan heading.
+
+Page 16 — PASS. Part C, touchpoints, C01/C02 and acceptance criteria are well aligned and readable; footer clearance is adequate. No clipping, overlap or orphan heading.
+
+Page 17 — PASS FOR LAYOUT; MINOR READABILITY FIX. C03/C04/C05 headings and criteria remain with content; C05.T1 is readable above the footer. No clipping or overlap. Add missing spaces in C04.T1 ('counts30,31,60,61,120,121' -> 'counts 30, 31, 60, 61, 120, 121') and C05.T1 ('A waits10:00-10:20' -> 'A waits 10:00-10:20'; 'B arrives10:45' -> 'B arrives 10:45'). These are text-spacing defects, not raster/render clipping.
+
+No tables occur on these eight reviewed pages, so table readability is not applicable. No fully blank page or clipped/overlapping text was found. Repair page 11 pagination and page 14 numbered-paragraph separation before final delivery; then rerender and review the affected pages and following page breaks.

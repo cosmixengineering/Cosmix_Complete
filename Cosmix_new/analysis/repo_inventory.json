@@ -1,0 +1,1378 @@
+{
+  "commit": "c4500264431523f7db7960bb3a759a15ca60f08e",
+  "trackedFiles": 4512,
+  "trackedCsFiles": 3349,
+  "frontendTsTsxFiles": 928,
+  "endpointSourceFiles": 72,
+  "endpointMappingCallsInProgram": 71,
+  "httpRegistrationsInEndpointSourceFiles": 587,
+  "applicationFeatures": [
+    "Accounting",
+    "ApiKeys",
+    "Audit",
+    "Auth",
+    "Blog",
+    "Brands",
+    "Cart",
+    "Checkout",
+    "Crm",
+    "CustomerGroups",
+    "Customers",
+    "Dashboard",
+    "DeveloperLogs",
+    "EmailTemplates",
+    "Estimation",
+    "FeatureManagement",
+    "FilterAnalytics",
+    "Hr",
+    "Inventory",
+    "LegalPages",
+    "Manufacturing",
+    "Media",
+    "Notifications",
+    "Orders",
+    "Payments",
+    "Permissions",
+    "PlatformSettings",
+    "Pm",
+    "ProductAttributes",
+    "ProductFilter",
+    "ProductFilterIndex",
+    "Products",
+    "Promotions",
+    "Reports",
+    "Reviews",
+    "Roles",
+    "Search",
+    "Shipping",
+    "Stock",
+    "TenantSettings",
+    "Tenants",
+    "Users",
+    "Webhooks",
+    "Wishlists"
+  ],
+  "domainAreas": [
+    "Accounting",
+    "Analytics",
+    "Cart",
+    "Checkout",
+    "Commercial",
+    "Common",
+    "Complaints",
+    "Crm",
+    "Customer",
+    "Engineering",
+    "Estimation",
+    "Fsm",
+    "Fulfillment",
+    "Helpdesk",
+    "Hr",
+    "Intake",
+    "Inventory",
+    "Invoicing",
+    "Manufacturing",
+    "MasterData",
+    "Order",
+    "Payment",
+    "Pm",
+    "Procurement",
+    "Product",
+    "Promotion",
+    "Qa",
+    "Review",
+    "Shipping",
+    "Stock",
+    "Stores",
+    "Webhook",
+    "Wishlist"
+  ],
+  "portalAreas": [
+    "blogs",
+    "brands",
+    "crm",
+    "customer-groups",
+    "customers",
+    "dashboard",
+    "hr",
+    "inventory",
+    "media",
+    "notifications",
+    "orders",
+    "payments",
+    "pm",
+    "products",
+    "promotions",
+    "reports",
+    "reviews",
+    "settings",
+    "shipping",
+    "systems",
+    "user-access",
+    "welcome",
+    "wishlists"
+  ],
+  "appMigrationFiles": 28,
+  "testCsFiles": 966,
+  "customDomains": [
+    {
+      "domain": "Accounting",
+      "entitySourceFiles": 4,
+      "entityClasses": [
+        "Account",
+        "JournalEntry",
+        "JournalLine"
+      ],
+      "applicationSourceFiles": 35,
+      "handlerSourceFiles": 12,
+      "validatorSourceFiles": 8,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Commercial",
+      "entitySourceFiles": 2,
+      "entityClasses": [
+        "CustomerPurchaseOrder",
+        "ExceptionRecord",
+        "PoComparisonResult"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Complaints",
+      "entitySourceFiles": 2,
+      "entityClasses": [
+        "CustomerComplaint"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Engineering",
+      "entitySourceFiles": 1,
+      "entityClasses": [
+        "Submittal"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Estimation",
+      "entitySourceFiles": 4,
+      "entityClasses": [
+        "Boq",
+        "BoqItem",
+        "BoqRevision"
+      ],
+      "applicationSourceFiles": 34,
+      "handlerSourceFiles": 11,
+      "validatorSourceFiles": 9,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Fsm",
+      "entitySourceFiles": 2,
+      "entityClasses": [
+        "FieldJob"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Fulfillment",
+      "entitySourceFiles": 3,
+      "entityClasses": [
+        "DeliveryChallan",
+        "DeliveryChallanItem"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Helpdesk",
+      "entitySourceFiles": 2,
+      "entityClasses": [
+        "HelpdeskTicket",
+        "Ticket",
+        "TicketComment"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Intake",
+      "entitySourceFiles": 1,
+      "entityClasses": [
+        "IntakeMessage"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Invoicing",
+      "entitySourceFiles": 4,
+      "entityClasses": [
+        "PaymentRecord",
+        "SalesInvoice",
+        "SalesInvoiceItem"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Manufacturing",
+      "entitySourceFiles": 5,
+      "entityClasses": [
+        "BillOfMaterial",
+        "BillOfMaterialItem",
+        "ProductionOrder",
+        "ProductionOrderItem"
+      ],
+      "applicationSourceFiles": 56,
+      "handlerSourceFiles": 19,
+      "validatorSourceFiles": 15,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "MasterData",
+      "entitySourceFiles": 1,
+      "entityClasses": [
+        "UnitConversion"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Procurement",
+      "entitySourceFiles": 4,
+      "entityClasses": [
+        "PurchaseOrder",
+        "PurchaseOrderItem",
+        "Supplier"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Qa",
+      "entitySourceFiles": 1,
+      "entityClasses": [
+        "QaInspection"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Stock",
+      "entitySourceFiles": 5,
+      "entityClasses": [
+        "StockIndent",
+        "StockIndentItem",
+        "StockTransfer",
+        "StockTransferItem"
+      ],
+      "applicationSourceFiles": 24,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    },
+    {
+      "domain": "Stores",
+      "entitySourceFiles": 2,
+      "entityClasses": [
+        "GoodsReceiptNote",
+        "GoodsReceiptNoteItem"
+      ],
+      "applicationSourceFiles": 0,
+      "handlerSourceFiles": 0,
+      "validatorSourceFiles": 0,
+      "directDomainFeatureTestFiles": 0,
+      "classesPresentInSnapshot": []
+    }
+  ],
+  "endpoints": [
+    {
+      "file": "src/NOIR.Web/Endpoints/AccountEndpoints.cs",
+      "groups": [
+        "/api/accounting/accounts"
+      ],
+      "httpRegistrations": 5,
+      "permissionReferences": [
+        "AccountingAccountsManage",
+        "AccountingAccountsRead"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.Accounting"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ApiKeyEndpoints.cs",
+      "groups": [
+        "/api/auth/me/api-keys",
+        "/api/admin/api-keys"
+      ],
+      "httpRegistrations": 7,
+      "permissionReferences": [
+        "ApiKeysCreate",
+        "ApiKeysDelete",
+        "ApiKeysRead"
+      ],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/AuditEndpoints.cs",
+      "groups": [
+        "/api/audit"
+      ],
+      "httpRegistrations": 3,
+      "permissionReferences": [
+        "AuditRead"
+      ],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/AuthEndpoints.cs",
+      "groups": [
+        "/api/auth"
+      ],
+      "httpRegistrations": 18,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/BillOfMaterialEndpoints.cs",
+      "groups": [
+        "/api/manufacturing/boms"
+      ],
+      "httpRegistrations": 9,
+      "permissionReferences": [
+        "ManufacturingBomsCreate",
+        "ManufacturingBomsDelete",
+        "ManufacturingBomsRead",
+        "ManufacturingBomsUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.ManufacturingSub.Boms"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/BlogEndpoints.cs",
+      "groups": [
+        "/api/blog/posts",
+        "/api/blog/categories",
+        "/api/blog/tags"
+      ],
+      "httpRegistrations": 20,
+      "permissionReferences": [
+        "BlogCategoriesCreate",
+        "BlogCategoriesDelete",
+        "BlogCategoriesRead",
+        "BlogCategoriesUpdate",
+        "BlogPostsCreate",
+        "BlogPostsDelete",
+        "BlogPostsPublish",
+        "BlogPostsRead",
+        "BlogPostsUpdate",
+        "BlogTagsCreate",
+        "BlogTagsDelete",
+        "BlogTagsRead",
+        "BlogTagsUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Content.Blog",
+        "ModuleNames.Content.Blog",
+        "ModuleNames.Content.Blog"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/BoqEndpoints.cs",
+      "groups": [
+        "/api/estimation/boqs"
+      ],
+      "httpRegistrations": 11,
+      "permissionReferences": [
+        "EstimationBoqsApprove",
+        "EstimationBoqsCreate",
+        "EstimationBoqsDelete",
+        "EstimationBoqsRead",
+        "EstimationBoqsUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.Estimation"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/BrandEndpoints.cs",
+      "groups": [
+        "/api/brands"
+      ],
+      "httpRegistrations": 5,
+      "permissionReferences": [
+        "BrandsCreate",
+        "BrandsDelete",
+        "BrandsRead",
+        "BrandsUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Brands"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/CartEndpoints.cs",
+      "groups": [
+        "/api/cart"
+      ],
+      "httpRegistrations": 7,
+      "permissionReferences": [],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Cart"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/CheckoutEndpoints.cs",
+      "groups": [
+        "/api/checkout"
+      ],
+      "httpRegistrations": 7,
+      "permissionReferences": [
+        "OrdersRead",
+        "OrdersWrite"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Checkout"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ComplaintEndpoints.cs",
+      "groups": [
+        "/api/after-sales/complaints"
+      ],
+      "httpRegistrations": 5,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/CrmActivityEndpoints.cs",
+      "groups": [
+        "/api/crm/activities"
+      ],
+      "httpRegistrations": 5,
+      "permissionReferences": [
+        "CrmActivitiesCreate",
+        "CrmActivitiesDelete",
+        "CrmActivitiesRead",
+        "CrmActivitiesUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.Crm"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/CrmCompanyEndpoints.cs",
+      "groups": [
+        "/api/crm/companies"
+      ],
+      "httpRegistrations": 5,
+      "permissionReferences": [
+        "CrmCompaniesCreate",
+        "CrmCompaniesDelete",
+        "CrmCompaniesRead",
+        "CrmCompaniesUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.Crm"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/CrmContactEndpoints.cs",
+      "groups": [
+        "/api/crm/contacts"
+      ],
+      "httpRegistrations": 5,
+      "permissionReferences": [
+        "CrmContactsCreate",
+        "CrmContactsDelete",
+        "CrmContactsRead",
+        "CrmContactsUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.Crm"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/CustomerEndpoints.cs",
+      "groups": [
+        "/api/customers"
+      ],
+      "httpRegistrations": 18,
+      "permissionReferences": [
+        "CustomersCreate",
+        "CustomersDelete",
+        "CustomersManage",
+        "CustomersRead",
+        "CustomersUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Customers"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/CustomerGroupEndpoints.cs",
+      "groups": [
+        "/api/customer-groups"
+      ],
+      "httpRegistrations": 7,
+      "permissionReferences": [
+        "CustomerGroupsCreate",
+        "CustomerGroupsDelete",
+        "CustomerGroupsManageMembers",
+        "CustomerGroupsRead",
+        "CustomerGroupsUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.CustomerGroups"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/CustomerPoEndpoints.cs",
+      "groups": [
+        "/api/commercial/customer-pos"
+      ],
+      "httpRegistrations": 3,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/DashboardEndpoints.cs",
+      "groups": [
+        "/api/dashboard"
+      ],
+      "httpRegistrations": 5,
+      "permissionReferences": [
+        "DashboardRead",
+        "OrdersRead"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Orders",
+        "ModuleNames.Content.Blog",
+        "ModuleNames.Ecommerce.Inventory"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/DepartmentEndpoints.cs",
+      "groups": [
+        "/api/hr/departments"
+      ],
+      "httpRegistrations": 6,
+      "permissionReferences": [
+        "HrDepartmentsCreate",
+        "HrDepartmentsDelete",
+        "HrDepartmentsRead",
+        "HrDepartmentsUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.HrSub.Departments"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/DevEndpoints.cs",
+      "groups": [
+        "/api/dev"
+      ],
+      "httpRegistrations": 2,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/DeveloperLogEndpoints.cs",
+      "groups": [
+        "/api/admin/developer-logs"
+      ],
+      "httpRegistrations": 13,
+      "permissionReferences": [
+        "SystemAdmin"
+      ],
+      "featureGates": [
+        "ModuleNames.Analytics.DeveloperLogs"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/EmailTemplateEndpoints.cs",
+      "groups": [
+        "/api/email-templates"
+      ],
+      "httpRegistrations": 7,
+      "permissionReferences": [
+        "EmailTemplatesRead",
+        "EmailTemplatesUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Platform.EmailTemplates"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/EmployeeEndpoints.cs",
+      "groups": [
+        "/api/hr/employees"
+      ],
+      "httpRegistrations": 14,
+      "permissionReferences": [
+        "HrEmployeesCreate",
+        "HrEmployeesRead",
+        "HrEmployeesUpdate",
+        "HrTagsManage"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.HrSub.Employees"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/EmployeeTagEndpoints.cs",
+      "groups": [
+        "/api/hr/tags"
+      ],
+      "httpRegistrations": 8,
+      "permissionReferences": [
+        "HrTagsManage",
+        "HrTagsRead"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.HrSub.Tags"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/EngineeringEndpoints.cs",
+      "groups": [
+        "/api/engineering/submittals"
+      ],
+      "httpRegistrations": 3,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ExecutiveDashboardEndpoints.cs",
+      "groups": [
+        "/api/dashboard/executive"
+      ],
+      "httpRegistrations": 1,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/FeatureManagementEndpoints.cs",
+      "groups": [
+        "/api/features"
+      ],
+      "httpRegistrations": 5,
+      "permissionReferences": [
+        "FeaturesRead",
+        "FeaturesUpdate",
+        "TenantSettingsRead",
+        "TenantSettingsUpdate"
+      ],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/FeedEndpoints.cs",
+      "groups": [],
+      "httpRegistrations": 4,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/FieldJobEndpoints.cs",
+      "groups": [
+        "/api/fsm/jobs"
+      ],
+      "httpRegistrations": 6,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/FileEndpoints.cs",
+      "groups": [],
+      "httpRegistrations": 1,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/FilterAnalyticsEndpoints.cs",
+      "groups": [
+        "/api/analytics/filter-events"
+      ],
+      "httpRegistrations": 2,
+      "permissionReferences": [
+        "ProductsRead"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Attributes"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/FulfillmentEndpoints.cs",
+      "groups": [
+        "/api/fulfillment/challans",
+        "/api/stores/grn"
+      ],
+      "httpRegistrations": 5,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/IntakeEndpoints.cs",
+      "groups": [
+        "/api/intake/messages"
+      ],
+      "httpRegistrations": 3,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/InventoryEndpoints.cs",
+      "groups": [
+        "/api/inventory"
+      ],
+      "httpRegistrations": 7,
+      "permissionReferences": [
+        "InventoryManage",
+        "InventoryRead",
+        "InventoryWrite"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Inventory"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/InvoicingEndpoints.cs",
+      "groups": [
+        "/api/invoicing/invoices",
+        "/api/invoicing/payments"
+      ],
+      "httpRegistrations": 4,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/JournalEntryEndpoints.cs",
+      "groups": [
+        "/api/accounting/journal"
+      ],
+      "httpRegistrations": 7,
+      "permissionReferences": [
+        "AccountingJournalCreate",
+        "AccountingJournalPost",
+        "AccountingJournalRead"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.Accounting"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/LeadEndpoints.cs",
+      "groups": [
+        "/api/crm/leads"
+      ],
+      "httpRegistrations": 9,
+      "permissionReferences": [
+        "CrmLeadsCreate",
+        "CrmLeadsManage",
+        "CrmLeadsRead",
+        "CrmLeadsUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.Crm"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/LegalPageEndpoints.cs",
+      "groups": [
+        "/api/legal-pages"
+      ],
+      "httpRegistrations": 4,
+      "permissionReferences": [
+        "LegalPagesRead",
+        "LegalPagesUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Platform.LegalPages"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/MediaEndpoints.cs",
+      "groups": [
+        "/api/media"
+      ],
+      "httpRegistrations": 12,
+      "permissionReferences": [
+        "MediaDelete",
+        "MediaRead",
+        "MediaUpdate"
+      ],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/NotificationEndpoints.cs",
+      "groups": [
+        "/api/notifications"
+      ],
+      "httpRegistrations": 7,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/OrderEndpoints.cs",
+      "groups": [
+        "/api/orders"
+      ],
+      "httpRegistrations": 17,
+      "permissionReferences": [
+        "OrdersManage",
+        "OrdersRead",
+        "OrdersWrite"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Orders"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/PaymentEndpoints.cs",
+      "groups": [
+        "/api/payments",
+        "/api/payment-gateways",
+        "/api/refunds",
+        "/api/payment-webhooks"
+      ],
+      "httpRegistrations": 25,
+      "permissionReferences": [
+        "PaymentGatewaysManage",
+        "PaymentGatewaysRead",
+        "PaymentRefundsManage",
+        "PaymentRefundsRead",
+        "PaymentWebhooksRead",
+        "PaymentsCreate",
+        "PaymentsManage",
+        "PaymentsRead"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Payments",
+        "ModuleNames.Ecommerce.Payments",
+        "ModuleNames.Ecommerce.Payments"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/PermissionEndpoints.cs",
+      "groups": [],
+      "httpRegistrations": 2,
+      "permissionReferences": [
+        "Queries",
+        "RolesRead"
+      ],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/PipelineEndpoints.cs",
+      "groups": [
+        "/api/crm/pipelines",
+        "/api/crm"
+      ],
+      "httpRegistrations": 10,
+      "permissionReferences": [
+        "CrmLeadsRead",
+        "CrmPipelineManage"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.Crm",
+        "ModuleNames.Erp.Crm"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/PlatformSettingsEndpoints.cs",
+      "groups": [
+        "/api/platform-settings"
+      ],
+      "httpRegistrations": 3,
+      "permissionReferences": [
+        "PlatformSettingsManage",
+        "PlatformSettingsRead"
+      ],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ProcurementEndpoints.cs",
+      "groups": [
+        "/api/procurement/suppliers",
+        "/api/procurement/orders"
+      ],
+      "httpRegistrations": 6,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ProductAttributeEndpoints.cs",
+      "groups": [
+        "/api/product-attributes"
+      ],
+      "httpRegistrations": 8,
+      "permissionReferences": [
+        "AttributesCreate",
+        "AttributesDelete",
+        "AttributesRead",
+        "AttributesUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Attributes"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ProductCategoryEndpoints.cs",
+      "groups": [
+        "/api/products/categories"
+      ],
+      "httpRegistrations": 11,
+      "permissionReferences": [
+        "ProductCategoriesCreate",
+        "ProductCategoriesDelete",
+        "ProductCategoriesRead",
+        "ProductCategoriesUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Categories"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ProductEndpoints.cs",
+      "groups": [
+        "/api/products"
+      ],
+      "httpRegistrations": 37,
+      "permissionReferences": [
+        "ProductsCreate",
+        "ProductsDelete",
+        "ProductsPublish",
+        "ProductsRead",
+        "ProductsUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Products"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ProductFilterEndpoints.cs",
+      "groups": [
+        "/api/products/filter",
+        "/api/categories"
+      ],
+      "httpRegistrations": 3,
+      "permissionReferences": [],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Attributes"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ProductionOrderEndpoints.cs",
+      "groups": [
+        "/api/manufacturing/production-orders"
+      ],
+      "httpRegistrations": 10,
+      "permissionReferences": [
+        "ManufacturingOrdersCreate",
+        "ManufacturingOrdersManage",
+        "ManufacturingOrdersRead",
+        "ManufacturingOrdersUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.ManufacturingSub.ProductionOrders"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ProjectEndpoints.cs",
+      "groups": [
+        "/api/pm/projects"
+      ],
+      "httpRegistrations": 24,
+      "permissionReferences": [
+        "PmMembersManage",
+        "PmProjectsCreate",
+        "PmProjectsDelete",
+        "PmProjectsRead",
+        "PmProjectsUpdate",
+        "PmTasksRead",
+        "PmTasksUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.Pm"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/PromotionEndpoints.cs",
+      "groups": [
+        "/api/promotions"
+      ],
+      "httpRegistrations": 9,
+      "permissionReferences": [
+        "PromotionsDelete",
+        "PromotionsRead",
+        "PromotionsWrite"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Promotions"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/PublicLegalPageEndpoints.cs",
+      "groups": [
+        "/api/public/legal"
+      ],
+      "httpRegistrations": 1,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/QaEndpoints.cs",
+      "groups": [
+        "/api/qa/inspections"
+      ],
+      "httpRegistrations": 4,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ReportEndpoints.cs",
+      "groups": [
+        "/api/reports"
+      ],
+      "httpRegistrations": 5,
+      "permissionReferences": [
+        "ReportsRead"
+      ],
+      "featureGates": [
+        "ModuleNames.Analytics.Reports"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ReviewEndpoints.cs",
+      "groups": [
+        "/api/reviews",
+        "/api/products/{productId:guid}/reviews"
+      ],
+      "httpRegistrations": 11,
+      "permissionReferences": [
+        "ReviewsManage",
+        "ReviewsRead"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Reviews"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/RoleEndpoints.cs",
+      "groups": [
+        "/api/roles"
+      ],
+      "httpRegistrations": 9,
+      "permissionReferences": [
+        "RolesCreate",
+        "RolesDelete",
+        "RolesManagePermissions",
+        "RolesRead",
+        "RolesUpdate"
+      ],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/SearchEndpoints.cs",
+      "groups": [
+        "/api/search"
+      ],
+      "httpRegistrations": 1,
+      "permissionReferences": [
+        "SearchGlobal"
+      ],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ShippingEndpoints.cs",
+      "groups": [
+        "/api/shipping"
+      ],
+      "httpRegistrations": 7,
+      "permissionReferences": [
+        "OrdersManage",
+        "OrdersRead",
+        "OrdersWrite"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Checkout"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/ShippingProviderEndpoints.cs",
+      "groups": [
+        "/api/shipping-providers"
+      ],
+      "httpRegistrations": 8,
+      "permissionReferences": [
+        "OrdersManage",
+        "OrdersWrite"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Checkout"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/SseEndpoints.cs",
+      "groups": [
+        "/api/sse"
+      ],
+      "httpRegistrations": 1,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/StockIndentEndpoints.cs",
+      "groups": [
+        "/api/stock/indents"
+      ],
+      "httpRegistrations": 10,
+      "permissionReferences": [
+        "StockIndentsApprove",
+        "StockIndentsCreate",
+        "StockIndentsRead"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.StockSub.Indents"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/StockTransferEndpoints.cs",
+      "groups": [
+        "/api/stock/transfers"
+      ],
+      "httpRegistrations": 11,
+      "permissionReferences": [
+        "StockTransfersApprove",
+        "StockTransfersCreate",
+        "StockTransfersRead"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.StockSub.Transfers"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/TaskEndpoints.cs",
+      "groups": [
+        "/api/pm/tasks"
+      ],
+      "httpRegistrations": 22,
+      "permissionReferences": [
+        "PmTasksCreate",
+        "PmTasksDelete",
+        "PmTasksRead",
+        "PmTasksUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Erp.Pm"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/TenantEndpoints.cs",
+      "groups": [
+        "/api/tenants"
+      ],
+      "httpRegistrations": 7,
+      "permissionReferences": [
+        "TenantsCreate",
+        "TenantsDelete",
+        "TenantsRead",
+        "TenantsUpdate"
+      ],
+      "featureGates": [
+        "ModuleNames.Platform.Tenants"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/TenantSettingsEndpoints.cs",
+      "groups": [
+        "/api/tenant-settings"
+      ],
+      "httpRegistrations": 10,
+      "permissionReferences": [
+        "TenantSettingsRead",
+        "TenantSettingsUpdate"
+      ],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/TicketEndpoints.cs",
+      "groups": [
+        "/api/helpdesk/tickets"
+      ],
+      "httpRegistrations": 5,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/UnitConversionEndpoints.cs",
+      "groups": [
+        "/api/master-data/unit-conversions"
+      ],
+      "httpRegistrations": 2,
+      "permissionReferences": [],
+      "featureGates": [],
+      "directDbContext": true
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/UserEndpoints.cs",
+      "groups": [
+        "/api/users"
+      ],
+      "httpRegistrations": 10,
+      "permissionReferences": [
+        "UsersCreate",
+        "UsersDelete",
+        "UsersManageRoles",
+        "UsersRead",
+        "UsersUpdate"
+      ],
+      "featureGates": [],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/WebhookEndpoints.cs",
+      "groups": [
+        "/api/webhooks"
+      ],
+      "httpRegistrations": 11,
+      "permissionReferences": [
+        "WebhooksManage",
+        "WebhooksRead",
+        "WebhooksTest"
+      ],
+      "featureGates": [
+        "ModuleNames.Integrations.Webhooks"
+      ],
+      "directDbContext": false
+    },
+    {
+      "file": "src/NOIR.Web/Endpoints/WishlistEndpoints.cs",
+      "groups": [
+        "/api/wishlists"
+      ],
+      "httpRegistrations": 12,
+      "permissionReferences": [
+        "WishlistsManage"
+      ],
+      "featureGates": [
+        "ModuleNames.Ecommerce.Wishlist"
+      ],
+      "directDbContext": false
+    }
+  ],
+  "method": "Tracked source inventory only. File counts and registration patterns do not prove completeness, successful compilation, database readiness, runtime security or SRS acceptance."
+}

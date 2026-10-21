@@ -1,0 +1,18 @@
+{
+  "docx": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\deliverables\\HR_Part_A_Continuation_Status_2026-10-13.docx",
+  "markdown": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\cosmix-backend\\docs\\HR-Part-A-Continuation-2026-10-13.md",
+  "docx_sha256": "e94205176dc0fdb4bb03b1da2b275869d193a78c220df632e0ea9e1895a4beee",
+  "markdown_sha256": "d5bd24ca160a999b33ec7232c3a0dbe21d89df34c02aee8f0bab7704e9ac076f",
+  "page_count": 6,
+  "font_pt": 11,
+  "paper": "Letter",
+  "line_wise_task_ids": "A-C01 through A-C12",
+  "content_review": "PASS independent updated Attendance handover rereview and final scoped claims",
+  "structural_checks": "PASS copied reference package preservation; exact candidate bytes promoted after visual QA",
+  "render_method": "Packaged LibreOffice unavailable diagnosed in prior attempt; hidden owned read-only Word and bundled Poppler130dpi on D",
+  "visual_review": "PASS all six latest page images individually inspected; no clipping overlap glyph or footer defects",
+  "original_plan_preserved": true,
+  "previous_valid_pair_preserved": "D:\\CosmixPartAContinuation20261013\\document-update-final-v1",
+  "latest_render": "D:\\CosmixPartAContinuation20261013\\document-update-final-v1\\render-final",
+  "document_task_changed_product_code_sql_provider_accounts": false
+}

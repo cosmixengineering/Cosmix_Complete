@@ -1,0 +1,517 @@
+diff --git a/src/Cosmix.Application/Authentication/Access/AccessPermissionCatalog.cs b/src/Cosmix.Application/Authentication/Access/AccessPermissionCatalog.cs
+index acca043..c0a10c8 100644
+--- a/src/Cosmix.Application/Authentication/Access/AccessPermissionCatalog.cs
++++ b/src/Cosmix.Application/Authentication/Access/AccessPermissionCatalog.cs
+@@ -14,6 +14,7 @@ using Cosmix.Application.Attendance.MonthLocks;
+ using Cosmix.Application.Attendance.Overtime;
+ using Cosmix.Application.Attendance.Zones;
+ using Cosmix.Application.Attendance.PayrollInputs;
++using Cosmix.Application.Attendance.LegalReview;
+ using Cosmix.Application.HR.CompanySettings;
+ 
+ namespace Cosmix.Application.Authentication.Access;
+@@ -45,6 +46,8 @@ public static class AccessPermissionCatalog
+         .. OvertimePermissions.Definitions,
+         .. ZonePermissions.Definitions,
+         .. AttendancePayrollInputPermissions.Definitions,
++        .. AttendancePayrollAttestationPermissions.Definitions,
++        .. AttendanceLegalReviewPermissions.Definitions,
+         .. CompanySettingsPermissions.Definitions,
+         new(EmployeePermissions.Read, "Read confidential hiring profiles and employee directory", true, true, false),
+         new(EmployeeUpdatePermissions.BasicEdit, "Update approved basic employee details with audit history", true, true, false),
+diff --git a/src/Cosmix.Application/DependencyInjection.cs b/src/Cosmix.Application/DependencyInjection.cs
+index 356a1c6..409eb35 100644
+--- a/src/Cosmix.Application/DependencyInjection.cs
++++ b/src/Cosmix.Application/DependencyInjection.cs
+@@ -22,6 +22,7 @@ using Cosmix.Application.HR.Policies;
+ using Cosmix.Application.HR.Leaves;
+ using Cosmix.Application.Attendance.Calculation;
+ using Cosmix.Application.Attendance.PayrollInputs;
++using Cosmix.Application.Attendance.LegalReview;
+ using Cosmix.Application.HR.CompanySettings;
+ using Microsoft.Extensions.DependencyInjection;
+ 
+@@ -63,7 +64,13 @@ public static class DependencyInjection
+         services.AddScoped<IAttendanceCalculationSnapshotProducer, AttendanceCalculationSnapshotProducer>();
+         services.AddScoped<IAttendancePolicyCalculator, ConfiguredAttendancePolicyCalculator>();
+         services.AddScoped<IAttendancePayrollInputProducer, AttendancePayrollInputProducer>();
++        services.AddScoped<IAttendancePayrollReconciliationSourceReader, AttendancePayrollReconciliationSourceReader>();
+         services.AddScoped<AttendancePayrollInputService>();
++        services.AddScoped<IMonthLockFinancialReader, AttendanceMonthLockFinancialReader>();
++        services.AddScoped<AttendancePayrollAttestationService>();
++        services.AddScoped<IAttendanceConfirmedPayrollPostingReader>(provider =>
++            provider.GetRequiredService<AttendancePayrollAttestationService>());
++        services.AddScoped<AttendanceLegalReviewService>();
+         services.AddScoped<CompanySettingsService>();
+         services.AddScoped<IAttendancePayrollJurisdictionReader, CompanyPayrollJurisdictionReader>();
+         services.AddSiteReportsApplication();
+diff --git a/src/Cosmix.Infrastructure/Database/CosmixDbContext.cs b/src/Cosmix.Infrastructure/Database/CosmixDbContext.cs
+index 1c23910..553d48f 100644
+--- a/src/Cosmix.Infrastructure/Database/CosmixDbContext.cs
++++ b/src/Cosmix.Infrastructure/Database/CosmixDbContext.cs
+@@ -73,6 +73,8 @@ public sealed class CosmixDbContext(DbContextOptions<CosmixDbContext> options)
+     public DbSet<PunchAssessment> PunchAssessments => Set<PunchAssessment>();
+     public DbSet<RawPunchEvent> RawPunchEvents => Set<RawPunchEvent>();
+     public DbSet<EmployeeShiftAssignment> EmployeeShiftAssignments => Set<EmployeeShiftAssignment>();
++    public DbSet<OfficeRosterAssignment> OfficeRosterAssignments => Set<OfficeRosterAssignment>();
++    public DbSet<OfficeRosterAssignmentEnd> OfficeRosterAssignmentEnds => Set<OfficeRosterAssignmentEnd>();
+     public DbSet<ShiftPopulationAssignment> ShiftPopulationAssignments => Set<ShiftPopulationAssignment>();
+     public DbSet<ShiftPopulationAssignmentEnd> ShiftPopulationAssignmentEnds => Set<ShiftPopulationAssignmentEnd>();
+     public DbSet<TemporaryShiftChange> TemporaryShiftChanges => Set<TemporaryShiftChange>();
+diff --git a/src/Cosmix.Infrastructure/Database/Migrations/CosmixDbContextModelSnapshot.cs b/src/Cosmix.Infrastructure/Database/Migrations/CosmixDbContextModelSnapshot.cs
+index 3a8371d..66deda7 100644
+--- a/src/Cosmix.Infrastructure/Database/Migrations/CosmixDbContextModelSnapshot.cs
++++ b/src/Cosmix.Infrastructure/Database/Migrations/CosmixDbContextModelSnapshot.cs
+@@ -734,6 +734,113 @@ namespace Cosmix.Infrastructure.Database.Migrations
+                         });
+                 });
+ 
++            modelBuilder.Entity("Cosmix.Domain.Attendance.LegalReview.AttendanceLegalReviewDossier", b =>
++                {
++                    b.Property<Guid>("Id")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<string>("BindingSha256")
++                        .IsRequired()
++                        .HasMaxLength(64)
++                        .IsUnicode(false)
++                        .HasColumnType("char(64)")
++                        .IsFixedLength()
++                        .UseCollation("Latin1_General_100_BIN2");
++
++                    b.Property<DateOnly>("EffectiveFrom")
++                        .HasColumnType("date");
++
++                    b.Property<DateOnly?>("EffectiveTo")
++                        .HasColumnType("date");
++
++                    b.Property<string>("EvidenceSha256")
++                        .IsRequired()
++                        .HasMaxLength(64)
++                        .IsUnicode(false)
++                        .HasColumnType("char(64)")
++                        .IsFixedLength()
++                        .UseCollation("Latin1_General_100_BIN2");
++
++                    b.Property<string>("PolicySha256")
++                        .IsRequired()
++                        .HasMaxLength(64)
++                        .IsUnicode(false)
++                        .HasColumnType("char(64)")
++                        .IsFixedLength()
++                        .UseCollation("Latin1_General_100_BIN2");
++
++                    b.Property<string>("ProtectedEvidenceReference")
++                        .IsRequired()
++                        .HasMaxLength(500)
++                        .HasColumnType("nvarchar(500)");
++
++                    b.Property<DateTimeOffset>("RecordedAtUtc")
++                        .HasColumnType("datetimeoffset(7)");
++
++                    b.Property<Guid>("RecordedByAccountId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<int>("Revision")
++                        .HasColumnType("int");
++
++                    b.Property<Guid>("SourcePolicyId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<Guid>("SourcePolicyVersionId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<string>("State")
++                        .IsRequired()
++                        .HasMaxLength(32)
++                        .IsUnicode(false)
++                        .HasColumnType("varchar(32)")
++                        .UseCollation("Latin1_General_100_BIN2");
++
++                    b.Property<Guid?>("SupersedesId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<string>("VerificationMode")
++                        .IsRequired()
++                        .HasMaxLength(48)
++                        .IsUnicode(false)
++                        .HasColumnType("varchar(48)")
++                        .UseCollation("Latin1_General_100_BIN2");
++
++                    b.HasKey("Id");
++
++                    b.HasIndex("RecordedByAccountId");
++
++                    b.HasIndex("SupersedesId")
++                        .IsUnique()
++                        .HasFilter("[SupersedesId] IS NOT NULL");
++
++                    b.HasIndex("BindingSha256", "Revision")
++                        .IsUnique();
++
++                    b.HasIndex("SourcePolicyId", "SourcePolicyVersionId");
++
++                    b.HasIndex("SourcePolicyVersionId", "PolicySha256", "BindingSha256", "SupersedesId");
++
++                    b.ToTable("AttendanceLegalReviewDossiers", "attendance", t =>
++                        {
++                            t.HasCheckConstraint("CK_AttendanceLegalReviewDossiers_BindingSha256", "LEN([BindingSha256]) = 64 AND [BindingSha256] NOT LIKE '%[^0-9A-F]%'");
++
++                            t.HasCheckConstraint("CK_AttendanceLegalReviewDossiers_Dates", "YEAR([EffectiveFrom]) BETWEEN 1901 AND 9997 AND ([EffectiveTo] IS NULL OR (YEAR([EffectiveTo]) BETWEEN 1901 AND 9997 AND [EffectiveTo] > [EffectiveFrom]))");
++
++                            t.HasCheckConstraint("CK_AttendanceLegalReviewDossiers_EvidenceSha256", "LEN([EvidenceSha256]) = 64 AND [EvidenceSha256] NOT LIKE '%[^0-9A-F]%'");
++
++                            t.HasCheckConstraint("CK_AttendanceLegalReviewDossiers_PolicySha256", "LEN([PolicySha256]) = 64 AND [PolicySha256] NOT LIKE '%[^0-9A-F]%'");
++
++                            t.HasCheckConstraint("CK_AttendanceLegalReviewDossiers_Predecessor", "[SupersedesId] IS NULL OR [SupersedesId] <> [Id]");
++
++                            t.HasCheckConstraint("CK_AttendanceLegalReviewDossiers_RecordOnly", "[State] = 'review_required' AND [VerificationMode] = 'recorded_not_legally_verified'");
++
++                            t.HasCheckConstraint("CK_AttendanceLegalReviewDossiers_RecordedAtUtc_Utc", "[RecordedAtUtc] IS NULL OR DATEPART(TZOFFSET, [RecordedAtUtc]) = 0");
++
++                            t.HasCheckConstraint("CK_AttendanceLegalReviewDossiers_Revision", "[Revision] BETWEEN 1 AND 128 AND (([Revision] = 1 AND [SupersedesId] IS NULL) OR ([Revision] > 1 AND [SupersedesId] IS NOT NULL))");
++                        });
++                });
++
+             modelBuilder.Entity("Cosmix.Domain.Attendance.MonthLocks.AttendancePeriodLock", b =>
+                 {
+                     b.Property<Guid>("Id")
+@@ -996,6 +1103,123 @@ namespace Cosmix.Infrastructure.Database.Migrations
+                         });
+                 });
+ 
++            modelBuilder.Entity("Cosmix.Domain.Attendance.PayrollInputs.AttendancePayrollAttestation", b =>
++                {
++                    b.Property<Guid>("Id")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<Guid>("ActorUserId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<DateTimeOffset>("CreatedAtUtc")
++                        .HasColumnType("datetimeoffset(7)");
++
++                    b.Property<Guid>("EmployeeId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<string>("EvidenceFingerprint")
++                        .IsRequired()
++                        .HasMaxLength(64)
++                        .IsUnicode(false)
++                        .HasColumnType("char(64)")
++                        .IsFixedLength()
++                        .UseCollation("Latin1_General_100_BIN2");
++
++                    b.Property<string>("ExternalReceiptKey")
++                        .IsRequired()
++                        .HasMaxLength(64)
++                        .IsUnicode(false)
++                        .HasColumnType("char(64)")
++                        .IsFixedLength()
++                        .UseCollation("Latin1_General_100_BIN2");
++
++                    b.Property<string>("LineFingerprint")
++                        .IsRequired()
++                        .HasMaxLength(64)
++                        .IsUnicode(false)
++                        .HasColumnType("char(64)")
++                        .IsFixedLength()
++                        .UseCollation("Latin1_General_100_BIN2");
++
++                    b.Property<DateTimeOffset>("OccurredAtUtc")
++                        .HasColumnType("datetimeoffset(7)");
++
++                    b.Property<DateOnly>("PeriodStart")
++                        .HasColumnType("date");
++
++                    b.Property<DateTimeOffset?>("PostedAtUtc")
++                        .HasColumnType("datetimeoffset(7)");
++
++                    b.Property<Guid?>("PreviousAttestationId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<string>("ProtectedEvidenceReference")
++                        .IsRequired()
++                        .HasMaxLength(500)
++                        .HasColumnType("nvarchar(500)");
++
++                    b.Property<string>("SourceFingerprint")
++                        .IsRequired()
++                        .HasMaxLength(64)
++                        .IsUnicode(false)
++                        .HasColumnType("char(64)")
++                        .IsFixedLength()
++                        .UseCollation("Latin1_General_100_BIN2");
++
++                    b.Property<int>("SourceRevision")
++                        .HasColumnType("int");
++
++                    b.Property<Guid>("SourceRevisionId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<string>("Status")
++                        .IsRequired()
++                        .HasMaxLength(16)
++                        .IsUnicode(false)
++                        .HasColumnType("varchar(16)")
++                        .UseCollation("Latin1_General_100_BIN2");
++
++                    b.Property<int>("Step")
++                        .HasColumnType("int");
++
++                    b.HasKey("Id");
++
++                    b.HasIndex("ActorUserId");
++
++                    b.HasIndex("ExternalReceiptKey", "Step")
++                        .IsUnique();
++
++                    b.HasIndex("EmployeeId", "PeriodStart", "Step")
++                        .IsUnique();
++
++                    b.HasIndex("EmployeeId", "PeriodStart", "SourceRevisionId", "PreviousAttestationId");
++
++                    b.ToTable("AttendancePayrollAttestations", "attendance", t =>
++                        {
++                            t.HasCheckConstraint("CK_AttendancePayrollAttestations_CreatedAtUtc_Utc", "[CreatedAtUtc] IS NULL OR DATEPART(TZOFFSET, [CreatedAtUtc]) = 0");
++
++                            t.HasCheckConstraint("CK_AttendancePayrollAttestations_EvidenceFingerprint", "LEN([EvidenceFingerprint]) = 64 AND [EvidenceFingerprint] NOT LIKE '%[^0-9A-F]%'");
++
++                            t.HasCheckConstraint("CK_AttendancePayrollAttestations_ExternalReceiptKey", "LEN([ExternalReceiptKey]) = 64 AND [ExternalReceiptKey] NOT LIKE '%[^0-9A-F]%'");
++
++                            t.HasCheckConstraint("CK_AttendancePayrollAttestations_LineFingerprint", "LEN([LineFingerprint]) = 64 AND [LineFingerprint] NOT LIKE '%[^0-9A-F]%'");
++
++                            t.HasCheckConstraint("CK_AttendancePayrollAttestations_OccurredAtUtc_Utc", "[OccurredAtUtc] IS NULL OR DATEPART(TZOFFSET, [OccurredAtUtc]) = 0");
++
++                            t.HasCheckConstraint("CK_AttendancePayrollAttestations_Period", "DAY([PeriodStart]) = 1 AND YEAR([PeriodStart]) BETWEEN 1900 AND 9998");
++
++                            t.HasCheckConstraint("CK_AttendancePayrollAttestations_PostedAtUtc_Utc", "[PostedAtUtc] IS NULL OR DATEPART(TZOFFSET, [PostedAtUtc]) = 0");
++
++                            t.HasCheckConstraint("CK_AttendancePayrollAttestations_SourceFingerprint", "LEN([SourceFingerprint]) = 64 AND [SourceFingerprint] NOT LIKE '%[^0-9A-F]%'");
++
++                            t.HasCheckConstraint("CK_AttendancePayrollAttestations_SourceRevision", "[SourceRevision] >= 1");
++
++                            t.HasCheckConstraint("CK_AttendancePayrollAttestations_Stage", "([Status] = 'handoff' AND [Step] = 1 AND [PreviousAttestationId] IS NULL AND [PostedAtUtc] IS NULL) OR ([Status] = 'posted' AND [Step] = 2 AND [PreviousAttestationId] IS NOT NULL AND [PostedAtUtc] IS NOT NULL AND [PostedAtUtc] = [OccurredAtUtc]) OR ([Status] = 'settled' AND [Step] = 3 AND [PreviousAttestationId] IS NOT NULL AND [PostedAtUtc] IS NOT NULL AND [PostedAtUtc] <= [OccurredAtUtc])");
++
++                            t.HasCheckConstraint("CK_AttendancePayrollAttestations_Time", "[OccurredAtUtc] <= [CreatedAtUtc]");
++                        });
++                });
++
+             modelBuilder.Entity("Cosmix.Domain.Attendance.PayrollInputs.AttendancePayrollInputRevision", b =>
+                 {
+                     b.Property<Guid>("Id")
+@@ -1297,6 +1521,84 @@ namespace Cosmix.Infrastructure.Database.Migrations
+                         });
+                 });
+ 
++            modelBuilder.Entity("Cosmix.Domain.Attendance.Rosters.OfficeRosterAssignment", b =>
++                {
++                    b.Property<Guid>("Id")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<Guid>("BranchId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<DateOnly>("EffectiveFrom")
++                        .HasColumnType("date");
++
++                    b.Property<DateOnly?>("EffectiveTo")
++                        .HasColumnType("date");
++
++                    b.Property<Guid?>("HolidayCalendarId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<DateTimeOffset>("RecordedAtUtc")
++                        .HasColumnType("datetimeoffset");
++
++                    b.Property<string>("RecordedBy")
++                        .IsRequired()
++                        .HasMaxLength(200)
++                        .HasColumnType("nvarchar(200)");
++
++                    b.Property<Guid>("ShiftId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.HasKey("Id");
++
++                    b.HasIndex("HolidayCalendarId");
++
++                    b.HasIndex("ShiftId");
++
++                    b.HasIndex("BranchId", "EffectiveFrom")
++                        .IsUnique();
++
++                    b.ToTable("OfficeRosterAssignments", "attendance", t =>
++                        {
++                            t.HasCheckConstraint("CK_OfficeRosterAssignments_Dates", "[EffectiveTo] IS NULL OR [EffectiveTo] > [EffectiveFrom]");
++                        });
++                });
++
++            modelBuilder.Entity("Cosmix.Domain.Attendance.Rosters.OfficeRosterAssignmentEnd", b =>
++                {
++                    b.Property<Guid>("Id")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<DateOnly>("EffectiveTo")
++                        .HasColumnType("date");
++
++                    b.Property<Guid>("OfficeRosterAssignmentId")
++                        .HasColumnType("uniqueidentifier");
++
++                    b.Property<string>("Reason")
++                        .IsRequired()
++                        .HasMaxLength(1000)
++                        .HasColumnType("nvarchar(1000)");
++
++                    b.Property<DateTimeOffset>("RecordedAtUtc")
++                        .HasColumnType("datetimeoffset");
++
++                    b.Property<string>("RecordedBy")
++                        .IsRequired()
++                        .HasMaxLength(200)
++                        .HasColumnType("nvarchar(200)");
++
++                    b.HasKey("Id");
++
++                    b.HasIndex("OfficeRosterAssignmentId")
++                        .IsUnique();
++
++                    b.ToTable("OfficeRosterAssignmentEnds", "attendance", t =>
++                        {
++                            t.HasCheckConstraint("CK_OfficeRosterAssignmentEnds_Reason", "LEN(LTRIM(RTRIM([Reason]))) > 0");
++                        });
++                });
++
+             modelBuilder.Entity("Cosmix.Domain.Attendance.Rosters.ShiftPopulationAssignment", b =>
+                 {
+                     b.Property<Guid>("Id")
+@@ -9142,6 +9444,28 @@ namespace Cosmix.Infrastructure.Database.Migrations
+                         .IsRequired();
+                 });
+ 
++            modelBuilder.Entity("Cosmix.Domain.Attendance.LegalReview.AttendanceLegalReviewDossier", b =>
++                {
++                    b.HasOne("Cosmix.Domain.Authentication.UserAccount", null)
++                        .WithMany()
++                        .HasForeignKey("RecordedByAccountId")
++                        .OnDelete(DeleteBehavior.Restrict)
++                        .IsRequired();
++
++                    b.HasOne("Cosmix.Domain.HR.Policies.PolicyVersion", null)
++                        .WithMany()
++                        .HasForeignKey("SourcePolicyId", "SourcePolicyVersionId")
++                        .HasPrincipalKey("PolicyId", "Id")
++                        .OnDelete(DeleteBehavior.Restrict)
++                        .IsRequired();
++
++                    b.HasOne("Cosmix.Domain.Attendance.LegalReview.AttendanceLegalReviewDossier", null)
++                        .WithMany()
++                        .HasForeignKey("SourcePolicyVersionId", "PolicySha256", "BindingSha256", "SupersedesId")
++                        .HasPrincipalKey("SourcePolicyVersionId", "PolicySha256", "BindingSha256", "Id")
++                        .OnDelete(DeleteBehavior.Restrict);
++                });
++
+             modelBuilder.Entity("Cosmix.Domain.Attendance.MonthLocks.AttendancePeriodLockEvent", b =>
+                 {
+                     b.HasOne("Cosmix.Domain.Common.Approvals.ApprovalRequest", null)
+@@ -9215,6 +9539,34 @@ namespace Cosmix.Infrastructure.Database.Migrations
+                         .IsRequired();
+                 });
+ 
++            modelBuilder.Entity("Cosmix.Domain.Attendance.PayrollInputs.AttendancePayrollAttestation", b =>
++                {
++                    b.HasOne("Cosmix.Domain.Authentication.UserAccount", null)
++                        .WithMany()
++                        .HasForeignKey("ActorUserId")
++                        .OnDelete(DeleteBehavior.Restrict)
++                        .IsRequired();
++
++                    b.HasOne("Cosmix.Domain.HR.Employees.Employee", null)
++                        .WithMany()
++                        .HasForeignKey("EmployeeId")
++                        .OnDelete(DeleteBehavior.Restrict)
++                        .IsRequired();
++
++                    b.HasOne("Cosmix.Domain.Attendance.PayrollInputs.AttendancePayrollInputRevision", null)
++                        .WithMany()
++                        .HasForeignKey("EmployeeId", "PeriodStart", "SourceRevisionId")
++                        .HasPrincipalKey("EmployeeId", "PeriodStart", "Id")
++                        .OnDelete(DeleteBehavior.Restrict)
++                        .IsRequired();
++
++                    b.HasOne("Cosmix.Domain.Attendance.PayrollInputs.AttendancePayrollAttestation", null)
++                        .WithMany()
++                        .HasForeignKey("EmployeeId", "PeriodStart", "SourceRevisionId", "PreviousAttestationId")
++                        .HasPrincipalKey("EmployeeId", "PeriodStart", "SourceRevisionId", "Id")
++                        .OnDelete(DeleteBehavior.Restrict);
++                });
++
+             modelBuilder.Entity("Cosmix.Domain.Attendance.PayrollInputs.AttendancePayrollInputRevision", b =>
+                 {
+                     b.HasOne("Cosmix.Domain.Authentication.UserAccount", null)
+@@ -9358,6 +9710,43 @@ namespace Cosmix.Infrastructure.Database.Migrations
+                     b.Navigation("Site");
+                 });
+ 
++            modelBuilder.Entity("Cosmix.Domain.Attendance.Rosters.OfficeRosterAssignment", b =>
++                {
++                    b.HasOne("Cosmix.Domain.HR.Branches.Branch", "Branch")
++                        .WithMany()
++                        .HasForeignKey("BranchId")
++                        .OnDelete(DeleteBehavior.Restrict)
++                        .IsRequired();
++
++                    b.HasOne("Cosmix.Domain.HR.Holidays.HolidayCalendar", "HolidayCalendar")
++                        .WithMany()
++                        .HasForeignKey("HolidayCalendarId")
++                        .OnDelete(DeleteBehavior.Restrict);
++
++                    b.HasOne("Cosmix.Domain.Attendance.Shifts.Shift", "Shift")
++                        .WithMany()
++                        .HasForeignKey("ShiftId")
++                        .OnDelete(DeleteBehavior.Restrict)
++                        .IsRequired();
++
++                    b.Navigation("Branch");
++
++                    b.Navigation("HolidayCalendar");
++
++                    b.Navigation("Shift");
++                });
++
++            modelBuilder.Entity("Cosmix.Domain.Attendance.Rosters.OfficeRosterAssignmentEnd", b =>
++                {
++                    b.HasOne("Cosmix.Domain.Attendance.Rosters.OfficeRosterAssignment", "Assignment")
++                        .WithOne()
++                        .HasForeignKey("Cosmix.Domain.Attendance.Rosters.OfficeRosterAssignmentEnd", "OfficeRosterAssignmentId")
++                        .OnDelete(DeleteBehavior.Restrict)
++                        .IsRequired();
++
++                    b.Navigation("Assignment");
++                });
++
+             modelBuilder.Entity("Cosmix.Domain.Attendance.Rosters.ShiftPopulationAssignment", b =>
+                 {
+                     b.HasOne("Cosmix.Domain.Common.Approvals.ApprovalRequest", null)
+diff --git a/src/Cosmix.Infrastructure/DependencyInjection.cs b/src/Cosmix.Infrastructure/DependencyInjection.cs
+index 6e58180..6a31fbf 100644
+--- a/src/Cosmix.Infrastructure/DependencyInjection.cs
++++ b/src/Cosmix.Infrastructure/DependencyInjection.cs
+@@ -14,6 +14,7 @@ using Cosmix.Infrastructure.Repositories.Attendance;
+ using Cosmix.Infrastructure.Notifications;
+ using Cosmix.Application.Attendance.DailySummaries;
+ using Cosmix.Application.Attendance.PayrollInputs;
++using Cosmix.Application.Attendance.LegalReview;
+ using Cosmix.Application.HR.CompanySettings;
+ using Cosmix.Application.Attendance.Corrections;
+ using Cosmix.Application.Attendance.Audit;
+@@ -69,6 +70,9 @@ public static class DependencyInjection
+         services.AddScoped<IAttendanceSummaryRepository, AttendanceSummaryRepository>();
+         services.AddScoped<IAttendancePayrollInputRepository, AttendancePayrollInputRepository>();
+         services.AddScoped<IAttendancePayrollInputLedger, AttendancePayrollInputLedger>();
++        services.AddScoped<IAttendancePayrollAttestationRepository, AttendancePayrollAttestationRepository>();
++        services.AddScoped<IAttendanceLegalReviewRepository, AttendanceLegalReviewRepository>();
++        services.AddSingleton<IAttendanceLegalReviewPdfInspector, AttendanceLegalReviewPdfInspector>();
+         services.AddScoped<ICompanySettingsRepository, CompanySettingsRepository>();
+         services.AddScoped<IAttendancePolicyRepository, AttendancePolicyRepository>();
+         services.AddScoped<ILeaveRepository, LeaveRepository>();

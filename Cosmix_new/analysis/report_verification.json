@@ -1,0 +1,11 @@
+{
+  "commit": "c4500264431523f7db7960bb3a759a15ca60f08e",
+  "presentationGroups": 17,
+  "technicalObservationsByReview": {
+    "sales_workflow_ui_review.md": 12,
+    "finance_supply_review.md": 17,
+    "people_service_review.md": 11
+  },
+  "note": "40 component observations include overlapping controls and are not 40 unique effort items.",
+  "output": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\Cosmix_new\\analysis\\Cosmix_New_Code_Review_and_SRS_Gap_Assessment.docx"
+}

@@ -1,0 +1,629 @@
+Human Resources Attendance and Employee Mobile Application
+Software Requirements Specification
+Developer Handoff Baseline
+Purpose: This SRS defines what the HR, attendance and employee mobile application must do. It converts the approved company policy documents and the existing HTML mockup ideas into requirements that developers can implement and test. Any item marked Management Confirmation Required must not be hard-coded until management approves the value or workflow.
+Document Control
+Approval and Interpretation
+Management has authorized the team to start HR and attendance work as an urgent priority.
+The signed policy documents effective 01 September 2026 are the primary source for attendance, leave, duty-hour and allowance rules described here.
+The existing HTML and React Native mockups are reference ideas only. They are not evidence of a working backend, approved authorization matrix or final calculation rule.
+The system must use configurable, effective-dated policies. Developers must not bury policy numbers in UI code.
+Where two statements conflict or a value is missing, this SRS marks the point for management confirmation.
+Contents
+1 System Purpose and Scope
+2 Users and Role Boundaries
+3 Technology and Architecture
+4 Authentication and Authorization
+5 HR Employee Master
+6 Organization Sites and Shifts
+7 Attendance Processing
+8 Company Policy Rules
+9 Leave and Absence
+10 Allowances Travel and Vehicle Policies
+11 Employee Mobile Application
+12 Approvals Notifications and Audit
+13 API Requirements
+14 Data Model
+15 Reports and Exports
+16 Security Privacy and Nonfunctional Requirements
+17 Acceptance Criteria
+18 Delivery Phases
+19 Management Decisions Required
+20 Source References
+1 System Purpose and Scope
+The solution will provide one controlled HR and attendance platform for office employees, site staff, supervisors, HR, Accounts and management. Employees will use the mobile application for check-in, check-out and self-service. Authorized office users will use the React web application for employee administration, shifts, attendance review, policy configuration, approvals, reports and payroll handoff.
+1.1 Primary Objectives
+Maintain a reliable employee master with personal, employment, contact, document, assignment and compensation information.
+Capture attendance through the mobile application with face verification at Check In and authorized correction without losing original evidence.
+Apply office and site policies consistently using versioned rules with effective dates.
+Give each employee secure access to their own attendance, salary summary, deductions, overtime, leave, advance and loan information.
+Provide traceable approvals and audit history for corrections, overtime, leave, allowances and policy exceptions.
+Generate verified attendance outputs for Accounts and payroll without allowing Accounts to rewrite original punches.
+1.2 Included Scope
+Authentication, session management, password recovery and role-based access control.
+Employee master, onboarding, employment history, documents, certifications, emergency details and status lifecycle.
+Departments, designations, reporting lines, branches, sites, staff categories, shifts, rosters and holidays.
+Mobile check-in/check-out, face verification at Check In, geolocation evidence, server timestamps and attendance exceptions.
+In-app site arrival/departure reporting and employee-specific authorized, controlled and restricted operational zones.
+Office and site attendance rules, overtime, meal allowance eligibility, travel day treatment and attendance corrections.
+Leave requests, balances, evidence, approval and attendance integration.
+Employee self-service web/mobile views and supervisor-limited views.
+Fuel, motorcycle tuning and vehicle custody policy records where they affect employees and payroll claims.
+Reports, exports, notifications, audit logs and payroll-ready attendance summaries.
+1.3 Out of Scope for the First Production Release
+Automatic salary disbursement to a bank. The first release may generate an approved payroll handoff or bank advice file only.
+Medical diagnosis or AI-based disciplinary decisions.
+Unrestricted live tracking outside an authorized attendance or assigned field-work event.
+Attendance-machine, time-clock or other attendance-hardware integration. The mobile application is the production attendance channel.
+Final payroll accounting ledger if Accounts chooses to retain it in a separate finance module.
+2 Users and Role Boundaries
+3 Technology and Architecture
+3.1 Logical Request Flow
+1. React or React Native sends an authenticated HTTPS request to the ASP.NET Core API.
+2. The API validates the access token, role, employee/site scope and request schema.
+3. The application service loads effective policy, shift, roster and assignment data for the event date.
+4. The domain service calculates or validates the result and records source evidence, result and audit metadata in one transaction.
+5. Notifications and noncritical processing run through background jobs after the transaction commits.
+3.2 Environments
+Development, Test/UAT and Production must use separate databases, storage, secrets and API endpoints.
+Production secrets must be stored in a secure secret manager or protected server configuration, never in React or React Native source code.
+Demo/mock data must never be mixed with production employee records.
+4 Authentication and Authorization
+5 HR Employee Master
+The Employee Master is the source of truth for employee identity and employment data. Employee information must not be duplicated separately inside attendance, payroll or mobile modules. Related modules shall reference the Employee ID.
+5.1 Employee Data Fields
+5.2 Employee Lifecycle Requirements
+6 Organization Sites and Shifts
+6.1 Master Data
+Departments, designations, staff categories, employment types, branches, cities and reporting structures.
+Sites with code, name, client/project, address, city, coordinates, configurable attendance geofence radius, start/end dates, status and authorized supervisor.
+Operational zones with type, map boundary, site, instructions, effective period and employee/role/team assignment. Operational zones are separate from the attendance geofence.
+Holiday calendars based on Federal Government notification, with effective date and attachment/reference.
+6.2 Shift Definition
+6.3 Operational Zone Controls
+Operational zones keep employees within authorized work areas and away from areas restricted for safety, security, administrative or other approved reasons. A zone rule may apply to one employee, a role, a team or a site. An individual assignment or exception takes precedence when its effective dates are valid.
+7 Attendance Processing
+Attendance must preserve evidence in two layers. Raw Punch Events store every received check-in/out event unchanged. Daily Attendance Summaries derive work time, status, late minutes, overtime and policy effects. A correction changes the interpreted summary or adds an authorized adjustment; it must not delete the original punch.
+7.1 Attendance Sources
+7.2 Mobile Check In and Check Out Flow
+1. Employee signs in and the app loads the current assignment, shift and attendance state from the API.
+2. For Check In, the app starts a live face challenge and requests location permission for the attendance event. Check Out does not require face verification.
+3. The app confirms liveness and a one-to-one match against the signed-in employee's active face enrollment, then obtains a short-lived verification result/token.
+4. The app captures coordinates, accuracy, device time and device identifier, then sends the event and required verification result over HTTPS.
+5. The server uses its own receipt time as the authoritative time and validates assignment, duplicate state, allowed time window and configurable geofence.
+6. The server stores the raw event, returns accepted, accepted with exception, queued for review or rejected with a clear reason.
+7. The app displays the server-confirmed time, location/site and attendance status. A locally displayed success without server confirmation is not a valid punch.
+7.2.1 Check In Face Verification
+7.3 Attendance Correction
+1. Employee or authorized supervisor submits the correction with requested time/status, reason and evidence.
+2. HR or the configured authority reviews source punches, assignment, shift and evidence.
+3. Approval creates a correction record and recalculates the daily summary using the applicable policy version.
+4. Rejection records the reviewer and reason and notifies the requester.
+5. If the payroll period is locked, the correction requires reopening or an adjustment in the next payroll period according to management policy.
+8 Company Policy Rules
+The rules below are derived from the signed policies effective 01 September 2026. They must be configurable and effective-dated. The system shall show the rule and calculation used for each result.
+8.1 Office Staff Rules
+8.2 Site Staff Rules
+8.3 Overtime Rules
+9 Leave and Absence
+9.1 Leave Workflow
+1. Employee selects leave type and dates; the server calculates duration, holidays, balance and eligibility.
+2. Employee provides reason, contact during leave, handover/reliever where required and supporting evidence.
+3. The system routes the request according to staff category, duration, site and configured approval matrix.
+4. Approval reserves/deducts leave and updates attendance. Rejection records reason. Cancellation follows a separate controlled action.
+5. Any paid/unpaid, encashment or KPI consequence is displayed before final approval and handed to payroll with traceability.
+10 Allowances Travel and Vehicle Policies
+10.1 Meal Allowance
+10.2 Motorcycle Fuel and Maintenance
+11 Employee Mobile Application
+The React Native application is an employee self-service and operational attendance surface. It is not the HR department administration panel. Mobile permissions are role-based, and department management remains in the React web application.
+11.1 Mobile Screens
+11.2 Mobile Attendance Requirements
+12 Approvals Notifications and Audit
+12.1 Approval Objects
+Employee activation and sensitive employment/compensation changes.
+Attendance correction, out-of-geofence event, missing punch and manual entry.
+Operational zone assignment, Amber-zone exception, Red-zone incident review and disputed location evidence.
+Overtime, meal allowance, travel/fuel claim and vehicle maintenance eligibility.
+Leave, leave encashment, advance, loan and policy exception.
+Month lock, month reopen and post-payroll adjustment.
+12.2 Audit History
+Authentication events, device registration, permission changes and failed access.
+Employee record create/update/status changes with field-level before/after values for sensitive fields.
+Raw punch receipt/import, duplicate detection, correction, recalculation and month lock/reopen.
+Policy creation/version/activation and which version calculated each attendance result.
+Document upload/download/delete, report export and sensitive data access.
+13 API Requirements
+API paths below are the minimum contract groups. Final DTO names may follow the team's conventions, but permissions, validation, idempotency, pagination and audit behavior are mandatory.
+13.1 API Standards
+14 Data Model
+14.1 Critical Data Constraints
+Employee ID, CNIC/passport (where applicable), official email and active mobile username must be unique.
+Raw Punch Event is append-only. Attendance summaries may be recalculated but must retain calculation version and history.
+More than one raw punch per employee/day is valid; therefore a unique EmployeeId plus AttendanceDate constraint must not be placed on raw events.
+Policy, shift, assignment and compensation changes require effective dates and may not silently rewrite prior periods.
+Files are private objects referenced by metadata; database backups alone are not a complete backup without file storage.
+Zone events reference the exact zone version and assignment effective at event time; later boundary edits shall not rewrite historical evidence.
+15 Reports and Exports
+16 Security Privacy and Nonfunctional Requirements
+16.1 Performance and Availability
+16.2 Testing Requirements
+Unit tests for policy calculations, cross-midnight sessions, late thresholds, leave eligibility, allowance cycles and mileage milestones.
+Integration tests for authentication, permissions, EF Core persistence, concurrency, audit and file authorization.
+Contract tests between React/React Native clients and OpenAPI DTOs.
+End-to-end tests for employee onboarding, face enrollment, Check-In face verification, check-out, correction approval, month lock and payroll handoff.
+Face-verification tests for live-person checks, replay attempts, wrong employee, expired/reused token, provider outage, re-enrollment and approved exceptions.
+Security tests for IDOR/data-scope bypass, token reuse, file upload, brute force and sensitive export access.
+UAT examples must be approved by HR/management and include office, site, overnight, outstation and exception cases.
+17 Acceptance Criteria
+18 Delivery Phases
+19 Management Decisions Required
+20 Source References
+20.1 Developer Start Checklist
+Review all Management Decisions Required and assign owners/due dates.
+Create the domain glossary and approved status/value lists before database migrations.
+Finalize authentication provider, database, private file storage and deployment environments.
+Define OpenAPI contracts for Auth, Employee, Shift, Punch, Site Report, Operational Zone and Attendance Summary first.
+Build raw-punch and effective-policy tests before implementing salary-impact calculations.
+Prepare UAT data that contains no real employee CNIC, bank, medical or password information.
+End of document
+
+TABLE 1
+Document Item | Value
+Company | Cosmix Engineering Pakistan
+Version | 1.2
+Date | 01 October 2026
+Status | Revised development baseline with digital reporting, operational zones and check-in face verification
+Audience | Project Manager, .NET developers, React developer, React Native developer, QA and management
+Backend | ASP.NET Core Web API on .NET 10, written in C#
+Web | React
+Mobile | React Native for Android and iOS
+
+TABLE 2
+Version | Date | Prepared For | Change
+1.0 | 01 Oct 2026 | Development Team | Initial HR, attendance and employee mobile development baseline
+1.1 | 01 Oct 2026 | Development Team | Moved attendance/reporting fully into the application and added employee-specific operational zone controls
+1.2 | 01 Oct 2026 | Development Team | Removed attendance-machine integration and added face verification only for mobile Check In
+
+TABLE 3
+Role | Permitted Scope
+Employee | Own profile summary, check-in/out, own attendance, corrections, leave, overtime, salary summary, deductions, advances and loans.
+Site Staff | Employee rights plus assigned site information and site attendance evidence.
+Site Supervisor | Own employee rights plus team attendance review and verification for assigned site only. Material/tool requests remain a separate supervisor permission.
+HR Officer | Employee records, shifts, attendance review, leave processing and reports according to assigned permission.
+HR Manager | HR administration, policy configuration, authorized corrections, approval routing and HR reports.
+Accounts Officer | Read approved attendance/payroll inputs, review financial impacts and record payroll processing. No right to alter raw punches.
+Administrator or Director | Management approvals and policy exceptions according to configured authority.
+System Administrator | User, role and technical configuration. No automatic access to medical, salary or restricted HR content.
+Auditor | Read-only access to authorized records, calculations and immutable audit history.
+
+TABLE 4
+ID | Requirement | Priority
+ROLE-001 | Every API and screen shall enforce role and data-scope permissions on the server, not only in the user interface. | Must
+ROLE-002 | A supervisor shall see only employees currently assigned to the supervisor's permitted site or team. | Must
+ROLE-003 | Employees shall see only their own personal, attendance and financial self-service data. | Must
+ROLE-004 | Medical, bank, salary, CNIC and disciplinary data shall use separate fine-grained permissions. | Must
+
+TABLE 5
+Layer | Required Technology and Responsibility
+Web Frontend | React application for HR, attendance, Accounts handoff, management approval and reporting.
+Mobile Frontend | React Native application for Android and iOS employee self-service and attendance.
+Backend | ASP.NET Core Web API on .NET 10, written in C#. Business rules and authorization execute here.
+Database | SQL Server recommended. Use EF Core migrations, relational constraints and effective-dated records.
+Background Processing | Hosted services or a durable job queue for notifications, report generation, face-verification cleanup and recalculation.
+File Storage | Private object/file storage for photos, CNIC/passport, certificates, evidence and policy documents. Store metadata in SQL.
+Maps and Location | Approved map/geocoding provider or internal coordinates. Provider choice must pass privacy review.
+Observability | Structured logs, health checks, metrics, error tracking and security audit events without leaking sensitive payloads.
+
+TABLE 6
+ID | Requirement | Priority
+AUTH-001 | Users shall authenticate with a unique employee/user identifier and password. Mobile may use approved phone/email login after identity verification. | Must
+AUTH-002 | The API shall issue short-lived access tokens and securely rotated refresh tokens with server-side revocation. | Must
+AUTH-003 | Password reset shall use a time-limited OTP or link sent through an approved company channel. | Must
+AUTH-004 | Management, HR, Accounts and System Administrator accounts shall support mandatory multi-factor authentication. | Must
+AUTH-005 | Mobile devices shall be registered to the user account. New-device sign-in shall generate an alert and may require OTP verification. | Must
+AUTH-006 | Repeated failed logins shall trigger throttling and temporary lockout without exposing whether an account exists. | Must
+AUTH-007 | Logout, password change, termination or suspension shall revoke active sessions as configured. | Must
+AUTH-008 | Every sensitive read and write shall record user, role, employee scope, IP/device, timestamp and correlation ID. | Must
+
+TABLE 7
+Group | Field | Rules | Requirement
+Identity | Employee ID | System-generated, unique, immutable after activation | Required
+Identity | Full legal name | As per CNIC or passport | Required
+Identity | Father or spouse name | Text | Required by HR policy
+Identity | CNIC or passport number | Unique; format depends on document type | Required
+Identity | Document type and expiry | CNIC or passport; expiry where applicable | Required
+Identity | Date of birth | Date; age validation based on company policy | Required
+Identity | Gender and marital status | Controlled values | As required
+Identity | Profile photo | Private image file with type and size validation | Required
+Identity | Face verification enrollment | Encrypted verification template, enrollment status/date, authorized enroller and re-enrollment history | Required for mobile Check In
+Contact | Personal phone | Pakistan/international normalized number | Required
+Contact | Company phone or SIM | Number, issue date, status and allowed credit tier | Optional
+Contact | Personal email | Validated email | Optional
+Contact | Company email | Unique company email | Optional
+Contact | Current and permanent address | Separate addresses, city and province | Required
+Emergency | Emergency contact | Name, relationship, phone and alternate phone | Required
+Employment | Department and designation | References to controlled master data | Required
+Employment | Employment category | Permanent, contract, daily wage, trainee, outsourced or approved type | Required
+Employment | Staff category | Office, site, logistics, driver, rider, purchaser, field/complaint or other | Required
+Employment | Reporting manager | Active employee reference with history | Required
+Employment | Branch/base city | Office/region reference | Required
+Employment | Assigned site | Current assignment plus effective-dated history | Conditional
+Employment | Joining date and probation | Date and probation period | Required
+Employment | Employment status | Draft, pending approval, active, suspended, resigned, terminated, retired | Required
+Employment | Shift and working hours | Effective-dated shift/roster assignment | Required
+Compensation | Base/gross salary and wage basis | Monthly, daily or hourly; effective-dated | Restricted
+Compensation | Payment method | Bank, cheque, cash or approved method | Restricted
+Bank | Bank details | Bank, account title, account number, IBAN and verification status | Restricted
+Background | Previous employment | Employer, role, dates, last salary and leaving reason | Optional
+Documents | Employee documents | Offer, contract, CNIC, degrees, certificates, licenses and evidence | As applicable
+Documents | Signature or thumb impression | Private file with uploader and timestamp | As required
+Certification | Certificate/license | Type, number, issuer, issue/expiry and attachment | Conditional
+Assets | Assigned assets | Asset reference, issue/return condition and custody record | Optional
+Medical | Authorized medical/emergency data | Restricted record; no diagnosis automation | Optional
+System | Mobile access | Enabled state, username/phone and registered devices | Required for app users
+
+TABLE 8
+ID | Requirement | Priority
+HR-001 | HR shall create an employee as Draft and save incomplete work without activating attendance access. | Must
+HR-002 | Required fields, uniqueness, documents and approval shall be validated before activation. | Must
+HR-003 | Employee numbers shall be generated by the server through a controlled sequence, never through random UI code. | Must
+HR-004 | Salary, role, manager, shift, branch and site changes shall create effective-dated history instead of overwriting the old value. | Must
+HR-005 | Termination or suspension shall block future punches and mobile access according to the effective date while preserving history. | Must
+HR-006 | Employee deletion shall be logical/archival only where records are referenced by attendance, payroll or audit history. | Must
+HR-007 | The system shall detect missing or expiring required documents and certifications and notify authorized users. | Should
+HR-008 | Mobile Check In shall remain disabled until an authorized face enrollment is active. Re-enrollment or reset shall require a reason, authorized actor and audit record. | Must
+
+TABLE 9
+Shift Field | Requirement
+Shift code and name | Unique and user-readable
+Start and end time | Supports same-day and cross-midnight shifts
+Scheduled work duration | Daily committed hours
+Breaks | Paid/unpaid and duration
+Late threshold | Effective policy value; current policy uses 10:15 AM for 10:00 AM start
+Half-day threshold | Current policy describes arrival up to 12:59 PM as half day
+Hourly treatment | After 12:59 PM where policy applies
+Overtime eligibility | By staff category and approval
+Applicable days | Default six-day week plus exceptions
+Early reporting rule | Default no credit before 10:00 AM unless approved exception
+Effective dates | Policy/shift history must be retained
+
+TABLE 10
+ID | Requirement | Priority
+SHIFT-001 | Shift assignments shall be effective-dated and assignable by employee, team, site, staff category or department. | Must
+SHIFT-002 | Temporary site-opening time changes shall require date, approving authority, written evidence and affected employees. | Must
+SHIFT-003 | The calculation engine shall use the employee's applicable shift and policy on the attendance date. | Must
+SHIFT-004 | Changing a shift rule shall not recalculate locked prior periods unless an authorized recalculation is explicitly approved. | Must
+
+TABLE 11
+Zone Type | Meaning and Application Behavior
+Green Authorized Zone | The employee is permitted to work or report in this area during the assigned schedule. The app may show the active site or task instruction.
+Amber Controlled Zone | Entry is allowed only when an active permission, task or approval exists. The app warns the employee and records an exception or access request when permission is missing.
+Red Restricted Zone | The employee is not permitted to enter during the configured period. The app displays a clear do-not-enter instruction and records a boundary or entry-attempt event for authorized review.
+
+TABLE 12
+ID | Requirement | Priority
+ZONE-001 | Authorized users shall define a zone as a circle or polygon with name, site, type, instructions, reason code, status and effective start/end date and time. | Must
+ZONE-002 | A zone shall be assignable to an employee, role, team or site population, with an explicit employee-level override and recorded approving authority. | Must
+ZONE-003 | The employee app shall show only the restriction and instruction needed by that employee. Confidential medical, disciplinary or security reasons shall be visible only to separately authorized roles. | Must
+ZONE-004 | Zone evaluation shall use server-controlled assignments and configuration. Mobile code shall not contain hard-coded employee or zone rules. | Must
+ZONE-005 | Green, Amber and Red are the initial zone types. Authorized administrators may add or deactivate further configured zone types without a mobile release. | Must
+ZONE-006 | When an employee approaches or enters an Amber or Red zone during an authorized duty or field-work window, the app shall warn the employee and send a zone event when technically available. | Must
+ZONE-007 | A zone event shall retain employee, zone/version, event type, server/device time, coordinates, accuracy, source, device, related assignment and acknowledgement status. | Must
+ZONE-008 | An attendance punch and a zone event shall remain separate records. A zone violation shall not delete, fabricate or silently change a punch or salary calculation. | Must
+ZONE-009 | Continuous or background boundary monitoring may run only during a configured duty or field assignment, with visible notice and approved retention. Tracking outside that window is prohibited. | Must
+ZONE-010 | Zone alerts shall create reviewable evidence and notifications; disciplinary action, access exception or payroll impact requires the configured human approval workflow. | Must
+
+TABLE 13
+Source | Required Evidence and Handling
+Employee mobile app | Employee, device, server timestamp, claimed action, Check-In face-verification result/token, coordinates, accuracy, site, optional attachment and online/offline state.
+In-app site report | Employee, assigned site/task, arrival/departure or incident type, server/device time, coordinates, notes, attachment, submission status and reviewer.
+File import | Source file hash, importer, mapping, duplicate report, validation errors and import batch.
+Authorized manual entry | Employee, time, reason, evidence, requester, approver and original/corrected values.
+
+TABLE 14
+ID | Requirement | Priority
+FACE-001 | Face verification shall run for Check In only. Check Out and ordinary app access shall not require a face scan. | Must
+FACE-002 | Verification shall be one-to-one against the signed-in employee's active enrollment and shall not search or identify a person across the employee population. | Must
+FACE-003 | A live-person check shall protect against printed photos, screen replays and other basic presentation attacks before matching. | Must
+FACE-004 | The server shall accept Check In only with a valid, unexpired and single-use verification result bound to the employee, registered device and punch request. | Must
+FACE-005 | A failed or unavailable verification shall not create a successful Check In. The app shall show a clear retry or attendance-correction path without exposing the match threshold. | Must
+FACE-006 | Enrollment, re-enrollment and verification attempts shall be audited with result, time, device, provider/version and correlation ID. Raw face captures shall not be retained unless an approved policy explicitly requires a limited retention period. | Must
+FACE-007 | Face templates and any retained capture shall be encrypted, isolated from ordinary profile photos and accessible only to specifically authorized services and roles. | Must
+FACE-008 | The system shall support approved accessibility or medical exception handling through a documented human approval and alternative Check-In process. | Must
+
+TABLE 15
+ID | Requirement | Priority
+ATT-001 | The system shall store check-in and check-out as separate immutable raw events and support more than two events per day where breaks or field movements are required. | Must
+ATT-002 | Server time and Pakistan timezone rules shall control attendance calculations. Device time shall be retained only as evidence. | Must
+ATT-003 | Duplicate/replayed punches shall be detected by idempotency key, employee, event type and time tolerance. | Must
+ATT-004 | Offline mobile punches may be queued with original capture time but shall remain Unverified until received and validated by the server. A queued Check In still requires a valid tamper-evident face-verification result. | Should
+ATT-005 | A configurable GPS accuracy threshold shall prevent unreliable coordinates from being silently accepted. | Must
+ATT-006 | Geofence radius shall be configurable by site. The existing mockup value of 80 meters is not a global approved rule. | Must
+ATT-007 | An out-of-geofence event shall be recorded with distance and routed for review; it shall not be silently converted to valid attendance. | Must
+ATT-008 | Missing check-out, overlapping shifts, impossible travel, excessive duration and sequence errors shall create exceptions. | Must
+ATT-009 | Daily summaries shall show scheduled hours, worked hours, payable hours, late minutes, overtime, status, exceptions and calculation version. | Must
+ATT-010 | Month lock shall freeze approved attendance for payroll. Reopening shall require authorized reason and audit entry. | Must
+ATT-011 | Employees shall submit attendance and operational reports only through the approved application and its authorized correction workflow. | Must
+
+TABLE 16
+Rule | System Requirement
+OFF-001 | Regular duty is 10:00 AM to 7:00 PM, nine hours, six days per week.
+OFF-002 | Time before 10:00 AM is not counted unless an approved exemption applies.
+OFF-003 | Arrival after 10:15 AM is late. Three late arrivals cause one day's salary deduction without marking those events as leave or absent.
+OFF-004 | Arrival up to 12:59 PM is treated as half day. Arrival after that may be calculated hourly.
+OFF-005 | If one paired employee delays another employee's work, the verified waiting duration and the late employee's late duration may be deducted according to policy.
+OFF-006 | Maximum annual late count is 30 without KPI deduction. Days 31-60 use 0.8 percent per day and days 61-120 use 0.5 percent per day, subject to management confirmation of calculation base.
+OFF-007 | Lunch is 1:00 PM to 2:00 PM. Meal-break rules shall not automatically count as overtime.
+OFF-008 | Continuous 13-hour office duty starting at 10:00 AM qualifies for meal allowance up to Rs. 400.
+OFF-009 | Both Check In and Check Out are required in the approved mobile application. Check In requires face verification; Check Out does not.
+OFF-010 | Named/role-based early-reporting exemptions must be maintained as effective-dated exceptions with instruction reference.
+OFF-011 | University/studying employee schedules, hourly treatment, make-up hours, TDA exclusion and KPI effect require a dedicated approved employee policy assignment.
+
+TABLE 17
+Rule | System Requirement
+SITE-001 | Regular duty is 10:00 AM to 7:00 PM, nine hours, six days per week. Work after 7:00 PM is overtime for eligible staff.
+SITE-002 | Early time is not counted unless instructed and recorded with supervisor/management reference.
+SITE-003 | Three late arrivals cause one day's salary deduction. Late and half-day thresholds follow the signed site policy.
+SITE-004 | A site may start as late as 11:00 AM by Site In-Charge coordination; the nine-hour period then starts at 11:00 AM. Earlier start requires written management approval.
+SITE-005 | Employees paired for the same work shall have coordinated reporting time. Verified waiting loss may be attributed to the late employee.
+SITE-006 | Fake IN/OUT evidence shall create a disciplinary case. The system records evidence and approval; it must not automatically terminate an employee.
+SITE-007 | Site attendance shall include site name, arrival time and departure time. The approved mobile application is the official structured reporting channel.
+SITE-008 | Overtime eligibility applies only to configured categories such as site staff, drivers, riders and purchasers.
+SITE-009 | Cross-midnight and extended duty shall use continuous work sessions. The next-day absence/4.5-hour/12-extra-hour policy must be implemented only after management confirms the exact examples and reset logic.
+SITE-010 | Monthly committed-hours shortage and KPI effects must show the exact shortage and policy calculation before approval.
+SITE-011 | 120 annual late arrivals may trigger termination/blacklist workflow but the system shall require authorized disciplinary approval.
+
+TABLE 18
+ID | Requirement | Priority
+OT-001 | Overtime shall be calculated only after scheduled work is complete and only for eligible staff categories. | Must
+OT-002 | Overtime must retain start/end, total minutes, site/job, reason, evidence, requester, approver and rate rule. | Must
+OT-003 | Travel for company work is paid as a normal workday but travel hours do not automatically earn overtime. | Must
+OT-004 | Bulk overtime approval shall identify affected employees and shall not silently mark every employee at a site. | Must
+OT-005 | The overtime rate/multiplier is Management Confirmation Required because the supplied policies define eligibility but not one complete rate formula. | Must
+
+TABLE 19
+Rule | Requirement
+LEAVE-001 | Leave year is fiscal July to June. Annual entitlement is 18 days for eligible employees.
+LEAVE-002 | Employees with less than four months of service are not entitled under the office policy unless management approves another rule.
+LEAVE-003 | Six days are sick leave and require electronic hospital or medical-store evidence.
+LEAVE-004 | Twelve days are casual leave and require written approval before leave.
+LEAVE-005 | Travel to/from hometown for personal leave is leave or absence, not a working day.
+LEAVE-006 | Company work travel is a normal paid working day without automatic overtime for travel hours.
+LEAVE-007 | Exam leave requires admit card and date sheet.
+LEAVE-008 | Half-day emergency leave requires evidence; missing evidence may create a one-percent KPI event.
+LEAVE-009 | Site injury medically advised rest does not reduce regular leave, subject to evidence and authorized review.
+LEAVE-010 | Federal Government notifications control holidays.
+LEAVE-011 | Management may grant six extra leave days or equivalent pay at 100 percent KPI.
+LEAVE-012 | Unused 18-day leave encashment requires at least 70 percent KPI and management approval.
+LEAVE-013 | Long-leave pending-hours recovery for site staff shall track pre-leave and post-return commitments.
+
+TABLE 20
+Category | Eligibility | Amount
+Office staff | Continuous 13-hour duty from 10:00 AM | Up to Rs. 400
+Stationed site staff dinner | Continuous 12-hour duty; cycle breaks if employee goes home | Amount requires management confirmation
+Stationed site staff breakfast | Still continuously working eight hours after dinner eligibility | Rs. 300
+Stationed site staff lunch | Still continuously working eight hours after breakfast eligibility | Rs. 500
+Outstation staff | Approved outstation deployment | Rs. 1,000 per day, including breakfast, lunch and dinner; no additional dinner claim
+
+TABLE 21
+ID | Requirement | Priority
+ALLOW-001 | The allowance engine shall prevent duplicate meal claims for the same continuous duty period. | Must
+ALLOW-002 | Meal eligibility shall use verified attendance/work sessions and approved staff/deployment category. | Must
+ALLOW-003 | Allowances shall record calculation, payable date, payroll period, status and approval. | Must
+ALLOW-004 | A home visit or break that ends continuous duty shall close the allowance cycle when verified. | Must
+
+TABLE 22
+Rule | Requirement
+VEH-001 | Policy applies only to employees assigned to complaint resolution and field visits.
+VEH-002 | Home-to-office and office-to-home distance is not reimbursable. Home distance must be stored for transparent adjustment.
+VEH-003 | Additional distance beyond usual home-office distance may be payable; nearer assignment excess may be adjusted monthly.
+VEH-004 | Outstation tuning becomes eligible every 1,000 approved kilometers at fixed Rs. 1,800.
+VEH-005 | Engine overhaul becomes eligible after 8,000 approved outstation kilometers at approximately Rs. 18,000 including tires.
+VEH-006 | Fuel reimbursement uses 28 kilometers per liter for approved site-to-site travel based on approved map distance and route evidence.
+VEH-007 | Puncture, challan/fines, lifting, bearing, helmet, seat, cover, indicators and other excluded expenses shall not be reimbursed under this policy.
+VEH-008 | Company vehicle issue/return condition, accident evidence, third-party details, insurance claim and employee liability shall be recorded.
+VEH-009 | Workshop/service history shall identify the authorized workshop, odometer, service type and evidence.
+
+TABLE 23
+Screen | Required Capability
+Authentication | Login, OTP/MFA when required, password reset, device registration, logout and session expiry.
+Home | Employee identity, current shift/site, today's status, next action and pending requests.
+Check In/Out | Check In face challenge and liveness result, server-confirmed punch, site/location, accuracy, policy warning, exception state and retry/offline state. Check Out has no face challenge.
+Site Reporting | Submit arrival, departure, delay, access issue or operational incident with site/task, notes, location and optional evidence; view server status and review history.
+Zones and Restrictions | Show the employee's active Green, Amber and Red zones, instructions, effective period, permission status, warnings and acknowledgement.
+My Attendance | Calendar, daily details, punch events, worked/payable hours, late/absence/overtime and monthly summary.
+Correction Request | Select day/event, proposed correction, reason, attachment and request status/history.
+My Shift | Current roster, working days, start/end, breaks, holiday and temporary approved changes.
+Leave | Balance, request, evidence upload, handover/reliever, approval status and history.
+Overtime | Own overtime records, eligibility, approval status and payable amount when authorized.
+Salary and Deductions | Own salary summary, attendance deductions, allowance, advance/loan recovery and payslips according to permission.
+Advance and Loan | Submit requests and view approval/repayment history.
+Profile and Documents | Own approved profile summary, emergency contact and expiring documents; edits become requests where required.
+Notifications | Attendance exceptions, missing punch, approval result, shift change, document expiry and policy notice.
+
+TABLE 24
+ID | Requirement | Priority
+MOB-001 | The app shall show Check In only when no active work session exists and Check Out when a valid active session exists, subject to approved exceptions. | Must
+MOB-002 | The app shall explain location permission and collect location only when required for attendance or authorized field work. | Must
+MOB-003 | The app shall not claim success until the API returns a server-generated attendance event ID. | Must
+MOB-004 | Queued offline events shall be visible as Pending Sync and shall use an idempotency key to avoid duplicate submission. | Should
+MOB-005 | Rooted/jailbroken device handling, mock-location detection and device-integrity checks shall be risk-based and shall create review flags rather than automatic salary deductions. | Should
+MOB-006 | Site Supervisor material/tool request access shall remain a separate permission and shall not be given to every site employee. | Must
+MOB-007 | Office and site employees shall both have access to their own attendance, salary, deductions, overtime, leave, advance and loan information. | Must
+MOB-008 | No HR department-wide employee management or medical record access shall be exposed in the employee mobile application. | Must
+MOB-009 | The app shall provide the complete official site arrival, departure, delay and incident reporting workflow. | Must
+MOB-010 | The app shall download only zones applicable to the signed-in employee and shall refresh them at login, assignment change and configured intervals. | Must
+MOB-011 | Amber or Red zone warnings shall identify the zone, instruction and next permitted action without exposing a confidential restriction reason. | Must
+MOB-012 | The employee shall be able to acknowledge a warning, request an Amber-zone exception where permitted and submit a correction when location evidence is inaccurate. | Must
+MOB-013 | Offline zone events and site reports shall show Pending Sync, retain original evidence and use idempotency keys when submitted. | Should
+MOB-014 | The app shall invoke camera permission for Check In face verification only when needed, explain the purpose and never expose the face template in local app storage. | Must
+
+TABLE 25
+ID | Requirement | Priority
+APR-001 | Approval matrices shall be configurable by request type, amount/duration, staff category, department, site and risk level. | Must
+APR-002 | The requester shall not approve their own request. | Must
+APR-003 | Every decision shall store decision, reason/comment, actor, role, timestamp and values before/after. | Must
+APR-004 | Delegation shall be time-bound, explicit and audited. | Should
+APR-005 | Notifications shall not expose sensitive salary, CNIC, medical or bank data on lock screens or email subjects. | Must
+
+TABLE 26
+API Group | Minimum Endpoints
+Authentication | POST /api/auth/login; POST /api/auth/refresh; POST /api/auth/logout; POST /api/auth/forgot-password; POST /api/auth/reset-password; POST /api/auth/mfa/verify
+Current User | GET /api/me; GET /api/me/permissions; GET /api/me/devices; DELETE /api/me/devices/{id}
+Employees | GET/POST /api/hr/employees; GET/PUT /api/hr/employees/{id}; POST /submit; POST /approve; POST /status-change
+Employee Files | POST /api/hr/employees/{id}/documents; GET metadata/download with authorization; POST verify/expire
+Organization | CRUD /api/hr/departments, /designations, /branches, /staff-categories and reporting assignments
+Sites | CRUD /api/hr/sites; GET /{id}/assignments; POST /{id}/geofence-version
+Operational Zones | CRUD /api/hr/zones; POST /{id}/versions; POST assignments; GET /api/me/zones; POST /api/zones/events; POST exception request/decision
+Shifts | CRUD /api/hr/shifts; POST /api/hr/shift-assignments; GET employee roster; POST temporary change
+Policies | CRUD /api/hr/policies; POST /versions; POST /activate; GET effective policy by employee/date
+Mobile Punch | POST /api/attendance/punches; GET /api/attendance/today; GET /api/attendance/my-calendar
+Site Reporting | POST /api/site-reports; GET /api/site-reports/mine; GET authorized queue; POST review/decision
+Attendance Admin | GET /api/attendance/daily; GET /exceptions; POST /corrections; POST correction decision; POST month lock/reopen
+Face Verification | POST /api/hr/employees/{id}/face-enrollment; POST re-enroll/revoke; POST /api/attendance/face-challenges; POST verify; GET authorized attempt history
+Leave | GET balances; POST requests; GET history; POST approve/reject/cancel; GET team calendar by scope
+Overtime | POST request; GET own/team records; POST approve/reject; GET payroll-ready summary
+Allowances | GET eligibility; POST claim; POST approve/reject; GET payment/payroll status
+Vehicle and Fuel | POST trips/claims/service; GET mileage ledger; POST decision; GET vehicle custody history
+Reports | POST report job; GET status; GET authorized download; export audit record
+Notifications | GET /api/notifications; POST mark-read; GET preferences where permitted
+
+TABLE 27
+ID | Requirement | Priority
+API-001 | All endpoints shall use HTTPS, versioning, standardized problem details, validation errors and correlation IDs. | Must
+API-002 | List endpoints shall provide pagination, filter, sorting and authorized data scope. | Must
+API-003 | Create/punch/approval endpoints shall support idempotency to prevent duplicate records. | Must
+API-004 | Optimistic concurrency/version tokens shall protect employee, policy, shift and approval updates. | Must
+API-005 | File endpoints shall validate extension, MIME type, signature, size and malware scan result. | Must
+API-006 | OpenAPI documentation shall be generated and kept consistent with the deployed API. | Must
+
+TABLE 28
+Entity | Purpose
+User Account | Identity, credentials, MFA, status and employee link
+Role Permission User Scope | RBAC plus department/site/employee data scope
+Employee | Stable identity and current status
+Employee Assignment History | Department, designation, manager, branch, site and effective dates
+Compensation History | Salary/wage basis, effective date and restricted access
+Employee Document Certification | Metadata, expiry, verification and private file reference
+Site and Geofence Version | Location, radius, status and effective dates
+Operational Zone and Version | Circle/polygon boundary, zone type, instructions, reason code, site and effective configuration
+Zone Assignment Exception | Employee/role/team/site scope, individual override, permission, approval and effective dates
+Zone Event | Approach, entry, exit, warning, acknowledgement or disputed evidence with location and device metadata
+In-App Site Report | Arrival, departure, delay, access issue or incident report with evidence and review status
+Shift and Shift Assignment | Schedule definition and employee/team assignment history
+Policy and Policy Version | Rule set, scope, effective dates, approval and immutable version
+Face Enrollment | Employee-bound encrypted template reference, status, enrollment/revocation history and authorized actor
+Face Verification Attempt | One-to-one Check-In challenge, liveness/match result, provider/version, device, expiry and audit reference
+Raw Punch Event | Immutable attendance source event
+Work Session | Paired/checkpointed work period across same-day or cross-midnight duty
+Daily Attendance Summary | Derived status and payable calculations
+Attendance Exception Correction | Issue, request, evidence, decision and recalculation
+Leave Type Balance Request | Entitlement, balance, evidence and approval
+Overtime Request | Work duration, reason, rate rule and approval
+Allowance Claim | Eligibility, calculation, evidence and payroll status
+Vehicle Trip Fuel Claim Service | Distance, route, liters, eligibility and maintenance milestones
+Approval Decision | Generic approval history and segregation of duties
+Audit Event | Security/business event with actor, target and before/after reference
+Notification | Recipient, channel, safe content, status and read time
+
+TABLE 29
+Report | Content
+Daily attendance | Present, late, absent, leave, exceptions, source and site/department filters
+Monthly attendance register | Employee-by-day matrix plus worked/payable hours and status totals
+Punch audit | Raw IN/OUT events, source/device, coordinates where authorized and exception trail
+Operational zones | Current assignments, Amber/Red events, warnings, acknowledgements, exceptions and reviewer actions by authorized scope
+Site reporting | In-app arrival/departure, delay, access issue and incident reports with sync and review status
+Late and KPI | Counts by policy year, thresholds, policy calculation and approved disciplinary status
+Overtime | Requested, approved, payable and rejected overtime by employee/site/job
+Meal allowance | Eligibility session, amount, approval and payroll/payment status
+Leave | Balances, utilization, evidence status, encashment eligibility and absence
+Employee master | Authorized fields only; sensitive fields excluded by default
+Document expiry | CNIC/passport/certification/insurance expiry and reminders
+Fuel and mileage | Approved routes, kilometers, liters, tuning/overhaul milestones and adjustments
+Payroll handoff | Locked attendance, overtime, allowances and approved deductions with trace IDs
+Audit | Policy changes, corrections, approvals, exports and sensitive access
+
+TABLE 30
+ID | Requirement | Priority
+REP-001 | Exports shall generate real XLSX/PDF/CSV files through background jobs for large reports, not UI-only success messages. | Must
+REP-002 | Export columns shall follow the user's permission and shall record an audit event. | Must
+REP-003 | Reports shall show generation time, filters, policy period and data lock status. | Must
+
+TABLE 31
+ID | Requirement
+SEC-001 | Encrypt all network traffic with TLS. Encrypt databases/backups and private files at rest.
+SEC-002 | Use least-privilege service accounts and separate application, database, file storage and face-verification service credentials.
+SEC-003 | Mask CNIC, bank and contact information in lists and logs. Reveal full values only to authorized roles.
+SEC-004 | Never store plaintext passwords, OTPs or temporary passwords. Use an approved password hashing algorithm and force secure activation.
+SEC-005 | Protect mobile tokens using OS secure storage. Do not store sensitive HR payloads in unencrypted local storage.
+SEC-006 | Rate-limit login, punch, OTP, file upload and report endpoints.
+SEC-007 | Validate files and scan for malware before making them available to users.
+SEC-008 | Location data shall be collected only for approved attendance/field purposes and retained according to approved policy.
+SEC-008A | Background zone monitoring shall be limited to the employee's configured duty/field-work window, use visible notice and stop when the authorized window ends.
+SEC-009 | External map providers must not receive employee identity or unrestricted route history.
+SEC-010 | Database queries, reports and exports shall enforce data scope on the server.
+SEC-011 | Face templates shall be encrypted with separately managed keys, excluded from routine exports/backups where policy requires, and deleted according to approved offboarding and retention rules.
+SEC-012 | Face verification shall be used only for employee Check In, not surveillance, unrestricted tracking or general identity search.
+
+TABLE 32
+ID | Requirement | Priority
+NFR-001 | Normal API responses should complete within two seconds at the agreed production load, excluding large exports and external device sync. | Should
+NFR-002 | Mobile punch submission should return a server result within five seconds on a stable network. | Should
+NFR-003 | The system shall support at least the agreed employee count plus three-year growth without redesign. Initial load target is Management Confirmation Required. | Must
+NFR-004 | Backups shall include SQL data, private files and configuration with tested restore procedures. | Must
+NFR-005 | Face-verification service failure shall not expose templates or create a false successful Check In; failures shall be observable and route employees to the approved exception process. | Must
+NFR-006 | Web and mobile interfaces shall meet practical accessibility, readable sizing and responsive-layout requirements. | Should
+
+TABLE 33
+ID | Acceptance Test
+AC-001 | An authorized HR user can create a complete employee draft, submit it, obtain required approval and activate mobile access without losing data.
+AC-002 | An employee can complete live one-to-one face verification at Check In, receive a server-confirmed event, Check Out without another face scan, and see both events in My Attendance and authorized web views.
+AC-003 | The system preserves raw punches and shows a separate approved correction trail without deleting original evidence.
+AC-004 | Office and site policy test cases calculate late, half-day, hourly, overtime and allowance outcomes using the policy version effective on the date.
+AC-005 | An employee outside the permitted geofence receives a clear review status; unauthorized users cannot approve the exception.
+AC-005A | An employee receives the correct Green, Amber or Red zone instruction for their effective assignment; a Red-zone entry attempt creates a separate audited event and notification without altering the attendance punch.
+AC-005B | A site employee can submit arrival, departure, delay and incident reports entirely in the application without any external messaging step or dependency.
+AC-006 | Office and site employees can view only their own attendance, salary summary, deductions, overtime, leaves, advances and loans.
+AC-007 | Accounts can consume locked attendance/payroll inputs but cannot alter raw punches or HR policy.
+AC-008 | Exports create usable files and exclude fields the requesting user is not allowed to access.
+AC-009 | Suspended/terminated users cannot create new punches after the effective time and their historical records remain available to authorized users.
+AC-010 | All sensitive changes, approvals, policy versions and report exports are traceable in audit history.
+
+TABLE 34
+Phase | Developer Outcome
+Phase 1 Foundation | Solution architecture, environments, authentication, RBAC/data scope, audit, master data and file storage.
+Phase 2 Employee Master | Employee lifecycle, fields, documents, assignments, approvals and employee profile.
+Phase 3 Attendance Core | Sites, shifts, face enrollment and Check-In verification, raw punches, mobile check-in/out, in-app site reporting, operational zones, summaries, exceptions and corrections.
+Phase 4 Policy Engine | Office/site rules, overtime, leave, meal allowance, month lock and payroll handoff.
+Phase 5 Employee Self Service | Attendance calendar, correction, leave, salary/deductions, overtime, advance/loan and notifications.
+Phase 6 Claims and Reporting | Fuel/motorcycle rules, reports, exports, dashboards and production hardening.
+
+TABLE 35
+ID | Decision Needed Before Final Implementation
+MD-001 | Final employee onboarding approval chain and which changes require management approval.
+MD-002 | Approved face-verification SDK/provider and whether matching runs on the registered device, company server or approved private service.
+MD-003 | Approved geofence radius per site and GPS accuracy threshold; 80 meters is mockup-only until confirmed.
+MD-003A | Final zone names/colors beyond Green, Amber and Red; boundary source/owner; alert recipients; approach distance; monitoring frequency; and which roles may approve Amber-zone exceptions.
+MD-004 | Approved live-person and face-match thresholds, retry count, enrollment method, alternative exception process and raw-capture retention period.
+MD-005 | Exact authority for attendance correction, out-of-geofence, overtime, leave and allowance decisions.
+MD-006 | Exact cross-midnight 10-hour reset, next-day 4.5-hour and 12-extra-hour examples for site staff.
+MD-007 | Overtime hourly rate/multiplier formula by staff category and day type.
+MD-008 | Dinner allowance amount for stationed site staff. The supplied site policy defines eligibility but not a clear dinner amount.
+MD-009 | KPI percentage calculation base, annual reset and whether deductions affect salary directly or performance only.
+MD-010 | Paired-worker waiting-time evidence, approval and maximum deduction treatment.
+MD-011 | Final leave approval chain, cancellation rules and additional six-day benefit handling.
+MD-012 | Employee categories and named early-reporting exceptions to migrate into effective-dated policy assignments.
+MD-013 | Face-template deletion timing after resignation/termination and the authorized roles for enrollment, re-enrollment and verification-attempt review.
+MD-014 | Payroll module boundary: HR calculation, Accounts verification, management approval and bank advice responsibility.
+MD-015 | Data retention periods for GPS, raw punches, CCTV/evidence, documents, payroll and audit logs.
+MD-016 | Initial production employee count, sites, peak punch concurrency and availability target.
+
+TABLE 36
+Source Type | Reference
+Signed policy | Office Timing Attendance and Meal Allowance Policy, dated 01 September 2026
+Signed policy | Duty Hours and Meal Allowance Policy Site Staff, effective 01 September 2026
+Signed policy | Motorcycle Maintenance and Tuning Policy, dated 01 September 2026
+Requirements | HMS ERP FSM SRS draft supplied by the project manager
+Project context | PROJECT_CONTEXT.md and AGENTS.md confirmed role/mobile boundaries
+Reference mockup | Existing hr HTML pages, shared JavaScript and React Native prototype

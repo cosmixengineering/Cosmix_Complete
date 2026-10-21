@@ -1,0 +1,121 @@
+# Based on the official exadel-inc/CompreFace v1.2.0 five-service deployment.
+name: cosmix-face
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  security_opt: ["no-new-privileges:true"]
+  logging:
+    driver: json-file
+    options: {max-size: "5m", max-file: "3"}
+  networks: [face-private]
+
+services:
+  compreface-postgres-db:
+    <<: *service-defaults
+    image: exadel/compreface-postgres-db:1.2.0@sha256:fe898d327bc3dd738513ef7cafcbe97da51ac10d2542493141ac7878d3bc9f3a
+    mem_limit: 256m
+    pids_limit: 100
+    environment:
+      POSTGRES_USER: cosmixface
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Provide the protected server-side password}
+      POSTGRES_DB: cosmixface
+    command: ["postgres", "-c", "shared_buffers=32MB", "-c", "max_connections=50"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cosmixface -d cosmixface"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  compreface-api:
+    <<: *service-defaults
+    image: exadel/compreface-api:1.2.0@sha256:4e131ba2c51a2e711f0bdad0720f9ab47c827f383c5c956b1be4dfd994edc1cc
+    mem_limit: 768m
+    pids_limit: 256
+    environment:
+      POSTGRES_USER: cosmixface
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Provide the protected server-side password}
+      POSTGRES_URL: jdbc:postgresql://compreface-postgres-db:5432/cosmixface
+      SPRING_PROFILES_ACTIVE: dev
+      API_JAVA_OPTS: -Xms128m -Xmx512m
+      SAVE_IMAGES_TO_DB: "false"
+      MAX_FILE_SIZE: 1MB
+      MAX_REQUEST_SIZE: 3MB
+      CONNECTION_TIMEOUT: "10000"
+      READ_TIMEOUT: "30000"
+      LOGGING_LEVEL_ROOT: WARN
+    depends_on:
+      compreface-postgres-db: {condition: service_healthy}
+
+  compreface-admin:
+    <<: *service-defaults
+    image: exadel/compreface-admin:1.2.0@sha256:1d199d4d1ab703e8c8bec5825ac6150c49de70568cd2b27658dd234c444fa7ed
+    mem_limit: 512m
+    pids_limit: 256
+    environment:
+      POSTGRES_USER: cosmixface
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Provide the protected server-side password}
+      POSTGRES_URL: jdbc:postgresql://compreface-postgres-db:5432/cosmixface
+      SPRING_PROFILES_ACTIVE: dev
+      ENABLE_EMAIL_SERVER: "false"
+      EMAIL_HOST: ""
+      EMAIL_USERNAME: ""
+      EMAIL_FROM: ""
+      EMAIL_PASSWORD: ""
+      ADMIN_JAVA_OPTS: -Xms128m -Xmx256m
+      MAX_FILE_SIZE: 1MB
+      MAX_REQUEST_SIZE: 3MB
+      LOGGING_LEVEL_ROOT: WARN
+    depends_on:
+      compreface-postgres-db: {condition: service_healthy}
+      compreface-api: {condition: service_started}
+
+  compreface-core:
+    <<: *service-defaults
+    image: exadel/compreface-core:1.2.0@sha256:c9c70f0f270b1767bdf59d8e549f00f7d8f06e29315ac2ff624e276dcf37385b
+    mem_limit: 1792m
+    pids_limit: 256
+    environment:
+      ML_PORT: "3000"
+      IMG_LENGTH_LIMIT: "640"
+      UWSGI_PROCESSES: "1"
+      UWSGI_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      TF_NUM_INTRAOP_THREADS: "1"
+      TF_NUM_INTEROP_THREADS: "1"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:3000/healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 180s
+
+  compreface-fe:
+    <<: *service-defaults
+    image: exadel/compreface-fe:1.2.0@sha256:3c92742ba75295b474b83ab27f8418aa94041e6e48d6006fe6ca7e6f06536508
+    mem_limit: 128m
+    pids_limit: 128
+    ports:
+      - "192.168.1.50:8000:443"
+      - "127.0.0.1:8001:80"
+    environment:
+      CLIENT_MAX_BODY_SIZE: 3M
+      PROXY_READ_TIMEOUT: 30s
+      PROXY_CONNECT_TIMEOUT: 10s
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./tls/server.crt:/etc/nginx/cosmix-tls/server.crt:ro
+      - ./tls/server.key:/etc/nginx/cosmix-tls/server.key:ro
+    depends_on:
+      compreface-api: {condition: service_started}
+      compreface-admin: {condition: service_started}
+      compreface-core: {condition: service_started}
+
+volumes:
+  postgres-data:
+
+networks:
+  face-private:
+    driver: bridge

@@ -1,0 +1,16 @@
+PASS default new transitions fail closed
+PASS flags alone cannot approve policy
+PASS policy window and exact retained version enforced
+PASS rehire requires new employment episode policy
+PASS due suspension revokes persisted access evidence
+PASS delayed suspension release cycle cannot retain old access
+PASS release after old applied suspension retires remaining face
+PASS release keeps independently disabled account blocked
+PASS release keeps independent account suspension blocked
+PASS protected owner requires handover before effective mutation
+PASS archive retry appends one immutable change
+PASS archive rejects stale version and blank reason
+PASS archive denies self and custom-role authority
+PASS archive replay rechecks protected owner
+PASS archive refuses active employment
+15 checks passed; baseline=False

@@ -1,0 +1,181 @@
+COSMIX FACE VERIFICATION - POST-UPGRADE PREFLIGHT AND STORAGE HOLD
+Inspection: 19 October 2026, 18:13-18:18 Asia/Karachi
+Server: dockeruser1@192.168.1.50:22 (hostname ubuntu)
+This supplements the earlier Phase 1 report; it does not replace its historical
+measurements. No deployment has been performed.
+
+RESULT
+The CPU/memory upgrade is visible. Storage sizing now blocks image downloads.
+The current root filesystem would have approximately 0.95 GiB headroom after
+the estimated CompreFace image footprint, before database growth, logs, ONNX,
+and operating-system headroom. Do not pull images or start containers yet.
+
+CURRENT SERVER RESOURCES
+Ubuntu 26.04.1 LTS, kernel 7.0.0-38-generic, x86_64, VMware.
+CPU: 4 vCPUs, Xeon E5-2660 v3; AVX and AVX2 present.
+RAM at 18:17:50: 5,670,793,216 bytes total (5.28 GiB),
+1,622,179,840 bytes used (1.51 GiB),
+4,048,613,376 bytes available (3.77 GiB). No swap.
+The OS sees 5.28 GiB, not the proposed 8 GiB. This is an improvement and permits
+planning a constrained trial; actual startup/inference memory remains untested.
+The earlier 8 GiB recommendation was a test allocation, not a vendor minimum.
+Default JVM heap limits must not be used unchanged on this allocation.
+
+Root: /dev/mapper/ubuntu--vg-ubuntu--lv, ext4.
+Filesystem size: 19,145,666,560 bytes (17.83 GiB).
+Used at storage sample: 9,867,513,856 bytes; available 8,349,880,320 bytes
+(7.78 GiB); df reports 55% use. Before/after preflight approximately 55%.
+No deployment space was consumed; normal OS activity can vary these values.
+Docker and containerd storage are both on this same root filesystem.
+Docker: 29.9.1, Compose v5.6.0; daemon active.
+Confirmed driver: overlayfs; driver-type io.containerd.snapshotter.v1.
+Existing sudo permissions work after password authentication. No policy edits.
+No .NET executable found on this account's PATH; no runtime installed by task.
+
+WORKLOADS, NETWORKS, PORTS, LOCATIONS
+Running containers: zero.
+Existing stopped containers: jovial_noyce and upbeat_wu (hello-world), preserved.
+Existing image: hello-world:latest, preserved; no images pulled by this task.
+Existing named volumes: zero.
+Networks: bridge, host, none. No network created or reconfigured.
+Server LAN address: 192.168.1.50/24.
+Port 8000: not listening at inspection time.
+Other observed ports: SSH 22, remote desktop 3389; loopback DNS 53, CUPS 631,
+and SSH X11 forwarding 6010. No listener changed.
+/opt/cosmix and /opt/cosmix/face-verification: absent; neither created.
+Limited deployment-file scan under /opt, /srv, /home, /var/www found no compose
+or .csproj files within depth 4. This does not exclude deployments elsewhere.
+
+OFFICIAL RELEASE AND IMAGE VERIFICATION - METADATA ONLY
+GitHub's latest-release API returned v1.2.0, draft=false, prerelease=false,
+published 22 August 2023. Selected candidate: official CompreFace 1.2.0 default
+CPU release. Its age and pinned digests do not constitute security acceptance;
+dependency/security review and runtime validation remain required.
+Official release Compose defines five services and a persistent Postgres volume.
+Official exadel Docker Hub linux/amd64 tags and registry manifests were checked.
+Proposed immutable image references (not downloaded or deployed):
+
+exadel/compreface-postgres-db:1.2.0
+  sha256:fe898d327bc3dd738513ef7cafcbe97da51ac10d2542493141ac7878d3bc9f3a
+  Compressed layer bytes: 110,931,758
+exadel/compreface-admin:1.2.0
+  sha256:1d199d4d1ab703e8c8bec5825ac6150c49de70568cd2b27658dd234c444fa7ed
+  Compressed layer bytes: 158,181,545
+exadel/compreface-api:1.2.0
+  sha256:4e131ba2c51a2e711f0bdad0720f9ab47c827f383c5c956b1be4dfd994edc1cc
+  Compressed layer bytes: 238,610,152
+exadel/compreface-fe:1.2.0
+  sha256:3c92742ba75295b474b83ab27f8418aa94041e6e48d6006fe6ca7e6f06536508
+  Compressed layer bytes: 54,834,839
+exadel/compreface-core:1.2.0
+  sha256:c9c70f0f270b1767bdf59d8e549f00f7d8f06e29315ac2ff624e276dcf37385b
+  Compressed layer bytes: 1,798,960,959
+
+STORAGE SIZING METHOD AND LIMITATIONS
+Public registry JSON was read from this Windows workstation. The five image
+manifests contain 53 unique layer digests after deduplication.
+Only four-byte gzip trailers were fetched for those layers using bounded HTTP
+206 range responses (212 bytes of layer payload total); no full image/model
+payload was downloaded, and nothing was downloaded to the Ubuntu server.
+All 53 trailer checks succeeded. ISIZE measures gzip payload size modulo 4 GiB;
+the sum is a sizing estimate/lower-bound signal, not an extraction benchmark.
+Tar padding, filesystem allocation, metadata and any 4-GiB wrap can affect actual
+disk use. A complete image extraction has NOT been tested.
+Unique compressed layers: 2,265,065,644 bytes.
+Sum of trailer uncompressed-tar sizes modulo 4 GiB: 5,069,465,088 bytes.
+Combined sizing estimate: 7,334,530,732 bytes (6.831 GiB).
+Docker documentation confirms this containerd store retains compressed layers
+and extracts them; compressed-download size alone would understate disk use.
+Estimated remaining space: 1,015,349,588 bytes (0.946 GiB).
+This excludes the database, container writable layers, logs, any runtime model
+downloads, ONNX Runtime/models, and OS/update capacity.
+Preflight reserve proposal: at least 3 GiB beyond this image estimate for an
+initial isolated trial. This is an engineering guard, not a vendor minimum or
+a validated production storage budget. Current capacity fails that guard.
+
+DISK EXPANSION PROPOSAL - REQUIRES EXPLICIT APPROVAL
+Existing /dev/sda virtual disk is already 40 GiB; root PV partition /dev/sda3
+is still approximately 18.2 GiB. The current partition ends at sector 41940991;
+approximately 20 GiB lies beyond it on the expanded device.
+LVM ubuntu-vg has zero free extents; extending the LV alone is insufficient.
+Read-only sfdisk reports the prior GPT capacity and backup-GPT location mismatch.
+No partition-table writes or GPT repair have occurred.
+Proposed authorized scope:
+  1. Confirm the VM/disk owner, a recoverable VMware snapshot/backup and any
+     required maintenance window before writes. Preserve partition/LVM metadata
+     as recovery evidence; metadata copies alone are not a full data backup.
+  2. Reverify the exact device identity, root mapping, sector boundaries, GPT,
+     filesystem health, tool availability and existing workloads.
+  3. Repair the expanded disk's GPT placement, grow partition 3 into its unused
+     tail while preserving its start and identity, then grow the LVM PV, root
+     LV, and ext4 filesystem. Stop on errors; do not delete/recreate volumes.
+  4. Expected resulting root capacity is approximately 38 GiB; validate exact
+     capacity and health after each stage and recheck Docker workloads.
+  5. Leave /dev/sdb, other partitions, Docker configuration and all existing
+     containers/images/databases untouched. Do not prune or delete anything.
+Expansion has no simple live shrink rollback; use the approved VM recovery
+method if necessary. No disk-change approval is recorded yet.
+
+PLANNED DEPLOYMENT AFTER THE STORAGE GATE - NOT IMPLEMENTED
+Directory candidate: /opt/cosmix/face-verification/ (requires sudo; absent).
+Compose project candidate: cosmix-face; a dedicated private Docker network.
+Retain the official five services and dependencies; avoid global-name conflicts.
+Use explicit 1.2.0 image versions with the verified digests above.
+Expose only the UI/proxy on 192.168.1.50:8000:80 after checking LAN isolation,
+firewall/routing and TLS requirements. Do not publish Postgres/core/API internals.
+Proposed UI: http://192.168.1.50:8000/login; this URL is NOT active.
+Use a dedicated persistent Postgres volume, restart policies, practical memory
+limits, bounded log rotation and supported readiness/health checks.
+Size JVM heaps and core worker count for actual available memory, then validate
+startup/steady-state/peak use before approving this allocation.
+Keep environment secrets only in approved protected server-side provisioning;
+no production accounts/keys have been created or approved by this report.
+Prepare the release Compose/config and operating/rollback instructions only
+after the capacity gate passes. Never change the host Docker storage backend.
+Verify isolated startup, UI, API, health, logs, persistence across a controlled
+project-only restart, and unchanged existing workloads.
+Stop/rollback only this project's services; retain volumes and credentials.
+
+ERP CONTEXT INSPECTED
+Read backend AGENTS.md, README.md, docs/Architecture.md and SRS module map.
+Preserve Domain -> Application -> Infrastructure -> API boundaries.
+Existing authentication is configuration-gated; the attendance/face module is
+not a completed workflow according to the inspected documentation.
+Face checks are live, one-to-one, Check In only; preserve all attendance rules.
+Client employee IDs are not identity proof. No provider may return mock success.
+No source, migration or shared configuration was edited. Existing dirty changes
+were preserved. No commits, pushes, merges or PRs were created.
+Actual face provider interfaces/code inspection and implementation remain later
+phases, after infrastructure and model/license gates pass.
+
+DELIVERY AND TEST STATUS
+CompreFace: not installed/running; no active browser URL/API; persistence NOT RUN.
+ONNX liveness: no model selected/downloaded, license not assessed, no runtime
+installed, inference NOT RUN, genuine/print/replay validation NOT RUN.
+ERP: no new interfaces, actual API integration or attendance orchestration;
+end-to-end verification NOT RUN.
+All fourteen requested functional/security/persistence scenarios remain NOT RUN.
+No consented test captures or approved thresholds were available or used.
+No claim of anti-spoofing protection or production readiness is made.
+There are no deployment configuration paths, container names or model versions
+actually in use; the names/paths above are explicitly proposals.
+
+NEXT ACTION
+Obtain explicit approval for the existing /dev/sda root expansion and confirm
+an approved VM backup/snapshot, or have IT perform that expansion. Then repeat
+the resource checks and continue deployment planning/installation phase by phase.
+No package installation, image/model download, deployment creation, service
+restart, data cleanup, disk resize, sudoers edit or server code change occurred.
+Only this local preflight report was added during this continuation.
+
+PRIMARY SOURCES
+https://github.com/exadel-inc/CompreFace/releases/tag/v1.2.0
+https://api.github.com/repos/exadel-inc/CompreFace/releases/latest
+https://raw.githubusercontent.com/exadel-inc/CompreFace/v1.2.0/docker-compose.yml
+https://raw.githubusercontent.com/exadel-inc/CompreFace/v1.2.0/.env
+https://docs.docker.com/engine/storage/containerd/
+https://hub.docker.com/v2/repositories/exadel/compreface-postgres-db/tags/1.2.0
+https://hub.docker.com/v2/repositories/exadel/compreface-admin/tags/1.2.0
+https://hub.docker.com/v2/repositories/exadel/compreface-api/tags/1.2.0
+https://hub.docker.com/v2/repositories/exadel/compreface-fe/tags/1.2.0
+https://hub.docker.com/v2/repositories/exadel/compreface-core/tags/1.2.0

@@ -1,0 +1,5542 @@
+{
+  "source": "C:\\Users\\Huma.Khan\\Desktop\\SOFTWARE REQUIREMENTS SPECIFICATION.docx",
+  "paragraphs": [
+    {
+      "style": "Normal",
+      "text": "SOFTWARE REQUIREMENTS SPECIFICATION (SRS)"
+    },
+    {
+      "style": "Normal",
+      "text": "HMS ERP / FSM SYSTEM"
+    },
+    {
+      "style": "Normal",
+      "text": "Document Status: Draft for Management Review\nVersion: 0.1\nPurpose: Consolidation of all currently identified functional, operational, automation, AI, integration, reporting, security, and workflow requirements."
+    },
+    {
+      "style": "Normal",
+      "text": "1. DOCUMENT PURPOSE"
+    },
+    {
+      "style": "Normal",
+      "text": "This Software Requirements Specification defines the proposed requirements for the HMS ERP / FSM platform."
+    },
+    {
+      "style": "Normal",
+      "text": "The system is intended to integrate the company's major operations within one centralized platform, including:"
+    },
+    {
+      "style": "Normal",
+      "text": "CRM"
+    },
+    {
+      "style": "Normal",
+      "text": "Intake and communication"
+    },
+    {
+      "style": "Normal",
+      "text": "Estimation"
+    },
+    {
+      "style": "Normal",
+      "text": "Engineering"
+    },
+    {
+      "style": "Normal",
+      "text": "Commercial operations"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement"
+    },
+    {
+      "style": "Normal",
+      "text": "Stores / Material Management"
+    },
+    {
+      "style": "Normal",
+      "text": "Projects"
+    },
+    {
+      "style": "Normal",
+      "text": "Manufacturing"
+    },
+    {
+      "style": "Normal",
+      "text": "Fulfillment"
+    },
+    {
+      "style": "Normal",
+      "text": "Field operations"
+    },
+    {
+      "style": "Normal",
+      "text": "After-sales"
+    },
+    {
+      "style": "Normal",
+      "text": "HR / People"
+    },
+    {
+      "style": "Normal",
+      "text": "Accounts and Finance"
+    },
+    {
+      "style": "Normal",
+      "text": "Master Data"
+    },
+    {
+      "style": "Normal",
+      "text": "Administration"
+    },
+    {
+      "style": "Normal",
+      "text": "Reporting"
+    },
+    {
+      "style": "Normal",
+      "text": "AI-assisted automation"
+    },
+    {
+      "style": "Normal",
+      "text": "Integrations"
+    },
+    {
+      "style": "Normal",
+      "text": "This document is a draft baseline and must be reviewed and approved by authorized management before it becomes the final development scope."
+    },
+    {
+      "style": "Normal",
+      "text": "2. REQUIREMENT APPROVAL & PROJECT GOVERNANCE"
+    },
+    {
+      "style": "Normal",
+      "text": "The final SRS must be reviewed and approved by the CEO or authorized management before full development proceeds."
+    },
+    {
+      "style": "Normal",
+      "text": "Existing mockups, staff interviews, notes, and proposed workflows shall be considered preliminary until management approval."
+    },
+    {
+      "style": "Normal",
+      "text": "The approved SRS shall become the official reference for:"
+    },
+    {
+      "style": "Normal",
+      "text": "Development scope"
+    },
+    {
+      "style": "Normal",
+      "text": "Workflow design"
+    },
+    {
+      "style": "Normal",
+      "text": "Database design"
+    },
+    {
+      "style": "Normal",
+      "text": "ERD preparation"
+    },
+    {
+      "style": "Normal",
+      "text": "API requirements"
+    },
+    {
+      "style": "Normal",
+      "text": "AI implementation"
+    },
+    {
+      "style": "Normal",
+      "text": "Development phases"
+    },
+    {
+      "style": "Normal",
+      "text": "Monthly deliverables"
+    },
+    {
+      "style": "Normal",
+      "text": "Project timeline"
+    },
+    {
+      "style": "Normal",
+      "text": "Testing"
+    },
+    {
+      "style": "Normal",
+      "text": "User acceptance"
+    },
+    {
+      "style": "Normal",
+      "text": "A reliable development timeline shall only be finalized after the functional scope and automation requirements have been approved."
+    },
+    {
+      "style": "Normal",
+      "text": "3. SYSTEM OBJECTIVE"
+    },
+    {
+      "style": "Normal",
+      "text": "The HMS platform shall operate as an integrated:"
+    },
+    {
+      "style": "Normal",
+      "text": "ERP + CRM + Estimation + Engineering + Procurement + Inventory/MM + Manufacturing + Project Management + Field Service Management + HR + Finance + Communication + AI Automation Platform."
+    },
+    {
+      "style": "Normal",
+      "text": "The objective is to provide one controlled business flow from the first customer inquiry through costing, quotation, procurement, project execution, delivery, service, accounting, and after-sales activities."
+    },
+    {
+      "style": "Normal",
+      "text": "4. HIGH-LEVEL BUSINESS FLOW"
+    },
+    {
+      "style": "Normal",
+      "text": "The proposed primary business workflow shall be:"
+    },
+    {
+      "style": "Normal",
+      "text": "Inbox\n→ Email / Message Viewer\n→ Classification\n→ Analysis\n→ Auto / Assisted Reply\n→ Processing Hierarchy\n→ CRM / Lead\n→ BOQ\n→ Store Availability\n→ Costing\n→ AUX / Engineering\n→ Technical Submittal\n→ Quotation\n→ Customer PO vs Quotation\n→ Project\n→ Procurement / Store / Manufacturing\n→ Delivery Advice\n→ Delivery\n→ OTP Confirmation\n→ Field Installation / Service\n→ After-Sales\n→ Invoice / Finance"
+    },
+    {
+      "style": "Normal",
+      "text": "The exact workflow shall remain configurable according to the final approved business process."
+    },
+    {
+      "style": "Normal",
+      "text": "5. DASHBOARD & MANAGEMENT INFORMATION"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall provide:"
+    },
+    {
+      "style": "Normal",
+      "text": "Main Dashboard"
+    },
+    {
+      "style": "Normal",
+      "text": "Management / CEO Dashboard"
+    },
+    {
+      "style": "Normal",
+      "text": "Department Dashboards"
+    },
+    {
+      "style": "Normal",
+      "text": "KPI Dashboard"
+    },
+    {
+      "style": "Normal",
+      "text": "Operational Alerts"
+    },
+    {
+      "style": "Normal",
+      "text": "Pending Approvals"
+    },
+    {
+      "style": "Normal",
+      "text": "Delayed Tasks"
+    },
+    {
+      "style": "Normal",
+      "text": "Sales Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Project Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Financial Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Field Staff Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Complaint Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Important Reminders"
+    },
+    {
+      "style": "Normal",
+      "text": "5.1 AI on Dashboard"
+    },
+    {
+      "style": "Normal",
+      "text": "AI shall be able to:"
+    },
+    {
+      "style": "Normal",
+      "text": "Summarize important operational activities."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify unusual KPI changes."
+    },
+    {
+      "style": "Normal",
+      "text": "Detect delays."
+    },
+    {
+      "style": "Normal",
+      "text": "Highlight operational risks."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify exceptions requiring management attention."
+    },
+    {
+      "style": "Normal",
+      "text": "Provide management summaries."
+    },
+    {
+      "style": "Normal",
+      "text": "Suggest possible causes of abnormal performance."
+    },
+    {
+      "style": "Normal",
+      "text": "Recommend areas requiring investigation."
+    },
+    {
+      "style": "Normal",
+      "text": "Every AI recommendation should allow authorized users to view the underlying records/data used to generate the recommendation."
+    },
+    {
+      "style": "Normal",
+      "text": "6. KPI MANAGEMENT"
+    },
+    {
+      "style": "Normal",
+      "text": "The system should support configurable Key Performance Indicators."
+    },
+    {
+      "style": "Normal",
+      "text": "Possible KPIs include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead conversion rate"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotation conversion"
+    },
+    {
+      "style": "Normal",
+      "text": "Average BOQ preparation time"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement processing time"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock turnover"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock aging"
+    },
+    {
+      "style": "Normal",
+      "text": "Project delays"
+    },
+    {
+      "style": "Normal",
+      "text": "On-time delivery"
+    },
+    {
+      "style": "Normal",
+      "text": "Field-job completion"
+    },
+    {
+      "style": "Normal",
+      "text": "Complaint resolution time"
+    },
+    {
+      "style": "Normal",
+      "text": "Outstanding receivables"
+    },
+    {
+      "style": "Normal",
+      "text": "Attendance"
+    },
+    {
+      "style": "Normal",
+      "text": "Department productivity"
+    },
+    {
+      "style": "Normal",
+      "text": "Each KPI may contain:"
+    },
+    {
+      "style": "Normal",
+      "text": "Target"
+    },
+    {
+      "style": "Normal",
+      "text": "Actual value"
+    },
+    {
+      "style": "Normal",
+      "text": "Trend"
+    },
+    {
+      "style": "Normal",
+      "text": "Responsible owner"
+    },
+    {
+      "style": "Normal",
+      "text": "Threshold"
+    },
+    {
+      "style": "Normal",
+      "text": "Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Supporting records"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may identify declining KPI trends and provide possible contributing factors."
+    },
+    {
+      "style": "Normal",
+      "text": "7. OPERATIONAL ALERTS"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall generate configurable operational alerts for conditions such as:"
+    },
+    {
+      "style": "Normal",
+      "text": "Low stock"
+    },
+    {
+      "style": "Normal",
+      "text": "Predicted shortage"
+    },
+    {
+      "style": "Normal",
+      "text": "Overstock"
+    },
+    {
+      "style": "Normal",
+      "text": "Delayed procurement"
+    },
+    {
+      "style": "Normal",
+      "text": "Delayed delivery"
+    },
+    {
+      "style": "Normal",
+      "text": "Overdue project"
+    },
+    {
+      "style": "Normal",
+      "text": "Pending approval"
+    },
+    {
+      "style": "Normal",
+      "text": "Complaint SLA breach"
+    },
+    {
+      "style": "Normal",
+      "text": "Field staff check-in failure"
+    },
+    {
+      "style": "Normal",
+      "text": "Red-zone violation"
+    },
+    {
+      "style": "Normal",
+      "text": "Expiring insurance"
+    },
+    {
+      "style": "Normal",
+      "text": "Expiring certification"
+    },
+    {
+      "style": "Normal",
+      "text": "Overdue invoice"
+    },
+    {
+      "style": "Normal",
+      "text": "Integration/API failure"
+    },
+    {
+      "style": "Normal",
+      "text": "Abnormal financial transaction"
+    },
+    {
+      "style": "Normal",
+      "text": "Abnormal stock movement"
+    },
+    {
+      "style": "Normal",
+      "text": "Alerts may support:"
+    },
+    {
+      "style": "Normal",
+      "text": "Information"
+    },
+    {
+      "style": "Normal",
+      "text": "Warning"
+    },
+    {
+      "style": "Normal",
+      "text": "High"
+    },
+    {
+      "style": "Normal",
+      "text": "Critical"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may prioritize alerts, identify probable causes, and recommend corrective actions."
+    },
+    {
+      "style": "Normal",
+      "text": "8. UNIFIED INTAKE / INBOX"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall provide a centralized inbox for all applicable incoming requests."
+    },
+    {
+      "style": "Normal",
+      "text": "Possible sources include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Email"
+    },
+    {
+      "style": "Normal",
+      "text": "Website"
+    },
+    {
+      "style": "Normal",
+      "text": "Social media"
+    },
+    {
+      "style": "Normal",
+      "text": "SMS"
+    },
+    {
+      "style": "Normal",
+      "text": "Integrated messaging channels"
+    },
+    {
+      "style": "Normal",
+      "text": "Manual inquiry"
+    },
+    {
+      "style": "Normal",
+      "text": "Referral"
+    },
+    {
+      "style": "Normal",
+      "text": "Marketing campaigns"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall maintain:"
+    },
+    {
+      "style": "Normal",
+      "text": "Original message"
+    },
+    {
+      "style": "Normal",
+      "text": "Message source"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer/company"
+    },
+    {
+      "style": "Normal",
+      "text": "Date/time"
+    },
+    {
+      "style": "Normal",
+      "text": "Attachments"
+    },
+    {
+      "style": "Normal",
+      "text": "Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Assigned department"
+    },
+    {
+      "style": "Normal",
+      "text": "Assigned user"
+    },
+    {
+      "style": "Normal",
+      "text": "Processing history"
+    },
+    {
+      "style": "Normal",
+      "text": "The original customer request must always remain unchanged."
+    },
+    {
+      "style": "Normal",
+      "text": "9. AI INBOX CLASSIFICATION & ANALYSIS"
+    },
+    {
+      "style": "Normal",
+      "text": "AI shall be capable of reading and analyzing incoming requests."
+    },
+    {
+      "style": "Normal",
+      "text": "Possible classification keywords/categories include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Supply"
+    },
+    {
+      "style": "Normal",
+      "text": "Installation"
+    },
+    {
+      "style": "Normal",
+      "text": "Maintenance"
+    },
+    {
+      "style": "Normal",
+      "text": "Repair"
+    },
+    {
+      "style": "Normal",
+      "text": "AMC"
+    },
+    {
+      "style": "Normal",
+      "text": "Complaint"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotation"
+    },
+    {
+      "style": "Normal",
+      "text": "Price"
+    },
+    {
+      "style": "Normal",
+      "text": "Project"
+    },
+    {
+      "style": "Normal",
+      "text": "Replacement"
+    },
+    {
+      "style": "Normal",
+      "text": "City"
+    },
+    {
+      "style": "Normal",
+      "text": "Brand"
+    },
+    {
+      "style": "Normal",
+      "text": "Capacity"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery"
+    },
+    {
+      "style": "Normal",
+      "text": "Urgency"
+    },
+    {
+      "style": "Normal",
+      "text": "AI should extract applicable data including:"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer"
+    },
+    {
+      "style": "Normal",
+      "text": "Company"
+    },
+    {
+      "style": "Normal",
+      "text": "Contact"
+    },
+    {
+      "style": "Normal",
+      "text": "City"
+    },
+    {
+      "style": "Normal",
+      "text": "Product"
+    },
+    {
+      "style": "Normal",
+      "text": "Quantity"
+    },
+    {
+      "style": "Normal",
+      "text": "Service required"
+    },
+    {
+      "style": "Normal",
+      "text": "Technical specification"
+    },
+    {
+      "style": "Normal",
+      "text": "Urgency"
+    },
+    {
+      "style": "Normal",
+      "text": "Required date"
+    },
+    {
+      "style": "Normal",
+      "text": "Project information"
+    },
+    {
+      "style": "Normal",
+      "text": "Proposed AI flow:"
+    },
+    {
+      "style": "Normal",
+      "text": "Incoming Query\n→ AI Reads\n→ AI Classifies\n→ AI Extracts\n→ AI Analyzes\n→ AI Determines Intent\n→ AI Identifies Missing Information\n→ AI Prepares Response\n→ Routing / Human Approval"
+    },
+    {
+      "style": "Normal",
+      "text": "10. ORIGINAL QUERY & AI INTERPRETATION"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall separately maintain:"
+    },
+    {
+      "style": "Normal",
+      "text": "Original Query"
+    },
+    {
+      "style": "Normal",
+      "text": "Original Attachments"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Classification"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Extracted Information"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Interpretation"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Suggested Correction"
+    },
+    {
+      "style": "Normal",
+      "text": "Normalized Data"
+    },
+    {
+      "style": "Normal",
+      "text": "Human-Approved Final Data"
+    },
+    {
+      "style": "Normal",
+      "text": "AI shall not silently overwrite customer-provided information."
+    },
+    {
+      "style": "Normal",
+      "text": "All corrections and transformations shall remain auditable."
+    },
+    {
+      "style": "Normal",
+      "text": "11. AI RESPONSE ENGINE"
+    },
+    {
+      "style": "Normal",
+      "text": "The response generated by AI should depend on the type of inquiry."
+    },
+    {
+      "style": "Normal",
+      "text": "For example:"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotation Inquiry"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may request:"
+    },
+    {
+      "style": "Normal",
+      "text": "Quantity"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery location"
+    },
+    {
+      "style": "Normal",
+      "text": "Technical specification"
+    },
+    {
+      "style": "Normal",
+      "text": "Required delivery date"
+    },
+    {
+      "style": "Normal",
+      "text": "Installation Inquiry"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may request:"
+    },
+    {
+      "style": "Normal",
+      "text": "Equipment details"
+    },
+    {
+      "style": "Normal",
+      "text": "Installation location"
+    },
+    {
+      "style": "Normal",
+      "text": "Installation type"
+    },
+    {
+      "style": "Normal",
+      "text": "Quantity"
+    },
+    {
+      "style": "Normal",
+      "text": "Site conditions"
+    },
+    {
+      "style": "Normal",
+      "text": "Complaint"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may request:"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer/project"
+    },
+    {
+      "style": "Normal",
+      "text": "Equipment"
+    },
+    {
+      "style": "Normal",
+      "text": "Fault description"
+    },
+    {
+      "style": "Normal",
+      "text": "Location"
+    },
+    {
+      "style": "Normal",
+      "text": "Urgency"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may prepare draft replies."
+    },
+    {
+      "style": "Normal",
+      "text": "Automatic sending shall only occur for workflows specifically approved by management."
+    },
+    {
+      "style": "Normal",
+      "text": "Sensitive technical/commercial responses may require human approval."
+    },
+    {
+      "style": "Normal",
+      "text": "12. PROCESSING HIERARCHY"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall provide configurable processing and approval hierarchies."
+    },
+    {
+      "style": "Normal",
+      "text": "Routing may depend on:"
+    },
+    {
+      "style": "Normal",
+      "text": "Inquiry type"
+    },
+    {
+      "style": "Normal",
+      "text": "Product"
+    },
+    {
+      "style": "Normal",
+      "text": "Department"
+    },
+    {
+      "style": "Normal",
+      "text": "City"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer"
+    },
+    {
+      "style": "Normal",
+      "text": "Priority"
+    },
+    {
+      "style": "Normal",
+      "text": "Project"
+    },
+    {
+      "style": "Normal",
+      "text": "Transaction value"
+    },
+    {
+      "style": "Normal",
+      "text": "Required approval"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may recommend routing based on the content of the request."
+    },
+    {
+      "style": "Normal",
+      "text": "Management-defined rules shall determine the final authorized workflow."
+    },
+    {
+      "style": "Normal",
+      "text": "13. CRM"
+    },
+    {
+      "style": "Normal",
+      "text": "CRM shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Companies"
+    },
+    {
+      "style": "Normal",
+      "text": "Contacts"
+    },
+    {
+      "style": "Normal",
+      "text": "Leads"
+    },
+    {
+      "style": "Normal",
+      "text": "Prospects"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead history"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer inquiry history"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotation history"
+    },
+    {
+      "style": "Normal",
+      "text": "Project history"
+    },
+    {
+      "style": "Normal",
+      "text": "Complaint history"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Match new inquiries with existing customers."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify possible duplicate customers."
+    },
+    {
+      "style": "Normal",
+      "text": "Summarize customer history."
+    },
+    {
+      "style": "Normal",
+      "text": "Assign lead priority."
+    },
+    {
+      "style": "Normal",
+      "text": "Analyze engagement history."
+    },
+    {
+      "style": "Normal",
+      "text": "14. LEAD SOURCE / MARKETING ATTRIBUTION"
+    },
+    {
+      "style": "Normal",
+      "text": "The CRM shall record the origin of each lead."
+    },
+    {
+      "style": "Normal",
+      "text": "Possible lead-source fields include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Source channel"
+    },
+    {
+      "style": "Normal",
+      "text": "Referral"
+    },
+    {
+      "style": "Normal",
+      "text": "Referring person"
+    },
+    {
+      "style": "Normal",
+      "text": "Referring company"
+    },
+    {
+      "style": "Normal",
+      "text": "Salesperson"
+    },
+    {
+      "style": "Normal",
+      "text": "Existing customer referral"
+    },
+    {
+      "style": "Normal",
+      "text": "Website"
+    },
+    {
+      "style": "Normal",
+      "text": "Social-media platform"
+    },
+    {
+      "style": "Normal",
+      "text": "Advertisement"
+    },
+    {
+      "style": "Normal",
+      "text": "Email campaign"
+    },
+    {
+      "style": "Normal",
+      "text": "SEO"
+    },
+    {
+      "style": "Normal",
+      "text": "SEO keyword"
+    },
+    {
+      "style": "Normal",
+      "text": "Search phrase"
+    },
+    {
+      "style": "Normal",
+      "text": "Landing page"
+    },
+    {
+      "style": "Normal",
+      "text": "Campaign code"
+    },
+    {
+      "style": "Normal",
+      "text": "City"
+    },
+    {
+      "style": "Normal",
+      "text": "Reports should identify:"
+    },
+    {
+      "style": "Normal",
+      "text": "Highest-performing lead sources"
+    },
+    {
+      "style": "Normal",
+      "text": "SEO keywords generating inquiries"
+    },
+    {
+      "style": "Normal",
+      "text": "SEO keywords generating quotations"
+    },
+    {
+      "style": "Normal",
+      "text": "Campaign conversion"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead-to-sale conversion"
+    },
+    {
+      "style": "Normal",
+      "text": "City-wise demand"
+    },
+    {
+      "style": "Normal",
+      "text": "Product/service demand"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may analyze lead-source performance and identify trends."
+    },
+    {
+      "style": "Normal",
+      "text": "15. ESTIMATION"
+    },
+    {
+      "style": "Normal",
+      "text": "The Estimation module shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "BOQ"
+    },
+    {
+      "style": "Normal",
+      "text": "BOQ Items"
+    },
+    {
+      "style": "Normal",
+      "text": "BOQ revisions"
+    },
+    {
+      "style": "Normal",
+      "text": "Costing"
+    },
+    {
+      "style": "Normal",
+      "text": "Dual Store concept"
+    },
+    {
+      "style": "Normal",
+      "text": "Store availability"
+    },
+    {
+      "style": "Normal",
+      "text": "Cost / BOQ via Hub"
+    },
+    {
+      "style": "Normal",
+      "text": "Comments"
+    },
+    {
+      "style": "Normal",
+      "text": "Attachments"
+    },
+    {
+      "style": "Normal",
+      "text": "Selection"
+    },
+    {
+      "style": "Normal",
+      "text": "Proposed workflow:"
+    },
+    {
+      "style": "Normal",
+      "text": "Requirement\n→ AI Extraction\n→ Technical Requirement\n→ BOQ\n→ Store Check\n→ Selection\n→ Costing\n→ Estimator Review"
+    },
+    {
+      "style": "Normal",
+      "text": "16. AI-ASSISTED BOQ"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may assist the estimator by:"
+    },
+    {
+      "style": "Normal",
+      "text": "Reading customer requirements."
+    },
+    {
+      "style": "Normal",
+      "text": "Extracting equipment requirements."
+    },
+    {
+      "style": "Normal",
+      "text": "Suggesting BOQ items."
+    },
+    {
+      "style": "Normal",
+      "text": "Identifying quantity."
+    },
+    {
+      "style": "Normal",
+      "text": "Identifying missing information."
+    },
+    {
+      "style": "Normal",
+      "text": "Matching requirements with available products."
+    },
+    {
+      "style": "Normal",
+      "text": "Checking stock."
+    },
+    {
+      "style": "Normal",
+      "text": "Identifying shortages."
+    },
+    {
+      "style": "Normal",
+      "text": "Comparing alternatives."
+    },
+    {
+      "style": "Normal",
+      "text": "Final BOQ approval shall remain with an authorized user."
+    },
+    {
+      "style": "Normal",
+      "text": "17. ITEM / EQUIPMENT SELECTION"
+    },
+    {
+      "style": "Normal",
+      "text": "Item selection shall be available during estimation/costing."
+    },
+    {
+      "style": "Normal",
+      "text": "Selection may consider:"
+    },
+    {
+      "style": "Normal",
+      "text": "Required capacity"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer specification"
+    },
+    {
+      "style": "Normal",
+      "text": "Technical compatibility"
+    },
+    {
+      "style": "Normal",
+      "text": "Availability"
+    },
+    {
+      "style": "Normal",
+      "text": "Local stock"
+    },
+    {
+      "style": "Normal",
+      "text": "International stock"
+    },
+    {
+      "style": "Normal",
+      "text": "Price"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead time"
+    },
+    {
+      "style": "Normal",
+      "text": "Previous approved selections"
+    },
+    {
+      "style": "Normal",
+      "text": "Alternative products"
+    },
+    {
+      "style": "Normal",
+      "text": "The system should provide multiple selectable options."
+    },
+    {
+      "style": "Normal",
+      "text": "A dropdown/selection interface should be available."
+    },
+    {
+      "style": "Normal",
+      "text": "Each selection shall support:"
+    },
+    {
+      "style": "Normal",
+      "text": "Selected option"
+    },
+    {
+      "style": "Normal",
+      "text": "Comments"
+    },
+    {
+      "style": "Normal",
+      "text": "Reason"
+    },
+    {
+      "style": "Normal",
+      "text": "Selected by"
+    },
+    {
+      "style": "Normal",
+      "text": "Date/time"
+    },
+    {
+      "style": "Normal",
+      "text": "Approval where required"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may recommend the most appropriate option and explain why."
+    },
+    {
+      "style": "Normal",
+      "text": "18. ENGINEERING"
+    },
+    {
+      "style": "Normal",
+      "text": "Engineering functionality shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Conversions"
+    },
+    {
+      "style": "Normal",
+      "text": "Technical review"
+    },
+    {
+      "style": "Normal",
+      "text": "AUX stage"
+    },
+    {
+      "style": "Normal",
+      "text": "Technical selection"
+    },
+    {
+      "style": "Normal",
+      "text": "Technical corrections"
+    },
+    {
+      "style": "Normal",
+      "text": "Submittals"
+    },
+    {
+      "style": "Normal",
+      "text": "Submittal revisions"
+    },
+    {
+      "style": "Normal",
+      "text": "Attachments"
+    },
+    {
+      "style": "Normal",
+      "text": "Approval status"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Detect specification mismatch."
+    },
+    {
+      "style": "Normal",
+      "text": "Compare customer specifications with available products."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify missing technical information."
+    },
+    {
+      "style": "Normal",
+      "text": "Read technical documents."
+    },
+    {
+      "style": "Normal",
+      "text": "Summarize datasheets."
+    },
+    {
+      "style": "Normal",
+      "text": "Suggest equivalent internal products."
+    },
+    {
+      "style": "Normal",
+      "text": "Final technical approval shall remain with authorized engineering staff."
+    },
+    {
+      "style": "Normal",
+      "text": "19. DATA NORMALIZATION"
+    },
+    {
+      "style": "Normal",
+      "text": "The system should support standardization of customer-supplied information."
+    },
+    {
+      "style": "Normal",
+      "text": "Example:"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer input:"
+    },
+    {
+      "style": "Normal",
+      "text": "Horizontal"
+    },
+    {
+      "style": "Normal",
+      "text": "Internal company format:"
+    },
+    {
+      "style": "Normal",
+      "text": "Vertical"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall preserve:"
+    },
+    {
+      "style": "Normal",
+      "text": "Original value"
+    },
+    {
+      "style": "Normal",
+      "text": "Suggested value"
+    },
+    {
+      "style": "Normal",
+      "text": "Conversion reason"
+    },
+    {
+      "style": "Normal",
+      "text": "Applicable rule"
+    },
+    {
+      "style": "Normal",
+      "text": "User decision"
+    },
+    {
+      "style": "Normal",
+      "text": "Final approved value"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may detect:"
+    },
+    {
+      "style": "Normal",
+      "text": "Non-standard terminology"
+    },
+    {
+      "style": "Normal",
+      "text": "Typing/spelling issues"
+    },
+    {
+      "style": "Normal",
+      "text": "Missing fields"
+    },
+    {
+      "style": "Normal",
+      "text": "Incorrect formatting"
+    },
+    {
+      "style": "Normal",
+      "text": "Unit differences"
+    },
+    {
+      "style": "Normal",
+      "text": "Important technical specifications shall not be changed without review where required."
+    },
+    {
+      "style": "Normal",
+      "text": "20. UNIT CONVERSION MASTER"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall contain approved unit-conversion rules."
+    },
+    {
+      "style": "Normal",
+      "text": "Possible examples:"
+    },
+    {
+      "style": "Normal",
+      "text": "Ton ↔ BTU/hr"
+    },
+    {
+      "style": "Normal",
+      "text": "kW ↔ Ton"
+    },
+    {
+      "style": "Normal",
+      "text": "CFM ↔ CMM"
+    },
+    {
+      "style": "Normal",
+      "text": "mm ↔ inch"
+    },
+    {
+      "style": "Normal",
+      "text": "meter ↔ feet"
+    },
+    {
+      "style": "Normal",
+      "text": "kg ↔ lb"
+    },
+    {
+      "style": "Normal",
+      "text": "°C ↔ °F"
+    },
+    {
+      "style": "Normal",
+      "text": "L/s ↔ CFM"
+    },
+    {
+      "style": "Normal",
+      "text": "Pressure conversions"
+    },
+    {
+      "style": "Normal",
+      "text": "Configuration shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "From unit"
+    },
+    {
+      "style": "Normal",
+      "text": "To unit"
+    },
+    {
+      "style": "Normal",
+      "text": "Factor/formula"
+    },
+    {
+      "style": "Normal",
+      "text": "Category"
+    },
+    {
+      "style": "Normal",
+      "text": "Effective date"
+    },
+    {
+      "style": "Normal",
+      "text": "Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Approved by"
+    },
+    {
+      "style": "Normal",
+      "text": "AI shall use approved conversion formulas rather than generating its own conversion factors."
+    },
+    {
+      "style": "Normal",
+      "text": "21. AUTO CALCULATOR & COMPARISON ENGINE"
+    },
+    {
+      "style": "Normal",
+      "text": "The Auto Calculator shall operate across relevant:"
+    },
+    {
+      "style": "Normal",
+      "text": "Estimation"
+    },
+    {
+      "style": "Normal",
+      "text": "Costing"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotations"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement"
+    },
+    {
+      "style": "Normal",
+      "text": "Purchase Orders"
+    },
+    {
+      "style": "Normal",
+      "text": "Sales Invoices"
+    },
+    {
+      "style": "Normal",
+      "text": "Vendor Bills"
+    },
+    {
+      "style": "Normal",
+      "text": "Finance"
+    },
+    {
+      "style": "Normal",
+      "text": "Commercial comparisons"
+    },
+    {
+      "style": "Normal",
+      "text": "It shall calculate:"
+    },
+    {
+      "style": "Normal",
+      "text": "Quantity × Rate"
+    },
+    {
+      "style": "Normal",
+      "text": "Item-wise total"
+    },
+    {
+      "style": "Normal",
+      "text": "Subtotal"
+    },
+    {
+      "style": "Normal",
+      "text": "Discount"
+    },
+    {
+      "style": "Normal",
+      "text": "Margin"
+    },
+    {
+      "style": "Normal",
+      "text": "Markup"
+    },
+    {
+      "style": "Normal",
+      "text": "Additional charges"
+    },
+    {
+      "style": "Normal",
+      "text": "Freight"
+    },
+    {
+      "style": "Normal",
+      "text": "Logistics"
+    },
+    {
+      "style": "Normal",
+      "text": "Installation"
+    },
+    {
+      "style": "Normal",
+      "text": "Service charges"
+    },
+    {
+      "style": "Normal",
+      "text": "Taxes"
+    },
+    {
+      "style": "Normal",
+      "text": "GST"
+    },
+    {
+      "style": "Normal",
+      "text": "Withholding Tax"
+    },
+    {
+      "style": "Normal",
+      "text": "Other deductions"
+    },
+    {
+      "style": "Normal",
+      "text": "Final payable"
+    },
+    {
+      "style": "Normal",
+      "text": "Final receivable"
+    },
+    {
+      "style": "Normal",
+      "text": "Any relevant change shall automatically recalculate affected values."
+    },
+    {
+      "style": "Normal",
+      "text": "22. MULTI-CURRENCY CALCULATION"
+    },
+    {
+      "style": "Normal",
+      "text": "The Auto Calculator shall support multiple currencies."
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall maintain:"
+    },
+    {
+      "style": "Normal",
+      "text": "Original Currency"
+    },
+    {
+      "style": "Normal",
+      "text": "Original Amount"
+    },
+    {
+      "style": "Normal",
+      "text": "Exchange Rate"
+    },
+    {
+      "style": "Normal",
+      "text": "Converted Amount"
+    },
+    {
+      "style": "Normal",
+      "text": "Rate Date"
+    },
+    {
+      "style": "Normal",
+      "text": "Rate Source"
+    },
+    {
+      "style": "Normal",
+      "text": "Authorized users may override exchange rates where permitted."
+    },
+    {
+      "style": "Normal",
+      "text": "Every override shall record:"
+    },
+    {
+      "style": "Normal",
+      "text": "Original rate"
+    },
+    {
+      "style": "Normal",
+      "text": "New rate"
+    },
+    {
+      "style": "Normal",
+      "text": "Reason"
+    },
+    {
+      "style": "Normal",
+      "text": "User"
+    },
+    {
+      "style": "Normal",
+      "text": "Date/time"
+    },
+    {
+      "style": "Normal",
+      "text": "23. TAX / GST / DEDUCTION CALCULATION"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall automatically apply configured tax rules."
+    },
+    {
+      "style": "Normal",
+      "text": "Applicable calculations may include:"
+    },
+    {
+      "style": "Normal",
+      "text": "GST"
+    },
+    {
+      "style": "Normal",
+      "text": "Sales Tax"
+    },
+    {
+      "style": "Normal",
+      "text": "Withholding Tax"
+    },
+    {
+      "style": "Normal",
+      "text": "NTN-related rules"
+    },
+    {
+      "style": "Normal",
+      "text": "Other configured taxes"
+    },
+    {
+      "style": "Normal",
+      "text": "Other applicable deductions"
+    },
+    {
+      "style": "Normal",
+      "text": "Both tax-inclusive and tax-exclusive transactions should be supported."
+    },
+    {
+      "style": "Normal",
+      "text": "Calculation should show:"
+    },
+    {
+      "style": "Normal",
+      "text": "Base amount"
+    },
+    {
+      "style": "Normal",
+      "text": "Tax rate"
+    },
+    {
+      "style": "Normal",
+      "text": "Tax amount"
+    },
+    {
+      "style": "Normal",
+      "text": "Deductions"
+    },
+    {
+      "style": "Normal",
+      "text": "Final amount"
+    },
+    {
+      "style": "Normal",
+      "text": "24. ALTERNATIVE COMPARISON ENGINE"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall allow comparison of sourcing alternatives."
+    },
+    {
+      "style": "Normal",
+      "text": "Examples:"
+    },
+    {
+      "style": "Normal",
+      "text": "Local Store"
+    },
+    {
+      "style": "Normal",
+      "text": "Cost"
+    },
+    {
+      "style": "Normal",
+      "text": "Tax"
+    },
+    {
+      "style": "Normal",
+      "text": "Availability"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead time"
+    },
+    {
+      "style": "Normal",
+      "text": "International Store"
+    },
+    {
+      "style": "Normal",
+      "text": "Foreign currency amount"
+    },
+    {
+      "style": "Normal",
+      "text": "Exchange rate"
+    },
+    {
+      "style": "Normal",
+      "text": "Converted amount"
+    },
+    {
+      "style": "Normal",
+      "text": "Freight"
+    },
+    {
+      "style": "Normal",
+      "text": "Taxes/duties"
+    },
+    {
+      "style": "Normal",
+      "text": "Total landed cost"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead time"
+    },
+    {
+      "style": "Normal",
+      "text": "Local Procurement"
+    },
+    {
+      "style": "Normal",
+      "text": "Supplier rate"
+    },
+    {
+      "style": "Normal",
+      "text": "Tax"
+    },
+    {
+      "style": "Normal",
+      "text": "Availability"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery"
+    },
+    {
+      "style": "Normal",
+      "text": "Final cost"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead time"
+    },
+    {
+      "style": "Normal",
+      "text": "Comparison criteria may include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Final cost"
+    },
+    {
+      "style": "Normal",
+      "text": "Currency"
+    },
+    {
+      "style": "Normal",
+      "text": "Exchange rate"
+    },
+    {
+      "style": "Normal",
+      "text": "Taxes"
+    },
+    {
+      "style": "Normal",
+      "text": "Discount"
+    },
+    {
+      "style": "Normal",
+      "text": "Freight"
+    },
+    {
+      "style": "Normal",
+      "text": "Logistics"
+    },
+    {
+      "style": "Normal",
+      "text": "Availability"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead time"
+    },
+    {
+      "style": "Normal",
+      "text": "Supplier"
+    },
+    {
+      "style": "Normal",
+      "text": "Store"
+    },
+    {
+      "style": "Normal",
+      "text": "Margin"
+    },
+    {
+      "style": "Normal",
+      "text": "Final selling price"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may identify:"
+    },
+    {
+      "style": "Normal",
+      "text": "Most economical option"
+    },
+    {
+      "style": "Normal",
+      "text": "Fastest option"
+    },
+    {
+      "style": "Normal",
+      "text": "Lowest landed cost"
+    },
+    {
+      "style": "Normal",
+      "text": "Best availability"
+    },
+    {
+      "style": "Normal",
+      "text": "Best commercial option"
+    },
+    {
+      "style": "Normal",
+      "text": "Final selection remains with an authorized user unless management approves automatic selection."
+    },
+    {
+      "style": "Normal",
+      "text": "25. COMMERCIAL"
+    },
+    {
+      "style": "Normal",
+      "text": "Commercial functionality shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotations"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotation Items"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotation revisions"
+    },
+    {
+      "style": "Normal",
+      "text": "Commercial Hub"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer PO linkage"
+    },
+    {
+      "style": "Normal",
+      "text": "Commercial Margins"
+    },
+    {
+      "style": "Normal",
+      "text": "Discounts"
+    },
+    {
+      "style": "Normal",
+      "text": "Terms"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery terms"
+    },
+    {
+      "style": "Normal",
+      "text": "Payment terms"
+    },
+    {
+      "style": "Normal",
+      "text": "Attachments"
+    },
+    {
+      "style": "Normal",
+      "text": "Comments"
+    },
+    {
+      "style": "Normal",
+      "text": "26. COMMERCIAL HUB"
+    },
+    {
+      "style": "Normal",
+      "text": "The Commercial Hub should provide one centralized workspace for:"
+    },
+    {
+      "style": "Normal",
+      "text": "BOQ"
+    },
+    {
+      "style": "Normal",
+      "text": "Costing"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotation"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotation revisions"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer PO"
+    },
+    {
+      "style": "Normal",
+      "text": "PO vs Quote comparison"
+    },
+    {
+      "style": "Normal",
+      "text": "Approval"
+    },
+    {
+      "style": "Normal",
+      "text": "Comments"
+    },
+    {
+      "style": "Normal",
+      "text": "Attachments"
+    },
+    {
+      "style": "Normal",
+      "text": "Project reference"
+    },
+    {
+      "style": "Normal",
+      "text": "27. CUSTOMER PO vs QUOTATION"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall compare the received customer PO against the approved quotation."
+    },
+    {
+      "style": "Normal",
+      "text": "Comparison shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Items"
+    },
+    {
+      "style": "Normal",
+      "text": "Quantity"
+    },
+    {
+      "style": "Normal",
+      "text": "Rate"
+    },
+    {
+      "style": "Normal",
+      "text": "Discount"
+    },
+    {
+      "style": "Normal",
+      "text": "Tax"
+    },
+    {
+      "style": "Normal",
+      "text": "Total"
+    },
+    {
+      "style": "Normal",
+      "text": "Technical specification"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery terms"
+    },
+    {
+      "style": "Normal",
+      "text": "Payment terms"
+    },
+    {
+      "style": "Normal",
+      "text": "Scope"
+    },
+    {
+      "style": "Normal",
+      "text": "Exclusions"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Read customer PO documents."
+    },
+    {
+      "style": "Normal",
+      "text": "Extract values."
+    },
+    {
+      "style": "Normal",
+      "text": "Compare PO against quotation."
+    },
+    {
+      "style": "Normal",
+      "text": "Highlight differences."
+    },
+    {
+      "style": "Normal",
+      "text": "Generate mismatch summary."
+    },
+    {
+      "style": "Normal",
+      "text": "Applicable differences shall require authorized review/approval."
+    },
+    {
+      "style": "Normal",
+      "text": "28. PROCUREMENT"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Purchase Requirements"
+    },
+    {
+      "style": "Normal",
+      "text": "Suppliers"
+    },
+    {
+      "style": "Normal",
+      "text": "Ordering Agencies"
+    },
+    {
+      "style": "Normal",
+      "text": "Supplier Quotations"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement POs"
+    },
+    {
+      "style": "Normal",
+      "text": "PO Items"
+    },
+    {
+      "style": "Normal",
+      "text": "Expected delivery"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement status"
+    },
+    {
+      "style": "Normal",
+      "text": "Approvals"
+    },
+    {
+      "style": "Normal",
+      "text": "Vendor performance where required"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may analyze supplier quotations using:"
+    },
+    {
+      "style": "Normal",
+      "text": "Price"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery time"
+    },
+    {
+      "style": "Normal",
+      "text": "Currency"
+    },
+    {
+      "style": "Normal",
+      "text": "Availability"
+    },
+    {
+      "style": "Normal",
+      "text": "Previous supplier performance"
+    },
+    {
+      "style": "Normal",
+      "text": "Terms"
+    },
+    {
+      "style": "Normal",
+      "text": "Quality indicators"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may recommend options."
+    },
+    {
+      "style": "Normal",
+      "text": "Final supplier selection shall remain with authorized personnel where approval is required."
+    },
+    {
+      "style": "Normal",
+      "text": "29. STORE ROUTING"
+    },
+    {
+      "style": "Normal",
+      "text": "For each requirement, the system may consider:"
+    },
+    {
+      "style": "Normal",
+      "text": "Local Store"
+    },
+    {
+      "style": "Normal",
+      "text": "International Store"
+    },
+    {
+      "style": "Normal",
+      "text": "Physical Store"
+    },
+    {
+      "style": "Normal",
+      "text": "Virtual Store"
+    },
+    {
+      "style": "Normal",
+      "text": "Local Procurement"
+    },
+    {
+      "style": "Normal",
+      "text": "International Procurement"
+    },
+    {
+      "style": "Normal",
+      "text": "Alternative Item"
+    },
+    {
+      "style": "Normal",
+      "text": "Management Decision"
+    },
+    {
+      "style": "Normal",
+      "text": "The system should display:"
+    },
+    {
+      "style": "Normal",
+      "text": "Available quantity"
+    },
+    {
+      "style": "Normal",
+      "text": "Cost"
+    },
+    {
+      "style": "Normal",
+      "text": "Store"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead time"
+    },
+    {
+      "style": "Normal",
+      "text": "Alternative availability"
+    },
+    {
+      "style": "Normal",
+      "text": "User shall have:"
+    },
+    {
+      "style": "Normal",
+      "text": "Dropdown options"
+    },
+    {
+      "style": "Normal",
+      "text": "Selection"
+    },
+    {
+      "style": "Normal",
+      "text": "Comment section"
+    },
+    {
+      "style": "Normal",
+      "text": "Approval where applicable"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may recommend the most appropriate source."
+    },
+    {
+      "style": "Normal",
+      "text": "30. STORES / MATERIAL MANAGEMENT"
+    },
+    {
+      "style": "Normal",
+      "text": "Stores/MM functionality shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Item list"
+    },
+    {
+      "style": "Normal",
+      "text": "Physical Stores"
+    },
+    {
+      "style": "Normal",
+      "text": "Virtual Stores"
+    },
+    {
+      "style": "Normal",
+      "text": "Local Stores"
+    },
+    {
+      "style": "Normal",
+      "text": "International Stores"
+    },
+    {
+      "style": "Normal",
+      "text": "On-Hand inventory"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock Adjustment"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock Transfer"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock Movement"
+    },
+    {
+      "style": "Normal",
+      "text": "Goods Receipt"
+    },
+    {
+      "style": "Normal",
+      "text": "Goods Issue"
+    },
+    {
+      "style": "Normal",
+      "text": "Return"
+    },
+    {
+      "style": "Normal",
+      "text": "Project Issue"
+    },
+    {
+      "style": "Normal",
+      "text": "Material Consumption"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock history"
+    },
+    {
+      "style": "Normal",
+      "text": "31. STOCK TRANSFER"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall provide a dedicated Stock Transfer function."
+    },
+    {
+      "style": "Normal",
+      "text": "Information shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "From Store"
+    },
+    {
+      "style": "Normal",
+      "text": "To Store"
+    },
+    {
+      "style": "Normal",
+      "text": "Item"
+    },
+    {
+      "style": "Normal",
+      "text": "Quantity"
+    },
+    {
+      "style": "Normal",
+      "text": "Transfer Date"
+    },
+    {
+      "style": "Normal",
+      "text": "Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Request"
+    },
+    {
+      "style": "Normal",
+      "text": "Approval"
+    },
+    {
+      "style": "Normal",
+      "text": "Comments"
+    },
+    {
+      "style": "Normal",
+      "text": "Transfer history"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may recommend transfer instead of procurement when another store has excess stock."
+    },
+    {
+      "style": "Normal",
+      "text": "32. STOCK AGING"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall provide Stock Aging analysis."
+    },
+    {
+      "style": "Normal",
+      "text": "It should identify:"
+    },
+    {
+      "style": "Normal",
+      "text": "Slow-moving stock"
+    },
+    {
+      "style": "Normal",
+      "text": "Non-moving stock"
+    },
+    {
+      "style": "Normal",
+      "text": "Old stock"
+    },
+    {
+      "style": "Normal",
+      "text": "Excess stock"
+    },
+    {
+      "style": "Normal",
+      "text": "Overstocked items"
+    },
+    {
+      "style": "Normal",
+      "text": "Item age"
+    },
+    {
+      "style": "Normal",
+      "text": "Store-wise aging"
+    },
+    {
+      "style": "Normal",
+      "text": "Category-wise aging"
+    },
+    {
+      "style": "Normal",
+      "text": "Quantity/value aging"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may identify inventory likely to become obsolete or non-moving."
+    },
+    {
+      "style": "Normal",
+      "text": "33. PREDICTIVE INVENTORY MANAGEMENT"
+    },
+    {
+      "style": "Normal",
+      "text": "AI should analyze future stock requirements using applicable data including:"
+    },
+    {
+      "style": "Normal",
+      "text": "Historical consumption"
+    },
+    {
+      "style": "Normal",
+      "text": "Current projects"
+    },
+    {
+      "style": "Normal",
+      "text": "Confirmed orders"
+    },
+    {
+      "style": "Normal",
+      "text": "Open quotations"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement lead time"
+    },
+    {
+      "style": "Normal",
+      "text": "Seasonal demand"
+    },
+    {
+      "style": "Normal",
+      "text": "Existing stock"
+    },
+    {
+      "style": "Normal",
+      "text": "Pending procurement"
+    },
+    {
+      "style": "Normal",
+      "text": "Planned production"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Forecast shortages."
+    },
+    {
+      "style": "Normal",
+      "text": "Predict demand."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify overstock risk."
+    },
+    {
+      "style": "Normal",
+      "text": "Recommend early procurement."
+    },
+    {
+      "style": "Normal",
+      "text": "Recommend delaying procurement."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify expected market shortages."
+    },
+    {
+      "style": "Normal",
+      "text": "Consider possible price movement where reliable data exists."
+    },
+    {
+      "style": "Normal",
+      "text": "Recommend stock redistribution."
+    },
+    {
+      "style": "Normal",
+      "text": "Recommendations should show supporting reasons/data."
+    },
+    {
+      "style": "Normal",
+      "text": "Authorized personnel shall make final purchasing decisions."
+    },
+    {
+      "style": "Normal",
+      "text": "34. PROJECTS"
+    },
+    {
+      "style": "Normal",
+      "text": "The Projects module shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Project Track"
+    },
+    {
+      "style": "Normal",
+      "text": "Project Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Milestones"
+    },
+    {
+      "style": "Normal",
+      "text": "Tasks"
+    },
+    {
+      "style": "Normal",
+      "text": "Project documents"
+    },
+    {
+      "style": "Normal",
+      "text": "Project team"
+    },
+    {
+      "style": "Normal",
+      "text": "Related customer"
+    },
+    {
+      "style": "Normal",
+      "text": "Related BOQ"
+    },
+    {
+      "style": "Normal",
+      "text": "Related quotation"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer PO"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement"
+    },
+    {
+      "style": "Normal",
+      "text": "Inventory"
+    },
+    {
+      "style": "Normal",
+      "text": "Manufacturing"
+    },
+    {
+      "style": "Normal",
+      "text": "Field Jobs"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery"
+    },
+    {
+      "style": "Normal",
+      "text": "Invoices"
+    },
+    {
+      "style": "Normal",
+      "text": "Complaints"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Analyze project health."
+    },
+    {
+      "style": "Normal",
+      "text": "Predict delays."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify blocked tasks."
+    },
+    {
+      "style": "Normal",
+      "text": "Detect missing dependencies."
+    },
+    {
+      "style": "Normal",
+      "text": "Summarize project progress."
+    },
+    {
+      "style": "Normal",
+      "text": "Recommend management attention."
+    },
+    {
+      "style": "Normal",
+      "text": "35. MANUFACTURING"
+    },
+    {
+      "style": "Normal",
+      "text": "Manufacturing shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Production Orders"
+    },
+    {
+      "style": "Normal",
+      "text": "Related Project"
+    },
+    {
+      "style": "Normal",
+      "text": "Related BOQ"
+    },
+    {
+      "style": "Normal",
+      "text": "Material requirements"
+    },
+    {
+      "style": "Normal",
+      "text": "Material consumption"
+    },
+    {
+      "style": "Normal",
+      "text": "Production status"
+    },
+    {
+      "style": "Normal",
+      "text": "Planned production date"
+    },
+    {
+      "style": "Normal",
+      "text": "Finished goods"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may assist with:"
+    },
+    {
+      "style": "Normal",
+      "text": "Production planning"
+    },
+    {
+      "style": "Normal",
+      "text": "Material forecasts"
+    },
+    {
+      "style": "Normal",
+      "text": "Production priorities"
+    },
+    {
+      "style": "Normal",
+      "text": "Shortage detection"
+    },
+    {
+      "style": "Normal",
+      "text": "Delay detection"
+    },
+    {
+      "style": "Normal",
+      "text": "36. FULFILLMENT"
+    },
+    {
+      "style": "Normal",
+      "text": "Fulfillment shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery Advice"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer/site"
+    },
+    {
+      "style": "Normal",
+      "text": "Project"
+    },
+    {
+      "style": "Normal",
+      "text": "Items"
+    },
+    {
+      "style": "Normal",
+      "text": "Quantities"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery date"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery status"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivered by"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery proof"
+    },
+    {
+      "style": "Normal",
+      "text": "OTP verification"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Identify delivery risk."
+    },
+    {
+      "style": "Normal",
+      "text": "Prioritize deliveries."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify late deliveries."
+    },
+    {
+      "style": "Normal",
+      "text": "Assist logistics scheduling."
+    },
+    {
+      "style": "Normal",
+      "text": "37. FIELD SERVICE MANAGEMENT"
+    },
+    {
+      "style": "Normal",
+      "text": "Field functionality shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Field Jobs"
+    },
+    {
+      "style": "Normal",
+      "text": "Installation"
+    },
+    {
+      "style": "Normal",
+      "text": "Commissioning"
+    },
+    {
+      "style": "Normal",
+      "text": "Maintenance"
+    },
+    {
+      "style": "Normal",
+      "text": "Repair"
+    },
+    {
+      "style": "Normal",
+      "text": "Inspection"
+    },
+    {
+      "style": "Normal",
+      "text": "Service Visit"
+    },
+    {
+      "style": "Normal",
+      "text": "Field Force Stub"
+    },
+    {
+      "style": "Normal",
+      "text": "Logistics Mobile Web"
+    },
+    {
+      "style": "Normal",
+      "text": "Technician Assignment"
+    },
+    {
+      "style": "Normal",
+      "text": "Job Start"
+    },
+    {
+      "style": "Normal",
+      "text": "Job Completion"
+    },
+    {
+      "style": "Normal",
+      "text": "Material Usage"
+    },
+    {
+      "style": "Normal",
+      "text": "Attachments/evidence"
+    },
+    {
+      "style": "Normal",
+      "text": "Site information"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may recommend technician assignment based on:"
+    },
+    {
+      "style": "Normal",
+      "text": "Skills"
+    },
+    {
+      "style": "Normal",
+      "text": "Location"
+    },
+    {
+      "style": "Normal",
+      "text": "Availability"
+    },
+    {
+      "style": "Normal",
+      "text": "Certification"
+    },
+    {
+      "style": "Normal",
+      "text": "Workload"
+    },
+    {
+      "style": "Normal",
+      "text": "Job priority"
+    },
+    {
+      "style": "Normal",
+      "text": "38. GPS FIELD TRACKING"
+    },
+    {
+      "style": "Normal",
+      "text": "Where permitted by company policy, the system may support:"
+    },
+    {
+      "style": "Normal",
+      "text": "GPS tracking"
+    },
+    {
+      "style": "Normal",
+      "text": "Site verification"
+    },
+    {
+      "style": "Normal",
+      "text": "Route information"
+    },
+    {
+      "style": "Normal",
+      "text": "Check-in/out location"
+    },
+    {
+      "style": "Normal",
+      "text": "Field history"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may detect:"
+    },
+    {
+      "style": "Normal",
+      "text": "Route deviation"
+    },
+    {
+      "style": "Normal",
+      "text": "Unusual movement"
+    },
+    {
+      "style": "Normal",
+      "text": "Extended inactivity"
+    },
+    {
+      "style": "Normal",
+      "text": "Deviation from assigned location"
+    },
+    {
+      "style": "Normal",
+      "text": "Tracking must follow authorized working-time and privacy policies."
+    },
+    {
+      "style": "Normal",
+      "text": "39. NON-GPS GROUND STAFF TRACKING"
+    },
+    {
+      "style": "Normal",
+      "text": "If continuous GPS is not used, operational presence may be determined through:"
+    },
+    {
+      "style": "Normal",
+      "text": "Site assignment"
+    },
+    {
+      "style": "Normal",
+      "text": "QR check-in"
+    },
+    {
+      "style": "Normal",
+      "text": "NFC"
+    },
+    {
+      "style": "Normal",
+      "text": "Biometric"
+    },
+    {
+      "style": "Normal",
+      "text": "Supervisor confirmation"
+    },
+    {
+      "style": "Normal",
+      "text": "Job Start"
+    },
+    {
+      "style": "Normal",
+      "text": "Job Completion"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer OTP"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock issue"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock return"
+    },
+    {
+      "style": "Normal",
+      "text": "Mobile activity"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery confirmation"
+    },
+    {
+      "style": "Normal",
+      "text": "This represents operational/work-status tracking and not exact live physical location."
+    },
+    {
+      "style": "Normal",
+      "text": "40. RED / RESTRICTED ZONES"
+    },
+    {
+      "style": "Normal",
+      "text": "The system may support:"
+    },
+    {
+      "style": "Normal",
+      "text": "Green Zone"
+    },
+    {
+      "style": "Normal",
+      "text": "Yellow Zone"
+    },
+    {
+      "style": "Normal",
+      "text": "Red Zone"
+    },
+    {
+      "style": "Normal",
+      "text": "When an applicable red-zone violation occurs:"
+    },
+    {
+      "style": "Normal",
+      "text": "Detection\n→ Staff Alert\n→ Supervisor Alert\n→ Event Record\n→ Explanation / Comment\n→ Escalation"
+    },
+    {
+      "style": "Normal",
+      "text": "Repeated incidents may be highlighted by AI."
+    },
+    {
+      "style": "Normal",
+      "text": "41. AFTER-SALES COMPLAINTS"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall manage:"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer Complaint"
+    },
+    {
+      "style": "Normal",
+      "text": "Project reference"
+    },
+    {
+      "style": "Normal",
+      "text": "Equipment"
+    },
+    {
+      "style": "Normal",
+      "text": "Site"
+    },
+    {
+      "style": "Normal",
+      "text": "Original inquiry"
+    },
+    {
+      "style": "Normal",
+      "text": "Priority"
+    },
+    {
+      "style": "Normal",
+      "text": "Assignment"
+    },
+    {
+      "style": "Normal",
+      "text": "Technician"
+    },
+    {
+      "style": "Normal",
+      "text": "Field Job"
+    },
+    {
+      "style": "Normal",
+      "text": "Resolution"
+    },
+    {
+      "style": "Normal",
+      "text": "Escalation"
+    },
+    {
+      "style": "Normal",
+      "text": "Complaint history"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Read complaints."
+    },
+    {
+      "style": "Normal",
+      "text": "Categorize complaints."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify urgency."
+    },
+    {
+      "style": "Normal",
+      "text": "Link complaint with project/equipment."
+    },
+    {
+      "style": "Normal",
+      "text": "Suggest likely resolution."
+    },
+    {
+      "style": "Normal",
+      "text": "Recommend technician."
+    },
+    {
+      "style": "Normal",
+      "text": "Draft customer response."
+    },
+    {
+      "style": "Normal",
+      "text": "42. PEOPLE / HR EMPLOYEE MASTER"
+    },
+    {
+      "style": "Normal",
+      "text": "Employee information may include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Employee ID"
+    },
+    {
+      "style": "Normal",
+      "text": "Full Name"
+    },
+    {
+      "style": "Normal",
+      "text": "CNIC / Passport"
+    },
+    {
+      "style": "Normal",
+      "text": "Date of Birth"
+    },
+    {
+      "style": "Normal",
+      "text": "Personal Phone"
+    },
+    {
+      "style": "Normal",
+      "text": "Company-provided Contact Number"
+    },
+    {
+      "style": "Normal",
+      "text": "Personal Email"
+    },
+    {
+      "style": "Normal",
+      "text": "Company-provided Email"
+    },
+    {
+      "style": "Normal",
+      "text": "Address"
+    },
+    {
+      "style": "Normal",
+      "text": "Department"
+    },
+    {
+      "style": "Normal",
+      "text": "Designation"
+    },
+    {
+      "style": "Normal",
+      "text": "Reporting Manager"
+    },
+    {
+      "style": "Normal",
+      "text": "Branch"
+    },
+    {
+      "style": "Normal",
+      "text": "Assigned Site"
+    },
+    {
+      "style": "Normal",
+      "text": "Joining Date"
+    },
+    {
+      "style": "Normal",
+      "text": "Employment Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Shift"
+    },
+    {
+      "style": "Normal",
+      "text": "Working Hours"
+    },
+    {
+      "style": "Normal",
+      "text": "Emergency Contact"
+    },
+    {
+      "style": "Normal",
+      "text": "Assigned Assets"
+    },
+    {
+      "style": "Normal",
+      "text": "Documents"
+    },
+    {
+      "style": "Normal",
+      "text": "Certifications"
+    },
+    {
+      "style": "Normal",
+      "text": "43. EMPLOYEE MEDICAL & INSURANCE"
+    },
+    {
+      "style": "Normal",
+      "text": "The system may maintain, where authorized:"
+    },
+    {
+      "style": "Normal",
+      "text": "Medical/emergency information"
+    },
+    {
+      "style": "Normal",
+      "text": "Medical certificate"
+    },
+    {
+      "style": "Normal",
+      "text": "Insurance provider"
+    },
+    {
+      "style": "Normal",
+      "text": "Insurance policy number"
+    },
+    {
+      "style": "Normal",
+      "text": "Insurance coverage"
+    },
+    {
+      "style": "Normal",
+      "text": "Start date"
+    },
+    {
+      "style": "Normal",
+      "text": "Expiry date"
+    },
+    {
+      "style": "Normal",
+      "text": "Insurance status"
+    },
+    {
+      "style": "Normal",
+      "text": "Supporting documents"
+    },
+    {
+      "style": "Normal",
+      "text": "Sensitive health information shall have restricted access."
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Detect missing mandatory documentation."
+    },
+    {
+      "style": "Normal",
+      "text": "Generate expiry reminders."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify expiring insurance/certification."
+    },
+    {
+      "style": "Normal",
+      "text": "AI shall not make medical diagnoses."
+    },
+    {
+      "style": "Normal",
+      "text": "44. HR POLICY LOCKS"
+    },
+    {
+      "style": "Normal",
+      "text": "HR shall be able to define system-enforced policies."
+    },
+    {
+      "style": "Normal",
+      "text": "Examples:"
+    },
+    {
+      "style": "Normal",
+      "text": "Shift restrictions"
+    },
+    {
+      "style": "Normal",
+      "text": "Attendance rules"
+    },
+    {
+      "style": "Normal",
+      "text": "Overtime approval"
+    },
+    {
+      "style": "Normal",
+      "text": "Leave restrictions"
+    },
+    {
+      "style": "Normal",
+      "text": "Certification requirement"
+    },
+    {
+      "style": "Normal",
+      "text": "Insurance requirement"
+    },
+    {
+      "style": "Normal",
+      "text": "Site eligibility"
+    },
+    {
+      "style": "Normal",
+      "text": "Access restrictions"
+    },
+    {
+      "style": "Normal",
+      "text": "Attendance correction approval"
+    },
+    {
+      "style": "Normal",
+      "text": "Project/site certification requirement"
+    },
+    {
+      "style": "Normal",
+      "text": "A policy lock may contain:"
+    },
+    {
+      "style": "Normal",
+      "text": "Policy\n→ Condition\n→ Applicable Employee/Role/Site\n→ System Action\n→ Approval\n→ Exception"
+    },
+    {
+      "style": "Normal",
+      "text": "Policy overrides must require:"
+    },
+    {
+      "style": "Normal",
+      "text": "Authorized user"
+    },
+    {
+      "style": "Normal",
+      "text": "Reason"
+    },
+    {
+      "style": "Normal",
+      "text": "Date/time"
+    },
+    {
+      "style": "Normal",
+      "text": "Audit entry"
+    },
+    {
+      "style": "Normal",
+      "text": "45. HELP DESK"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall provide internal Helpdesk functionality."
+    },
+    {
+      "style": "Normal",
+      "text": "Include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Ticket"
+    },
+    {
+      "style": "Normal",
+      "text": "Employee"
+    },
+    {
+      "style": "Normal",
+      "text": "Category"
+    },
+    {
+      "style": "Normal",
+      "text": "Priority"
+    },
+    {
+      "style": "Normal",
+      "text": "Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Assignment"
+    },
+    {
+      "style": "Normal",
+      "text": "Escalation"
+    },
+    {
+      "style": "Normal",
+      "text": "Resolution"
+    },
+    {
+      "style": "Normal",
+      "text": "History"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Classify tickets."
+    },
+    {
+      "style": "Normal",
+      "text": "Suggest solutions."
+    },
+    {
+      "style": "Normal",
+      "text": "Route tickets."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify repeated problems."
+    },
+    {
+      "style": "Normal",
+      "text": "46. ACCOUNTS & FINANCE"
+    },
+    {
+      "style": "Normal",
+      "text": "Accounts shall include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Sales Invoices"
+    },
+    {
+      "style": "Normal",
+      "text": "Vendor Bills"
+    },
+    {
+      "style": "Normal",
+      "text": "Chart of Accounts"
+    },
+    {
+      "style": "Normal",
+      "text": "Journals"
+    },
+    {
+      "style": "Normal",
+      "text": "Journal Entries"
+    },
+    {
+      "style": "Normal",
+      "text": "Journal Lines"
+    },
+    {
+      "style": "Normal",
+      "text": "Trial Balance"
+    },
+    {
+      "style": "Normal",
+      "text": "Accounts Receivable Aging"
+    },
+    {
+      "style": "Normal",
+      "text": "Accounts Payable Aging"
+    },
+    {
+      "style": "Normal",
+      "text": "Fiscal Periods"
+    },
+    {
+      "style": "Normal",
+      "text": "Period Closing"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Detect unusual financial entries."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify overdue receivables."
+    },
+    {
+      "style": "Normal",
+      "text": "Identify possible duplicate invoices/bills."
+    },
+    {
+      "style": "Normal",
+      "text": "Flag unusual vendor billing."
+    },
+    {
+      "style": "Normal",
+      "text": "Produce management financial summaries."
+    },
+    {
+      "style": "Normal",
+      "text": "47. MASTER DATA"
+    },
+    {
+      "style": "Normal",
+      "text": "Master Data shall centrally maintain reusable configuration including:"
+    },
+    {
+      "style": "Normal",
+      "text": "Items"
+    },
+    {
+      "style": "Normal",
+      "text": "Categories"
+    },
+    {
+      "style": "Normal",
+      "text": "Units"
+    },
+    {
+      "style": "Normal",
+      "text": "Unit Conversion"
+    },
+    {
+      "style": "Normal",
+      "text": "Stores"
+    },
+    {
+      "style": "Normal",
+      "text": "Store Types"
+    },
+    {
+      "style": "Normal",
+      "text": "Physical / Virtual Store Types"
+    },
+    {
+      "style": "Normal",
+      "text": "Local / International Store Types"
+    },
+    {
+      "style": "Normal",
+      "text": "Departments"
+    },
+    {
+      "style": "Normal",
+      "text": "Designations"
+    },
+    {
+      "style": "Normal",
+      "text": "Commercial Margins"
+    },
+    {
+      "style": "Normal",
+      "text": "Site Staff Policies"
+    },
+    {
+      "style": "Normal",
+      "text": "Policy Slots"
+    },
+    {
+      "style": "Normal",
+      "text": "Taxes"
+    },
+    {
+      "style": "Normal",
+      "text": "GST"
+    },
+    {
+      "style": "Normal",
+      "text": "Currencies"
+    },
+    {
+      "style": "Normal",
+      "text": "Exchange Rates"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead Sources"
+    },
+    {
+      "style": "Normal",
+      "text": "SEO Sources"
+    },
+    {
+      "style": "Normal",
+      "text": "Status Masters"
+    },
+    {
+      "style": "Normal",
+      "text": "Other reference data"
+    },
+    {
+      "style": "Normal",
+      "text": "AI shall use approved Master Data but shall not independently change controlled Master Data unless an approved workflow exists."
+    },
+    {
+      "style": "Normal",
+      "text": "48. SITE STAFF POLICY / POLICY SLOTS"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall support:"
+    },
+    {
+      "style": "Normal",
+      "text": "Site Staff Policy"
+    },
+    {
+      "style": "Normal",
+      "text": "Site Type"
+    },
+    {
+      "style": "Normal",
+      "text": "Employee Category"
+    },
+    {
+      "style": "Normal",
+      "text": "Policy Slot"
+    },
+    {
+      "style": "Normal",
+      "text": "Shift timing"
+    },
+    {
+      "style": "Normal",
+      "text": "Start Time"
+    },
+    {
+      "style": "Normal",
+      "text": "End Time"
+    },
+    {
+      "style": "Normal",
+      "text": "Policy restrictions"
+    },
+    {
+      "style": "Normal",
+      "text": "Exceptions"
+    },
+    {
+      "style": "Normal",
+      "text": "Approvals"
+    },
+    {
+      "style": "Normal",
+      "text": "Status"
+    },
+    {
+      "style": "Normal",
+      "text": "49. USER ACCESS CONTROL"
+    },
+    {
+      "style": "Normal",
+      "text": "Administration shall support:"
+    },
+    {
+      "style": "Normal",
+      "text": "Users"
+    },
+    {
+      "style": "Normal",
+      "text": "Roles"
+    },
+    {
+      "style": "Normal",
+      "text": "Permissions"
+    },
+    {
+      "style": "Normal",
+      "text": "Module access"
+    },
+    {
+      "style": "Normal",
+      "text": "Screen access"
+    },
+    {
+      "style": "Normal",
+      "text": "View rights"
+    },
+    {
+      "style": "Normal",
+      "text": "Create rights"
+    },
+    {
+      "style": "Normal",
+      "text": "Edit rights"
+    },
+    {
+      "style": "Normal",
+      "text": "Delete rights"
+    },
+    {
+      "style": "Normal",
+      "text": "Approval rights"
+    },
+    {
+      "style": "Normal",
+      "text": "Authorization limits"
+    },
+    {
+      "style": "Normal",
+      "text": "User activation/deactivation"
+    },
+    {
+      "style": "Normal",
+      "text": "AI must operate within the permissions of the workflow and must not bypass security roles."
+    },
+    {
+      "style": "Normal",
+      "text": "50. APPROVAL HIERARCHY"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall support:"
+    },
+    {
+      "style": "Normal",
+      "text": "Department hierarchy"
+    },
+    {
+      "style": "Normal",
+      "text": "Reporting hierarchy"
+    },
+    {
+      "style": "Normal",
+      "text": "Processing hierarchy"
+    },
+    {
+      "style": "Normal",
+      "text": "Multi-level approval"
+    },
+    {
+      "style": "Normal",
+      "text": "Value-based approval"
+    },
+    {
+      "style": "Normal",
+      "text": "Conditional approval"
+    },
+    {
+      "style": "Normal",
+      "text": "Escalation"
+    },
+    {
+      "style": "Normal",
+      "text": "Reassignment"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may recommend/escalate according to approved rules."
+    },
+    {
+      "style": "Normal",
+      "text": "51. CHANNELS & INTEGRATIONS"
+    },
+    {
+      "style": "Normal",
+      "text": "Integration capability may include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Email"
+    },
+    {
+      "style": "Normal",
+      "text": "SMS"
+    },
+    {
+      "style": "Normal",
+      "text": "Social media"
+    },
+    {
+      "style": "Normal",
+      "text": "Website"
+    },
+    {
+      "style": "Normal",
+      "text": "Incoming APIs"
+    },
+    {
+      "style": "Normal",
+      "text": "Outgoing APIs"
+    },
+    {
+      "style": "Normal",
+      "text": "External services"
+    },
+    {
+      "style": "Normal",
+      "text": "Third-party software"
+    },
+    {
+      "style": "Normal",
+      "text": "Mailbox integration"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall maintain:"
+    },
+    {
+      "style": "Normal",
+      "text": "Integration logs"
+    },
+    {
+      "style": "Normal",
+      "text": "Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Errors"
+    },
+    {
+      "style": "Normal",
+      "text": "Failed messages"
+    },
+    {
+      "style": "Normal",
+      "text": "Retry history"
+    },
+    {
+      "style": "Normal",
+      "text": "52. OUTGOING APIs & COMMUNICATION"
+    },
+    {
+      "style": "Normal",
+      "text": "The system should be able to send authorized communications/data externally."
+    },
+    {
+      "style": "Normal",
+      "text": "Possible communication includes:"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer Email"
+    },
+    {
+      "style": "Normal",
+      "text": "Supplier Email"
+    },
+    {
+      "style": "Normal",
+      "text": "SMS"
+    },
+    {
+      "style": "Normal",
+      "text": "Notifications"
+    },
+    {
+      "style": "Normal",
+      "text": "Social messages"
+    },
+    {
+      "style": "Normal",
+      "text": "External API messages"
+    },
+    {
+      "style": "Normal",
+      "text": "Record:"
+    },
+    {
+      "style": "Normal",
+      "text": "Recipient"
+    },
+    {
+      "style": "Normal",
+      "text": "Channel"
+    },
+    {
+      "style": "Normal",
+      "text": "Message/data"
+    },
+    {
+      "style": "Normal",
+      "text": "Sender"
+    },
+    {
+      "style": "Normal",
+      "text": "Date/time"
+    },
+    {
+      "style": "Normal",
+      "text": "Related transaction"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery status"
+    },
+    {
+      "style": "Normal",
+      "text": "Error status"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may draft communications."
+    },
+    {
+      "style": "Normal",
+      "text": "Automatic sending shall follow configured approval rules."
+    },
+    {
+      "style": "Normal",
+      "text": "53. HOSTINGER INTEGRATION"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall support required Hostinger-related integration where applicable."
+    },
+    {
+      "style": "Normal",
+      "text": "Possible scope may include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Hosting"
+    },
+    {
+      "style": "Normal",
+      "text": "Domain"
+    },
+    {
+      "style": "Normal",
+      "text": "Email"
+    },
+    {
+      "style": "Normal",
+      "text": "Database"
+    },
+    {
+      "style": "Normal",
+      "text": "Application deployment"
+    },
+    {
+      "style": "Normal",
+      "text": "Other hosted services"
+    },
+    {
+      "style": "Normal",
+      "text": "The final services and technical access shall be defined during final SRS approval."
+    },
+    {
+      "style": "Normal",
+      "text": "54. IMPORT / EXPORT"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall provide an Import / Export facility."
+    },
+    {
+      "style": "Normal",
+      "text": "Possible functionality:"
+    },
+    {
+      "style": "Normal",
+      "text": "Import data"
+    },
+    {
+      "style": "Normal",
+      "text": "Export data"
+    },
+    {
+      "style": "Normal",
+      "text": "File validation"
+    },
+    {
+      "style": "Normal",
+      "text": "Field mapping"
+    },
+    {
+      "style": "Normal",
+      "text": "Import errors"
+    },
+    {
+      "style": "Normal",
+      "text": "Import history"
+    },
+    {
+      "style": "Normal",
+      "text": "Export history"
+    },
+    {
+      "style": "Normal",
+      "text": "Permissions"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may assist:"
+    },
+    {
+      "style": "Normal",
+      "text": "Mapping incoming fields."
+    },
+    {
+      "style": "Normal",
+      "text": "Detecting duplicate records."
+    },
+    {
+      "style": "Normal",
+      "text": "Identifying inconsistent records."
+    },
+    {
+      "style": "Normal",
+      "text": "Important transformations should require user confirmation."
+    },
+    {
+      "style": "Normal",
+      "text": "55. AUDIT LOG"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall maintain an enterprise-wide Audit Log."
+    },
+    {
+      "style": "Normal",
+      "text": "Audit events may include:"
+    },
+    {
+      "style": "Normal",
+      "text": "User actions"
+    },
+    {
+      "style": "Normal",
+      "text": "AI actions"
+    },
+    {
+      "style": "Normal",
+      "text": "Automated actions"
+    },
+    {
+      "style": "Normal",
+      "text": "Approvals"
+    },
+    {
+      "style": "Normal",
+      "text": "Rejections"
+    },
+    {
+      "style": "Normal",
+      "text": "Data changes"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock adjustments"
+    },
+    {
+      "style": "Normal",
+      "text": "Financial changes"
+    },
+    {
+      "style": "Normal",
+      "text": "Login/security activity"
+    },
+    {
+      "style": "Normal",
+      "text": "Policy overrides"
+    },
+    {
+      "style": "Normal",
+      "text": "Rate changes"
+    },
+    {
+      "style": "Normal",
+      "text": "Tax changes"
+    },
+    {
+      "style": "Normal",
+      "text": "Store selections"
+    },
+    {
+      "style": "Normal",
+      "text": "AI normalization"
+    },
+    {
+      "style": "Normal",
+      "text": "AI recommendation"
+    },
+    {
+      "style": "Normal",
+      "text": "Manual overrides"
+    },
+    {
+      "style": "Normal",
+      "text": "Communication history"
+    },
+    {
+      "style": "Normal",
+      "text": "Where appropriate, the system should store:"
+    },
+    {
+      "style": "Normal",
+      "text": "Original value"
+    },
+    {
+      "style": "Normal",
+      "text": "Revised value"
+    },
+    {
+      "style": "Normal",
+      "text": "User"
+    },
+    {
+      "style": "Normal",
+      "text": "Reason"
+    },
+    {
+      "style": "Normal",
+      "text": "Date/time"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may analyze audit history for repeated or unusual activity."
+    },
+    {
+      "style": "Normal",
+      "text": "56. SPECIAL TASKS"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall provide a Special Tasks area."
+    },
+    {
+      "style": "Normal",
+      "text": "Include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Task"
+    },
+    {
+      "style": "Normal",
+      "text": "Owner"
+    },
+    {
+      "style": "Normal",
+      "text": "Assignee"
+    },
+    {
+      "style": "Normal",
+      "text": "Priority"
+    },
+    {
+      "style": "Normal",
+      "text": "Due Date"
+    },
+    {
+      "style": "Normal",
+      "text": "Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Comments"
+    },
+    {
+      "style": "Normal",
+      "text": "Attachments"
+    },
+    {
+      "style": "Normal",
+      "text": "Reminder"
+    },
+    {
+      "style": "Normal",
+      "text": "Escalation"
+    },
+    {
+      "style": "Normal",
+      "text": "Completion"
+    },
+    {
+      "style": "Normal",
+      "text": "History"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Prioritize tasks."
+    },
+    {
+      "style": "Normal",
+      "text": "Detect overdue items."
+    },
+    {
+      "style": "Normal",
+      "text": "Summarize pending work."
+    },
+    {
+      "style": "Normal",
+      "text": "Recommend escalation."
+    },
+    {
+      "style": "Normal",
+      "text": "57. QUALITY ASSURANCE"
+    },
+    {
+      "style": "Normal",
+      "text": "Quality Assurance functionality may include:"
+    },
+    {
+      "style": "Normal",
+      "text": "QA Checklist"
+    },
+    {
+      "style": "Normal",
+      "text": "QA Inspection"
+    },
+    {
+      "style": "Normal",
+      "text": "QA Approval"
+    },
+    {
+      "style": "Normal",
+      "text": "Rejection"
+    },
+    {
+      "style": "Normal",
+      "text": "Correction"
+    },
+    {
+      "style": "Normal",
+      "text": "Evidence"
+    },
+    {
+      "style": "Normal",
+      "text": "Attachments"
+    },
+    {
+      "style": "Normal",
+      "text": "Responsible Person"
+    },
+    {
+      "style": "Normal",
+      "text": "Status"
+    },
+    {
+      "style": "Normal",
+      "text": "Comments"
+    },
+    {
+      "style": "Normal",
+      "text": "Revision History"
+    },
+    {
+      "style": "Normal",
+      "text": "QA may be linked with:"
+    },
+    {
+      "style": "Normal",
+      "text": "BOQ"
+    },
+    {
+      "style": "Normal",
+      "text": "Engineering"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement"
+    },
+    {
+      "style": "Normal",
+      "text": "Manufacturing"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery"
+    },
+    {
+      "style": "Normal",
+      "text": "Field Jobs"
+    },
+    {
+      "style": "Normal",
+      "text": "Project Completion"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may assist by checking completeness and identifying missing information."
+    },
+    {
+      "style": "Normal",
+      "text": "Final QA approval remains with authorized personnel."
+    },
+    {
+      "style": "Normal",
+      "text": "58. COMMENTS & DECISION RECORDS"
+    },
+    {
+      "style": "Normal",
+      "text": "Important workflow stages shall support:"
+    },
+    {
+      "style": "Normal",
+      "text": "Comments"
+    },
+    {
+      "style": "Normal",
+      "text": "Reason"
+    },
+    {
+      "style": "Normal",
+      "text": "Attachments"
+    },
+    {
+      "style": "Normal",
+      "text": "Selection"
+    },
+    {
+      "style": "Normal",
+      "text": "Selected By"
+    },
+    {
+      "style": "Normal",
+      "text": "Date/time"
+    },
+    {
+      "style": "Normal",
+      "text": "Approval"
+    },
+    {
+      "style": "Normal",
+      "text": "Rejection Reason"
+    },
+    {
+      "style": "Normal",
+      "text": "Override Reason"
+    },
+    {
+      "style": "Normal",
+      "text": "This applies particularly to:"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Recommendations"
+    },
+    {
+      "style": "Normal",
+      "text": "Equipment Selection"
+    },
+    {
+      "style": "Normal",
+      "text": "Engineering Conversion"
+    },
+    {
+      "style": "Normal",
+      "text": "Store Selection"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement Selection"
+    },
+    {
+      "style": "Normal",
+      "text": "Quote Changes"
+    },
+    {
+      "style": "Normal",
+      "text": "PO Mismatches"
+    },
+    {
+      "style": "Normal",
+      "text": "Margin Overrides"
+    },
+    {
+      "style": "Normal",
+      "text": "Price Overrides"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock Adjustments"
+    },
+    {
+      "style": "Normal",
+      "text": "Tax Overrides"
+    },
+    {
+      "style": "Normal",
+      "text": "Exchange-rate Overrides"
+    },
+    {
+      "style": "Normal",
+      "text": "HR Policy Overrides"
+    },
+    {
+      "style": "Normal",
+      "text": "59. HELP SCREEN / AI ASSISTANT"
+    },
+    {
+      "style": "Normal",
+      "text": "A help function shall be available across system sessions/pages."
+    },
+    {
+      "style": "Normal",
+      "text": "It may provide:"
+    },
+    {
+      "style": "Normal",
+      "text": "Page explanation"
+    },
+    {
+      "style": "Normal",
+      "text": "Field guidance"
+    },
+    {
+      "style": "Normal",
+      "text": "Workflow guidance"
+    },
+    {
+      "style": "Normal",
+      "text": "FAQs"
+    },
+    {
+      "style": "Normal",
+      "text": "User instructions"
+    },
+    {
+      "style": "Normal",
+      "text": "Support information"
+    },
+    {
+      "style": "Normal",
+      "text": "An AI assistant may provide contextual support such as:"
+    },
+    {
+      "style": "Normal",
+      "text": "“What should I do next?”"
+    },
+    {
+      "style": "Normal",
+      "text": "“What does this field mean?”"
+    },
+    {
+      "style": "Normal",
+      "text": "“Why is this approval pending?”"
+    },
+    {
+      "style": "Normal",
+      "text": "“What documents are missing?”"
+    },
+    {
+      "style": "Normal",
+      "text": "The help shown may depend on the user's role and current page."
+    },
+    {
+      "style": "Normal",
+      "text": "60. NOTIFICATIONS & REMINDERS"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall support reminders for:"
+    },
+    {
+      "style": "Normal",
+      "text": "Tasks"
+    },
+    {
+      "style": "Normal",
+      "text": "Approvals"
+    },
+    {
+      "style": "Normal",
+      "text": "Escalations"
+    },
+    {
+      "style": "Normal",
+      "text": "Follow-ups"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock reorder"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock shortage"
+    },
+    {
+      "style": "Normal",
+      "text": "Project milestones"
+    },
+    {
+      "style": "Normal",
+      "text": "Deliveries"
+    },
+    {
+      "style": "Normal",
+      "text": "Insurance expiry"
+    },
+    {
+      "style": "Normal",
+      "text": "Certification expiry"
+    },
+    {
+      "style": "Normal",
+      "text": "Birthdays"
+    },
+    {
+      "style": "Normal",
+      "text": "Major events"
+    },
+    {
+      "style": "Normal",
+      "text": "Company events"
+    },
+    {
+      "style": "Normal",
+      "text": "Other configured dates"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may:"
+    },
+    {
+      "style": "Normal",
+      "text": "Prioritize reminders."
+    },
+    {
+      "style": "Normal",
+      "text": "Group related alerts."
+    },
+    {
+      "style": "Normal",
+      "text": "Generate daily summaries."
+    },
+    {
+      "style": "Normal",
+      "text": "Reduce duplicate low-value notifications according to approved rules."
+    },
+    {
+      "style": "Normal",
+      "text": "61. REPORTING"
+    },
+    {
+      "style": "Normal",
+      "text": "Required reporting areas may include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Dashboard"
+    },
+    {
+      "style": "Normal",
+      "text": "KPIs"
+    },
+    {
+      "style": "Normal",
+      "text": "Sales"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotations"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock Aging"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock Movements"
+    },
+    {
+      "style": "Normal",
+      "text": "Project Track"
+    },
+    {
+      "style": "Normal",
+      "text": "Trial Balance"
+    },
+    {
+      "style": "Normal",
+      "text": "AR Aging"
+    },
+    {
+      "style": "Normal",
+      "text": "AP Aging"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead Sources"
+    },
+    {
+      "style": "Normal",
+      "text": "SEO Performance"
+    },
+    {
+      "style": "Normal",
+      "text": "Inquiry Analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "Field Staff"
+    },
+    {
+      "style": "Normal",
+      "text": "Complaints"
+    },
+    {
+      "style": "Normal",
+      "text": "HR"
+    },
+    {
+      "style": "Normal",
+      "text": "Tasks"
+    },
+    {
+      "style": "Normal",
+      "text": "Audit"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Recommendations"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may support natural-language reporting such as:"
+    },
+    {
+      "style": "Normal",
+      "text": "“Show projects delayed by more than 15 days.”"
+    },
+    {
+      "style": "Normal",
+      "text": "or:"
+    },
+    {
+      "style": "Normal",
+      "text": "“Show items likely to run out next month.”"
+    },
+    {
+      "style": "Normal",
+      "text": "AI may also summarize reports and highlight important changes."
+    },
+    {
+      "style": "Normal",
+      "text": "62. WEB & MOBILE SCOPE"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall support:"
+    },
+    {
+      "style": "Normal",
+      "text": "Main Web ERP"
+    },
+    {
+      "style": "Normal",
+      "text": "Responsive/mobile interfaces"
+    },
+    {
+      "style": "Normal",
+      "text": "Logistics Mobile Web"
+    },
+    {
+      "style": "Normal",
+      "text": "Field operations interface"
+    },
+    {
+      "style": "Normal",
+      "text": "Job updates"
+    },
+    {
+      "style": "Normal",
+      "text": "Check-in/out"
+    },
+    {
+      "style": "Normal",
+      "text": "GPS where authorized"
+    },
+    {
+      "style": "Normal",
+      "text": "OTP"
+    },
+    {
+      "style": "Normal",
+      "text": "Attachments"
+    },
+    {
+      "style": "Normal",
+      "text": "Notifications"
+    },
+    {
+      "style": "Normal",
+      "text": "Ground-staff work-status tracking"
+    },
+    {
+      "style": "Normal",
+      "text": "Offline capability may be included where specifically approved and required."
+    },
+    {
+      "style": "Normal",
+      "text": "63. ENTERPRISE AI CAPABILITIES"
+    },
+    {
+      "style": "Normal",
+      "text": "AI implementation may include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Inquiry classification"
+    },
+    {
+      "style": "Normal",
+      "text": "Intent extraction"
+    },
+    {
+      "style": "Normal",
+      "text": "Data extraction"
+    },
+    {
+      "style": "Normal",
+      "text": "Auto-reply"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer identification"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead prioritization"
+    },
+    {
+      "style": "Normal",
+      "text": "SEO/source analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "BOQ assistance"
+    },
+    {
+      "style": "Normal",
+      "text": "Equipment selection"
+    },
+    {
+      "style": "Normal",
+      "text": "Data normalization"
+    },
+    {
+      "style": "Normal",
+      "text": "Unit conversion"
+    },
+    {
+      "style": "Normal",
+      "text": "Cost analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotation assistance"
+    },
+    {
+      "style": "Normal",
+      "text": "PO comparison"
+    },
+    {
+      "style": "Normal",
+      "text": "Procurement comparison"
+    },
+    {
+      "style": "Normal",
+      "text": "Supplier recommendation"
+    },
+    {
+      "style": "Normal",
+      "text": "Store recommendation"
+    },
+    {
+      "style": "Normal",
+      "text": "Inventory forecasting"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock aging analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "Shortage prediction"
+    },
+    {
+      "style": "Normal",
+      "text": "Price-risk analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "Project risk analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "Technician assignment"
+    },
+    {
+      "style": "Normal",
+      "text": "Complaint analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "Financial anomaly detection"
+    },
+    {
+      "style": "Normal",
+      "text": "KPI analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "Operational alerts"
+    },
+    {
+      "style": "Normal",
+      "text": "Report generation"
+    },
+    {
+      "style": "Normal",
+      "text": "Management summaries"
+    },
+    {
+      "style": "Normal",
+      "text": "Document analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "Task prioritization"
+    },
+    {
+      "style": "Normal",
+      "text": "Audit-log analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "64. AI GOVERNANCE"
+    },
+    {
+      "style": "Normal",
+      "text": "For each major AI function, the final SRS shall identify:"
+    },
+    {
+      "style": "Normal",
+      "text": "Input\n→ AI Analysis\n→ AI Recommendation\n→ Human Review\n→ Approval where required\n→ System Action\n→ Audit Record"
+    },
+    {
+      "style": "Normal",
+      "text": "AI should primarily:"
+    },
+    {
+      "style": "Normal",
+      "text": "Analyze"
+    },
+    {
+      "style": "Normal",
+      "text": "Assist"
+    },
+    {
+      "style": "Normal",
+      "text": "Recommend"
+    },
+    {
+      "style": "Normal",
+      "text": "Predict"
+    },
+    {
+      "style": "Normal",
+      "text": "Prioritize"
+    },
+    {
+      "style": "Normal",
+      "text": "Summarize"
+    },
+    {
+      "style": "Normal",
+      "text": "Automate repetitive approved tasks"
+    },
+    {
+      "style": "Normal",
+      "text": "Sensitive actions should remain human-controlled unless management explicitly approves automation."
+    },
+    {
+      "style": "Normal",
+      "text": "These include:"
+    },
+    {
+      "style": "Normal",
+      "text": "Final technical specifications"
+    },
+    {
+      "style": "Normal",
+      "text": "Final quotations"
+    },
+    {
+      "style": "Normal",
+      "text": "Discounts"
+    },
+    {
+      "style": "Normal",
+      "text": "Commercial margins"
+    },
+    {
+      "style": "Normal",
+      "text": "Supplier selection"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock adjustments"
+    },
+    {
+      "style": "Normal",
+      "text": "Financial entries"
+    },
+    {
+      "style": "Normal",
+      "text": "HR-sensitive decisions"
+    },
+    {
+      "style": "Normal",
+      "text": "Policy overrides"
+    },
+    {
+      "style": "Normal",
+      "text": "65. SYSTEM SECURITY & DATA CONTROL"
+    },
+    {
+      "style": "Normal",
+      "text": "The system shall provide:"
+    },
+    {
+      "style": "Normal",
+      "text": "Role-based access"
+    },
+    {
+      "style": "Normal",
+      "text": "Restricted sensitive information"
+    },
+    {
+      "style": "Normal",
+      "text": "Authentication"
+    },
+    {
+      "style": "Normal",
+      "text": "Authorization"
+    },
+    {
+      "style": "Normal",
+      "text": "Audit logging"
+    },
+    {
+      "style": "Normal",
+      "text": "User status control"
+    },
+    {
+      "style": "Normal",
+      "text": "Module restrictions"
+    },
+    {
+      "style": "Normal",
+      "text": "Approval restrictions"
+    },
+    {
+      "style": "Normal",
+      "text": "Sensitive HR/medical-data restrictions"
+    },
+    {
+      "style": "Normal",
+      "text": "AI shall not bypass normal authorization mechanisms."
+    },
+    {
+      "style": "Normal",
+      "text": "66. DATA HISTORY & TRACEABILITY"
+    },
+    {
+      "style": "Normal",
+      "text": "The system should preserve applicable history for:"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer inquiries"
+    },
+    {
+      "style": "Normal",
+      "text": "BOQ revisions"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotation revisions"
+    },
+    {
+      "style": "Normal",
+      "text": "PO changes"
+    },
+    {
+      "style": "Normal",
+      "text": "Item selections"
+    },
+    {
+      "style": "Normal",
+      "text": "Store decisions"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock movements"
+    },
+    {
+      "style": "Normal",
+      "text": "Project changes"
+    },
+    {
+      "style": "Normal",
+      "text": "Approval decisions"
+    },
+    {
+      "style": "Normal",
+      "text": "Employee assignments"
+    },
+    {
+      "style": "Normal",
+      "text": "Policies"
+    },
+    {
+      "style": "Normal",
+      "text": "Rates"
+    },
+    {
+      "style": "Normal",
+      "text": "Taxes"
+    },
+    {
+      "style": "Normal",
+      "text": "AI recommendations"
+    },
+    {
+      "style": "Normal",
+      "text": "User overrides"
+    },
+    {
+      "style": "Normal",
+      "text": "This will provide complete traceability from the original request through final execution."
+    },
+    {
+      "style": "Normal",
+      "text": "67. CURRENT PROPOSED END-TO-END AI WORKFLOW"
+    },
+    {
+      "style": "Normal",
+      "text": "Email / Website / Social Media / Referral / SEO"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Unified Inbox"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Original Query Preserved"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Reads & Extracts Data"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Classification"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Intent / Keyword Analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer / Lead Identification"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Lead Source Attribution"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Response / Missing-Information Request"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Processing Hierarchy"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "CRM / Lead"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Technical Normalization"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Unit Conversion"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "BOQ"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "AI Item / Equipment Selection"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Physical / Virtual / Local / International Store Check"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Alternative Comparison"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Automatic Costing"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Engineering / AUX"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Technical Submittal"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Quotation"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Customer PO"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "AI PO vs Quote Comparison"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Project Creation"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Predictive Stock Analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Stock Transfer / Procurement / Manufacturing"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Supplier / Source Comparison"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery Advice"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Delivery + OTP"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Field Job"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Technician Assignment"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Installation / Service"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "After-Sales"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Complaint Analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Sales Invoice / Vendor Bills / Accounts"
+    },
+    {
+      "style": "Normal",
+      "text": "↓"
+    },
+    {
+      "style": "Normal",
+      "text": "Dashboard / KPI / AI Management Analysis"
+    },
+    {
+      "style": "Normal",
+      "text": "68. ITEMS REQUIRING MANAGEMENT CONFIRMATION"
+    },
+    {
+      "style": "Normal",
+      "text": "The following items remain open and should be finalized before technical implementation:"
+    },
+    {
+      "style": "Normal",
+      "text": "Exact meaning and workflow of AUX."
+    },
+    {
+      "style": "Normal",
+      "text": "Exact definition of Dual Stores."
+    },
+    {
+      "style": "Normal",
+      "text": "Exact physical vs virtual store rules."
+    },
+    {
+      "style": "Normal",
+      "text": "Exact local vs international store structure."
+    },
+    {
+      "style": "Normal",
+      "text": "Required social-media integrations."
+    },
+    {
+      "style": "Normal",
+      "text": "Required Hostinger services."
+    },
+    {
+      "style": "Normal",
+      "text": "Exact Import / Export scope."
+    },
+    {
+      "style": "Normal",
+      "text": "GPS tracking rules and authorized timings."
+    },
+    {
+      "style": "Normal",
+      "text": "Red-zone definitions and actions."
+    },
+    {
+      "style": "Normal",
+      "text": "Exact employee medical data required."
+    },
+    {
+      "style": "Normal",
+      "text": "Tax and GST rules."
+    },
+    {
+      "style": "Normal",
+      "text": "Exchange-rate source."
+    },
+    {
+      "style": "Normal",
+      "text": "Sources for market-price prediction."
+    },
+    {
+      "style": "Normal",
+      "text": "Sources for stock-shortage prediction."
+    },
+    {
+      "style": "Normal",
+      "text": "Which AI actions may execute automatically."
+    },
+    {
+      "style": "Normal",
+      "text": "Which AI actions require human approval."
+    },
+    {
+      "style": "Normal",
+      "text": "Approval limits for discounts/margins."
+    },
+    {
+      "style": "Normal",
+      "text": "Approval levels for procurement."
+    },
+    {
+      "style": "Normal",
+      "text": "Exact QA checkpoints."
+    },
+    {
+      "style": "Normal",
+      "text": "Mandatory vs future-phase functionality."
+    },
+    {
+      "style": "Normal",
+      "text": "69. FINAL APPROVAL PROCESS"
+    },
+    {
+      "style": "Normal",
+      "text": "After management reviews this SRS:"
+    },
+    {
+      "style": "Normal",
+      "text": "Management Corrections\n→ Requirements Finalization\n→ Department Validation\n→ CEO / Authorized Management Sign-Off\n→ Scope Freeze / Baseline\n→ Development Phase Planning\n→ Monthly Deliverables\n→ Final Timeline\n→ Detailed Workflows\n→ Database Design\n→ Technical Architecture\n→ ERD\n→ Development"
+    },
+    {
+      "style": "Normal",
+      "text": "70. DOCUMENT STATUS"
+    },
+    {
+      "style": "Normal",
+      "text": "This document represents the consolidated Draft HMS Software Requirements Specification based on all requirements identified to date."
+    },
+    {
+      "style": "Normal",
+      "text": "It is intended to become the formal project baseline only after:"
+    },
+    {
+      "style": "Normal",
+      "text": "Department-level review"
+    },
+    {
+      "style": "Normal",
+      "text": "Management corrections"
+    },
+    {
+      "style": "Normal",
+      "text": "Identification of mandatory vs future features"
+    },
+    {
+      "style": "Normal",
+      "text": "AI automation approval"
+    },
+    {
+      "style": "Normal",
+      "text": "Final scope confirmation"
+    },
+    {
+      "style": "Normal",
+      "text": "CEO / authorized management sign-off"
+    },
+    {
+      "style": "Normal",
+      "text": "After approval, the final SRS shall be used to prepare the detailed workflow architecture, data model, database structure, technical architecture, development roadmap, and Entity Relationship Diagram (ERD)."
+    }
+  ],
+  "tables": []
+}

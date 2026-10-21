@@ -1,0 +1,16 @@
+{
+  "artifact": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\deliverables\\HR_Backend_Completion_Plan_A_to_G_2026-10-13.docx",
+  "docx_sha256": "a90c142b82a9383015dd20a36e7003b5b0ae7460f953b9843cbb376da5023849",
+  "page_count": 38,
+  "parts": "A B C D E F G",
+  "task_count": 46,
+  "gap_entries": 32,
+  "management_decisions": 17,
+  "report_types": 14,
+  "acceptance_criteria": 12,
+  "structural_checks": "PASS",
+  "content_and_dependency_review": "PASS after documented corrections",
+  "render_method": "Microsoft Word hidden read-only export; bundled Poppler130dpi PNGs. Standard packaged LibreOffice unavailable.",
+  "visual_review": "PASS all38pages; initial final render individually inspected by root1-10,36-38; attendance reviewer11-18; HR reviewer19-26; frontend reviewer27-35. Latest render pixel-identical on34pages; changed7,20,23,24 individually re-inspected by root and passed.",
+  "product_code_sql_accounts_providers_changed_by_this_document_task": false
+}

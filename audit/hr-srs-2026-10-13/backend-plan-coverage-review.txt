@@ -1,0 +1,321 @@
+BACKEND COMPLETION PLAN -- SCOPE AND CONSUMER COVERAGE REVIEW
+13 October 2026, Asia/Karachi; reviewed at approximately 15:18-15:23 +05:00.
+Read-only planning review; only this requested review artifact was written.
+
+Inputs: supplied numbered SRS v1.2 extraction, overall completion audit,
+integration/acceptance audits, HR/attendance backend findings, frontend findings,
+current HR Gap Closure work order and approved attendance-setup design.
+Current source correction: 20261013101327_AddOfficeRosterHistory.cs and its
+Designer.cs now exist in backend migrations. The previous audit's absent-migration
+finding is superseded. Part B must validate the new migration/snapshot and run
+approved isolated deployment acceptance, not blindly recreate the migration.
+
+VERDICT
+Parts A-G are a sensible complete domain partition, provided the omissions and
+consumer acceptance items below become numbered tasks with owners, prerequisites,
+deliverables and objective evidence. Do not turn a backend completion document
+into an unbounded requirement to implement the entire React/React Native clients.
+Do not call a model, endpoint skeleton, unavailable-only response, report heading
+or private-file storage reference an operational feature.
+
+COMPLETION DEFINITIONS FOR THE DOCX
+1. Backend source complete for the approved scope: every retained requirement has
+   operational domain/application/repository/controller/DI paths, authoritative
+   scope and sensitive-field checks, validation, state transitions, persistence,
+   immutable provenance, concurrency/idempotency, audit and required job producers;
+   complete generated migrations/model snapshot; versioned OpenAPI and typed request/
+   response examples; recorded build and meaningful positive/negative calculation,
+   persistence and contract evidence. There are no required placeholder modules or
+   unconditional blocks where a supported business workflow should succeed.
+   An unresolved rule remains a declared decision dependency, not a delivered rule.
+   An approved narrower scope must be named explicitly rather than labelled full SRS.
+2. Backend deployed/API accepted: current schema applied on an authorized isolated
+   environment, genuine auth/scanner/storage/jobs/provider integrations exercised,
+   real service-level positive/negative paths accepted, permission/security/load/
+   restore evidence recorded. Source completion alone does not prove this gate.
+3. Platform/SRS accepted: the actual web and mobile applications render, collect,
+   submit and consume those contracts successfully, including genuine physical-device
+   face/location/offline behavior and the approved AC-001..010 scenarios. Native
+   scaffolding and API tests cannot certify a complete employee mobile application.
+For the backend-only document, client implementation may remain a separately owned
+deliverable; client contract conformance and API usability must remain backend exit
+criteria. State which gate each task closes. Never report 100% platform completion
+because backend source compiles.
+
+REUSABLE TASK EXIT CRITERIA
+Each business task should specify: SRS IDs/audit gap; current working source to
+preserve; backend owner; required management input; prerequisite source revisions;
+real API and DTO deliverable; permissions/current plus historical scope; required
+state transitions and failure/availability states; persistence/migration; concurrency
+and exact retry; audit/notification/report consumers; acceptance examples with
+expected results; client handover owner; source/deployed/platform completion status.
+Use one consumer contract pack for each feature: exact request/response examples,
+OpenAPI schemas, nullable/unavailable meanings, statuses/enums, timestamps/timezone,
+exclusive/inclusive date ranges, errors/correlation IDs, pagination/cursor rules,
+idempotency/version fields, file upload/download behavior and compatibility changes.
+Verify that actual frontend/mobile parsers can consume examples where they exist;
+a small contract harness can exercise future consumers without building full screens.
+Follow the repository's restriction on recreating permanent test projects: choose
+an authorized verification mechanism; planning does not itself authorize SQL/provider
+activation, account creation or permanent test-project changes.
+
+PART A -- FOUNDATION, ACCESS, FILES, MASTERS, PROFILES, APPROVALS
+Required backend/client contracts and easily missed scope:
+- Login/MFA/recovery/device registration, phone/device recovery, token rotation,
+  revocation and effective suspension/termination. Mobile integrity fields must have
+  explicit interpretation; retaining an opaque client string is not integrity proof.
+- Scope catalogue and assignment reason/version/date contracts. Preserve mandatory
+  Reason on AssignAccessRoleRequest. Add positive and omitted/blank-reason contract
+  cases. Existing initial/additional web role bodies omit it; record a frontend-owned
+  repair/contract signoff task, not a request to weaken backend validation.
+- Account/role grant, revoke, channel enable/disable, initial credential reset and
+  safe activation. Hiring approval creates dormant access; independently accept
+  draft -> submit -> different reviewer -> approved record -> initial access ->
+  mobile provisioning. System-role setup needs explicit current authority.
+- Controlled gender/marital values, configurable age/conditional required fields,
+  full permitted staff taxonomy/eligibility mapping, probation and identity expiry
+  rules. Distinguish pending policy choices from absent validation code.
+- Dedicated bank verification lifecycle; salary/bank/medical/CNIC/disciplinary
+  permissions and masked projection contracts. An unverified bank flag is not a
+  verification process. Preserve salary effective history and separate payment.
+- Retirement, reactivation/resume, rehire/category conversion and logical archival
+  where in approved scope, with referenced-history retention and effective account
+  blocking. Decide unsupported transitions explicitly; do not delete attendance.
+- Post-hire certification/license renew/expire/evidence, asset issue/return/custody,
+  company SIM issue/change/return/status/credit history. Draft hiring inputs are
+  not these operational lifecycles. Include own approved profile/current emergency/
+  document safe read projections and own change-request contracts for Part G.
+- Files: extension/MIME/signature/size, genuine scan/quarantine/retry, private
+  authorized download/review, expiry detection and retention deletion. Ensure
+  medical evidence does not become ordinary profile-photo/face-template data.
+- Approval routing/delegation: resolve literal APR-001/004 gaps without silently
+  replacing already-confirmed fixed HR/Admin authority. Preserve segregation,
+  time-bounded authority and recorded actor/role/reason/before/after. If generic
+  matrices are retained, implement their evaluator, publication/history and decision
+  binding; if superseded, obtain a specific accepted scope-deviation record.
+
+PART B -- SCHEDULING, CAPTURE, FACE, ZONES, SITE REPORTING
+- Current shifts/site rosters/geofences and office roster clients are routed.
+  Validate the newly present office migration/snapshot, upgrade/rollback compatibility
+  and effect on existing site shift publication; actual deployed tables are unproven.
+- Add real office boundary versions and historical office membership/boundary/shift/
+  source binding for punches, sessions, manual corrections, summaries and transfers.
+  Never fake an office as a site, fall back to an individual shift or accept missing
+  location. Pin the original start-business-date through overnight/transfer changes.
+- Define server-confirmed next action, authoritative UTC receipt time and Karachi
+  business date, accepted/review/rejected/offline-unverified states, device/location
+  evidence, accuracy threshold/distance, multiple raw events and immutable pairing.
+  Check In consumes a valid employee/device/punch-bound single-use face result;
+  Check Out has no face requirement. Keep original events and correction revisions.
+- Handle missing checkout, overlap, excessive duration, sequence and impossible
+  travel exceptions; add scoped supervisor/team discovery and review read contracts,
+  out-of-geofence authority and a genuine separate correction source/decision path.
+  Cursor-based evidence queues need nextCursor, possible empty-page continuation,
+  matching filters and original/current scope, not assumed totalCount/page DTOs.
+- Correction source previews, fingerprints, expected assessment/summary versions,
+  protected evidence, manual-duty alternative, request/cancel/return/resubmit/
+  different reviewer decision and derived results all need precise client examples.
+- Face: production-capable approved provider registration/adapter and artifact
+  validation are source tasks where current registration is Development-only.
+  Provider choice/model/thresholds/retention are management gates; actual liveness,
+  wrong person, replay, expired/reused token, re-enrollment, outage and deletion are
+  real acceptance tasks. Add accessibility/medical exception application/decision/
+  dated alternative process, automatic offboarding retirement and physical disposal.
+- Zone/site report backend contracts must cover effective boundaries/assignment
+  versions, duty-window acknowledgement/expiry, safe instructions, event/response/
+  reviewer history, retained coarse evidence, notification and allowed current
+  location. No unrestricted live tracking. Offline state/sync/retry contracts must
+  be explicit; mobile implementation is separately owned.
+- Reconcile original Green/Amber/custom type/employee override expectations with
+  confirmed Operational/Red/no-Amber/no-individual-precedence decisions. Obtain an
+  auditable requirement-deviation mapping or approved additional scope; do not
+  silently implement stale prepared Amber controls.
+- File import is in SRS 7.1 despite mobile being the production attendance channel.
+  Include a decision/task for authorized historical import/migration if retained:
+  hashes, mapping, duplicates, validation batch, source authorization, audit and
+  provenance. Do not add attendance-machine integration or fabricate face evidence.
+
+PART C -- POLICY ENGINE, KPI, WAITING, STUDY, CROSS-MIDNIGHT, TRAVEL
+- Preserve confirmed direct HR policy publication and ordinary/late/OT formulae.
+  Typed schema, recommendations, validation/preview fingerprints, effective immutable
+  versions, nonconflicting assignments and explicit applicability are required.
+- Extend office/site source provenance through scheduled/worked/payable/late/halfday/
+  hourly/break/OT output, with calculation version, exact rule explanation and null
+  unavailable/conflict reasons. Frontend displays results, never calculates pay rules.
+- Early-reporting exemptions; studying schedule/make-up hours/TDA/KPI exclusion;
+  paired-worker waiting evidence/verification/attribution; KPI composition/year reset/
+  thresholds/shortage/evidence/finalization and human disciplinary escalation must
+  be real typed producer/lifecycle tasks, not one generic policy JSON row.
+- Special continuous-duty next-day 4.5-hour/10-hour-reset/12-extra-hour examples
+  require approved exact examples, crossing/overlap treatment and source pinning.
+- Company-work travel needs an approved normal-paid-day source and attendance
+  classification; rejecting travel OT alone does not implement its paid treatment.
+- Overtime needs own/team/bulk explicit affected employees, source revision preview,
+  approval/cancel/resubmission, confirmed eligibility/rate provenance and calculated
+  versus consumed/posted/settled financial states, passed to Part F.
+
+PART D -- LEAVE, BENEFITS, ENCASHMENT, RECOVERY
+- Preserve ordinary direct Admin leave review and exact interval allocations.
+  Add an explicit date-range preview/calculation contract (holidays, service, quota,
+  evidence, half-day fractions) and scoped team calendar where required. Exact
+  interval intake alone is not a date-range consumer experience.
+- Missing emergency half-day evidence/KPI consequence needs a documented approved
+  lifecycle rather than only rejection; sick/exam/injury private evidence remains
+  authoritative. Paid/unpaid/non-consuming injury treatment and personal versus
+  company travel must have precise attendance and financial projections.
+- Extra-six-day versus cash election, 100% KPI qualification, unused-18-day
+  encashment with >=70% KPI and management authority, benefit pools/reservation/
+  consumption/cancellation/reversal and exact valuation need separate tasks.
+- Long-leave pre/post-return recovery obligation, deadline, evidence, completion,
+  partial fulfillment/waiver and financial consequence must be operational.
+- Consumer examples must distinguish balance from historical ledger, future approved
+  reservation from past utilization, approval from payment and cancellation from
+  deletion. Feed exact immutable allocations/benefit credits to C and F.
+
+PART E -- ALLOWANCES, FUEL, VEHICLES, ADVANCES, LOANS
+- Four separate operational paths: meals/outstation; trips/fuel/mileage/service;
+  custody/incident/insurance/liability; advances/loans/agreements/repayment.
+- Meals use verified continuous sessions, breaks/home visit closure, eligible
+  assignment/deployment, duplicate cycle prevention, approval and payment period.
+  Preserve SRS Rs400 office, Rs300 breakfast, Rs500 lunch and Rs1000 outstation
+  amounts; stationed dinner amount/cycle details await approved inputs.
+- Fuel: allowed complaint/field eligibility, approved route/map evidence, commute
+  exclusion and monthly adjustment, 28 km/L, 1000-km/Rs1800 tuning, 8000-km/approx
+  Rs18000 overhaul, excluded costs, workshop/odometer/evidence and nonduplicated
+  milestones. A client-supplied distance is not approved route mileage.
+- Loans: terms/amount/currency/approval, agreement/amendment, disbursement evidence,
+  schedule, recovery ledger, partial/reversal/overpayment and balance/history.
+- Every service needs authoritative request/decision/evidence/settlement histories,
+  own limited reads, cancellation/revision rules, audit/notification producers and
+  traceable financial outputs. Do not count existing entities/DbSets as completion.
+
+PART F -- FINANCIAL MONTH LOCK, HANDOFF AND CARRY-FORWARD
+- Complete approved OT/allowance/benefit/claim/loan/recovery consumption in payroll
+  input revisions, exact source fingerprints, deduplication and reconciliation.
+  Define ordinary-versus-late overlap and no-charge only after all applicable source
+  producers are complete; unavailable/missing rows never imply zero liability.
+- Record-only legal/jurisdiction dossiers do not provide current formal activation.
+  Add a properly authorized applicable legal/financial activation lifecycle and
+  reasoned readiness checks, not removal of existing legal gates to force a lock.
+- Approve and implement a state machine that avoids the current lock/handoff cycle.
+  Identify which immutable pre-lock evidence can support handoff and how final lock
+  identity is bound; never require the same not-yet-created final lock to produce
+  the financial evidence needed to create it. Acceptance must prove a positive
+  new period closes, not only show useful denial reasons.
+- Distinguish calculation, approval, handoff, authoritative external posted/settled
+  receipts, payment and reconciliation. Preserve existing no-charge handoff.
+  Do not add automatic bank disbursement or a full accounting ledger to first release.
+- Keep approved no-reopen policy and implement controlled forward adjustments,
+  receipt-backed monetary carry-forward, exact prior consumption references,
+  partial/reversal/amendment authority and genuine posted/settled reconciliation.
+- Accounts may read/record the approved financial boundary, never edit raw punches,
+  face evidence or HR policy. Negative own/requester review and stale/out-of-scope
+  receipt cases are essential contract acceptance.
+
+PART G -- ESS, REPORTS, NOTIFICATIONS, AUDIT, API HARDENING, DEPLOYMENT/UAT
+- Provide usable current employee home/assignment/shift/attendance/pending-request
+  context through a documented composition of APIs or explicit read model; no
+  duplicated employee identity. Own approved profile/emergency/documents and salary/
+  deductions/payslip/OT/allowance/advance/loan/recovery views must project real current
+  data from A-F and derive subject from session, not accept arbitrary employeeId.
+- Provide supervisor's currently assigned team/site discovery, attendance review,
+  scoped team leave calendar and operational verification; separate material/tool
+  permissions. All-only administrative lists are not supervisor coverage.
+- Notifications: add missing hiring, employee changes, salary/status, leave decisions
+  and document/certification expiry producers. Implement durable transactional
+  staging/retries/deduplication/read-state and expiry scheduling with safe content.
+  A working inbox alone does not prove notices are produced/delivered.
+- Generic audit search/detail/protected evidence/report and every successful/failed
+  sensitive read/write/export need immutable scope/correlation/actor evidence.
+  Separate biometric data, clinical content, CNIC/bank/salary and disciplinary views.
+- Enumerate all 14 source-backed reports as numbered deliverables: daily attendance;
+  monthly register; punch audit; operational zones; site reporting; late/KPI;
+  overtime; meal allowance; leave; employee master; document expiry; fuel/mileage;
+  payroll handoff; audit. Each needs permitted fields/scopes, generation time,
+  filters, policy period, lock status, genuine CSV/XLSX/PDF job/status/private
+  download/expiry/audit. Current factual exports are reusable, not all14 completion.
+- API hardening includes HTTPS/version/OpenAPI consistency/problem details,
+  bounded filtering/sorting/page-or-cursor contracts, authorization on replay,
+  optimistic concurrency, multi-attempt races, file signature/malware/rate limits,
+  trace-safe observability and provider/worker/schema readiness health checks.
+- Separate Development/UAT/Production configuration, migrations/upgrade/rollback,
+  private SQL/file/biometric key backup/restore, secrets/least privilege, retention
+  enforcement and deletion, enabled real jobs, agreed employee/load targets and
+  response budgets. Mobile token storage, permissions, responsive/accessibility UX,
+  native build/store/distribution are client/platform tasks, with API expectations
+  documented rather than claimed as backend work.
+- AC-001..010 acceptance evidence matrix must identify backend API cases versus
+  actual web/device end-to-end cases. Unit/contract cases never certify physical
+  camera/liveness/GPS/background duty monitoring or real provider outage behavior.
+
+DEPENDENCY AND OVERLAP RULES
+1. A supplies identity, permissions, salary/assignment history and files to B-G.
+2. B supplies immutable schedule/boundary/punch/session/correction/report evidence
+   to C and ordinary D. C and D exchange explicit immutable allocations, not live
+   mutable totals. Implement ordinary leave allocation before final KPI assessment;
+   then freeze KPI evidence before KPI-based D benefits. Do not require a benefit
+   to calculate the very KPI needed to qualify for that benefit.
+3. C's approved sessions/travel/eligibility support E. D/E emit approved financial
+   source credits/charges; F consumes them once. Claims compute eligibility, F owns
+   payroll consumption/receipts; neither producer claims payment just from approval.
+4. G's shared audit/notification/API/security infrastructure starts with A; do not
+   defer producer integration until the final part. Each domain owns producing its
+   events; G owns authorized projection/delivery/export/retention verification.
+5. Reporting/ESS projections can be designed and contract-checked early, but their
+   financial/KPI outputs cannot be accepted before C-F producers exist. Keep factual
+   attendance versus payable attendance distinctions explicit.
+6. Place raw intake/correction mechanics in B, policy interpretation/OT/KPI in C,
+   leave entitlement/lifecycle in D, claims/agreements in E, financial posting and
+   consumption in F, shared read projections/outputs in G. One task owns each
+   transition, with explicit downstream contract signoff, avoiding duplicate fixes.
+
+MANAGEMENT CONTROL VERSUS MISSING CODE
+- Preserve already-confirmed ordinary and OT formulae, direct HR policy publication,
+  HR correction/OT authority, direct Admin leave review, office/site scheduling,
+  office OT ineligibility, manual Finance receipt principles and no-reopen rules.
+  Do not reopen them merely because v1.2 has an older MD marker or prepared UI field.
+- Remaining definition gates include KPI base/reset/composition/disciplinary effect;
+  waiting attribution/evidence/caps; study/make-up treatment; special cross-midnight
+  examples; leave benefit/encashment election/pools/valuation; recovery deadline/
+  credit/waiver; stationed dinner/cycle; vehicle operating/route definitions; loan
+  terms and partial/reversal/amendment authority; production face provider/artifacts/
+  thresholds/exception/retention; legal activation authority; retention/load targets.
+- Management approval is not a substitute for missing services. Typed configuration,
+  factual intake, preview/errors, effective history, evidence, permission/audit and
+  deactivated readiness can be built without invented values. A missing executable
+  claim, own profile API, report producer or review lifecycle remains a code task.
+- Original Green/Amber/custom zones, population/override schedules, configurable
+  approvals and reopening versus later approved constraints need an explicit SRS
+  traceability/deviation row. A retained baseline requirement must be implemented
+  or formally superseded; silently marking it done is unacceptable.
+
+MINIMUM CONSUMER HANDOVER ACCEPTANCE WITHOUT FULL CLIENT IMPLEMENTATION
+WEB: exact initial access Reason positive/negative; current versus frozen hiring
+profile; office/site setup DTOs; daily/calendar/register/source versions; correction
+cursor and fingerprint; direct policy preview/publication; exact leave allocations;
+OT eligibility/financial states; zone/site report scoped queues/evidence; claims/
+loans settlement projection; lock/readiness/Finance receipts; protected jobs/download;
+inbox/read/version; sensitive field and supervisor scoped rejection cases.
+MOBILE: login/device/rotating-session/recovery; current own context; capability/
+challenge/capture/result/punch binding; own immutable today/calendar/session detail;
+offline unverified/retry semantics; own shift/correction/leave/OT/claims/loan;
+safe site report sync/review; effective zone instructions/duty-window/live expiry/
+acknowledge/dispute; own profile/documents/financial rows/inbox. For each, publish
+request/response/error samples consumable by a contract harness and assign a client
+owner for platform acceptance. Full React/React Native UI delivery is not required
+to certify those backend contracts; actual AC-002/005A/005B platform success still is.
+
+FINAL RECOMMENDATIONS TO THE DOCUMENT AUTHOR
+- Include one A-G task-to-SRS/audit matrix plus a decision/deviation register and a
+  three-gate completion checklist. Do not repeat old absent-office-migration or
+  resolved lint/format failures as current missing code.
+- List concrete deliverables and positive success evidence, especially office
+  provenance, face production registration/deletion, own profile/financial APIs,
+  supervisor discovery/team calendar, file import decision, bank verification,
+  full post-hire lifecycle, HR notifications, all14 reports and positive month close.
+- Keep frontend Reason repair and other consumer integration responsibilities
+  visible as named handover/contract acceptance dependencies; they do not require
+  finishing the entire clients before backend source completion.
+- Explicitly reject fabricated face/template proof, salary/zero availability,
+  approval success, fake office sites, automatic disciplinary decisions, public
+  sensitive exports, automatic bank payment and removed readiness gates.

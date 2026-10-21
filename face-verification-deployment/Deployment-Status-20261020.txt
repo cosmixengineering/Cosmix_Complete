@@ -1,0 +1,228 @@
+COSMIX FACE DEPLOYMENT -- AS BUILT, 20 OCTOBER 2026 (ASIA/KARACHI)
+
+CompreFace: installed YES; running YES; official release 1.2.0.
+Browser/API URL: https://192.168.1.50:8000/
+Dedicated Compose project: cosmix-face; private bridge: cosmix-face_face-private.
+Server directory: /opt/cosmix/face-verification
+Persistent volume: cosmix-face_postgres-data.
+Containers (all running): cosmix-face-compreface-postgres-db-1,
+cosmix-face-compreface-admin-1, cosmix-face-compreface-api-1,
+cosmix-face-compreface-core-1, cosmix-face-compreface-fe-1.
+Postgres and core have Docker health checks and report healthy. The others have
+HTTP/runtime checks; they do not have invented Docker health status.
+Immutable official image digests, limits and dependencies are in compose.yaml.
+
+Provisioned application: Cosmix ERP. Services: Cosmix DETECTION, Cosmix VERIFY,
+Cosmix RECOGNITION. Each has its own server-side key. The current ERP adapter
+uses stateless 1:1 verification with its encrypted reference image, rather than
+registering a global recognition-gallery identity. No real employee was enrolled.
+Metadata/service-key persistence passed a controlled Postgres restart on 19 Oct.
+On 20 Oct the web container was found with no network attachment and 143 failed
+restarts. Recreating ONLY that frontend restored its configured private network.
+Subsequent checks: all five running; frontend restart count zero after 10 minutes.
+The cause of the earlier network detachment was not established.
+
+Network/TLS:
+  192.168.1.50:8000 -> frontend 443 (TLS 1.2/1.3).
+  127.0.0.1:8001 -> frontend 80 (local maintenance only).
+  No published Postgres, core, admin or internal API port.
+  Nginx RFC1918/loopback allow-list, bounded 3 MB request, rate limiting,
+  no request/image access logs, no image spooling, no wildcard CORS.
+  /core/ blocked except exact GET/HEAD /core/status needed by the login bootstrap;
+  normal CompreFace sign-up is enabled on the existing private LAN allow-list.
+  Host Docker configuration and host firewall were not changed.
+  Private CA: tls/ca.crt; backend pins its PEM bytes with SHA256:
+    bcf8c0667a307f3c6e46928d97ea8394884a144cc02d4f674e268a11e697d89f
+  Server certificate valid through 19 October 2027; IP SAN verified.
+  Per-client custom-root trust keeps hostname/signature/expiry checks. A later UI
+  fix installed the verified deployment CA in this Windows CurrentUser Root store,
+  after the owner accepted Windows' certificate dialog. Machine trust is unchanged.
+  Other devices still need their own trust of this private CA.
+  Original deployment note: browser trust of this private CA
+  must be provisioned separately; the backend HTTPS handshake already passes.
+
+Secrets and directory layout (values deliberately excluded):
+  /opt/cosmix/face-verification/compose.yaml, nginx.conf
+  .env                          root-only database password (0600)
+  credentials/                  root-only operator/service provisioning (0700)
+  credentials/admin-password    generated technical operator password
+  credentials/model-*.json      protected service keys
+  tls/                          public CA/server cert and root-only private keys
+  models/                       hash-pinned ONNX files and Apache-2.0 license
+  tools/runtime-probe/          self-contained Linux .NET inference diagnostic
+  logs/                         deployment/persistence/runtime evidence
+Technical operator username: face-operator@cosmix.local. Retrieve its password
+only in an authorized private SSH session with sudo; do not paste it into Git,
+logs or mobile configuration. Secure configuration transfer used SCP and a
+user-only Windows ACL. No administrator credential is sent to the ERP client.
+
+ONNX liveness:
+  MiniFASNetV1SE.onnx (1,742,335 bytes):
+    ebab7f90c7833fbccd46d3a555410e78d969db5438e169b6524be444862b3676
+  MiniFASNetV2.onnx (1,743,581 bytes):
+    b32929adc2d9c34b9486f8c4c7bc97c1b69bc0ea9befefc380e4faae4e463907
+  Source: https://github.com/yakhyo/face-anti-spoofing/releases/tag/weights
+  Release target: c175efef505bc275f7835cc9aa2aecab305ac184.
+  Source review: scripts/onnx_export.py and scripts/onnx_inference.py at that ref.
+  Publisher's current source/license review:
+    aea85c1fa14e4d52a7910af75d59ef51e62a2267 (Apache-2.0).
+  Upstream Minivision Silent-Face-Anti-Spoofing also carries Apache-2.0.
+  Apache-2.0 permits commercial use subject to its terms; retained license and
+  attribution apply. The old release target has no separate LICENSE file; the
+  reviewed publisher's current README links these same release assets. This
+  assessment does not certify training-data rights or downstream legal compliance.
+  Input: float32 BGR, 0..255, NCHW, 80x80, OpenCV linear resize.
+  Crops: upstream scaled bounding box, V1SE 4.0 / V2 2.7.
+  Reviewed adapter uses CompreFace max-min box extents. Output: three logits;
+  numerically stable softmax, live class 1; each model must independently pass.
+  Release batch_size is explicitly bound to 1, with strict [1,3,80,80]/[1,3]
+  metadata validation. No filename-based semantics or unreviewed dynamic shapes.
+  Runtime: .NET 10 / Microsoft.ML.OnnxRuntime 1.24.3 CPU. Real Linux means after
+  warmup: V1SE 6.73 ms, V2 8.96 ms (20 iterations, synthetic flat tensor).
+  This is inference compatibility/performance, not an anti-spoof accuracy test.
+  No additional Python liveness service/runtime is used. The official CompreFace
+  core retains its normal vendor-provided internal dependencies.
+
+Backend and operational configuration:
+  Active repo: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix-backend
+  Normal launch profile: Cosmix.Api.FaceVerification (first profile).
+  Running local API: https://localhost:7240/ ; Swagger: /swagger/
+  User-selected SQL target: (localdb)\CosmixUat_d893653346 / Cosmix_Testing.
+  Old saved Cosmix_Development pipe was stale; the selected testing database was
+  verified ONLINE with 24 applied migrations before changing the private setting.
+  No migration, bootstrap, enrollment or attendance request was executed.
+  Runtime binary copy: C:/Users/Huma.Khan/.codex/artifacts/cosmix-face-20261020/ApiRuntime
+  Uses the installed .NET runtime and local NuGet cache. The source launch profile
+  is the normal reproducible developer startup; no Windows service was installed.
+  Private settings: %APPDATA%/Microsoft/UserSecrets/Cosmix-Backend-HR-Development/secrets.json
+  Face-only provisioning copy: C:/Users/Huma.Khan/.codex/artifacts/cosmix-face-20261019/private/backend.private.json
+  Private biometric storage: %LOCALAPPDATA%/Cosmix/FaceVerification/{objects,journal,index,keys}
+  Private model files: C:/Users/Huma.Khan/.codex/artifacts/cosmix-face-20261019/models
+  Backups of prior settings are protected alongside the private provisioning copy.
+  Independent biometric/journal AES-256-GCM keys were generated, outside all object
+  roots and separate from ordinary ERP document encryption. No real capture stored.
+
+The owner explicitly delegated initial settings on 20 October:
+  SelfHostedFace:Enabled = true; MinimumSimilarity = 0.85
+  SelfHostedFace:CompreFace:MinimumDetectionProbability = 0.90
+  SelfHostedFace:SilentFace:Enabled = true
+  SelfHostedFace:SilentFace:Models:0/1:MinimumLiveProbability = 0.90 each
+  FaceVerificationPolicy:ChallengeLifetimeSeconds = 120
+  FaceVerificationPolicy:MaximumAttemptsPerPunch = 3
+  FaceCapture:LifetimeSeconds = 120
+  FaceStorageRetention:CaptureUseLifetimeSeconds = 120
+  FaceStorageRetention:EnrollmentUseLifetimeSeconds = 7776000 (90 days)
+  Authority/approval references cite this owner's operational delegation.
+These are explicit initial operational choices, not validated accuracy or legal
+approval claims. Use expiry denies subsequent reads; it does NOT mean ciphertext
+or backups are physically deleted at expiry. Physical disposal is not enabled.
+All settings support normal ASP.NET configuration: replace ':' with '__' for
+environment variables, including Models__0__Path/Sha256/etc. Keep actual API keys
+and encryption material in private settings/secret files. Never place them here.
+
+Integration behavior:
+  Domain/Application/Infrastructure/API remain separate. Existing capture and
+  attendance implementations are reused. CompreFace uses the named HttpClientFactory
+  client Cosmix.CompreFace with private-destination/redirect/proxy/response guards.
+  Removed the PocApproved and Development-only provider/capture selection locks.
+  Encryption/retention gates apply in every environment. Unconfigured services
+  still fail closed. Provider identity is CompreFace+SilentFace; new contract
+  version prevents silently reusing incompatible historical PoC enrollments.
+  Protected enrollment/capture tokens retain employee/device/session/challenge
+  binding; JWT, current authorization and attendance/location/shift checks remain.
+  Enrollment: /api/v1/hr/employees/{employeeId}/face-enrollments[/captures]
+  Verification: /api/v1/attendance/face/challenges, then /{id}/captures and /{id}/verify
+  Capability: /api/v1/attendance/face/capability (authenticated).
+  Liveness returns pass/score/model version/processing time/failure reason.
+
+Executed verification on 20 October:
+  Release build: 0 warnings, 0 errors.
+  Existing offline face checks: 397 passed.
+  Real models + environment/DI guards: 20 passed (6 new gate assertions failed
+    before the production-selection change, then passed).
+  Attendance composition: 54 passed; no database access in that harness.
+  TLS handshakes: 4 passed (valid CA, untrusted CA, wrong hash, wrong hostname).
+  Live server/configuration: 11 passed using the saved operational configuration.
+  Real blank PNG: detection and verification HTTP 400/code 28, no face accepted.
+  Missing key: HTTP 400/code 20; incorrect key: HTTP 404/code 10 (upstream contract).
+  API /health/live 200; /health/ready 200; Swagger 200; anonymous capability 401.
+  CompreFace /healthz 200; /login 200; /core/ 404 except read-only /core/status;
+  anonymous /admin/user/me 401. Later sign-up checks are recorded below.
+  Reviewer delegation could not complete because its account usage limit was hit;
+    no independent completed-review claim is made.
+  No real biometric sample, identity match, printed photo, screen replay, blur,
+    multiple-person detection or authenticated employee attendance was tested.
+  Expiry/reuse/outage guards have offline coverage; genuine HTTP/SQL/mobile
+    attendance acceptance remains NOT RUN. No overall production-ready claim.
+
+Resources/storage:
+  Ubuntu 26.04.1 x86_64, AVX/AVX2, 4 vCPU, 5.28 GiB usable RAM, no swap.
+  Pre-expansion sample: 17.83 GiB root, 7.78 GiB available, 55% used.
+  After deployment: 38G root, 17G used, 20G available, 47% used.
+  Latest host RAM: 5.3Gi total / 4.0Gi used / 1.3Gi available.
+  Container memory limits are in compose.yaml; no concurrency/load acceptance.
+  Root expansion had user authorization and verified partition/GPT/LVM backups:
+    /root/cosmix-face-disk-backup-20261019
+    C:/Users/Huma.Khan/.codex/backups/cosmix-face-20261019/cosmix-face-disk-backup-20261019.tar.gz
+  This is metadata recovery, not a full VM/data snapshot. /dev/sdb was untouched.
+  Existing hello-world containers remain stopped and unchanged.
+
+Operations and bounded rollback:
+  On server, cd /opt/cosmix/face-verification; use sudo for Docker.
+  Health: sudo docker compose --ansi never ps
+  TLS: sudo curl --cacert tls/ca.crt https://192.168.1.50:8000/healthz
+  Inspect only the required service's recent logs; never dump .env/credentials.
+  If frontend cannot resolve upstream names, inspect its membership in
+  cosmix-face_face-private first; the observed failure had an empty Networks map.
+  API 400/28 means no face; 400/20 missing key; 404/10 incorrect key.
+  API 503 readiness means SQL/foundation availability failed; verify the selected
+  local instance/database before changing targets. Do not auto-apply migrations.
+  To pause only this deployment: sudo docker compose stop (from this directory).
+  Resume only this deployment: sudo docker compose up -d.
+  Preserve PostgreSQL volume, private keys, credentials, models and encrypted
+  objects. Do not use down -v, prune, recursive deletion or restore old disk
+  partition sizes on a grown filesystem.
+  Disable SelfHostedFace:Enabled/FaceCapture:Enabled to stop biometric use, then
+  restart the owned backend. Restore only the task's face settings from protected
+  backups after checking for subsequent configuration edits; never reset the repo.
+  The currently running backend is a local developer process, not an OS service.
+  Service supervision, full backup/restore, RAM/load acceptance, dependency security
+  review, physical disposal and consented camera/attack calibration remain separate.
+
+Primary sources reviewed:
+  https://github.com/exadel-inc/CompreFace/releases/tag/v1.2.0
+  https://github.com/exadel-inc/CompreFace/blob/v1.2.0/docs/Rest-API-description.md
+  https://github.com/exadel-inc/CompreFace/blob/master/docs/Face-Recognition-Similarity-Threshold.md
+  https://github.com/yakhyo/face-anti-spoofing/releases/tag/weights
+  https://github.com/yakhyo/face-anti-spoofing/blob/aea85c1fa14e4d52a7910af75d59ef51e62a2267/LICENSE
+  https://github.com/minivision-ai/Silent-Face-Anti-Spoofing/blob/master/README_EN.md
+
+Later mock deep-review addendum (20 October):
+  See Deep-Verification-20261020.txt for the current verification/handoff record.
+  Fresh integrated Release:0 warnings/0 errors;665 automated assertions passed,
+  plus four updated running-API smoke checks. Two independent reviews completed.
+  Fixed ordinary no-face/multi-face/low-confidence outage classification, stale
+  successful-receipt CanSubmitCheckIn, and disabled-provider raw-vault retention
+  bypass. Mixed low-confidence/malformed comparison responses validate fully first.
+  Root parser and workflow/storage regressions reproduced before each fix.
+  Updated API runtime files match the verified build; API remains running locally.
+  Final Ubuntu frontend check:running, network attached, restart count0 (~48min).
+  Current public workflow still provides generic VERIFICATION_FAILED for ordinary
+  rejection; upstream HTTP400/code28 is internally classified as409 recapture.
+  No real employee/camera/print/video replay or authenticated SQL punch acceptance
+  was performed. Physical deletion, enrollment-use-expiry metadata readiness,
+  simultaneous pre-receipt inference, SQL rollback/crash behavior and physical
+  mobile HTTPS/networking remain bounded gaps listed in the detailed report.
+
+20 October - CompreFace login UI correction:
+- /core/status404 caused by custom Nginx core-block rule; exact read-only status proxy deployed.
+- Graceful frontend reload;14 live checks +13 document/JS/CSS dependency checks pass.
+- Owner accepted Windows certificate dialog; verified deployment CA is in CurrentUser Root.
+- Normal Windows .NET HTTPS validates200/OK. Browser visual automation unavailable/blocked.
+- Details and rollback:WebUi-Fix-20261020.txt. Mobile work remains deferred.
+
+20 October - sign-up correction:
+- Removed exact registration403 deny; existing private-LAN proxy now forwards native sign-up.
+- Actual synthetic register201/login200/profile200/own-account cleanup:9checks pass.
+- Live service/configuration diagnostics:16pass. Native optional demo404 is expected after first owner registration.
+- Details:Signup-Fix-20261020.txt. No real employee, existing role/app/key or mobile change.

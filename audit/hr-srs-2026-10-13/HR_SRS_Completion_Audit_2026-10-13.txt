@@ -1,0 +1,1007 @@
+HR Attendance and Employee Mobile SRS Completion Audit
+13 October 2026 Asia/Karachi
+
+Main conclusion
+The full HR WEB scope has approximately 40% source-integrated business workflow coverage. The narrower employee and organization administrative workspace has approximately 86% coverage. These refer to different scopes. Current employee administration is substantially built; attendance operations, claims, financial self-service, reports and full employee clients are unfinished or unconnected.
+The React Native business application is 0% delivered: the only business source entry returns null. Native project scaffolding is present.
+Current system is not ready for complete SRS production acceptance.
+
+Scoring method and denominators
+Web: 33 coherent equal feature groups; 11 implemented, 4 partial, 18 missing/unconnected. (11 + 4*0.5)/33 = 39.39%.
+Employee/organization administrative subset: web groups 1-14; 11 implemented, 2 partial, 1 missing. (11 + 2*0.5)/14 = 85.71%.
+Non-attendance HR backend: 25 coherent equal groups; 8 implemented, 7 partial, 10 missing. (8 + 7*0.5)/25 = 46%.
+Attendance backend: 21 coherent equal groups; 6 implemented, 14 partial, 1 missing. (6 + 14*0.5)/21 = 61.90%.
+Implemented=1, partial=0.5, missing/unconnected=0. Folder/model/README/UI-draft existence alone scores zero. These are transparent audit estimates of source coverage, not estimates of engineering hours, official milestone percentages, live UAT pass rates or production readiness. The backend domain matrices overlap some payroll/audit dependencies; no combined overall backend or whole-system percentage is asserted. Mobile-only functionality is excluded from the web denominator.
+
+Assessed source
+Supplied baseline: C:/Users/Huma.Khan/Downloads/HR_Attendance_Employee_Mobile_SRS_v1.2.docx.
+Current web: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix_frotned.
+Current backend: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix-backend.
+Current mobile: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix_mobile.
+Latest modified/untracked source is included. C:/Users/Huma.Khan/Downloads/cosmix-backend is an older copy: all its inspected source paths also exist in the nested copy, which adds 306 .cs/.csproj paths and changes 53 common ones. Reference mockups and the separate NOIR/Cosmix_new foundation are not counted as delivered SRS business functionality.
+The SRS was treated as requirements/source material, not as authorization to execute its developer checklist, change SQL or activate providers.
+
+Feature delivery summary
+Employee directory / organization masters / holidays: connected web and real backend paths.
+Draft employee, sensitive proposals, private documents, hiring/Admin decisions: real connected source; clean scanner/current authenticated full onboarding acceptance still pending.
+Current employee changes, compensation history, suspension/resign/terminate, site assignment: real connected source. Complete retirement/reactivation/rehire/archive and post-hire asset/SIM/certificate lifecycles remain incomplete.
+Employee access setup: partially connected; current initial and additional role requests omit backend-required Reason and are rejected by current validation.
+Shifts / site rosters / geofences: real backend; latest routes and typed pages are connected during this audit refresh. Grouped scheduling remains partial due office schema and unfinished office attendance. Office roster source exists, with no corresponding migration/snapshot and incomplete office capture/calculation provenance.
+Attendance daily/register/corrections/OT: significant backend source; current reachable web workspaces do not load/save business records.
+Policies / ordinary leave: real partial backend feature scope; special KPI/waiting/study/make-up/encashment/recovery producers incomplete; current web operations disconnected.
+Operational zones and site reports: real bounded backend workflows; literal SRS Green/Amber/custom-type and complete employee UI/monitoring not delivered.
+Allowances / meal/outstation / fuel/motorcycle/vehicle / advances/loans: models exist; operational service/API/UI lifecycles missing.
+Payroll inputs: ordinary/late immutable revisions and manual Finance receipts exist; current no-charge handoff is implemented. Full approved OT financial consumption, monetary carry-forward and final month release remain blocked/incomplete.
+Reports: protected factual CSV/XLSX/PDF jobs exist; all fourteen SRS report producers are incomplete and current web export controls disabled.
+Employee self-service / notifications: some own attendance/leave/OT/inbox backend paths exist; routed own web workspace is prepared-only, complete own profile/financial data absent, React Native business app blank.
+
+Critical immediate blockers
+1. Initial/additional role assignment lacks required Reason; blocks complete new employee access setup against newest backend (static contract proof, no live write made).
+2. Seventeen remaining administrative operational workspaces and one own workspace use disconnected PreparedWorkspace controls. Latest scheduling setup routes are now connected and counted as partial, superseding the initial unreachable finding.
+3. Office roster models/configuration/DbSets exist without a supplied migration/snapshot. Their schema guard can also block existing site shift publication/status operations.
+4. Office capture/calculation/correction still depends on site provenance; office scheduling alone does not complete office attendance.
+5. Production face provider remains unavailable; the self-hosted adapter is Development-only. Approved artifacts, actual liveness/matching/device acceptance, automatic biometric retirement/deletion and a complete employee client remain pending.
+6. Current financial reader unconditionally requires missing legal activation and rejects new retained full locks. Approved OT/carry-forward/claims financial closure is also incomplete. A saved no-charge handoff does not settle or pay payroll.
+7. Final fresh source checks all pass: backend Release build and web lint/format/TypeScript/Vite. Passing code checks does not prove SRS business workflows or deployed acceptance.
+
+Fresh checks in this audit
+Backend Release solution build PASS: all four projects, zero warnings/errors, TEMP output, --no-restore.
+Latest web TypeScript/Vite production build PASS, 2247 modules. Existing combined >500kB JavaScript chunk warning remains.
+FINAL latest npm run verify PASS: ESLint, Prettier, TypeScript and Vite production build, 2247 modules. Earlier lint/format failures were resolved by concurrent source changes and are superseded. This audit applied no source fixes/formatting.
+No authenticated browser/API writes, SQL connection/schema application, real SMS/scanner/biometric/device test, native mobile build, load or restore drill was executed. Historical verification records are explicitly distinguished from fresh results.
+
+Suggested delivery order
+1. Repair the current initial/additional role-assignment contract and complete onboarding/access acceptance.
+2. Complete office roster schema/migration and historical office boundary/capture/correction/calculation support.
+3. Connect real HR attendance setup and operations UI: daily/register, corrections, OT, ordinary leave, policies, zones, site reports and notifications.
+4. Build missing claim/vehicle/advance/loan/leave-extension/self-service producers and their approval/settlement flows.
+5. Complete financial consumption/carry-forward/activation/month finalization and expand all required source-backed reports.
+6. Deliver the actual employee React Native app and approved real face/device workflow.
+7. Run genuine authorized isolated SQL/browser/device acceptance with real configured providers and HR-approved office/site/overnight/outstation/exception examples.
+These recommendations are an assessment, not an instruction to modify confirmed policy, create production accounts or execute SQL during this audit.
+
+
+Refresh note: Workspace source was changing concurrently during the audit. The initial37.88% web estimate was revised to39.39% after scheduling routes were connected. Current evidence is a reviewed local source snapshot, not an immutable release or a live accepted deployment.
+
+Detailed evidence follows
+
+Final check refresh: concurrent changes after the15:09 source review were formatting-only in inspected setup/router/schema files. Functional routes/contracts and the39.39% web score are unchanged. Fresh complete npm run verify exited0. Backend evidence files remained unchanged since the successful Release build.
+
+
+========================================================================
+integration-findings.txt
+========================================================================
+Current integration and delivery findings
+13 October 2026 Asia/Karachi
+
+1. Attendance setup routes were connected during the audit and are now partially delivered
+Latest AppRoutes imports/mounts ShiftsPage, SiteRostersPage, SiteGeofencesPage and OfficeRostersPage, redirects the old shifts-rosters path and exports the pages via modules/attendance/index.ts. AppLayout now links these actual routes. Typed office roster form uses the matching branch endpoint and timeline/shift version/reason fields.
+This supersedes the earlier audit snapshot where these pages were unreachable. Office schema/migration and actual office capture/calculation remain incomplete, so the grouped setup workflow scores partial rather than complete.
+Seventeen other administrative workspaces remain disconnected; PreparedWorkspace explicitly states Service not connected and does not load/save/submit business records. EmployeeSelfServicePage still uses the same prepared shell. This affects attendance operations, leave/OT/policy operations, zones/site reports, financial flows/reports and own-service UI.
+
+2. Current frontend role-assignment request is incompatible with the latest backend
+Evidence: cosmix-backend/src/Cosmix.Application/Authentication/Access/AccessContracts.cs:47-53 adds JsonRequired + Required Reason to AssignAccessRoleRequest. AccessManagementService.cs:143 invokes RequireReason, :342-345 rejects missing/blank/oversized values with invalid_access_reason.
+Frontend EmployeeAccessSetup.tsx:516-528 omits reason from the initial assignment payload; AdditionalRoleAssignment.tsx:92-102 also omits it; schemas/access-setup.ts:82-91 defines no reason field.
+Impact: current initial/additional access requests are rejected by current backend validation. Employee activation/access AC-001 is not a complete connected flow. This is a static request/contract trace, not an observed authenticated HTTP response; no live account write was made.
+
+3. Current Office roster source has no supplied corresponding migration/snapshot
+Evidence: DbContext.cs:76-77 has OfficeRosterAssignment/End DbSets. OfficeRosterConfigurations.cs maps both tables/FKs. The current migrations and CosmixDbContextModelSnapshot contain no OfficeRoster entries.
+OfficeRosterRepository.cs:71-101 inspects the required SQL tables/columns/FKs/indexes and rejects absence with office_roster_schema_required 503 (:108).
+ShiftVersionPublication.cs:15-16 and ShiftService.cs:101-102,122-123 consume this dependency for shift publication. It can block existing site-shift changes until the new schema exists, even though Release compilation succeeds.
+Impact: office scheduling is partially implemented source; deployment is incomplete. This audit did not connect to or inspect the live database and does not assert actual table presence there.
+
+4. Office roster resolution is real; office attendance boundary provenance remains unfinished
+Evidence: EmployeeRosterResolver and OfficeRosterResolver provide office versus site schedule dispatch. AttendanceCaptureService.cs:61-69 still resolves site geofences and EmployeeSites; siteMatches requires a single employee site matching selected.SiteId. No Office attendance boundary path exists in this capture flow.
+Impact: do not confuse an office shift schedule with completed office check-in/calculation/evidence coverage. This requires a real office boundary/history path, not a fabricated site.
+
+5. Face security code is substantial, but real production check-in is unavailable
+Evidence: Infrastructure/Repositories/Attendance/AttendanceCaptureRegistration.cs:28-30 returns UnconfiguredFaceVerificationProvider outside Development or when disabled. Self-hosted CompreFace and ONNX liveness adapters are development-only source with approved-model/provider/device acceptance still pending.
+Mobile src/app/App.tsx:3 returns null; src contains no other business source file.
+Impact: FACE-003 / AC-002 live-person matching/device flow cannot be passed. No real provider/model inference/camera/replay/liveness checks were run in this audit. Check-Out has no added face requirement in backend capture.
+
+6. Positive full month close/payroll finalization remains deliberately blocked
+Evidence: Application/Attendance/PayrollInputs/AttendanceMonthLockFinancialReader.cs:54-56 unconditionally adds legal_payroll_activation_required for every retained financial input; :86-87 rejects retained verification with month_lock_legal_activation_unavailable. Missing approved financial consumption/carry-forward and legal activation remain visible dependencies.
+Current no-charge handoff is implemented for an issue-free saved zero-line input. Do not repeat older documentation's blanket claim that it is absent. No-charge handoff is not posting, settlement, payment or full month-finalization acceptance.
+Impact: ATT-010, AC-007 and payroll-ready closure remain partial. SRS requires controlled reopening; current later-approved project policy forbids reopening and relies on controlled forward adjustments, which still need full financial implementation. Treat this as a documented requirement deviation, not a reason to silently change product policy during this audit.
+
+7. FINAL latest source checks after concurrent formatting changes
+Backend Release build PASS 0 warnings/0 errors, TEMP output. Its inspected backend evidence hashes remain unchanged.
+Final complete npm run verify PASS: ESLint, Prettier formatting, TypeScript and Vite production build; 2247 modules. Existing large JavaScript chunk warning remains.
+Earlier audit snapshots failed lint1/format10, then passed lint/failed format15. Those failures are historical and superseded by the final successful full command after concurrent formatting changes. This auditor did not alter product source.
+No authenticated employee/attendance/SQL/mobile/provider acceptance was run.
+
+8. Earlier profile-snapshot suspicion was checked and not confirmed
+EmployeeDetailPage.tsx:147 reads employees/{id}/current/{section}; EmployeeHiringPage redirects approved employees away from the retained draft. Current profile updates use their proper API. Do not report a stale-profile bug without this trace.
+
+
+========================================================================
+frontend-hr-findings.txt
+========================================================================
+HR WEB FRONTEND AUDIT -- 13 October 2026
+
+REFRESHED SNAPSHOT: 2026-10-13 15:09:25 +05:00. Another chat changed product source
+during this audit. The current findings below supersede the earlier route
+unreachability, 38% web score, and lint/10-file-format failure observations.
+This auditor made no product changes. FINAL verification refresh: after concurrent formatting changes, the parent reran full npm run verify and it PASSED lint, formatting, TypeScript and Vite2247 modules. Earlier lint/format failure observations below are historical and superseded. The reviewed functional scope and39.39% score are unchanged.
+
+Audit scope and limits
+Web root (W): C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix_frotned
+Backend root (B): C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix-backend
+SRS: audit/hr-srs-2026-10-13/srs-extracted.txt, supplied v1.2 baseline.
+Read AGENTS.md, README.md and module instructions. This audit is static and read-only
+apart from this requested findings artifact. No product files, tests, database,
+providers, accounts or API business records were changed. No API writes were made.
+The parent owns fresh build/check execution. Endpoint evidence below establishes
+source existence and client wiring, not deployed-schema or live behavioral success.
+Historical implementation reports are useful context but current code wins.
+
+Result and reproducible score
+For all HR WEB scope, the estimate is about 40% source-integrated business coverage:
+11 Implemented + 4 Partial + 18 Missing/Unconnected across 33 equal groups.
+Formula: (11*1 + 4*0.5 + 18*0)/33 = 39.39%.
+For the narrower employee/organization administrative workspace (groups 1-14),
+the estimate is 86%: 11 Implemented + 2 Partial + 1 Missing; 12/14 = 85.71%.
+These are explicit audit estimates, not official effort-weighted percentages and
+not UAT pass rates. Equal groups prevent UI/file volume from masquerading as
+completed business scope. The administrative estimate must not be presented as
+completion of the full SRS HR/Attendance panel.
+
+Implemented (1): reachable UI with real reads/writes and matching backend routes,
+with no identified contract blocker for that group's central workflow.
+Partial (0.5): a usable subset exists but material pieces are absent/broken.
+Missing/Unconnected (0): no reachable, API-backed business workflow; prepared
+drafts, empty tables and any unreachable page code score zero.
+No mobile face capture, GPS capture, offline queue, mobile storage or mobile-only
+screens are in this denominator. Web face administration is included, as are
+authorized web attendance review, Accounts handoff, notifications and reports.
+Own web views are included under SRS 1.2 (employee self-service web/mobile views),
+not by counting the React Native application's screens against the web project.
+NFR/security/deployment/UAT acceptance is reported as a separate gate, not assigned
+invented partial-credit numbers.
+
+Most consequential findings
+
+1. Most menus are honest but nonoperational prepared controls.
+   W/src/app/router/AppRoutes.tsx:48 sends /hr/workspaces/:workspaceId to
+   HrPreparedWorkspacePage. That component selects a definition and always renders
+   PreparedWorkspace (W/src/modules/hr/pages/HrPreparedWorkspacePage.tsx:11-16).
+   W/src/modules/hr/components/workspaces/PreparedWorkspace.tsx:38 says
+   "Service not connected"; :60 says records/results are unavailable and drafts
+   are not saved/submitted; :87 disables filtering; :113 shows "Records
+   unavailable"; :128 renders every verified result as "Unavailable".
+   PreparedForm.tsx:172 disables the actual submit/save action; :182 calls review
+   "Not submitted". No business API exists in this renderer. ReportActions.tsx:21
+   disables Export and :27 disables Print. Calendars/rosters/registers and boundary
+   drawings are presentation helpers, not loaded business records.
+   There are now 17 disconnected administrative workspaces: three attendance,
+   five operations, seven people-service and two reporting workspaces. Eighteen
+   definitions remain, but shifts-rosters is redirected to the real scheduling
+   route. The employee self-service page is an additional disconnected surface.
+
+2. New scheduling implementation is now routed; overall setup remains Partial.
+   W/src/modules/attendance/pages/ShiftsPage.tsx:18, SiteRostersPage.tsx:95 and
+   SiteGeofencesPage.tsx:167 define real pages and clients. AppRoutes.tsx:8 imports
+   them through the attendance module; :40-46 registers shifts, site roster,
+   site geofence and new office roster routes. :47 redirects the old prepared
+   shifts-rosters route to /hr/attendance/shifts. Attendance/index.ts:1-5 exports
+   these pages/access helper. Sidebar AppLayout.tsx:21-26 links real scheduling;
+   :74 excludes shifts-rosters from prepared menus. References.tsx:251 now targets
+   registered site routes. This supersedes the earlier unreachable-code finding.
+   OfficeRostersPage.tsx:21,38,72 reads office references and real branch roster
+   history; OfficeRosterForm.tsx:24-40 sends matching assignment/replace/end bodies
+   with timeline, shift version and reason. Response schemas match
+   B/src/Cosmix.Application/Attendance/Rosters/OfficeRosterContracts.cs:12-25.
+   The office source is not deployment-complete: OfficeRosterRepository.cs:71-108
+   requires physical schema and fails closed with office_roster_schema_required
+   (503), and no matching office roster migration/snapshot is present. Parent's
+   backend audit also traces this gate into shift publication. Site setup has
+   substantial integrated UI; office setup and fresh live acceptance still block
+   declaring the entire scheduling group complete.
+
+3. Initial and additional access assignment violate the latest backend contract.
+   W/src/modules/hr/components/approvals/EmployeeAccessSetup.tsx:516-528 submits
+   roleId, scopes, dates, versions and configureAsInitialAccess, with no reason.
+   AdditionalRoleAssignment.tsx:89-102 does the same for additional access.
+   W/src/modules/hr/schemas/access-setup.ts:82-91 has no reason property.
+   B/src/Cosmix.Application/Authentication/Access/AccessContracts.cs:47-53 makes
+   Reason JsonRequired/Required (nonempty, max 1000). AccessManagementService.cs:143
+   calls RequireReason; :342-346 rejects null/blank/control-character reasons as
+   invalid_access_reason. Thus both current web bodies are rejected rather than
+   creating assignments. This is a deterministic static contract finding; no live
+   write was performed. EmployeeAccessSetup.tsx:246 and :255 require initial
+   access before mobile provisioning and first web credentials, so a new employee
+   cannot complete AC-001 through the present web flow. Existing accounts with
+   already-assigned initial access can still use the connected provisioning subset.
+
+4. Several prepared workflow definitions are stale relative to confirmed backend
+   behavior. W/workspaces paths here mean src/modules/hr/workspaces.
+   operations.ts:200/254 offers Amber exceptions/access decisions whereas
+   B/src/Cosmix.Api/Controllers/Attendance/ZonesControllers.cs:20 creates the
+   current Operational/Red model. operations.ts:591 offers month reopening,
+   whereas MonthLocksController.cs:15-28 exposes preview/finalize/detail only and
+   the current work-order preserves no-reopen rules. operations.ts:449 offers a
+   separate policy version approval/activation, whereas
+   AttendancePoliciesController.cs:42-53 implements direct HR publication without
+   a second reviewer. attendance.ts:129-153 lists individual/team/category/
+   department populations; the current approved office/site source must be
+   reconciled before these fields are wired. These are currently disabled draft
+   models, not active API requests or runtime data-corruption findings.
+
+5. Current approved employee details do use current values, not frozen hiring
+   snapshots. EmployeeHiringPage.tsx:84-87 redirects approved records to the
+   current detail page. EmployeeDetailPage.tsx:147 loads current/{section}; salary
+   and status use dedicated compensation/lifecycle endpoints. The backend's
+   retained hiring ProfileReference is therefore not a stale-data bug in these
+   routed current-detail flows. However, certifications/assets/SIM and archive
+   continuation remain disconnected after hire; draft collection is not a
+   post-hire issue/return/renewal/expiry workflow.
+
+Scored WEB feature matrix
+Each W/B citation below is relative to the roots above. A range indicates nearby
+supporting source, not a claim that a whole file or folder is completed.
+
+01 | Shared web authentication, MFA/recovery, own sessions/devices | Implemented | 1
+SRS 4, AUTH-001..008 (web aspects).
+W/src/app/router/AppRoutes.tsx:24-30; src/auth/adapter.ts:6-56;
+src/auth/AccountSessions.tsx:143-168,233; src/services/api/http-client.ts:84-93,184.
+B/src/Cosmix.Api/Controllers/Authentication/WebAuthenticationController.cs;
+WebPasswordController.cs; CurrentAccountController.cs:15-27.
+Real cookie/CSRF transport, login/SMS challenge, password recovery and session/device
+read/revoke flow; no fabricated login/token. SMS, provisioned accounts and production
+configuration still need live acceptance. These source features do not certify
+all deployment security/NFR requirements.
+
+02 | Organization masters | Implemented | 1
+SRS 6.1, 13 Organization.
+W/src/modules/hr/pages/OrganizationPage.tsx:21-35,81;
+components/organization/MasterEditor.tsx:55-68; OrganizationHistory.tsx:21.
+B/src/Cosmix.Api/Controllers/HR/OrganizationMasterControllerBase.cs plus Departments,
+Designations, Cities, Branches, StaffCategories and EmploymentTypes controllers.
+Real paged list/search, create/edit/status and reason/version/history support.
+
+03 | Holiday calendars and effective revisions | Implemented | 1
+SRS 6.1, LEAVE-010.
+W/src/modules/hr/components/organization/HolidayCalendars.tsx:22,116,174-215.
+B/src/Cosmix.Api/Controllers/HR/HolidayCalendarsController.cs.
+Real calendars, notification reference and revision/history controls; not merely
+the prepared attendance-calendar view.
+
+04 | Employee directory/search/navigation | Implemented | 1
+SRS 5, 13 Employees.
+W/src/modules/hr/pages/EmployeesPage.tsx:23-26,97-115.
+B/src/Cosmix.Api/Controllers/HR/EmployeesController.cs:19-26;
+src/Cosmix.Infrastructure/Repositories/HR/EmployeeHiringRepository.cs:20-31.
+Server pagination/search/onboarding filter, employee number display and correct
+hiring/current navigation. Numeric directory search is exact employee number,
+not substring, so the approval review's numeric lookup is not an ambiguity bug.
+
+05 | Employee draft and complete personal/employment profile | Partial | 0.5
+SRS 5.1, HR-001..003; controlled gender/marital fields and shift assignment.
+W/src/modules/hr/pages/EmployeeHiringPage.tsx:35-38;
+components/hiring/ProfileForm.tsx:60-74,113-119,220-227,265,346,435.
+B/src/Cosmix.Api/Controllers/HR/EmployeesController.cs:21-28;
+src/Cosmix.Application/HR/Employees/EmployeeFormContracts.cs.
+Draft creation and incomplete saves, identity/contact/address/emergency,
+employment references, background, draft certificates/assets/SIM are real.
+Gender/marital status are unrestricted text rather than controlled selections.
+Proposed shift is only displayed read-only when already present; an HR user cannot
+choose it in the hiring form. Effective office/site scheduling now has its own
+routed controls but has the separate group 15 readiness limits. The server generates
+employee numbers; crypto UUIDs are form-entry/operation keys, not employee numbers.
+
+06 | Restricted hiring financial and medical sections | Implemented | 1
+SRS 5.1 Compensation/Bank/Medical, ROLE-004.
+W/src/modules/hr/components/hiring/SensitiveForms.tsx:43-53,130-138,304-311;
+schemas/hiring.ts:113 onward financial/bank/medical contracts.
+B/src/Cosmix.Api/Controllers/HR/EmployeesController.cs:30-38.
+Separate protected reads/writes for salary/wage/payment/bank/previous salary and
+authorized medical information. Server permissions remain authoritative.
+
+07 | Private employee document upload/review/verification/download | Implemented | 1
+SRS 5.1 Documents, 13 Employee Files (core evidence subset).
+W/src/modules/hr/components/documents/EmployeeDocuments.tsx:55,82-87,102-142;
+components/approvals/SubmissionDocuments.tsx:27,42;
+api/hr-api.ts:32-47.
+B/src/Cosmix.Api/Controllers/HR/EmployeeDocumentsController.cs:17-42;
+src/Cosmix.Application/HR/Employees/EmployeeDocumentService.cs:145-151.
+Real multipart upload, issued/expiry metadata, scan status/rescan, verification,
+private review/download, and post-hire proposal-evidence support. Document expiry
+reminders and renew/expire lifecycle are counted separately in groups 14 and 31.
+Scanner availability and protected file behavior are live acceptance gates.
+
+08 | Hiring readiness, submit, frozen review and Admin decision | Implemented | 1
+SRS HR-002, APR-002/003, first part of AC-001.
+W/src/modules/hr/components/hiring/SubmissionReview.tsx:51-64,117-141;
+pages/HiringApprovalsPage.tsx:27;
+components/approvals/HiringSubmissionReview.tsx:62-105,128-143.
+B/src/Cosmix.Api/Controllers/HR/EmployeesController.cs:40-60.
+Real validation, immutable submitted sections/document snapshot, current document
+availability/version check, decision history, reason and self-approval presentation
+checks. Completion of account/mobile activation is group 9, which is broken.
+
+09 | Employee account, initial/additional role and login-channel setup | Partial | 0.5
+SRS 5.1 System, HR-004, AUTH-007, AC-001.
+W/src/modules/hr/components/approvals/EmployeeAccessSetup.tsx:128-148,243-265,
+516-528,579-583,634-638; AdditionalRoleAssignment.tsx:89-102.
+B/src/Cosmix.Api/Controllers/Authentication/AccessController.cs:39-90;
+src/Cosmix.Application/Authentication/Access/AccessContracts.cs:47-53.
+Access/account/role reads and existing-account provisioning are wired. New role
+assignments omit required reason and fail. Revoke assignment, channel recovery/
+enable-disable and reset-initial-password backend actions have no current UI.
+System-role administration is intentionally delegated to separate administration,
+whose module is still architecture-only. This materially blocks end-to-end hiring.
+
+10 | Current basic/protected employee sections, change request and history | Implemented | 1
+SRS HR-004, APR-002/003, ROLE-004.
+W/src/modules/hr/pages/EmployeeDetailPage.tsx:147-150;
+components/employee/ChangeForm.tsx:80-102;
+components/requests/ChangeRequests.tsx:125-134,164-180,198-219;
+RequestDecisionForm.tsx:18-25,122-137; ChangeHistory.tsx:16-24.
+B/src/Cosmix.Api/Controllers/HR/EmployeeUpdatesController.cs:17-56.
+Current and scheduled values, basic updates, identity/employment/bank/medical/
+document requests, requester cancel, Admin approve/return/reject, current version
+refresh and before/after history are real. This is not the prepared own-profile UI.
+
+11 | Compensation request/review/effective history | Implemented | 1
+SRS HR-004, Compensation.
+W/src/modules/hr/components/requests/EmployeeWorkflows.tsx:26-32;
+SalaryRequestForm.tsx:50; WorkflowRequests.tsx:45,128;
+RequestDecisionForm.tsx:122-137.
+B/src/Cosmix.Api/Controllers/HR/EmployeeCompensationController.cs:17-52.
+Dedicated restricted current/scheduled salary, wage/payment, dated request,
+review and history; proposed amounts do not silently replace current compensation.
+Employee payslip/deduction self-service is a separate missing scope.
+
+12 | Employment status requests/decision/history | Implemented | 1
+SRS HR-005, AC-009 web administration.
+W/src/modules/hr/components/requests/EmployeeWorkflows.tsx:122-128;
+StatusRequestForm.tsx:49; WorkflowRequests.tsx:128.
+B/src/Cosmix.Api/Controllers/HR/EmployeeLifecycleController.cs:17-54.
+Current/scheduled lifecycle, reason/effective-date requests, separate review and
+preserved status history. Whether effective suspension terminates live sessions
+and blocks punches is backend/mobile live acceptance, not proved by these screens.
+
+13 | Site master and dated employee site assignment | Implemented | 1
+SRS 6.1 sites, HR-004 site history.
+W/src/modules/hr/pages/SitesPage.tsx; components/sites/SitesWorkspace.tsx:31-38;
+SiteEditor.tsx:29-35; components/employee/EmployeeSiteAssignments.tsx:48-53,75-79,184.
+B/src/Cosmix.Api/Controllers/Attendance/SitesController.cs:18-42;
+src/Cosmix.Api/Controllers/HR/EmployeeAssignmentsController.cs:16-25.
+Site identity/address/client/project/supervisor/start-end/status CRUD and history,
+real effective assignment/reassignment. Attendance geofences are group 15; the
+site master does not supply them. Initial site selection exists at hiring review.
+
+14 | Post-hire certificates/SIM/assets/archival lifecycle | Missing | 0
+SRS 5.1 and HR-006/007.
+W/src/modules/hr/workspaces/people-services.ts:32-141 defines only prepared tabs.
+Draft certificates/assets/SIM fields do save in hiring, but there are no connected
+approved-record issue/return/renewal/expiry/archive flows. Generic documents and
+employment termination are not equivalent to these workflows.
+
+15 | Reachable shift/office-site roster/temporary change/geofence administration | Partial | 0.5
+SRS 6.2, SHIFT-001..004, ATT-006.
+W/src/modules/attendance/pages/ShiftsPage.tsx:18;
+SiteRostersPage.tsx:25-29,95; SiteGeofencesPage.tsx:31-37,167;
+components/rosters/SiteRosterForm.tsx:36-64;
+components/geofences/SiteBoundaryForm.tsx:56;
+W/src/app/router/AppRoutes.tsx:8,40-47; attendance/index.ts:1-5;
+pages/OfficeRostersPage.tsx:21,38,72;
+components/rosters/OfficeRosterForm.tsx:24-40; schemas/office-rosters.ts:4-9.
+B/src/Cosmix.Api/Controllers/Attendance/ShiftsController.cs:17-52;
+SiteRostersController.cs:16-116; SiteGeofencesController.cs:18-48;
+OfficeRostersController.cs:9-29.
+Shifts/site rosters/site geofences and office rosters are now reachable. Old prepared
+shifts-rosters redirects to the real shifts route. New office assignment/replace/end
+and response DTO fields match the backend. The known missing office schema/migration
+gate produces 503 and also affects existing shift publication; fresh real scheduling
+acceptance remains unverified. Partial credit is for integrated setup UI and matching
+contracts, not proof of deployed office scheduling or attendance calculations.
+
+16 | Daily/monthly attendance, source punches/sessions and recalculation | Missing | 0
+SRS ATT-001/009, 7.1, 15 Daily/Monthly/Punch audit.
+W/src/modules/hr/workspaces/attendance.ts:298-397; PreparedWorkspace.tsx:113,128.
+B/src/Cosmix.Api/Controllers/Attendance/AttendanceSummariesController.cs:15-27;
+AttendanceAuditController.cs:17-29; AttendanceReportsController.cs:16-39.
+No actual daily/calendar/register/punch/session query, source trail or calculation
+client. The current server's available factual vs financial distinctions must be
+honored rather than rendering missing results as zero/present/absent.
+
+17 | Attendance exceptions/manual correction review and decision | Missing | 0
+SRS ATT-007/008, 7.3, AC-003/005.
+W/src/modules/hr/workspaces/attendance.ts:399-487 is prepared-only.
+B/src/Cosmix.Api/Controllers/Attendance/AttendanceExceptionsControllers.cs;
+AttendanceCorrectionReviewControllers.cs:9-93; MyAttendanceCorrectionsController.cs.
+No queue/evidence preview/source fingerprint/current version/decision/recalculated
+trail client; generic hiring/employee-change approval does not cover attendance.
+
+18 | Face enrollment/re-enrollment/revoke/attempt administration | Missing | 0
+SRS HR-008, FACE-006..008 (web administration only).
+W/src/modules/hr/workspaces/attendance.ts:219-292,610-613.
+B/src/Cosmix.Api/Controllers/Attendance/FaceVerificationController.cs:40-73.
+No connected enrollment, retained attempt history, capture/revoke or approved
+alternative-path admin UI. Profile-photo document upload is not face enrollment.
+Real provider/liveness acceptance belongs to the separate operational gate.
+
+19 | Operational zone configuration/assignment/event review | Missing | 0
+SRS ZONE-001..010 web responsibilities.
+W/src/modules/hr/workspaces/operations.ts:58-270,696-699.
+B/src/Cosmix.Api/Controllers/Attendance/ZonesControllers.cs:9-46.
+Local coordinate editor/drawing is not server-persisted/versioned boundaries,
+assignments, monitoring configuration, scoped event evidence or human review.
+
+20 | Site report queue, evidence and human review | Missing | 0
+SRS 7.1, SITE-007, AC-005B authorized web view.
+W/src/modules/hr/workspaces/operations.ts:275-314,702-705.
+B/src/Cosmix.Api/Controllers/Attendance/SiteReportsController.cs:47-58;
+SiteReportReviewController.cs:15-35.
+No actual assigned queue/detail/evidence download/decision client.
+
+21 | Effective attendance policies/assignments and impact assessments | Missing | 0
+SRS 8.1/8.2, OFF/SITE rules, HR-004, SHIFT-004.
+W/src/modules/hr/workspaces/operations.ts:320-565,708-717.
+B/src/Cosmix.Api/Controllers/HR/AttendancePoliciesController.cs:16-63;
+AttendancePolicySettingsController.cs:15-34.
+No actual settings validation, immutable publication preview/fingerprint,
+version/assignment history or rule/result display. Waiting/KPI/studying forms
+also cannot save or calculate. Pending management definitions are not invented.
+
+22 | Leave settings/balances/request/evidence/review/calendar/extensions | Missing | 0
+SRS 9, LEAVE-001..013.
+W/src/modules/hr/workspaces/people-services.ts:148-438.
+B/src/Cosmix.Api/Controllers/HR/LeaveSettingsController.cs:16-32;
+LeavesController.cs:17-89.
+Ordinary types, policies, exact interval preview, self balances and direct Admin
+review/cancellation have real backend routes but no web clients. Team calendar,
+encashment, extra-six benefit and recovery commitments are also prepared-only;
+backend readiness for these extensions is separately audited.
+
+23 | Overtime eligibility/request/bulk review/financial status | Missing | 0
+SRS OT-001..005, 12/15.
+W/src/modules/hr/workspaces/attendance.ts:511-599,623-626.
+B/src/Cosmix.Api/Controllers/Attendance/OvertimeControllers.cs:15-103;
+OvertimeEligibilityControllers.cs:14-44.
+No live request/source preview/review/payable or explicit affected-employee bulk
+UI. Server eligibility/rate provenance cannot be replaced by a draft field.
+
+24 | Meal/outstation allowance eligibility/claim/review/payment status | Missing | 0
+SRS ALLOW-001..004, 10.1.
+W/src/modules/hr/workspaces/people-services.ts:442-599.
+No operational client/API-backed workflow. Models and draft inputs alone do not
+establish engine eligibility, prevention of duplicate claims or settlement.
+
+25 | Vehicle fuel/mileage/service/tuning/overhaul/custody/accident workflows | Missing | 0
+SRS VEH-001..009.
+W/src/modules/hr/workspaces/people-services.ts:604-940.
+No connected route/distance evidence, mileage ledger, reimbursement decision,
+maintenance milestone, issue/return or insurance/liability business flow.
+
+26 | Advances/loans/repayment and employee financial/payslip views | Missing | 0
+SRS 1.1/1.2, Role Employee, 11.1 own financial views.
+W/src/modules/hr/workspaces/people-services.ts:944-1088.
+No actual loan/advance submission/review/repayment ledger/payslip query. The real
+HR compensation-edit screen is an administrative salary master, not a payslip.
+
+27 | Month lock and Accounts payroll input/handoff/receipts/adjustments | Missing | 0
+SRS ATT-010, 12.1, 15 Payroll handoff, AC-007.
+W/src/modules/hr/workspaces/operations.ts:567-689,720-723.
+B/src/Cosmix.Api/Controllers/Attendance/MonthLocksController.cs:15-28;
+AttendancePayrollInputsController.cs:17-34;
+AttendancePayrollAttestationsController.cs:19-27;
+AttendanceCarryForwardControllers.cs:57-109.
+No connected readiness preview/finalization, locked input revisions, Finance
+receipt reconciliation or carry-forward web workflow. Reopen draft is stale;
+current backend no-reopen policy must be respected.
+
+28 | Configurable approval matrix and time-bound delegation | Missing | 0
+SRS APR-001/004.
+W/src/modules/hr/workspaces/people-services.ts:1093-1258.
+Existing hiring/change/salary/status decisions are real, but no configurable
+approval routing/delegation service consumer. Fixed approved authorities should
+not be described as a delivered configurable approval matrix.
+
+29 | All 14 SRS reports and real XLSX/PDF/CSV report-job/export/download | Missing | 0
+SRS 15, REP-001..003, AC-008.
+W/src/modules/hr/workspaces/reporting.ts:28-287 lists 14 report definitions;
+components/workspaces/ReportActions.tsx:21-27; reporting.ts:369 export-jobs.
+B/src/Cosmix.Api/Controllers/Attendance/AttendanceReportsController.cs:16-62
+has factual attendance/dashboard/job/status/download sources, unused by web.
+No generated report, job polling, protected report download or permitted export
+columns are implemented in the web panel. Private employee document download
+is a working separate function and must not be counted as report export.
+
+30 | Cross-workflow business/security/export/sensitive-access audit viewer | Partial | 0.5
+SRS 12.2, 15 Audit, AC-010.
+W/src/modules/hr/components/organization/OrganizationHistory.tsx:21;
+components/employee/ChangeHistory.tsx:16-24; hiring/SubmissionReview.tsx:57;
+components/requests/ChangeRequests.tsx:155-163 show working per-record histories.
+W/src/modules/hr/workspaces/reporting.ts:407-477 is prepared-only broad audit.
+Employee/organization decision/change histories supply a real subset; attendance,
+exports, access/security and generic scoped audit search are not connected.
+
+31 | In-app notification inbox/read state and document-expiry reminders | Missing | 0
+SRS HR-007, APR-005, 13 Notifications.
+W/src/modules/hr/workspaces/people-services.ts:1262-1333;
+self-service.ts:328-342.
+B/src/Cosmix.Api/Controllers/Notifications/MyNotificationsController.cs:9-36.
+Real own notification/read endpoints exist but no client reads/marks notifications.
+No connected employee document/certification expiry reminder workflow.
+
+32 | Employee's own WEB profile/attendance/shift/request/financial views | Missing | 0
+SRS 1.2 self-service web/mobile, ROLE-003, AC-006 web aspect.
+W/src/modules/hr/pages/EmployeeSelfServicePage.tsx:16-24 sends the fixed current
+employee ID into PreparedWorkspace, not a data source.
+W/src/modules/hr/workspaces/self-service.ts:16-342 defines 12 disconnected tabs.
+B has /me/attendance state/punches/sessions/calendar, /me/shift, own correction,
+leave, OT, site-report, zone and notification routes. No self-service business
+read/request is integrated. Own account/session security (group 1) is functional.
+
+33 | Supervisor/team/site-scoped authorized operational web views | Missing | 0
+SRS ROLE-002, 2 Site Supervisor, 1.2 supervisor-limited views.
+W/src/modules/hr/hooks/use-hr-access.ts:4-7 accepts only All scope.
+HrPreparedWorkspacePage.tsx:15 and AppLayout.tsx:77-80 require All HR employee-read
+for the remaining prepared operational workspaces. The newly routed site roster
+screen supports matching Site/All roster grants; AppLayout.tsx:22-24 exposes that
+menu to scoped roster users. There is still no actual supervisor team attendance,
+exceptions, site report verification or operational zone review client. Group 33
+measures these operational views; roster setup is group 15. This is missing intended
+access coverage, not a claimed server-side authorization bypass. Backend remains
+responsible for scope enforcement.
+
+Acceptance/release blockers
+- AC-001: complete employee activation cannot pass from current UI for new initial
+  role setup, due to mandatory-reason contract regression. Hiring approval itself
+  is connected; do not conflate that with mobile/account activation.
+- AC-002/003/005/005A/005B web portions: no usable web attendance source/review,
+  correction, face administration, zone and site reporting clients.
+- AC-004: no effective policy configuration/result display web workflow.
+- AC-006: own web business data still unavailable.
+- AC-007: Accounts cannot consume HR locked inputs through the current panel.
+- AC-008: all report exports remain disabled UI controls.
+- AC-009: status change administration exists, but effective punch/session
+  revocation and preserved source history require backend/mobile live checks.
+- AC-010: real employee/organization histories are visible; broad business,
+  attendance/export/sensitive-access audit UI remains partial.
+- Parent reran npm run verify after the concurrent source changes: lint PASS;
+  format:check FAIL, 15 files, including AppRoutes/AppLayout/new office files.
+  The previous common.ts no-control-regex failure is superseded by explicit
+  character checks in common.ts:9-12. Parent separately reran npm run build:
+  PASS, 2247 transformed modules. Build success does not clear the formatting
+  failure or prove live business acceptance.
+- Authenticated browser acceptance, fixture-complete employee lifecycle,
+  real scanner/private file behavior, SMS delivery, scope/IDOR checks, report
+  jobs/downloads, deployment schema and production provider configuration remain
+  unverified in this audit. Historical acceptance notes are not fresh evidence.
+
+Recommended reporting sentence
+"The narrow employee administration workspace is about 86% source-integrated,
+but the full HR/Attendance web scope is about 40% (39.4%) under an explicit 33-group
+workflow score. Most remaining menus are unsaved prepared forms. Current release
+acceptance is blocked by initial access assignment contract drift and pending authenticated onboarding/schema acceptance; operational attendance and payroll web flows are
+still mostly unconnected. Scheduling now has real routes and clients but its office
+schema/migration gate remains. These estimates are not production/UAT completion rates."
+
+Refreshed source hashes (SHA256, captured 2026-10-13 15:09:25 +05:00)
+W/src/app/router/AppRoutes.tsx
+23965597EB292179916C782C33BFDDBED498CFBD7404D6FC13926E1CE1237FB7
+W/src/layouts/AppLayout.tsx
+6BA8FF87B686D253B19DCB43247839AE2B63F54A9182B2A2C99A85CAB5D49448
+W/src/modules/attendance/index.ts
+7470337510563D260EF5A73C3E0F057F84F61F5DF718E55E84A777DFB28015A3
+W/src/modules/attendance/pages/OfficeRostersPage.tsx
+443BFB1D8ABA9810964A5A8E81BBF8FB1A3254E6C6D119B80AAF715DA6B1FB63
+W/src/modules/attendance/components/rosters/OfficeRosterForm.tsx
+CF802EE9D400B19C09E39201E62EDB7BC00B2C840D51D1DDE56EA1940E7FA01C
+W/src/modules/attendance/schemas/office-rosters.ts
+9D8A4B2CF741FDA744726545259E2890F53E9DF77B3F1E4F5C139FE43398FF4A
+W/src/modules/attendance/schemas/common.ts
+6B0ACD545B8E05573DA6EF8E8F0E6D93CFCBF19352625E92169CF23E6FEDB2EB
+
+
+========================================================================
+backend-hr-findings.txt
+========================================================================
+HR BACKEND SRS COVERAGE AUDIT - NON-ATTENDANCE BUSINESS FEATURES
+Audit date: 13 October 2026. Read-only source review.
+Source root: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix-backend
+Baseline: HR_Attendance_Employee_Mobile_SRS_v1.2.docx (numbered extraction srs-extracted.txt).
+No source, database, provider or account changes. No live API/business mutation and no build run by this sidecar. Parent is responsible for fresh Release build. Existing verification documents are historical evidence, not new acceptance results.
+
+VERDICT
+The non-attendance HR backend is substantially implemented for organization masters, employee hiring, controlled changes, salary history and ordinary leave. It is not a completed HR backend against the supplied SRS. Operational claims, fuel/vehicles, advances/loans, employee financial self-service, configurable approval routing/delegation, HR expiry reminders, leave extensions and the full HR report/export set are still absent or partial.
+Entity classes, EF mappings, DbSets and database safeguards are not counted as working services. The application/API folders for Allowances, VehicleFuel, AdvancesLoans, EmployeeSelfService and HR Reports contain README files only; no matching controller/service/repository implementation path is registered. Generic ApprovalRouteRule and ApprovalDelegation have models/DbSets but no operational application/API path.
+
+SCORING METHOD
+Equal weight across 25 coherent non-attendance business groups below: implemented source path = 1, partial source path = 0.5, missing operational path = 0. This measures source implementation coverage only. It does not measure effort, elapsed time, security certification, deployment readiness or approved UAT. A complete source group still has unverified current live acceptance.
+8 implemented + 7 partial + 10 missing = 11.5 / 25 = 46.0% estimated non-attendance backend source coverage.
+Do not convert this to an overall HR percentage without combining an explicitly defined attendance/authentication/web matrix. Current authenticated SQL/UAT readiness is unverified in this audit, so no numeric production-readiness percentage is defensible.
+
+MATRIX
+N01 | Core organization masters and holiday revisions | Implemented | 1
+N02 | Full SRS staff-category taxonomy | Partial | 0.5
+N03 | Employee field catalogue and policy validation | Partial | 0.5
+N04 | Draft, submission, frozen hiring approval and account handoff | Implemented | 1
+N05 | Server employee numbers and uniqueness | Implemented | 1
+N06 | Controlled post-hire identity/basic/employment/bank/medical/document changes | Implemented | 1
+N07 | Restricted effective-dated compensation request/decision/history | Implemented | 1
+N08 | Full employment lifecycle | Partial | 0.5
+N09 | Referenced employee retention and archival | Partial | 0.5
+N10 | Private document upload, scan, verification and protected download | Implemented | 1
+N11 | Missing/expiring document and certification detection/reminders | Missing | 0
+N12 | Certification, asset and SIM operational lifecycles | Partial | 0.5
+N13 | Own approved profile/emergency/document self-service and edit requests | Missing | 0
+N14 | Own salary, deductions, payslips, allowances and financial self-service | Missing | 0
+N15 | Ordinary leave types/settings/balances/intake/review/cancellation/attendance binding | Implemented | 1
+N16 | KPI extra leave/cash, encashment and long-leave recovery | Missing | 0
+N17 | Meal/outstation allowance eligibility, claim, review and settlement | Missing | 0
+N18 | Motorcycle/fuel/mileage/maintenance/vehicle custody claims | Missing | 0
+N19 | Advances, loans, repayment schedule and recovery services | Missing | 0
+N20 | Configurable approval matrices and delegation | Missing | 0
+N21 | Existing HR approval segregation and decision evidence | Implemented | 1
+N22 | HR audit persistence plus full authorized audit review/export | Partial | 0.5
+N23 | HR hiring/change/leave/document-expiry notification producers | Missing | 0
+N24 | Complete financial payroll handoff/closure | Partial | 0.5
+N25 | Non-attendance SRS reports and permission-filtered exports | Missing | 0
+
+DETAILED REQUIREMENT COVERAGE AND EVIDENCE
+All paths below are relative to the audited source root. Line numbers refer to the current local checkout. For absence findings, the search covered application .cs files, API controllers, infrastructure repositories and DI registrations; model-only presence does not change the status.
+
+N01 - Organization masters (SRS 6.1, API Organization, LEAVE-010): implemented code; current live acceptance unverified.
+Departments, designations, physical branches/offices, cities, employment types and the currently permitted staff categories have real list/detail/create/update/status/history routes. OrganizationMasterControllerBase.cs:18-49 exposes these actions; individual controllers select /api/v1/hr/{master}. OrganizationMasterService.cs:8-82 validates master-specific writes; OrganizationRepository.cs:20-36 scopes the reference query through authorized operations, filters/searches, sorts and paginates; :45-96 writes actual entity rows. OrganizationOperation owns current web MFA, All-scope permissions, audit and retry receipts. HolidayCalendarService.cs:31-68 publishes immutable replacement revisions with GovernmentNotificationReference and holiday dates. Application/DependencyInjection.cs:36-38 and Infrastructure/DependencyInjection.cs:56 register this path. No destructive delete API exists.
+Limits: federal notification references are stored; there is no automatic government-notification ingestion. These are global reference masters behind All-scope permission, not supervisor/employee directory APIs. Reporting-manager relationships live in employee assignments, rather than a separate hierarchy administration module.
+
+N02 - Staff categories (SRS field staff category, SITE-008, MD-012): partial.
+OrganizationMasterService.cs:38-39 only permits creation of OFFICE or SITE; :79-80 blocks reactivation of other codes. EmployeeRosterResolver.cs:13-17 also resolves only these two codes. The SRS includes logistics, driver, rider, purchaser and field/complaint categories, subject to approved category definitions. These categories cannot currently be configured through the master API as distinct categories. This is a delivery gap against the baseline, even where the narrowed OFFICE/SITE flow reflects a later PM decision. Do not invent the pending category/eligibility values.
+
+N03 - Employee fields and validation (SRS 5.1, HR-002): partial.
+EmployeeFormContracts.cs:11-43 captures legal name, father/spouse, document number/type/expiry, birth, gender/marital, phones/SIM metadata, emails, joining/probation, organization references, proposed shift, mobile intent, addresses, emergency, documents, previous employment, certificates and assets. Financial fields are separate at :116-146; medical data at :154-159. EmployeeFormValidation.cs:9-75 checks input shapes, phones/emails, date ranges and referenced IDs; :137-158 lists required core fields. EmployeeHiringService.cs:182-231 adds current master, document/photo/identity, certificate, asset and evidence completeness checks. EmployeeApprovalMaterializer.cs:34-102 persists assignments, addresses, emergency details, certificates, custody, compensation, previous employment, encrypted medical and bank records.
+Concrete remaining gaps: gender and marital status are free strings, not controlled values; DOB is checked only as a valid past date, not against a configurable age policy (EmployeeFormValidation.cs:24-26); father/spouse is not in RequiredFields despite SRS HR-policy qualification; identity expiry is only rejected when a supplied expiry is past and is not conditionally required by document type; probation is not required by completeness. Bank verification status is represented in EmployeeBankDetails.cs:11-14,49-51 and returned by EmployeeUpdateSections.cs:58, but hiring/current bank materialization writes unverified records and no bank verification workflow/endpoint was found. These should be policy/configuration gaps, not claims that every optional SRS field is mandatory.
+
+N04 - Hiring lifecycle (HR-001, HR-002, AC-001): implemented code; acceptance unverified.
+EmployeesController.cs:17-60 supplies draft/profile/financial/medical/validation/submit/submission/decision/access-setup routes. EmployeeHiringService.cs:15-22 saves an empty Draft with no active account; :121-136 freezes a private submission after validation. Employee.cs:205-210 changes to PendingApproval, not Active. EmployeeApprovalService.cs:42-70 rechecks current frozen version, uniqueness, documents, references and permissions and denies requester/beneficiary review; :72-89 records the decision, materializes related rows and creates a dormant UserAccount inside EmployeeOperation's transaction. Return/reject and resubmission are real states. Explicit mobile provisioning and existing access/web-credential setup are separate steps; approval alone does not grant login access.
+Important API interpretation: EmployeeHiringService.GetAsync :31-38 returns the retained hiring draft profile even after approval. Current post-hire fields are supplied by /current/{section} routes. A client treating GET /employees/{id} as the current profile after approved changes can display stale hiring data; inspect client consumption before calling this a demonstrated UI bug.
+
+N05 - Employee ID and uniqueness (HR-003; SRS 14.1): implemented code.
+EmployeeConfiguration.cs:37-41 uses NEXT VALUE FOR [hr].[EmployeeNumbers], prohibits before/after save overrides and adds a unique employee number. CosmixDbContext.cs:194 defines the controlled SQL sequence. EmployeeConfiguration.cs:46-47 and :59-60 adds normalized identity/type and official-email unique indexes; EmployeeHiringRepository.cs:89-94 rechecks duplicates at the service boundary. This is not UI/random employee numbering. Required uniqueness for active mobile phone/user identity is handled by shared authentication, outside this non-attendance audit.
+
+N06 - Controlled post-hire changes/history (HR-004; APR sensitive employee changes): implemented for the supported current sections.
+EmployeeUpdatesController.cs:18-54 exposes current sections, immutable history, request queue, detail, decision and cancellation. EmployeeUpdateContracts.cs:23-43 separates basic, identity, employment, bank, medical and selected documents and disallows mass-assignment of salary/site/category/credentials. EmployeeUpdateSections.cs:96-154 updates supported sections; employment makes a new dated assignment (:122-130); bank creates a new dated encrypted record (:132-146); medical creates a new record. EmployeeUpdateService protects proposals and before/after evidence in EmployeeChange; rowversions and per-section revisions protect stale writes. Direct basic changes are retained in the journal, while sensitive/transfer changes require a different fixed Admin decision. Current bank, identity and medical reads use distinct permissions (EmployeeUpdateContracts.cs:16-19; EmployeeUpdateValidation.cs:99-117).
+Separate supported site assignment history is real: EmployeeSiteAssignmentService.cs:32-80 validates active approved employment/site dates, rejects same-start/scheduled replacements, ends the old assignment at the exclusive boundary and adds a new one. HR-004 also includes roles/shifts, whose controlled effective histories should be evaluated in shared access/scheduling audits; this row does not assert those subsystems' acceptance.
+
+N07 - Compensation (SRS salary/wage/payment fields; HR-004): implemented code; current live acceptance unverified.
+EmployeeCompensationController.cs:18-49 exposes restricted state/history/request/decision/cancel. EmployeeCompensationService.cs:19-40 creates a protected HR proposal; :45-89 authorizes different fixed Admin review, validates expected versions/effective-date ordering and appends CompensationRecord; :108-136 resolves dated state/history. CompensationRecord.cs:8 is append-only. Service :183-192 disallows backdating and same/earlier effective starts; :232-241 validates currency/decimal precision/wage basis/payment method. Reads/changes use separate salary permissions and do not automatically alter bank records or post payroll. Employee-facing salary access is absent (N14).
+
+N08 - Employment lifecycle (HR-005; AC-009; full SRS employment status): partial.
+EmployeeLifecycleController.cs:17-47 and EmployeeLifecycleService.cs:18-108 implement HR request, different fixed-Admin decision, cancellation and dated blocking history. EmployeeLifecycleService.cs:191-195 permits Active->Suspended/Resigned/Terminated and Suspended->Resigned/Terminated only. EmployeeLifecycleProcessor.cs:70-85 changes account state and revokes sessions/open challenges. AccessManagementRepository.cs:69-72,109-113 checks effective employment history independently of worker completion. This supports effective-time blocking and preserves historical rows.
+Retired exists as EmployeeStatus.cs:11 but has no supported transition. Reactivation/resume, rehire and employment-category conversion are not implemented in this service. The current audit did not execute a signed-in suspension/termination punch test; code gating is not AC-009 acceptance.
+
+N09 - Retention/archival (HR-006): partial.
+No employee hard-delete API exists, restrictive relationships retain referenced records, and append-only history protections exist. This meets the preservation intent for current exposed flows. There is no operational archive/unarchive workflow or archived employee state/query lifecycle. Do not equate 'there is no delete button' with a completed archival feature.
+
+N10 - Employee documents (SRS fields/doc API; API-005, SEC-007): implemented code, deployment acceptance unverified.
+EmployeeDocumentsController.cs:17-44 exposes upload, list, rescan, verification, review and protected download. EmployeeDocumentService.cs:23-48 validates/scans and persists actual file metadata; :82-107 records verification and allows ordinary download only when available; :112-115 verifies size/hash. ValidateFile :153-164 checks extension+MIME+signature, file size and image-only profile photo. Medical documents require additional permissions (:145-151). EncryptedPrivateFileStore.cs:9,68-123 uses AES-256-GCM objects with external 32-byte key files; Infrastructure/DependencyInjection.cs:89-93 registers storage and ClamAV scanner. ClamAvEmployeeFileScanner.cs:36-41 fails closed when disabled; :75-78 handles clean/rejected verdicts. Clean scanning and verification are both required for available employee documents.
+Missing file API actions: explicit document expire/revoke/delete lifecycle is not exposed; current selected document replacement uses the approved manifest flow. Real scanner deployment/detection remains unverified; this is not synthetic malware safety acceptance. Storage/key/ACL/backup/retention operations require deployment evidence.
+
+N11 - Expiry/reminders (HR-007; document-expiry report): missing operational path.
+Onboarding checks supplied document/certificate expiry and stores expiry metadata; it does not periodically detect missing/expiring required records and notify HR. No document/certification reminder service/handler/worker was found. Program.cs:36-40 hosts OTP, employment lifecycle, attendance outbox, zone retention and missing-checkout reminder workers, not employee expiry scanning. InsuranceExpiryReminder DbSets/models also exist without an operational HR insurance/expiry service. Requirement is still open.
+
+N12 - Asset/SIM/certification lifecycles (SRS 5.1): partial.
+Hiring captures certification type/number/issuer/dates/attachment, asset issue/return conditions, real return receiver and SIM issue/status/credit metadata. EmployeeApprovalMaterializer.cs:45-54 materializes certificate/asset rows. Post-hire update DTOs (EmployeeUpdateContracts.cs:23-43) have no asset custody issue/return, certificate renewal/revocation or SIM issue/return/credit-tier workflow. Replacing selected documents does not renew a certificate entity. Distinguish initial hiring capture from ongoing custody/renewal/reminder delivery.
+
+N13 - Profile/document ESS (ROLE-003; SRS 11 profile and documents): missing operational path.
+/api/v1/me supplies only the small authenticated identity/access summary and device/session management (CurrentAccountController.cs:9-24; AccountSessionService.cs:18-20). Employee self-service application/controller folders contain README only. EmployeeOperation.cs:88-105 requires web MFA and All-scope HR permissions for employee administration; it cannot substitute for an own-profile mobile/web API. No own approved emergency contact, expiring document list/download or employee-initiated HR profile edit request path was found. Attendance/leave own APIs remain separate implemented slices.
+
+N14 - Financial ESS (MOB-007; AC-006; SRS 11 salary/advance/loan screens): missing operational path.
+Restricted HR compensation administration and attendance payroll-input APIs exist, but no employee-bound own salary summary, payslip, deduction/allowance/recovery ledger or advance/loan financial history API exists. The empty EmployeeSelfService, AdvancesLoans and PayrollHandoff folders must not be counted as delivery. Current attendance daily DTOs deliberately do not expose financial payroll sources (AttendancePayrollInputProducer.cs:22 comment). Consequently AC-006/MOB-007 cannot be fully met by the backend even before evaluating the mobile UI.
+
+N15 - Ordinary leave (LEAVE-001..005,007,009,010; API Leave group): implemented code for ordinary supported operations.
+LeavesController.cs:16-68 exposes own request/history/types/policy choices/balance/preview/detail/evidence/cancellation and Admin queue/review. LeaveSettingsController.cs:15-26 creates explicit types and effective-dated policy settings. LeavePolicySettings.cs:26-39 enforces supplied annual18/sick6/casual12/minimum4-month quotas and eligible categories/holiday/day/paid-kind settings; :52-53 defines July-June fiscal year. No implicit settings are seeded. LeaveRules.cs:32-43 requires medical evidence, admit card+date sheet, and injury evidence. LeaveType.cs:18-20 ensures casual advance approval and injury non-consuming treatment. LeaveService.cs:53-55 binds exact whole-minute leave intervals to historical shift versions; :133-172 validates Admin decisions, no-self, locked periods, evidence, schedule, policy and balance and writes utilization; :177-232 provides separately reviewed cancellation and release ledger. LeaveTreatmentRules.cs:22-43 handles fiscal boundaries, pinned holidays, service/balance, unpaid and non-consuming injury rest. LeaveAttendanceContextReader returns exact allocations and unresolved/conflict states for downstream attendance rather than dividing total minutes.
+Current DI uses EmployeeRosterResolver via SchedulingRegistration.cs:18, not the older standalone IndividualRosterResolver. It dispatches OFFICE/SITE to their current roster readers (EmployeeRosterResolver.cs:13-17); leave descriptions mentioning only site schedules are stale documentation, not proof that current office leave always fails.
+Limits: the API requires explicit day intervals and rejects requests including excluded holidays instead of automatically selecting/calculating a date range; policy selection/treatment remains explicit and approval is revalidated. No scoped team leave-calendar endpoint exists. PersonalTravel LeaveKind exists; company work travel requires attendance treatment in a separate audit. Emergency half-day missing evidence is rejected for approval (LeaveTreatmentRules.cs:13-14); the one-percent KPI-event alternative is absent. Financial consequences do not post payroll: LeaveRules.cs:82-84 returns explicit no-payroll-posting state. Ordinary source implementation is not a passed end-to-end leave acceptance result.
+
+N16 - Leave extensions (LEAVE-008 KPI branch,011,012,013): missing.
+There are no services/APIs for 100%-KPI extra-six-day-or-cash election, >=70%-KPI unused-18-day encashment, leave benefit pool consumption, pre/post long-leave hours recovery commitments/fulfillment/waiver or approved KPI consequences. The Gap Closure document explicitly retains these as future package4. Some data models/policy placeholders cannot execute these lifecycles. MD-009/MD-011 and later confirmed values/authority must be resolved before financial activation.
+
+N17 - Allowances (ALLOW-001..004; SRS 10.1): missing operational path.
+AllowanceClaim, submission and settlement models and DbContext allowance guards exist (CosmixDbContext.cs:278-307); no operational eligibility/calculation/claim/decision/payment API or registered application service exists. Therefore no enforceable continuous13-hour office Rs400, stationed12-hour dinner, 8-hour breakfast/lunch chain, approved outstation Rs1000/day, duplicate-cycle control or verified home-break closure is delivered. Dinner amount/continuous-cycle definitions remain management/deployment work where the SRS leaves them unresolved. Domain rows alone do not demonstrate allowance engine correctness.
+
+N18 - Vehicle/fuel (VEH-001..009): missing operational path.
+Domain VehicleTrip/FuelClaim/EmployeeCommuteDistance/VehicleMileageEntry/VehicleServiceRecord/VehicleCustody/VehicleIncident exist. Application/HR/VehicleFuel has README only and no API/repository/service registration. No complaint-field eligibility, commute exclusion/monthly adjustment, approved map-route evidence, 28km/L reimbursement, 1000km/Rs1800 tuning, 8000km/approxRs18000 overhaul, expense exclusion, workshop approval or incident/insurance/liability lifecycle can be performed through the backend. These are unimplemented business services, not merely a missing UI.
+
+N19 - Advances/loans (SRS 1.2,11,12,14; AC-006): missing operational path.
+AdvanceLoanRequest/Agreement/RepaymentScheduleEntry/RepaymentLedgerEntry models exist with persistence safeguards, but Application/HR/AdvancesLoans is README-only and no request/review/disbursement/repayment/recovery/history APIs or services were found. No operating financial terms, partial/reversal/amendment authority or real ESS flow is implemented.
+
+N20 - Routing/delegation (APR-001, APR-004): missing operational path.
+CosmixDbContext.cs:123,125 exposes ApprovalDelegations and ApprovalRouteRules; application Common/Approvals and API Approvals contain README only. Existing services use explicit fixed Admin/HR authority rather than evaluating configurable type/amount/duration/category/department/site/risk routing and time-bound delegated decision rights. This may match confirmed narrower PM workflows but remains short of the baseline generic matrix/delegation requirements. Do not reopen a confirmed fixed Admin flow merely to invent generic approval chains.
+
+N21 - Existing HR approvals/audit decision evidence (APR-002,APR-003): implemented for supported workflows.
+EmployeeApprovalService.cs:45-46 denies requester and beneficiary approval; salary, lifecycle, updates and LeaveService.cs:241-242 have equivalent separation checks. ApprovalRequest/Decision capture actor role, decision, reason, timestamps and private proposal evidence; CompensationRecord and EmployeeChange provide before/after provenance. ApprovalDecision.cs:3 and AuditEvent.cs:4 are append-only; CosmixDbContext.cs:234-238 rejects updates/deletion of IAppendOnlyEntity. Supported commands require retry keys and expected versions. This proves source enforcement for existing paths, not future claims/loans/leave-extension approvals.
+
+N22 - HR audit (AUTH-008; SRS12.2; AC-010): partial.
+EmployeeOperation.cs:20-23 audits reads; :60-67 stores protected before/after references on writes; :130-133 stores account/role/employee/target/correlation/IP/session metadata. OrganizationOperation similarly persists master audit/receipts; existing history APIs expose module changes. AuditEvent is immutable through the EF append-only guard. No general authorized HR audit event search/detail/report/export path was found, and unimplemented modules cannot produce their required audit events. Audit completeness/privacy, successful transaction races and sensitive-read coverage need current authenticated verification; model immutability alone is not a tamper-proof infrastructure certification.
+
+N23 - HR notifications (SRS12, HR-007, mobile notifications): missing HR producers.
+Shared own inbox/read and safe attendance templates are implemented in Common/Notifications. NotificationTemplates.cs:6-12 includes attendance exceptions, missing punch, decision, shift, report, zone and site-report notices. Searches of Application/HR show no NotificationOutbox/StageAsync invocation by hiring, compensation, updates, status or leave services and no document-expiry producer. A generic inbox is not evidence that HR approvals/leave decisions/expiry events notify the employee/HR. Safe templates support APR-005's privacy direction, but full notification coverage is incomplete.
+
+N24 - Payroll handoff/closure (SRS primary objectives, Accounts boundary, payroll-handoff report, AC-007): partial.
+Actual restricted AttendancePayrollInputService/Producer prepare immutable ordinary/late deduction input revisions using approved compensation and exact attendance/policy source fingerprints. AttendancePayrollInputProducer.cs:147-195 verifies retained salary approval/hiring provenance. AttendancePayrollAttestationService records permissioned manual Finance handoff/posting/settlement evidence, including the current issue-free empty-calculation no-charge handoff. This is real source code and must not be reported as wholly missing.
+However the application HR/PayrollHandoff folder remains model/future scope, and complete financial closure is unavailable. AttendanceMonthLockFinancialReader.cs:54-56 unconditionally records legal_payroll_activation_required; :87 rejects month_lock_legal_activation_unavailable because no formally appointed activation evidence exists. Approved OT financial consumption, financial carry-forward, meals/claims/new credits and complete authoritative financial partial/reversal handling remain gaps per the current source/docs. Handoff attestations do not disburse money or supply a payroll ledger. Any summary saying 'all payroll complete because salary history/ordinary inputs exist' is incorrect. Exact broader attendance input/lock behavior is covered by the attendance sidecar.
+
+N25 - SRS HR reports/exports (REP-001..003; AC-008; full14 report catalogue): missing non-attendance report production.
+There is a real reusable factual attendance report job/export path: AttendanceReportService.cs:54-72 persists jobs/outbox; AttendanceReportHandler.cs:41-55 generates real CSV/XLSX/PDF and private output; service :90-115 reauthorizes download and :156-164 enforces original/current scope. This should be counted in the attendance matrix. Its single ReportType is attendance.factual.v1 (AttendanceReportService.cs:20). FactualAttendanceDocument.cs:12-14 columns contain factual employee-day time/session/exception/lock references; metadata explicitly declares factual_only_no_payroll_calculation.
+No non-attendance HR report job types were found for employee master authorized fields, document expiry, leave balances/utilization/evidence/encashment, meal eligibility/payment, fuel/mileage, payroll handoff or general audit; API/Controllers/Reports and Application/HR/Reports are README-only. Operational list/history endpoints are not full SRS report/export implementations. Existing factual CSV/XLSX/PDF does not cover all14 reports or nonexistent financial producers. Large-report delivery additionally depends on configured durable jobs/private storage; AttendanceOutboxWorker.cs:11 returns when options.Enabled is false, and AttendanceJobOptions.Enabled defaults false (DurableJobContracts.cs:58).
+
+CROSS-CUTTING API LIMITS
+Implemented employee/master writes use real version tokens, strict JSON contracts and retry receipts, and business operations recheck current server permissions inside transactions. Employee administration intentionally requires current web MFA and All scope (EmployeeOperation.cs:88-105). It therefore must not be exposed as an employee-owned self-service substitute. Organization references have explicit filters/sorts/pagination; EmployeeListRequest supports search/status/pagination but not the full arbitrary sort/filter contract in API-002. File uploads do not have a dedicated rate-limit attribute; current generic rate-limit middleware should be separately reviewed against SEC-006. This sidecar does not certify TLS, database/backups encryption, production service-account permissions, retention, approved provider settings or load targets from source alone.
+
+CRITICAL REVIEW OF docs/HR-Gap-Closure-2026-10-13.md
+The document accurately describes itself as a work order/planning snapshot, not a completion report. Its seven packages are unfinished deliverables, not proof of implemented services. Packages4/5/7 match the source absences above, and package6 honestly retains financial activation/OT/carry-forward gaps. The statement that a saved empty financial calculation now supports no-charge handoff agrees with the current financial path and supersedes older 'no-charge entirely absent' descriptions.
+The document's sentence 'No product implementation occurred in this planning turn' cannot be applied to the entire current checkout: OfficeRostersController, OfficeRosterResolver and EmployeeRosterResolver now exist with registrations. The attendance sidecar must judge current office scheduling/provenance and fresh build independently. Also 'What already exists' is a source/workflow inventory, not actual current-schema/provider/authenticated acceptance.
+
+ACCEPTANCE / DEPLOYMENT BOUNDARY
+All25 groups have unverified current live acceptance in this audit. Existing docs/Employee-Hiring-Verification.md:156-159 reports real services/SQL/private-file checks but explicit auth/grant/scanner substitutes and anonymous HTTP; :224-225 says actual owner/SMS/ClamAV acceptance remains pending and disabled scanning prevents ordinary available uploads until configuration+scan+verification. Employee-Updates-Verification.md:96-104 states SQL authorization/grant/savepoint substitutes and pending real storage/scanner/SMS/owner/client UAT. Employee-Compensation-Verification.md:72-73 says anonymous HTTP is not authenticated browser/mobile acceptance and real SMS/scanner/owner/production load/successful-commit races remain outside evidence.
+README explicitly says 'This is not the completed HR module.' Recent laptop records describe a migration12 baseline versus prepared later migrations; the parent has not touched a database for this audit. Historical successful migration/check documents do not prove the current target has current migrations or providers. Required next verification is a reviewed isolated target, genuine current accounts/MFA/CSRF, actual storage/scanner/SMS/provider configuration, signed-in web flows, role/scope/negative tests, concurrency/replay, document access, lifecycle effective time and HR-approved UAT scenarios. No test project was created, in accordance with AGENTS.md.
+
+END OF NON-ATTENDANCE BACKEND AUDIT
+
+
+========================================================================
+backend-attendance-findings.txt
+========================================================================
+BACKEND ATTENDANCE SRS COVERAGE AUDIT
+Audit date: 13 October 2026 (Asia/Karachi)
+Source: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix-backend
+Requirements: audit/hr-srs-2026-10-13/srs-extracted.txt (numbered extraction of HR Attendance Employee Mobile SRS v1.2).
+All source paths below are relative to the source root above, followed by verified one-based line numbers.
+
+METHOD AND LIMITS
+Read-only static audit of actual controllers, DI, application services, repositories, entities and EF mappings. Source files and database were not changed; no test project, provider activation, account, SQL connection or acceptance run was created. Parent is independently building the solution. Existing verification documents were inspected as historical claims, not rerun results. Folder/README/model presence alone earns no operational coverage. This report includes modified and untracked working-tree code, because that is the user's latest local implementation; it is not an audit of an immutable committed release.
+Status vocabulary: IMPLEMENTED = credible backend implementation path exists for the stated bounded capability; PARTIAL = path exists but required behavior, dependencies or integration remain incomplete; MISSING = no operational path found; UNVERIFIED = static code cannot establish the deployed or real-device result. IMPLEMENTED does not mean production/UAT accepted.
+The SRS has subsequently approved scope differences: direct HR site scheduling, newly approved office-wise scheduling, no individual roster precedence, Operational/Red zones without Amber, and no month reopening. Those differences are identified rather than described as accidental regressions. Literal SRS coverage remains narrower where its original capability is not present.
+
+BACKEND ATTENDANCE ESTIMATE (FEATURE GROUPS, NOT CODE SIZE)
+21 coherent attendance feature groups, equally weighted. Complete = 1; partial = 0.5; missing = 0. No points for table or folder scaffolding. Six complete groups + fourteen partial groups + one missing group = 13 / 21 = 61.9%, approximately 62% backend attendance code coverage against the SRS boundary. This is an estimate, not a production readiness percentage. Mobile UI and HR modules such as vehicle/allowance services are audited separately by the other reviewers and not counted again here.
+
+Group                                      Status       Score  Why
+1 Site masters + historical geofences       Complete     1      Actual versioned configuration/repository/API; explicit radius and accuracy, lock checks.
+2 Shift definitions + immutable versions    Complete     1      Scheduling CRUD, versions, optimistic concurrency, impact/lock protection.
+3 Site roster + temporary changes           Complete     1      Direct dated assignment/replacement/ending; written evidence and named impacted staff.
+4 Office roster source                      Partial      0.5    Working service/resolver/repository/controller exists; no office migration/snapshot found, office consumers incomplete.
+5 Immutable raw events + session revisions  Complete     1      Append-only punches, assessments and WorkSession revisions, same-day/cross-midnight evidence.
+6 Punch validation/duplicates/offline       Partial      0.5    Server/device/sequence/location gates exist; no time-tolerance dedup/revalidation of queued offline proofs.
+7 Enrollment + face proof orchestration     Partial      0.5    One-to-one, expiry/device/request/single-use guards; alternative exception workflow incomplete and provider gated.
+8 Live liveness/match provider              Partial      0.5    C# ONNX + private CompreFace PoC path; absent reviewed model, no live biometric acceptance, Development only.
+9 Face storage lifecycle                   Partial      0.5    Separate encryption, approved-use gate and encrypted journal; no automatic retirement or deletion.
+10 Factual daily/calendar/history          Complete     1      Canonical sessions, protected revision inputs and self/scoped reads.
+11 Effective policy/calculation engine     Partial      0.5    Ordinary time/late/half-day/hourly and leaves/OT provenance; site-only snapshot, missing advanced policies.
+12 Correction review/recalculation         Partial      0.5    Real self/supervisor/HR approval and session revisions; office/manual/geofence/medical boundaries incomplete.
+13 Exception detection/review              Partial      0.5    Sequence/overlap/location/face/missing-out detection and scope-safe queues; travel/duration/fraud detectors absent.
+14 Operational zones                      Partial      0.5    Circle/polygon, server population/employee priority, duty windows/events/notices; literal Green/Amber/custom types absent.
+15 Structured in-app site reports          Complete     1      Arrival/departure/delay/access issue/incident, private attachments and Accept/Return/Reject + immutable responses.
+16 Overtime                               Partial      0.5    Site eligibility, named bulk review, exact ticks and confirmed formula; nine-hour restriction, travel/payroll consumption incomplete.
+17 Month lock                             Partial      0.5    Exact protected membership/fingerprints and immutable locks; legal activation gate prevents current new full finalization.
+18 Locked-period carry-forward             Partial      0.5    Authorized factual delta ledger/history to next unlocked month; no monetary calculation/settlement.
+19 Payroll inputs/handoff                  Partial      0.5    Immutable ordinary/late financial revisions, no-charge handoff and manual receipts; no full payroll activation/OT/carry-forward settlement.
+20 Attendance reports/exports              Partial      0.5    Real factual batch/dashboard, punch audit, CSV/XLSX/PDF jobs; not all SRS financial/late/KPI/zone/site reports.
+21 Attendance file import                  Missing      0      No import-batch, hash/mapping/validation/duplicate workflow/controller/service found.
+
+CRITICAL COMPLETION BOUNDARIES
+
+1. OFFICE SCHEDULING IS NEW CODE, NOT YET A COMPLETE OFFICE ATTENDANCE PATH.
+OfficeRostersController.cs:9,19,25,29 exposes branch roster writes; OfficeRosterService.cs:26-113 implements future-dated assign/replace/end with expected timeline/shift version, holiday reference, impact and lock checks. OfficeRosterResolver.cs:8-33 resolves historical OFFICE membership and rejects transfer across an overnight duty. EmployeeRosterResolver.cs:9-18 routes SITE and OFFICE staff explicitly. SchedulingRegistration.cs:15-18 and Infrastructure scheduling registration:15 wire them, and OfficeRosterRepository.cs:19-45 actually queries assignment/office/shift tables. They are not merely planned folders.
+However, these OfficeRoster files are untracked local implementation in git status. DbContext.cs:76-77 has OfficeRoster DbSets; OfficeRosterConfigurations.cs:11,25 maps the two tables, but neither the current CosmixDbContextModelSnapshot nor migration files contain OfficeRoster definitions. OfficeRosterRepository.cs:71-101 explicitly validates their SQL columns/FKs/index and throws 503 office_roster_schema_required. No deployed office schema is proven.
+Shared site shift publication/status now calls the office schema too: ShiftVersionPublication.cs:15-16 and :30 invokes OfficeIdsAsync; ShiftService.cs:97-107 invokes publication validation, and :117-126 obtains office IDs for additional permission; ShiftRepository.cs:48-50 checks office use first for disabling a shift. Missing new office tables can therefore block existing site shift operations as well as office roster operations. This is a concrete runtime dependency, not a compiler error.
+Office attendance provenance remains absent: AttendanceCaptureService.cs:50-69 only selects SiteGeofenceVersion when SiteId exists and then requires EmployeeSites/siteMatches. An office roster has no SiteId, so it is assessed as missing_location / site_relationship_changed and cannot produce an accepted office Check In. AttendanceCalculationSnapshotProducer.cs:60-63 requires roster.SiteId and later binds site/session/punch IDs. CorrectionReviewService.cs:248-252 requires SiteId for manual duty. New office roster support must not be mistaken for office punches, corrections or pay calculations.
+
+2. FACE VERIFICATION IS NOT PRODUCTION ACCEPTED.
+Actual implementation: FaceService.cs creates audited enrollment/re-enrollment/revoke/history and challenges/verification; FaceCaptureService.cs:15-73 creates protected image captures, and :88-166 validates account/session/employee/device/attempt/challenge/expiry and single-operation claims. AttendanceCaptureService.cs:237-245 validates current provider/version, active enrollment, account/device, time boundaries, punch key and hashed proof. AttendanceFaceWriteGuard.cs:42-53 requires atomic single-use consumption with the matching new Check In. Controller and repositories are registered.
+Infrastructure/Repositories/Attendance/AttendanceCaptureRegistration.cs:22-32 deliberately supplies UnconfiguredFaceVerificationProvider outside Development or when SelfHostedFace.Enabled is false. Face capture options are likewise Development-gated at :21-23. SelfHostedFaceVerificationProvider.cs:30-49 requires PoC approval, private client and liveness configuration; :66-72 and :100-108 performs Detect -> liveness -> one-to-one compare. The enrolled 'Template' is a copy of the original JPEG/PNG reference image, not a derived embedding. There is no population search path.
+SilentFaceLivenessService.cs:20-61 has an actual reviewed-byte/model-validation/load path and :86 onwards an inference implementation. But no reviewed ONNX artifact, artifact-specific license/provenance/hash/semantics or calibrated live/match thresholds is supplied, according to Self-Hosted-Face-PoC.md:14-19 and Face-PoC-Completion-20261013.md:150-161. Current missing configuration correctly prevents successful Check In.
+The Oct13 verification document reports 5 new synthetic regressions, 66 lifecycle, 122 provider and 103 capture checks plus a temporary-output build. Its :79-91 explicitly says synthetic repositories, flat-color images/offline HTTP, no ONNX inference, no biometric accuracy, no live authentication/SQL or camera provenance. That is useful code evidence, not real face/device/UAT acceptance. Do not report FACE-003 or AC-002 as passed.
+
+3. BIOMETRIC USE EXPIRY IS NOT DISPOSAL.
+EncryptedFaceTemplateStore.cs:22-53 rejects overlap of ordinary and biometric storage/key paths. RetentionControlledFaceTemplateStore.cs:15,26-98 wraps vault use with explicit approved duration, encrypted journal evidence, exclusive expiry, future-clock safeguards and plaintext zeroization. Oct13 hardening is present at :49-95, :134-155 and EncryptedFaceStorageRetentionJournal.cs:132-159; CompreFaceClient also includes deadline/cancellation checks around final body reads/JSON parsing.
+RetireAsync exists only on the concrete retention wrapper (:100-123). IFaceTemplateStore exposes configured/write/read, not retirement/deletion. FaceService revocation/replacement and completed captures never call RetireAsync, and EncryptedFaceTemplateStore delegates only WriteAsync/ReadAsync (:56-59). No reviewed physical-delete primitive or post-commit disposal intent/worker exists. Revoked proofs are unusable through authorization, but the ciphertext does not become physically deleted or automatically retired. Face-PoC-Completion-20261013.md:130-148 confirms these exact boundaries. Offboarding/backup/key disposal acceptance remains open.
+
+4. MONTH LOCK CURRENTLY REMAINS NOT READY FOR A NONEMPTY PAYROLL POPULATION.
+MonthLockService.cs:34-61 re-inspects sources and fingerprints in one operation and persists exact protected summary/carry/input membership. :111-128 requires current saved calculated daily summaries; :92 always raises carry_forward_financial_calculation_unavailable when factual adjustments exist. IMonthLockFinancialReader is actually registered to AttendanceMonthLockFinancialReader (Application DependencyInjection.cs:69).
+AttendanceMonthLockFinancialReader.cs:42-56 inspects exact saved payroll inputs, checks no-charge/charged handoff and jurisdiction, then unconditionally adds legal_payroll_activation_required for each saved employee input. :86-87 unconditionally refuses retained new locks with month_lock_legal_activation_unavailable. Missing inputs add other issues, and MonthLockService.cs:147 also requires a nonempty complete population. Thus the API and evidence model are present, but successful new full month finalization cannot currently be asserted.
+MonthLocksController.cs:23,30 intentionally states no reopen. This is a user-confirmed change from ATT-010's literal reopening requirement. Later factual carry-forward is the current supported alternative; it still lacks financial calculation/consumption.
+
+5. FINANCIAL INPUTS AND MANUAL ATTESTATIONS ARE NOT PAYROLL POSTING.
+AttendancePayrollInputProducer.cs:35-104 derives actual protected daily/compensation/policy/leave/OT source evidence, source history/reconciliation and immutable fingerprints. AttendancePayrollInputService.cs:32-59 re-inspects before saving and blocks locked periods. Domain AttendancePayrollInputRules.cs:26-140 applies configured normal/late deductions with exact intervals and larger-of overlap handling. Current immutable input/receipt services and DI are present.
+AttendancePayrollAttestationsController.cs:21 explicitly now accepts complete issue-free saved empty lines as a handoff only (lines=[], postedAtUtc=null). This Oct13 no-charge handoff exists; older statements that it is absent are stale. Posted/settled remain permissioned manual assertions with external evidence, not direct payroll integration. The source response explicitly stays legal_policy_review_required / false payroll readiness at AttendancePayrollInputService.cs:181-186. AttendanceLegalReviewService.cs:148 records recorded_not_legally_verified evidence, not activation authority. Approved OT money and factual carry-forward still have no authoritative complete financial consumption/settlement path.
+
+REQUIREMENT-BY-REQUIREMENT COVERAGE
+
+SHIFT-001 PARTIAL against original SRS. Date-driven Site/Office assignments exist, but individual/team/category/department scheduling writes are not supported in the approved active flow. IndividualRostersController.cs:27-46 returns 409 individual_scheduling_replaced_by_site_rosters; historical individual models are not active functionality. Current approved office/site scope is described above.
+SHIFT-002 IMPLEMENTED for direct HR site changes. SiteRosterService.cs:105-150 retains protected written evidence and original/replacement version; :173-191 binds exact impacted employees. Temporary cancel/supersede retains immutable history at SiteRosterTemporaryAmendments.cs:29-87.
+SHIFT-003 PARTIAL. IIndividualRosterResolver is bound to EmployeeRosterResolver (Shifts/SchedulingRegistration.cs:18), policy resolver is effective-dated (HR/Policies/AttendancePolicyResolver.cs:10-56); actual calculation snapshot still requires SiteId (Calculation/AttendanceCalculationSnapshotProducer.cs:60-63).
+SHIFT-004 IMPLEMENTED lock protection. ShiftService.cs:94-107 rejects date/history conflicts/locked periods; SiteRosterService.cs:243-245 and OfficeRosterService.cs:129-130 protect affected intervals; summary recalculation refuses locked dates (AttendanceSummaryService.cs:78).
+
+FACE-001 IMPLEMENTED backend rule. Check Out with supplied face fields is rejected in AttendanceCaptureService.cs:37; PunchCaptureRules.cs:28 applies face only for CheckIn. No ordinary app access face requirement is added.
+FACE-002 IMPLEMENTED orchestration / UNVERIFIED live result. FaceService.BoundAttempt binds signed-in account/employee/device and active enrollment, and SelfHostedFaceVerificationProvider.cs:103 compares supplied active target reference directly; no face-population search or enrollment collection call was found.
+FACE-003 PARTIAL. Actual liveness adapter exists; missing artifact/threshold/device replay acceptance means printed photo and screen replay resistance are not established. See critical boundary 2.
+FACE-004 IMPLEMENTED backend checks / UNVERIFIED live SQL/device acceptance. AttendanceCaptureService.cs:237-245 and AttendanceFaceWriteGuard.cs:42-53 implement exact employee/device/punch/time/single-use association; FaceCaptureService.cs:158-166 protects pending attempts.
+FACE-005 IMPLEMENTED fail-closed logic. FaceReadiness.cs:20-28 derives explicit unavailable reason; PunchCaptureRules.cs:28-29 rejects failed Check In; StateAsync at AttendanceCaptureService.cs:182-186 guides unavailable verification to attendance support/correction. Actual mobile retry UX is separate.
+FACE-006 PARTIAL. Enrollment journal/history and verification outcomes are audited. Raw-capture use requires approved bounds, but automatic retirement/physical deletion are missing; real service/proxy logging and durability are unverified.
+FACE-007 IMPLEMENTED encryption/isolation code / UNVERIFIED deployment ACLs/key backup/restore. EncryptedFaceTemplateStore.cs:22-53 requires separate vault/key paths; FaceCaptureService uses the dedicated template store and protected envelope. No ordinary profile-photo template access is exposed.
+FACE-008 PARTIAL. Site manual duty requires documented HR approval (CorrectionReviewService.cs:248-274); a complete accessibility/medical exemption request/decision/effective alternative Check In workflow was not found. FaceVerificationException appears in Domain/EF models, not an operational service/controller. Do not count that table as delivery.
+
+ATT-001 IMPLEMENTED. RawPunchEvent.cs:6 and WorkSession.cs:7 implement IAppendOnlyEntity; CosmixDbContext.cs:237-239 refuses modified/deleted append-only entities. AttendanceCaptureService.cs:75,126-136 stages separate raw and assessment then new session revisions; multiple sequential daily events are allowed.
+ATT-002 IMPLEMENTED. Server actor.Now governs raw ReceivedAt and session start/end. DeviceCapturedAtUtc is evidence. AttendanceCaptureRepository.cs:55-62 converts Asia/Karachi boundaries, and Rosters/RosterSchedule uses Asia/Karachi for the business date.
+ATT-003 PARTIAL. Existing per-employee/idempotency key lookup and fingerprint guard are actual code (AttendanceCaptureService.cs:47-53); operation receipts retain replay results with current access. No duplicate time-tolerance comparator exists; PunchCaptureRules.cs:11 explicitly states no invented duplicate tolerance.
+ATT-004 PARTIAL (Should). IsOffline requires original capture time (CaptureService.cs:36), and PunchCaptureRules.cs:16 immediately returns Unverified. Raw evidence is retained, but offline Check In does not validate/consume proof at that branch and no automatic queued-proof validation/sync lifecycle exists. It must not be described as usable offline accepted attendance.
+ATT-005 IMPLEMENTED configurable site accuracy validation. SiteGeofenceService.cs:139-156 validates explicit radius/maximum accuracy; CaptureService.cs:64-66 evaluates coordinates/accuracy and unreliable cases create review.
+ATT-006 IMPLEMENTED site-level dated geofence configuration. SiteGeofenceService.cs:80-94 writes explicit new version and historical reads; no fixed 80 m acceptance fallback.
+ATT-007 PARTIAL. Capture preserves distance/inside/accuracy in assessment and queues OutsideGeofence (CaptureService.cs:118-126; PunchCaptureRules.cs:26). Exception read/review queue exists, but no specific authorized transition approving the original location exception was found. Manual HR duty remains separate and does not rewrite raw location evidence.
+ATT-008 PARTIAL. Sequence, active conflicts, overlapping schedule, geofence/location/face exceptions are produced in PunchCaptureRules.cs:18-29; missing checkout at CaptureService.cs:144-151 and gated reminder processor. ImpossibleTravel, ExcessiveDuration and SuspectedFalseEvidence are enum values (Domain AttendanceException.cs:5), without automatic detector/service workflow found.
+ATT-009 PARTIAL. Factual worked time, roster minutes, payable/late/approved OT calculation, status, exception count and version appear in AttendanceSummaryService.cs:91-102,126-148. Richer calculations depend on configured verified site sources; Office snapshot, advanced KPI/allowance/reset outcomes remain unavailable.
+ATT-010 PARTIAL. Protected direct month lock exists, but legal activation blocks current new finalization; no reopen by approved current design. See critical boundary 4.
+ATT-011 IMPLEMENTED backend channels. Authorized mobile punch API, self/supervisor corrections and structured SiteReports APIs; no external messaging attendance integration found. File import is a separate missing source capability.
+
+SRS 7.1 FILE IMPORT MISSING. The listed source requires source hash/importer/mapping/duplicate/error/batch handling. No attendance import controller/application service/repository path was found in the inspected source. This is distinct from manual correction.
+SRS 7.3 CORRECTION WORKFLOW PARTIAL overall. Self intake and supervisor intake, protected source fingerprint/evidence, HR queue/detail/approve/return/reject, no self-review, concurrency, notifications and automatic session+summary revision are present (Corrections/CorrectionReviewService.cs:46-70,142-199; AttendanceCorrectionRepository and CorrectionReviewRepository; Corrections registration). Only CheckInTime/CheckOutTime/ManualSession may be approved (:155-156); locked source requests require carry-forward (:159). Manual application still requires SiteId (:248-252). Raw punches are preserved, satisfying AC-003 at the code level; authorization/SQL/UAT not rerun here.
+
+ZONE-001 IMPLEMENTED backend definition. ZoneAdministrationService.cs:25-46 publishes exact circle/polygon versions and instruction/reason with effective instants; ZoneGeometry validates boundaries. Zone status/type administration beyond the approved limited types is incomplete under ZONE-005.
+ZONE-002 IMPLEMENTED backend population/override. ZoneAdministrationService.cs:68-96 supports employee/role/team/site targets and retained authority; ZoneMonitoringService.cs:193-211 selects employee override first and rejects inconsistent equal-precedence assignments. Physical mobile behavior unverified.
+ZONE-003 IMPLEMENTED safe own projection. ZoneMonitoringService.cs:25-27 blanks confidential ReasonCode; self API returns applicable instruction. Separate operational rights apply to management reads.
+ZONE-004 IMPLEMENTED. ZoneMonitoringService.Resolve uses effective assignments, live server permission/membership and accepted duty evidence, rather than client-supplied rules.
+ZONE-005 MISSING literal Green/Amber/custom-type administration. ZoneAdministrationService.cs:112 allows only OPERATIONAL or RED, and ZoneMonitoringService.cs:205 has the same restriction. This follows a later approved scope narrowing; Green naming and Amber permission workflow/type customization from v1.2 are not delivered.
+ZONE-006 PARTIAL. Red/Operational live samples produce boundary warnings/events; no Amber path, and actual mobile warning/background mechanics remain unverified (MonitoringService.cs:50-109).
+ZONE-007 IMPLEMENTED online evidence. MonitoringService.cs:78-101 retains exact assignment/version/window/config/coordinates/device/received/capture time and separate response history. Location is private retention-bounded evidence. Offline synchronization is not implemented by this live duty-sample path.
+ZONE-008 IMPLEMENTED separation. Zone repository stores window/checkpoint/event/response rows independently; sampling never updates RawPunchEvent, session or salary. Code-scoped notifications are produced.
+ZONE-009 IMPLEMENTED server gates / UNVERIFIED device background operation. Mine/start/sample/live require active accepted duty, expiry, device and notice/hash with explicit monitoring/retention options (MonitoringService.cs:29-48,180-233). No out-of-window tracking is granted.
+ZONE-010 PARTIAL. Audited factual review/acknowledgement/dispute and configured recipients exist. It does not implement disciplinary case lifecycle, Amber access exception approval or payroll consequences; those are not silently inferred.
+
+SITE-007 / MOB-009 / AC-005B IMPLEMENTED backend. SiteReportsController.cs:17-33 accepts Arrival/Departure/Delay/AccessIssue/Incident from server-derived registered mobile identity with mandatory idempotency and optional scanned private attachment. SiteReportService/Repository retain exact assignment, source/time/location and task. HR SiteReportReviewService plus employee response evidence implements Accept/Return/Reject and re-entry after response, separately from accepted attendance. Complete app UX/UAT is not established by backend code.
+
+OFF-001 PARTIAL: office schedule definition supported by new office roster code, but migration/actual capture/calculation unavailable. OFF-002 default early exclusion IMPLEMENTED in AttendanceDailyTimeCalculation.cs:82-83; approved early exemptions are not applied by this engine. OFF-003/OFF-004 PARTIAL overall: typed late/half-day/hourly and late deduction rules exist (AttendancePolicyRules.cs:19-54, AttendanceDailyTimeCalculation.cs:105-140, AttendancePayrollInputRules.cs); office source binding is incomplete. OFF-005 waiting attribution MISSING; OFF-006 annual KPI percentages/reset MISSING. OFF-007 break duration treatment IMPLEMENTED, but exact 13:00-14:00 break evidence is not modeled by the duration-only shift; no automatic meal-break OT award. OFF-008 allowance is outside this slice and no attendance allowance engine was found. OFF-009 PARTIAL because Check-In/Out API exists but office capture/live face acceptance does not. OFF-010 approved early-report exemptions MISSING operational calculator support. OFF-011 study/make-up/TDA/KPI assignment engine MISSING.
+SITE-001 regular nine-hour roster/confirmed OT code IMPLEMENTED. SITE-002 default early exclusion exists, instructed early-credit handling PARTIAL. SITE-003 PARTIAL site calculation/input code exists subject to verified sources/legal gate; not a payroll deduction release. SITE-004 IMPLEMENTED temporary dated start changes with named staff and written authority. SITE-005 waiting loss attribution MISSING. SITE-006 fake evidence disciplinary case MISSING operational lifecycle (exception enum is not a case/decision workflow). SITE-008 configured site/common/employee OT eligibility IMPLEMENTED for current approved design; office is explicitly ineligible (OvertimeEligibilityService.cs:20-24). SITE-009 PARTIAL: cross-midnight session evidence/resolution implemented, special 10-hour-reset/next-day-4.5/12-extra-hour policy is absent. SITE-010 exact KPI/committed-shortage approval MISSING. SITE-011 annual-late disciplinary/blacklist escalation MISSING.
+
+OT-001 PARTIAL overall. OvertimeRules.cs:24-58 permits only valid closed SITE sessions after scheduled end and configured eligibility; ConfirmedOvertimeDurationPolicy in OvertimeFormula.cs:38-91 demands a nine-hour schedule and completed total duty. Other schedules return explicit unavailable. No broad staff/category entitlement is invented.
+OT-002 IMPLEMENTED review evidence. OvertimeService.cs:123-167 creates request/evidence/approval and exact financial source/decision; bound site/job/start/end/reason/requester/rate rule; source race, overlaps, no self-decision and historical employment are checked.
+OT-003 PARTIAL. OvertimeRules.cs:50 rejects travel for overtime, satisfying no automatic travel OT. A complete approved company-work-travel normal-pay attendance source is not delivered by this attendance path.
+OT-004 IMPLEMENTED. OvertimeQueriesAndBulk.cs:80-112 explicitly validates 1-25 distinct named employees/request IDs and prevalidates every review before staging; no site-wide silent approval.
+OT-005 IMPLEMENTED current confirmed formula. OvertimeFormula.cs:9-29 uses monthly base / actual calendar days / nine hours with exact ticks and final whole-rupee rounding. It is no longer merely a pending rate model. Financial API reports calculated_pending_payroll (OvertimeService.cs:94), not posted/settled money.
+
+MOB-001 IMPLEMENTED backend next-action/state logic, but Office acceptance and actual client UX unverified (CaptureService.cs:157-193). MOB-002/003/004 are chiefly client-dependent; server supplies event ID/time and Unverified offline state. MOB-005 PARTIAL: device integrity code is retained, with no interpretation or salary deduction (CaptureService.cs:153-155); no mock-location/device-integrity provider is established. MOB-010/011/012 PARTIAL: applicable own zones, safe instructions, acknowledge/dispute exist; refresh/background UX/Amber exception absent. MOB-013 PARTIAL: site reports accept explicit offline evidence/idempotency; zone samples are live duty-window submissions and no offline queue implementation is delivered by this backend. MOB-014 UNVERIFIED mobile camera provenance/permission UX; server protected captures cannot establish that bytes came from a physical camera.
+
+REPORTS, AUDIT, NOTIFICATIONS AND NONFUNCTIONAL EVIDENCE
+Actual report delivery: AttendanceReportsController.cs:16-52; AttendanceReportService.cs:24-65 scoped factual batch/dashboard/preview, :69-126 real export request/status/download, :128-143 factual rows, :242-249 bounded max 25 employees/31 inclusive days. AttendanceReportHandler.cs:23-70 revalidates live web requester/session and original/current scope, generates actual CSV/XLSX/PDF, private file + generation manifest and report-ready notification. Report generators contain real archive/PDF/CSV output logic. This is implemented bounded factual reporting, not all fourteen SRS reports. Rows exclude payable/late/OT/allowance/KPI/source location policy report content. Detailed punch/session audit services exist (AttendanceAuditService.cs:20-105; AttendanceAuditRepository.cs:21-48), but their presence is not a complete fourteen-report package.
+Notifications: actual recipient-owned list/detail/read APIs and durable outbox/handler are registered. Correction/site report/shift/zone/exception/report producers stage notifications. Missing-checkout reminders have dated shift delay and a real processor/handler. Delivery and report exports remain configuration-gated: AttendanceOutboxWorker.cs:11 returns immediately if jobs disabled; AttendanceReportService.cs:73 returns 503 if worker disabled; MissingCheckoutReminderProcessor.cs:23 returns no work if reminder/delivery disabled. Those default gates are not a proven running production service.
+Authentication/data-scope/traceability: AttendanceOperation.cs:126-169 requires current session, web MFA for management or bound registered mobile session/device for captures, current permission scopes; reads/writes/replays generate audit, and receipts recheck original/current scope (:98-115). Protected audit and idempotency receipts share existing authorized transactions (:54-83). EF enforces append-only records and unique revisions/face consumption. This is strong source evidence for AC-003/AC-009/AC-010, but new live SQL/provider/device acceptance is not established here.
+NFR-001/002/003 performance/load, NFR-004 tested restore, storage durability/ACL/key backup, live malicious-file scanning, device presentation attacks and full production accessibility remain UNVERIFIED. No fresh load, restore, device or end-to-end acceptance tests were run by this audit. No tests were created because the user requested read-only review and AGENTS.md prohibits recreating removed test projects without a request.
+
+ACCEPTANCE STATUS
+AC-002 UNVERIFIED/BLOCKED: one-to-one live Check In and real-device visible attendance not demonstrated; provider selection is Development only and missing reviewed model.
+AC-003 IMPLEMENTED source trail; live authoritative SQL/UAT unverified.
+AC-004 PARTIAL/BLOCKED overall: site ordinary/late/half-day/hourly + confirmed OT code exists; office binding/advanced allowances/KPI unavailable.
+AC-005 PARTIAL: out-of-geofence recorded/queued with safe exception state, specific approval path incomplete and fresh live auth/location acceptance unverified.
+AC-005A PARTIAL vs original SRS: Operational/Red supported; Green/Amber/custom types and mobile warning behavior not complete.
+AC-005B IMPLEMENTED backend workflow; actual complete mobile application acceptance unverified.
+AC-007 PARTIAL/BLOCKED: restricted read/handoff evidence exists, but no new full locked/payroll-ready inputs can currently pass legal activation and financial carry-forward/OT closure.
+AC-008 PARTIAL: real bounded factual CSV/XLSX/PDF private/audited export exists; all SRS reports/fields and live worker acceptance incomplete.
+AC-009 IMPLEMENTED current session/device/employment authorization checks; historical records retained; fresh suspended-user acceptance not rerun.
+AC-010 IMPLEMENTED attendance operation audit/policy/shift/decision/export trail code; deployed durability, full feature coverage and end-to-end UAT unverified.
+
+ACTIONABLE ORDER FOR COMPLETION
+1 Complete office migration/snapshot and schema-compatible shared scheduling; then office boundary/raw-session/correction/calculation provenance across transfers and overnight duty. Do not create fake sites for office staff.
+2 Keep unavailable-face gates closed until reviewed artifacts, threshold/exception/retention authority and genuine private provider/device enrollment/wrong-person/print/screen/replay/outage/SQL acceptance exist. Add durable post-commit automatic retirement and authorized disposal/backup/key policy.
+3 Finish specified missing detectors and special policy producers (waiting, KPI, early exceptions, study/make-up, special cross-midnight), each with approved exact examples, not generic tables or guessed defaults.
+4 Complete financial OT/carry-forward/credit consumption, exact handoff/posting/reversal reconciliation and formal applicable legal activation before claiming month lock/payroll readiness. Preserve current no-charge handoff capability and immutable historic evidence.
+5 Expand real source-backed reports and enabled delivery acceptance. Decide explicitly whether the original attendance import/Green/Amber/custom zone features remain required or were formally superseded.
+6 Execute and record genuine authenticated SQL and office/site/overnight/outstation/exception UAT on an approved isolated target. Code checks and documentation cannot substitute for those outcomes.
+
+
+========================================================================
+acceptance-audit.txt
+========================================================================
+SRS acceptance criteria audit
+Date: 13 October 2026 Asia/Karachi
+Statuses describe current source traceability and delivery gaps. No criterion is claimed fully passed by this audit; no authenticated end-to-end UAT was run.
+
+AC-001 | Partial; not end-to-end accepted
+Real draft/submission/Admin approval and dormant account code exists. Current frontend initial/additional role assignment omits backend-required Reason. Live complete hiring also previously blocked by clean-document scanning. See EmployeeAccessSetup.tsx:516, AccessContracts.cs:47, frontend docs/Verification.md:28.
+
+AC-002 | Not delivered end-to-end
+Backend face challenge/single-use punch safeguards exist; React Native App returns null. Production provider registration returns UnconfiguredFaceVerificationProvider; reviewed model/device/liveness acceptance not established.
+
+AC-003 | Backend implementation substantial; web/mobile acceptance incomplete
+Immutable raw events and separate approved correction/session revisions implemented. Reachable HR correction page is prepared-only; authenticated fresh SQL persistence was not exercised by this audit.
+
+AC-004 | Partial
+Ordinary/late policy and overtime calculations exist. Office punch boundary provenance and office schema are unfinished. Meal allowance, waiting, KPI and other special policy producers remain incomplete.
+
+AC-005 | Backend partial; employee workflow unavailable
+Site geofence/configuration and punch review statuses exist; current mobile flow absent and current web operations disconnected. Current office capture has no corresponding office boundary path.
+
+AC-005A | Partial
+Operational/Red zone backend events, separate audit records, warning context and notifications exist. Full Green/Amber/Red employee client and Amber exception workflow absent.
+
+AC-005B | Partial
+Real in-app site report intake/review endpoints exist. No functioning employee React Native app; routed web site report workspace remains prepared-only.
+
+AC-006 | Not complete
+Complete own salary/deduction/allowance/advance/loan data views missing. Frontend EmployeeSelfServicePage renders PreparedWorkspace; mobile is blank. Some own attendance/leave/OT read APIs exist.
+
+AC-007 | Partial
+Protected financial inputs/manual handoff receipts exist. Approved OT financial consumption, full carry-forward and positive month lock/payroll closure are unavailable. No automatic bank payment is required in first release.
+
+AC-008 | Partial
+Some factual protected exports exist; not all fourteen SRS reports. Reachable web exports disabled. Full report producer/API/background/UI acceptance incomplete.
+
+AC-009 | Substantial backend implementation; not freshly accepted live
+Effective status transitions, token/access/punch rejection and retained history code exist. Retirement/reactivation/rehire/archive lifecycle coverage incomplete. No live account/status write was performed by audit.
+
+AC-010 | Partial
+Authentication/HR/scheduling/attendance/policy/decision/export code records audit evidence. Missing feature producers and generic user audit/report flows prevent whole-platform acceptance.
+
+
+========================================================================
+verification-evidence.txt
+========================================================================
+HR SRS audit verification record
+Date: 13 October 2026 Asia/Karachi
+Authoritative supplied requirement source: C:/Users/Huma.Khan/Downloads/HR_Attendance_Employee_Mobile_SRS_v1.2.docx
+Primary backend assessed: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix-backend
+Primary web assessed: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix_frotned
+Mobile assessed: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix_mobile
+No product source, SQL/database, settings, account, provider or Git write performed by this audit. Build outputs were produced in frontend dist/obj and a temporary backend output directory. Audit text files are separate.
+
+Fresh checks executed during this audit:
+1. dotnet build Cosmix.Backend.sln -c Release --no-restore -m:1 -p:UseSharedCompilation=false -p:OutDir=<temporary audit output>/ -v:minimal: PASS; 0 warnings, 0 errors; all four assemblies built.
+2. npm.cmd run verify: FAIL; ESLint src/modules/attendance/schemas/common.ts:9:23 no-control-regex; one error, no warnings. Verify stopped before formatting/build.
+3. npm.cmd run build: PASS; TypeScript and Vite; 2211 modules transformed. Existing >500kB JavaScript chunk warning remains.
+4. npm.cmd run format:check: FAIL; ten attendance module files require formatting. No formatting changes applied.
+5. Source-only comparison of nested and external backend (.cs/.csproj, bin/obj excluded): nested 711 files, external 405 files, nested-only 306, external-only 0, differing shared files 53. Counts support choosing nested copy; are not completion metrics.
+6. Mobile src inventory: only src/app/App.tsx is a non-.gitkeep file, and its entry returns null. No business UI/API workflow counted.
+
+Not executed in this audit:
+Authenticated browser or API acceptance; real SMS; ClamAV live detection; SQL connection/migration/transactions/concurrency; biometric inference/liveness/replay/device acceptance; native Android/iOS build; load or restore drill. Existing dated verification documents are historical evidence, not fresh passed tests.
+
+Source SHA256 at audit inspection:
+cosmix_frotned/src/app/router/AppRoutes.tsx | 2f0c18f83296595fdaba197b9e18eb9ef3a6bbc6c430c9be28a4d9c60668b763
+cosmix_frotned/src/modules/hr/components/workspaces/PreparedWorkspace.tsx | 9d9b88a3013aab377601211e4aab00901afb3494cb12a946266dca5b19d0d938
+cosmix_frotned/src/modules/hr/components/approvals/EmployeeAccessSetup.tsx | 210b28e350afb7760281122e5b79ba52e949f72e69a6a6847a7af1add0ae6431
+cosmix_frotned/src/modules/hr/components/approvals/AdditionalRoleAssignment.tsx | f43fb40622b4fec5a8e09b438c29e77cdc6688fca5fc24c95c34af64da137377
+cosmix_frotned/src/modules/hr/schemas/access-setup.ts | 4f2ef8e5dc863de3a86a6ec345e8c739b600974c7b60be377920da3da38fbced
+cosmix_frotned/src/modules/attendance/schemas/common.ts | 6abb5b8664c0035f5e4a44360b55229ebca93bb661f226c1b8aba74f49a4bd07
+cosmix_mobile/src/app/App.tsx | 0b5e3e858d9ec81d2c4fed98850a4502c4fc8890d09c797e62758745ad6beb1b
+cosmix-backend/src/Cosmix.Application/Authentication/Access/AccessContracts.cs | 1d3aff2737fcb15a9fe4f7c7edcbec0dbea30e13c22b89ac205f8f8b946b21fc
+cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendanceMonthLockFinancialReader.cs | 9e49d5ca84176ac4149e0f0106d4e800deb8a700ea3b245ff4b20382cd77e63c
+cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/AttendanceCaptureRegistration.cs | 599c0f5def263ea4cb1188a89ebf39444a125343209d6ab0da08ab3a4752cd61
+cosmix-backend/src/Cosmix.Infrastructure/Database/CosmixDbContext.cs | 3052da6442d90d2d4a8a26fc8f86083191ae913d603071834688b7e81498b255
+cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/CosmixDbContextModelSnapshot.cs | a889e0f68a0ca5603ed114e3ea22bf8ce4557f2c70fe682eb15f83e88d6197ac
+
+Latest refresh after concurrent source changes
+The AppRoutes and common schema hashes changed during consolidation. Current scheduling routes and a new office roster page were inspected; web reviewer updated feature group15 from Missing to Partial. This changes the web source score from37.88% to39.39%; the narrower employee admin score remains85.71%.
+Latest npm run verify: lint PASS, formatting FAIL15 files; no build phase reached. Latest independent npm run build: PASS2247 modules, TypeScript/Vite with existing large chunk warning. Initial lint1/format10 failures above are historical and superseded. No source fixes were made by this audit.
+Current endpoint/guard proof still shows missing required role-assignment Reason, absent office migration/snapshot, office capture provenance gap, production face provider unavailability and legal month-lock gate.
+Refreshed final source hashes:
+cosmix_frotned/src/app/router/AppRoutes.tsx | 23965597eb292179916c782c33bfddbed498cfbd7404d6fc13926e1ce1237fb7
+cosmix_frotned/src/layouts/AppLayout.tsx | 6ba8ff87b686d253b19dcb43247839ae2b63f54a9182b2a2c99a85cab5d49448
+cosmix_frotned/src/modules/attendance/schemas/common.ts | 6b0acd545b8e05573da6ef8e8f0e6d93cfcbf19352625e92169cf23e6fedb2eb
+cosmix_frotned/src/modules/attendance/index.ts | 7470337510563d260ef5a73c3e0f057f84f61f5df718e55e84a777dfb28015a3
+cosmix_frotned/src/modules/attendance/pages/OfficeRostersPage.tsx | 443bfb1d8aba9810964a5a8e81bbf8fb1a3254e6c6d119b80aaf715da6b1fb63
+cosmix_frotned/src/modules/attendance/components/rosters/OfficeRosterForm.tsx | cf802ee9d400b19c09e39201e62edb7bc00b2c840d51d1dde56ea1940e7fa01c
+
+FINAL complete verification result
+Fresh npm.cmd run verify exited0: ESLint PASS, Prettier PASS all matched files, TypeScript PASS, Vite production build PASS2247 modules. Existing large combined chunk warning remains. Prior failures are superseded, not erased. Final source review found formatting-only changes in the inspected setup/router/schema paths; functional scope/Reason blocker/office migration gap are unchanged. No product source edits by this audit.
+
+Final source SHA256 snapshot:
+cosmix_frotned/src/app/router/AppRoutes.tsx | 91f660d74febfb8a660e3118efcea3957389078848e6e1e78a11a91166aa098f
+cosmix_frotned/src/modules/hr/components/workspaces/PreparedWorkspace.tsx | 9d9b88a3013aab377601211e4aab00901afb3494cb12a946266dca5b19d0d938
+cosmix_frotned/src/modules/hr/components/approvals/EmployeeAccessSetup.tsx | 210b28e350afb7760281122e5b79ba52e949f72e69a6a6847a7af1add0ae6431
+cosmix_frotned/src/modules/hr/components/approvals/AdditionalRoleAssignment.tsx | f43fb40622b4fec5a8e09b438c29e77cdc6688fca5fc24c95c34af64da137377
+cosmix_frotned/src/modules/hr/schemas/access-setup.ts | 4f2ef8e5dc863de3a86a6ec345e8c739b600974c7b60be377920da3da38fbced
+cosmix_frotned/src/modules/attendance/schemas/common.ts | 6ba48fffcb4587b8e1cf6f07a49c723e73403f6c9bfeea61d2c6a147d1255707
+cosmix_mobile/src/app/App.tsx | 0b5e3e858d9ec81d2c4fed98850a4502c4fc8890d09c797e62758745ad6beb1b
+cosmix-backend/src/Cosmix.Application/Authentication/Access/AccessContracts.cs | 1d3aff2737fcb15a9fe4f7c7edcbec0dbea30e13c22b89ac205f8f8b946b21fc
+cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendanceMonthLockFinancialReader.cs | 9e49d5ca84176ac4149e0f0106d4e800deb8a700ea3b245ff4b20382cd77e63c
+cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/AttendanceCaptureRegistration.cs | 599c0f5def263ea4cb1188a89ebf39444a125343209d6ab0da08ab3a4752cd61
+cosmix-backend/src/Cosmix.Infrastructure/Database/CosmixDbContext.cs | 3052da6442d90d2d4a8a26fc8f86083191ae913d603071834688b7e81498b255
+cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/CosmixDbContextModelSnapshot.cs | 51895d5397de4653e313ca6eb442ad620b62cf10818cc79f7003f5b82420d41a
+cosmix_frotned/src/layouts/AppLayout.tsx | 850c095f97a5407d6ff5b3af364ae76507fd6c289428eb211a2e4b4f0f253121
+cosmix_frotned/src/modules/attendance/index.ts | 7470337510563d260ef5a73c3e0f057f84f61f5df718e55e84a777dfb28015a3
+cosmix_frotned/src/modules/attendance/pages/OfficeRostersPage.tsx | 189a0d1991af92ba7f4a586658c16debcaac7c78711ce81e45b6594cc998fd6c
+cosmix_frotned/src/modules/attendance/components/rosters/OfficeRosterForm.tsx | 418b17a6f52d94e83f6d024a0756af1331064594c82fe1c0d0027ffcc7caa787

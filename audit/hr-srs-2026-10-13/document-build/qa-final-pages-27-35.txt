@@ -1,0 +1,38 @@
+FINAL VISUAL QA -- PAGES 27-35
+Reviewed individually with tools.view_image(detail="original") using the NEW
+final-page prefix; this review does not rely on the earlier page-26..32 render.
+Source supplied: final Microsoft Word/Poppler render, 38-page document, 130 dpi.
+No document, builder, render or product source modified by this reviewer.
+
+final-page-27.png / page 27: PASS. Complete F02 and F03 task blocks, acceptance
+and dependency text are readable. No clipping, overlap, orphan heading or footer
+collision. Lower whitespace supports keeping the next task together.
+final-page-28.png / page 28: PASS. F04 and F05 are complete and clear, with
+consistent spacing/margins. Headings remain attached to their body and acceptance.
+No clipping, overlap or blank-page anomaly.
+final-page-29.png / page 29: PASS. F06 is a complete readable block. The lower
+whitespace is the end of Part F before Part G, not a blank page or missing content.
+final-page-30.png / page 30: PASS. Part G title/owner/dependencies/current state/
+touchpoints and complete G01 remain within margins. No orphan headings, clipped
+paragraphs or overlapping footer. Developer-number spacing is corrected.
+final-page-31.png / page 31: PASS. Complete G02 and G03 blocks, including their
+acceptance/dependencies, are readable with no split task or layout defects.
+final-page-32.png / page 32: PASS. Complete G04 and G05 blocks are readable and
+well spaced. No clipping, overlapping text or detached acceptance headings.
+final-page-33.png / page 33: PASS. Complete G06/G07 and the report checklist
+heading/header/rows 01-05 fit cleanly. "exits 0" spacing is corrected. Table rows
+are complete and separated from the footer; no orphan table heading.
+final-page-34.png / page 34: PASS. Report checklist continuation repeats its
+column headers; complete rows 06-14 are readable and correctly shaded/bordered.
+No clipped cells, overlap or missing row. Lower whitespace precedes the next
+deliberate section break.
+final-page-35.png / page 35: PASS. Developer integration table, parallel-work
+note, status/handoff heading and H 01-H 05 are complete/readable. No clipping,
+overlap or footer collision. Introductory Developer 1/Developer 2 spacing is fixed.
+Optional typography note only: long slash chains still wrap within "source" in
+wave 1 Review gate and "restore" in wave 5 Developer 2. Both words remain fully
+visible and intelligible; shorter phrases/spaces after separators would smooth
+the wraps. This is not a blocking layout defect.
+
+OVERALL: PASS -- all nine final pages 27, 28, 29, 30, 31, 32, 33, 34 and 35
+were inspected individually at original resolution. No blocking visual defects.

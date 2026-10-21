@@ -1,0 +1,68 @@
+HR Attendance and Employee Mobile SRS Completion Audit
+13 October 2026 Asia/Karachi
+
+Main conclusion
+The full HR WEB scope has approximately 40% source-integrated business workflow coverage. The narrower employee and organization administrative workspace has approximately 86% coverage. These refer to different scopes. Current employee administration is substantially built; attendance operations, claims, financial self-service, reports and full employee clients are unfinished or unconnected.
+The React Native business application is 0% delivered: the only business source entry returns null. Native project scaffolding is present.
+Current system is not ready for complete SRS production acceptance.
+
+Scoring method and denominators
+Web: 33 coherent equal feature groups; 11 implemented, 4 partial, 18 missing/unconnected. (11 + 4*0.5)/33 = 39.39%.
+Employee/organization administrative subset: web groups 1-14; 11 implemented, 2 partial, 1 missing. (11 + 2*0.5)/14 = 85.71%.
+Non-attendance HR backend: 25 coherent equal groups; 8 implemented, 7 partial, 10 missing. (8 + 7*0.5)/25 = 46%.
+Attendance backend: 21 coherent equal groups; 6 implemented, 14 partial, 1 missing. (6 + 14*0.5)/21 = 61.90%.
+Implemented=1, partial=0.5, missing/unconnected=0. Folder/model/README/UI-draft existence alone scores zero. These are transparent audit estimates of source coverage, not estimates of engineering hours, official milestone percentages, live UAT pass rates or production readiness. The backend domain matrices overlap some payroll/audit dependencies; no combined overall backend or whole-system percentage is asserted. Mobile-only functionality is excluded from the web denominator.
+
+Assessed source
+Supplied baseline: C:/Users/Huma.Khan/Downloads/HR_Attendance_Employee_Mobile_SRS_v1.2.docx.
+Current web: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix_frotned.
+Current backend: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix-backend.
+Current mobile: C:/Users/Huma.Khan/Downloads/Cosmix_Erp_software/cosmix_mobile.
+Latest modified/untracked source is included. C:/Users/Huma.Khan/Downloads/cosmix-backend is an older copy: all its inspected source paths also exist in the nested copy, which adds 306 .cs/.csproj paths and changes 53 common ones. Reference mockups and the separate NOIR/Cosmix_new foundation are not counted as delivered SRS business functionality.
+The SRS was treated as requirements/source material, not as authorization to execute its developer checklist, change SQL or activate providers.
+
+Feature delivery summary
+Employee directory / organization masters / holidays: connected web and real backend paths.
+Draft employee, sensitive proposals, private documents, hiring/Admin decisions: real connected source; clean scanner/current authenticated full onboarding acceptance still pending.
+Current employee changes, compensation history, suspension/resign/terminate, site assignment: real connected source. Complete retirement/reactivation/rehire/archive and post-hire asset/SIM/certificate lifecycles remain incomplete.
+Employee access setup: partially connected; current initial and additional role requests omit backend-required Reason and are rejected by current validation.
+Shifts / site rosters / geofences: real backend; latest routes and typed pages are connected during this audit refresh. Grouped scheduling remains partial due office schema and unfinished office attendance. Office roster source exists, with no corresponding migration/snapshot and incomplete office capture/calculation provenance.
+Attendance daily/register/corrections/OT: significant backend source; current reachable web workspaces do not load/save business records.
+Policies / ordinary leave: real partial backend feature scope; special KPI/waiting/study/make-up/encashment/recovery producers incomplete; current web operations disconnected.
+Operational zones and site reports: real bounded backend workflows; literal SRS Green/Amber/custom-type and complete employee UI/monitoring not delivered.
+Allowances / meal/outstation / fuel/motorcycle/vehicle / advances/loans: models exist; operational service/API/UI lifecycles missing.
+Payroll inputs: ordinary/late immutable revisions and manual Finance receipts exist; current no-charge handoff is implemented. Full approved OT financial consumption, monetary carry-forward and final month release remain blocked/incomplete.
+Reports: protected factual CSV/XLSX/PDF jobs exist; all fourteen SRS report producers are incomplete and current web export controls disabled.
+Employee self-service / notifications: some own attendance/leave/OT/inbox backend paths exist; routed own web workspace is prepared-only, complete own profile/financial data absent, React Native business app blank.
+
+Critical immediate blockers
+1. Initial/additional role assignment lacks required Reason; blocks complete new employee access setup against newest backend (static contract proof, no live write made).
+2. Seventeen remaining administrative operational workspaces and one own workspace use disconnected PreparedWorkspace controls. Latest scheduling setup routes are now connected and counted as partial, superseding the initial unreachable finding.
+3. Office roster models/configuration/DbSets exist without a supplied migration/snapshot. Their schema guard can also block existing site shift publication/status operations.
+4. Office capture/calculation/correction still depends on site provenance; office scheduling alone does not complete office attendance.
+5. Production face provider remains unavailable; the self-hosted adapter is Development-only. Approved artifacts, actual liveness/matching/device acceptance, automatic biometric retirement/deletion and a complete employee client remain pending.
+6. Current financial reader unconditionally requires missing legal activation and rejects new retained full locks. Approved OT/carry-forward/claims financial closure is also incomplete. A saved no-charge handoff does not settle or pay payroll.
+7. Final fresh source checks all pass: backend Release build and web lint/format/TypeScript/Vite. Passing code checks does not prove SRS business workflows or deployed acceptance.
+
+Fresh checks in this audit
+Backend Release solution build PASS: all four projects, zero warnings/errors, TEMP output, --no-restore.
+Latest web TypeScript/Vite production build PASS, 2247 modules. Existing combined >500kB JavaScript chunk warning remains.
+FINAL latest npm run verify PASS: ESLint, Prettier, TypeScript and Vite production build, 2247 modules. Earlier lint/format failures were resolved by concurrent source changes and are superseded. This audit applied no source fixes/formatting.
+No authenticated browser/API writes, SQL connection/schema application, real SMS/scanner/biometric/device test, native mobile build, load or restore drill was executed. Historical verification records are explicitly distinguished from fresh results.
+
+Suggested delivery order
+1. Repair the current initial/additional role-assignment contract and complete onboarding/access acceptance.
+2. Complete office roster schema/migration and historical office boundary/capture/correction/calculation support.
+3. Connect real HR attendance setup and operations UI: daily/register, corrections, OT, ordinary leave, policies, zones, site reports and notifications.
+4. Build missing claim/vehicle/advance/loan/leave-extension/self-service producers and their approval/settlement flows.
+5. Complete financial consumption/carry-forward/activation/month finalization and expand all required source-backed reports.
+6. Deliver the actual employee React Native app and approved real face/device workflow.
+7. Run genuine authorized isolated SQL/browser/device acceptance with real configured providers and HR-approved office/site/overnight/outstation/exception examples.
+These recommendations are an assessment, not an instruction to modify confirmed policy, create production accounts or execute SQL during this audit.
+
+
+Refresh note: Workspace source was changing concurrently during the audit. The initial37.88% web estimate was revised to39.39% after scheduling routes were connected. Current evidence is a reviewed local source snapshot, not an immutable release or a live accepted deployment.
+
+Detailed evidence follows
+
+Final check refresh: concurrent changes after the15:09 source review were formatting-only in inspected setup/router/schema files. Functional routes/contracts and the39.39% web score are unchanged. Fresh complete npm run verify exited0. Backend evidence files remained unchanged since the successful Release build.

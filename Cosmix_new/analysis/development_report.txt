@@ -1,0 +1,214 @@
+HMS ERP / FSM SYSTEM
+Comprehensive Technical Audit, Gap Analysis & Developer Action Roadmap
+1. Executive Summary & High-Level System Status
+Following a comprehensive deep-dive code audit conducted by 7 specialized AI agents across all 70 sections of the HMS ERP/FSM SRS, this report establishes the exact status of the platform, the architectural foundation already built inside the NOIR base, and an unambiguous, step-by-step developer roadmap for the next 5 months.
+2. Honest Breakdown: Backend vs Frontend Completion & Gap Analysis
+A critical objective of this audit is total transparency regarding what is completed versus what is missing. The system cannot be evaluated with a single broad percentage; Backend and Frontend layers are at distinctly different stages of maturity.
+2.1 Backend Deep Breakdown (.NET 10 Clean Architecture) — Completion: 45% - 50%
+The backend foundation is structurally sound. Developers do not need to invent database tables or invent routing patterns from scratch. However, the system currently consists of data stores and endpoints rather than an autonomous enterprise execution pipeline.
+2.2 Frontend Deep Breakdown (React 19 / TypeScript / Vite) — Completion: 20% - 25%
+NOIR contains 56 robust React pages for platform administration, user access, and CRM. However, NONE of the 23 specialized ERP panels have frontend screens yet. The backend APIs exist, but frontend developers must build the corresponding UI views. The audit identified exactly 34 Pages and 25 Modals/Drawers that must be coded in React 19.
+3. Panel-by-Panel Technical Audit & Developer Worklist
+Panel 1: CEO & Executive Management Panel (SRS Sec 5, 5.1, 6)
+Panel 2: CRM & Sales Panel (SRS Sec 12, 13, 14)
+Panel 3: Omnichannel Inbox & Communication Panel (SRS Sec 8, 9, 10, 11)
+Panel 4: Estimation & BOQ Panel (SRS Sec 15, 16, 17)
+Panel 5: Engineering & Technical Submittals (SRS Sec 18, 19, 20)
+Panel 6: Commercial & PO Reconciliation Panel (SRS Sec 25, 26, 27)
+Panel 7: Procurement Panel (SRS Sec 28)
+Panel 8: Inventory & Dual Stores Management (SRS Sec 29, 30, 31, 32, 33)
+Panel 9: Projects Management Panel (SRS Sec 34)
+Panel 10: Manufacturing Panel (SRS Sec 35)
+Panel 11: Fulfillment & Delivery Panel (SRS Sec 36)
+Panel 12: Field Service Management (FSM) Panel (SRS Sec 37, 38, 39, 40)
+Panel 13: After-Sales & Complaints Panel (SRS Sec 41)
+Panel 14: HR & Employee Management Panel (SRS Sec 42, 43, 44)
+Panel 15: Accounts & Finance Panel (SRS Sec 21, 22, 23, 46)
+Panel 16: Helpdesk Panel (SRS Sec 45)
+Panel 17: Quality Assurance (QA) Panel (SRS Sec 57)
+Panel 18: Admin & User Management Panel (SRS Sec 49, 65)
+Panel 19: Master Data Panel (SRS Sec 47)
+Panel 20: Reports & Analytics Panel (SRS Sec 61)
+Panel 21: AI Assistant & Automation Panel (SRS Sec 5.1, 9, 11, 16, 24, 33, 59, 63, 64)
+Panel 22: Tasks & Notifications Panel (SRS Sec 56, 60)
+Panel 23: Integrations & Audit Panel (SRS Sec 51, 52, 55, 66)
+4. Immediate Developer Action Plan (Sprint 0 - Office Kickoff)
+Upon reaching the office, developers should NOT begin writing ad-hoc frontend code immediately. They must execute the following sequential setup steps to stabilize the backend and database:
+• Step 1: Execute EF Core Migration: Generate and apply the comprehensive migration to create all tables for the 23 panels:
+dotnet ef migrations add AddCompleteErpAndFsmModules --project src/NOIR.Infrastructure --startup-project src/NOIR.Web
+dotnet ef database update --project src/NOIR.Infrastructure --startup-project src/NOIR.Web
+• Step 2: Seed Granular Permissions: Register missing permissions in NOIR.Domain.Common.Permissions.cs (e.g. FsmRead, FsmManage, ComplaintsRead, QaRead, ProcurementRead, InvoicingRead) and run RoleSeeder so platform admins can access the endpoints.
+• Step 3: Run Solution & Verify Scalar API Docs: Execute 'dotnet run --project src/NOIR.Web' and navigate to http://localhost:5000/api/docs to inspect and test all Minimal API endpoints in the interactive Scalar documentation interface.
+• Step 4: Refactor Minimal APIs to Wolverine CQRS Handlers: Move direct DbContext operations in Procurement, Fulfillment, Invoicing, Commercial, Intake, Engineering, and QA into NOIR.Application/Features/<Domain>/Commands and Queries with FluentValidation validators.
+5. Realistic 5-Month Roadmap & Monthly Deliverables
+Month 1: Foundation, Estimation (BOQ), Commercial & Procurement
+• Backend: Stabilize EF migrations, refactor CQRS handlers, create CustomerPurchaseOrderItem.
+• Frontend: Build BOQ List & BOQ Builder workspace; build Customer PO vs Quote Diff Viewer; build Supplier & PO generator screens.
+• Deliverable: Estimators can create BOQs, procurement can issue POs, and commercial managers can reconcile Customer POs against quotations.
+Month 2: Stores, Material Management & Manufacturing (BOM & Work Orders)
+• Backend: Implement Store aggregate (Physical/Virtual, Local/Int'l) and multi-location StoreInventory ledger; link BOMs to production orders; wire material consumption.
+• Frontend: Build Multi-store Stock Availability matrix, GRN receiving desk, Stock Transfer grid, BOM tree designer, and Production Order tracker.
+• Deliverable: Complete inward receipt, stock movement, dual-store routing, and manufacturing assembly workflows.
+Month 3: Fulfillment, Delivery OTP & Field Service Management (FSM)
+• Backend: Implement DeliveryAdvice aggregate; build secure SMS OTP generator; build Geolocation proximity verifier (<=200m) and Red Zone breach alert engine.
+• Frontend: Build Delivery Challan print/dispatch screens; build Mobile PWA for Field Technicians with 1-tap Google Maps directions, material usage entry, and customer OTP sign-off modal.
+• Deliverable: Closed-loop field installation, delivery with customer OTP proof, and technician tracking.
+Month 4: Accounts, Invoicing, After-Sales & Helpdesk
+• Backend: Build Vendor Bills (AP) and 3-way matching; implement Auto-Calculator service (GST & WHT deductions); wire automated GL posting triggers; build SLA escalation job for complaints/tickets.
+• Frontend: Build Sales Invoicing builder, Payment Settlement modal, Chart of Accounts tree, Complaints resolution desk, and Helpdesk conversation stream.
+• Deliverable: Double-entry financial books, customer billing, vendor payments, and customer support portal.
+Month 5: AI Engine, Executive Intelligence, Reports & UAT
+• Backend: Integrate Semantic Kernel LLM client; deploy MailKit IMAP worker for auto-intake; build AI Inbox classifier and draft responder; build Predictive Inventory forecasting.
+• Frontend: Deploy floating AI Assistant widget; build Executive CEO KPI Dashboard; generate Trial Balance and AR/AP aging reports.
+• Deliverable: End-to-end UAT sign-off, production deployment, and go-live.
+6. Critical Management Decisions Required (SRS Sec 68)
+1. Dual Stores Exact Definition: Does Dual Stores mean Physical vs Virtual, Local vs International, or General Warehouse vs Project-Dedicated Stock?
+2. Technical AUX Workflow: What specific technical calculations and sign-offs occur during the AUX engineering review?
+3. Red-Zone Actions: Should GPS red-zone breach immediately restrict technician system access, or log a silent supervisor alert?
+4. Tax & NTN Rules: Should the system automatically verify customer/vendor Active Taxpayer Status (Filer vs Non-Filer) against FBR/tax registries?
+5. AI Autonomy Limits: Which specific communications may the AI send autonomously, and which strictly require 1-click human sign-off?
+
+TABLE 1
+Base Codebase: | NOIR Platform (.NET 10 Clean Architecture + React 19 + EF Core)
+Audited Specification: | HMS ERP / FSM Software Requirements Specification (SRS v0.1, 70 Sections)
+Audit Date & Target: | October 2026 | Production Readiness & 5-Month Development Timeline
+Auditing Team: | Antigravity Multi-Agent Squad (7 Specialized Domain Auditors)
+
+TABLE 2
+Layer / Subsystem | Completion % | Summary Verdict
+Backend Architecture & APIs (.NET 10 / EF Core) | ~45% - 50% | All 23 Panel Schemas & Minimal APIs mapped; Business engines & multi-store ledger pending.
+Frontend UI / UX Client (React 19 / TypeScript) | ~20% - 25% | Base admin/CRM/HR pages exist; 34 specialized ERP pages + 25 modals pending.
+Overall Enterprise ERP/FSM Platform | ~35% - 40% | Strong architectural foundation; requires 5 months of active full-stack execution.
+
+TABLE 3
+✅ 100% Completed on Backend | ❌ Gaps / What Developers Must Build Next
+Database Schema (Code-First): Domain Entities, Value Objects, and EF DbSets for all 23 Panels are created and mapped. | Multi-Store Inventory Ledger: Create dedicated Store aggregate and LocationStock ledger so that transfers and dispatches automatically debit/credit specific warehouses.
+REST Minimal APIs: Endpoint routing for all 23 panels is registered in Program.cs with Swagger/Scalar documentation support. | Centralized Auto-Calculator Engine: Unify GST, Withholding Tax (WHT), Discounts, Markups, and Multi-Currency exchange rates across all commercial documents.
+Core SaaS Foundation: Finbuckle Multi-Tenancy, ASP.NET Identity, Granular RBAC Permissions, and 3-tier Auditing are production-ready. | External Email & Ingestion Worker: Deploy MailKit IMAP Idle background service to ingest raw customer inquiries and WhatsApp webhooks.
+Double-Entry Accounting Primitives: Chart of Accounts tree, balanced JournalEntry (Debit == Credit) aggregate, and Invoicing models exist. | Automated General Ledger Triggers: Wire domain events so issued invoices, received payments, and approved vendor bills auto-post double-entry journal vouchers.
+PO Reconciliation Skeleton: PoReconciliationEngine ported from invoice-processor to compare PO totals and line items against BOQs. | Document OCR & PDF Intelligence: Integrate Azure Document Intelligence / PdfPig inside Hangfire async jobs to extract tabular data from uploaded customer PO PDFs.
+Hangfire & MCP Background Infrastructure: Hangfire dashboard configured; Model Context Protocol (MCP) server mapped at /api/mcp with 62 tools. | SLA & Policy Enforcement Jobs: Build Hangfire recurring jobs to evaluate Complaint SLAs, Ticket escalations, Geofence Red-Zone breaches, and expiring staff insurances.
+
+TABLE 4
+✅ Already Built in React 19 (56 Pages) | ❌ Missing ERP Screens (34 Pages + 25 Modals)
+Authentication & Security: Login, Forgot Password, OTP Verification, Profile settings, API Key management. | BOQ Builder Workspace: Interactive Excel-style line item editor with hierarchical sections, dynamic markup slider, and revision snapshot diff viewer.
+User Access Control (RBAC): Users directory, Roles list, Granular Permission matrix dialog, Tenant settings. | PO vs Quote Diff Viewer Modal: Side-by-side reconciliation comparison highlighting price variances, missing SKUs, and discrepancy logger.
+CRM & Sales Pipeline: Contacts list, Company profiles, Lead Kanban board with @dnd-kit drag-and-drop, Deal stages. | Procurement PO Generator: Multi-item purchase order creator with supplier lookup, expected delivery dates, and 1-click PO approval button.
+Human Resources (HR): Employee directory, Department hierarchy, D3/SVG interactive Org-Chart, HR reports. | Dual Stores & GRN Receiving Desk: Inward inspection desk with Store location selector (Local vs Int'l) and Received/Accepted/Rejected item table.
+Project Management (PM): Project directory, Task Kanban board, Subtasks, Activity comments feed. | FSM Mobile PWA View: Field technician responsive smartphone view with 1-tap Google Maps navigation, parts usage logger, and customer OTP sign-off modal.
+E-Commerce & Platform Systems: Products catalog, Order management, Media library, Activity audit timeline. | Accounting & Finance Views: Chart of Accounts 5-class tree view, double-entry Journal Voucher composer (Debit == Credit), and Sales Invoice builder.
+
+TABLE 5
+Current State: | ExecutiveDashboardEndpoints.cs returns live KPI aggregations (TotalRevenue, ActiveProjects, PendingFieldJobs, OpenComplaints, OpenHelpdeskTickets, ActiveEmployees). MCP tools exist.
+What Developers Must Build: | Needs automated historical KPI anomaly detection, automated weekly executive brief generator, and React 19 Executive Dashboard widget with drill-down links to source records.
+Estimated Effort: | 10 - 12 Dev Days
+
+TABLE 6
+Current State: | Full Leads, Contacts, Companies, Deal Pipelines, Kanban board with @dnd-kit drag-drop in React.
+What Developers Must Build: | Add marketing attribution fields (UTM, SEO keywords, campaign source, referrer) to Lead entity; implement customer deduplication engine.
+Estimated Effort: | 8 - 10 Dev Days
+
+TABLE 7
+Current State: | IntakeMessage aggregate root and /api/intake/messages endpoints mapped.
+What Developers Must Build: | Build MailKit IMAP Idle background service to ingest emails; build WhatsApp webhook listener; integrate Semantic Kernel to classify incoming queries, extract customer/specs, and draft replies with human approval gate.
+Estimated Effort: | 14 - 18 Dev Days
+
+TABLE 8
+Current State: | Boq, BoqItem, BoqRevision entities with full Wolverine CQRS commands and /api/estimation/boqs endpoints.
+What Developers Must Build: | Build React 19 BOQ Builder UI with inline item grid, section grouping, and markup slider; integrate catalog auto-matching and multi-store availability check.
+Estimated Effort: | 14 - 16 Dev Days
+
+TABLE 9
+Current State: | Submittal aggregate root and /api/engineering/submittals endpoints mapped.
+What Developers Must Build: | Add SubmittalItem schedule; build AUX review stage workflow; implement PDF datasheet specification comparison against BOQ; support non-linear formulas in UnitConversionMaster (°C ↔ °F).
+Estimated Effort: | 10 - 12 Dev Days
+
+TABLE 10
+Current State: | CustomerPurchaseOrder, ExceptionRecord, and PoReconciliationEngine ported from invoice-processor.
+What Developers Must Build: | Add CustomerPurchaseOrderItem child entity; integrate Azure Document Intelligence / PdfPig to auto-extract line items from uploaded PO PDFs; expand diff engine to compare discounts, delivery terms, and scope exclusions.
+Estimated Effort: | 16 - 20 Dev Days
+
+TABLE 11
+Current State: | Supplier and PurchaseOrder entities with /api/procurement endpoints.
+What Developers Must Build: | Refactor to Wolverine CQRS; build Purchase Requisition (PR) workflow; implement RFQ 3-quote comparative matrix; add monetary approval limits; build React PO generator and supplier portal.
+Estimated Effort: | 14 - 18 Dev Days
+
+TABLE 12
+Current State: | StockIndent, StockTransfer entities with CQRS; GoodsReceiptNote entity exists.
+What Developers Must Build: | CRITICAL ARCHITECTURAL REQUIREMENT: Create Store aggregate (Physical/Virtual, Local/International) and StoreInventory multi-location stock ledger; build 2-step In-Transit transfer; build Stock Aging query (30/60/90 days) and predictive shortage alerts.
+Estimated Effort: | 18 - 22 Dev Days
+
+TABLE 13
+Current State: | Project, ProjectTask, Kanban workspace in React and Wolverine CQRS.
+What Developers Must Build: | Link Projects to BOQs, Customer POs, Delivery Challans, and Field Jobs for 360° progress tracking; build task delay predictor.
+Estimated Effort: | 8 - 10 Dev Days
+
+TABLE 14
+Current State: | BillOfMaterial, BillOfMaterialItem, ProductionOrder entities with CQRS.
+What Developers Must Build: | Link ProductionOrder to ProjectId/BoqId; wire IssueMaterialCommand to deduct raw materials from StoreInventory; credit finished goods upon completion; build React BOM tree designer.
+Estimated Effort: | 14 - 16 Dev Days
+
+TABLE 15
+Current State: | DeliveryChallan and DeliveryChallanItem entities with /api/fulfillment endpoints.
+What Developers Must Build: | Refactor to CQRS; build DeliveryAdvice aggregate; implement secure server-generated 6-digit OTP dispatched via SMS; deduct stock upon challan dispatch; build Mobile OTP sign-off screen.
+Estimated Effort: | 12 - 15 Dev Days
+
+TABLE 16
+Current State: | FieldJob aggregate root (with OTP, site coordinates, status) and /api/fsm/jobs endpoints.
+What Developers Must Build: | Build React mobile PWA for technicians (daily dispatches, 1-tap Google Maps directions, photo proof upload); build GPS geofencing (<=200m check-in); build Red Zone restriction engine with supervisor alerts.
+Estimated Effort: | 18 - 24 Dev Days
+
+TABLE 17
+Current State: | CustomerComplaint entity and /api/after-sales/complaints endpoints.
+What Developers Must Build: | Implement SlaPolicy matrix (Critical: 2h/8h, High: 4h/24h); build Hangfire background job for SLA breach escalation; build 1-click 'Convert Complaint to Field Job' action; build Complaints desk UI.
+Estimated Effort: | 10 - 12 Dev Days
+
+TABLE 18
+Current State: | Employee, Department, OrgChart with React UI in portal.
+What Developers Must Build: | Expand Employee schema (CNIC/Passport, dual emails/phones, emergency contacts, branch/site, documents/certifications); build Medical & Insurance module; build HR Policy Lock engine.
+Estimated Effort: | 16 - 20 Dev Days
+
+TABLE 19
+Current State: | Chart of Accounts, balanced Double-entry JournalEntry, SalesInvoice, and PaymentRecord.
+What Developers Must Build: | Build Vendor Bills (AP) and 3-way matching; implement Auto-Calculator service (GST inclusive/exclusive, WHT deductions); wire automated GL posting triggers; build Trial Balance and AR/AP Aging reports.
+Estimated Effort: | 22 - 26 Dev Days
+
+TABLE 20
+Current State: | HelpdeskTickets and HelpdeskTicketComments entities and /api/helpdesk/tickets.
+What Developers Must Build: | Consolidate domain model; implement Wolverine CQRS handlers; add Hangfire SLA monitor job; build React ticket workspace with threaded conversation stream.
+Estimated Effort: | 10 - 12 Dev Days
+
+TABLE 21
+Current State: | QaInspection entity with multi-stage enum and /api/qa/inspections endpoints.
+What Developers Must Build: | Build structured QaChecklistTemplate data model; implement cross-module enforcement gates (block GRN if receiving QA fails, block Production if in-process QA fails); build React Checklist Inspector modal.
+Estimated Effort: | 12 - 15 Dev Days
+
+TABLE 22
+Current State: | ASP.NET Identity, Permission authorization handler, Tenant management, User/Role admin UI.
+What Developers Must Build: | Fully implemented (90%). Minor task: add monetary approval limits to role assignments.
+Estimated Effort: | 3 - 4 Dev Days
+
+TABLE 23
+Current State: | UnitConversion, Product Categories, Brands, Attributes.
+What Developers Must Build: | Build Master Data management screens in React (Unit conversions table, Tax masters, Currency exchange rates).
+Estimated Effort: | 6 - 8 Dev Days
+
+TABLE 24
+Current State: | Core report framework and queries in NOIR.Application/Features/Reports.
+What Developers Must Build: | Build specialized ERP reports: Lead Attribution ROI, Stock Aging Analysis, Trial Balance, AR/AP Aging, Field Technician Productivity.
+Estimated Effort: | 10 - 12 Dev Days
+
+TABLE 25
+Current State: | MCP Server mapped at /api/mcp with 62 tools; Hangfire jobs configured.
+What Developers Must Build: | Integrate Semantic Kernel and Microsoft.Extensions.AI; implement floating AI Chat Assistant widget in React 19 via SignalR; enforce 5-step Human-in-the-Loop governance for commercial/financial actions.
+Estimated Effort: | 20 - 24 Dev Days
+
+TABLE 26
+Current State: | Notification aggregate, NotificationHub (SignalR), and user preferences UI in React.
+What Developers Must Build: | Add recurring reminder jobs for expiring insurance, certifications, and pending approvals; build Special Tasks delegation module.
+Estimated Effort: | 6 - 8 Dev Days
+
+TABLE 27
+Current State: | 3-tier relational audit logging (Http, Handler, Entity), Webhook delivery engine, Hangfire dashboard.
+What Developers Must Build: | Add mandatory business 'Reason' on overrides; tag AI actions with ActorType=AIAgent; build visual Lifecycle Traceability graph (Inquiry -> BOQ -> Quote -> PO -> Challan -> Invoice).
+Estimated Effort: | 6 - 8 Dev Days

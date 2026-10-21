@@ -1,0 +1,32 @@
+[
+  {
+    "Path": "src/Cosmix.Application/Attendance/Rosters/RosterStaffTaxonomy.cs",
+    "Bytes": 4325,
+    "SHA256": "8C89816D229ACEA12B07D29DDEEB07C069A11EA37DCC0E18BA819C6BCD568B64"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Rosters/RosterContracts.cs",
+    "Bytes": 3301,
+    "SHA256": "DCF58DF0906E7879A215913854D564E54661F1E3876FF22987CBCC93D66CC977"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Rosters/EmployeeRosterResolver.cs",
+    "Bytes": 1807,
+    "SHA256": "06895AD28E69D0EDDBE05A22E5882EEAC866027785197B1E0D9B62E86FDF76A2"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Rosters/OfficeRosterResolver.cs",
+    "Bytes": 3606,
+    "SHA256": "0FAAFAAAAFE179A3277B2BCA5CC7E2EBFD9AC4EC677298FF694C09F7197FC7A1"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Rosters/SiteRosterResolver.cs",
+    "Bytes": 6095,
+    "SHA256": "4DEBA8B5E8831C6AE5BB5351B7C99F688785BBA794C89010CA9E1D595798B75E"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Offices/OfficeAttendanceSourceReader.cs",
+    "Bytes": 5259,
+    "SHA256": "350B1B2C7459F91A2A28B548BF52B3EA3AB24F984EA8D9A1B41BD74C623AE1A0"
+  }
+]

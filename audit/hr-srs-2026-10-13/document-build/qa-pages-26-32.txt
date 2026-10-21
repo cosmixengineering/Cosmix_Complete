@@ -1,0 +1,31 @@
+VISUAL QA -- PAGES 26-32
+Reviewed individually with tools.view_image(detail="original").
+Source: Microsoft Word DOCX-to-PDF render, Poppler page PNGs at 130 dpi.
+Files: document-build/render/page-26.png through page-32.png.
+No document, builder or product source changes made by this reviewer.
+
+Page 26: PASS. Financial task F03/F04 and the start of F05 are readable, with
+consistent margins/spacing. Headings retain following body text. No clipping,
+overlap, blank-page anomaly or footer collision.
+Page 27: PASS. F05 continuation and F06 are complete/readable. The lower whitespace
+is the intentional end of Part F before the new Part G page, not a blank page.
+Page 28: PASS. Part G title/owner/dependencies/touchpoints and G01/G02 remain inside
+margins. Bottom acceptance text is clear and separated from the footer. No orphan
+heading, clipping or overlap.
+Page 29: PASS. G03/G04/G05 headings and task bodies are readable. Continuation from
+G02 at the top is natural. The bottom paragraph and footer do not collide.
+Page 30: PASS. G05 acceptance, G06/G07 and report checklist heading are readable.
+The report table begins with its header and first complete row; no row is split
+or clipped. Minor copy polish: G07.T1 displays "exits0"; prefer "exits 0".
+Page 31: PASS. Report checklist continues with its repeated column header and
+complete readable rows 02-14. Alternating shading and borders are consistent;
+no clipping, overlapping cells, lost rows or blank-page issue.
+Page 32: PASS. Integration order table, parallel-work note and H01-H05 are readable
+and within margins. No clipped cells or footer collision. Minor copy/wrapping
+polish: introductory "Developer1"/"Developer2" should have spaces. Long slash
+chains in the table wrap within "source" (wave 1 review gate) and "restore"
+(wave 5 Developer 2); both remain fully visible/readable, but shorter phrases or
+spaces after separators would make those wraps smoother.
+
+Overall: PASS for pages 26, 27, 28, 29, 30, 31, 32. No blocking visual/layout
+defects found. Optional copy/wrapping polish is limited to the noted items.

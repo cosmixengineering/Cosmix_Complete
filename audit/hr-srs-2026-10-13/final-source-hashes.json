@@ -1,0 +1,18 @@
+{
+  "cosmix_frotned/src/app/router/AppRoutes.tsx": "91f660d74febfb8a660e3118efcea3957389078848e6e1e78a11a91166aa098f",
+  "cosmix_frotned/src/modules/hr/components/workspaces/PreparedWorkspace.tsx": "9d9b88a3013aab377601211e4aab00901afb3494cb12a946266dca5b19d0d938",
+  "cosmix_frotned/src/modules/hr/components/approvals/EmployeeAccessSetup.tsx": "210b28e350afb7760281122e5b79ba52e949f72e69a6a6847a7af1add0ae6431",
+  "cosmix_frotned/src/modules/hr/components/approvals/AdditionalRoleAssignment.tsx": "f43fb40622b4fec5a8e09b438c29e77cdc6688fca5fc24c95c34af64da137377",
+  "cosmix_frotned/src/modules/hr/schemas/access-setup.ts": "4f2ef8e5dc863de3a86a6ec345e8c739b600974c7b60be377920da3da38fbced",
+  "cosmix_frotned/src/modules/attendance/schemas/common.ts": "6ba48fffcb4587b8e1cf6f07a49c723e73403f6c9bfeea61d2c6a147d1255707",
+  "cosmix_mobile/src/app/App.tsx": "0b5e3e858d9ec81d2c4fed98850a4502c4fc8890d09c797e62758745ad6beb1b",
+  "cosmix-backend/src/Cosmix.Application/Authentication/Access/AccessContracts.cs": "1d3aff2737fcb15a9fe4f7c7edcbec0dbea30e13c22b89ac205f8f8b946b21fc",
+  "cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendanceMonthLockFinancialReader.cs": "9e49d5ca84176ac4149e0f0106d4e800deb8a700ea3b245ff4b20382cd77e63c",
+  "cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/AttendanceCaptureRegistration.cs": "599c0f5def263ea4cb1188a89ebf39444a125343209d6ab0da08ab3a4752cd61",
+  "cosmix-backend/src/Cosmix.Infrastructure/Database/CosmixDbContext.cs": "3052da6442d90d2d4a8a26fc8f86083191ae913d603071834688b7e81498b255",
+  "cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/CosmixDbContextModelSnapshot.cs": "51895d5397de4653e313ca6eb442ad620b62cf10818cc79f7003f5b82420d41a",
+  "cosmix_frotned/src/layouts/AppLayout.tsx": "850c095f97a5407d6ff5b3af364ae76507fd6c289428eb211a2e4b4f0f253121",
+  "cosmix_frotned/src/modules/attendance/index.ts": "7470337510563d260ef5a73c3e0f057f84f61f5df718e55e84a777dfb28015a3",
+  "cosmix_frotned/src/modules/attendance/pages/OfficeRostersPage.tsx": "189a0d1991af92ba7f4a586658c16debcaac7c78711ce81e45b6594cc998fd6c",
+  "cosmix_frotned/src/modules/attendance/components/rosters/OfficeRosterForm.tsx": "418b17a6f52d94e83f6d024a0756af1331064594c82fe1c0d0027ffcc7caa787"
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "Path": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\cosmix-backend\\src\\Cosmix.Application\\HR\\StaffCategories\\StaffTaxonomyAuthority.cs",
+    "Hash": "DB3B26B9599D45FAB0D6CDC7CB3F8414D82A55C03576B8E2F49A56FF65927146"
+  },
+  {
+    "Path": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\cosmix-backend\\src\\Cosmix.Application\\HR\\StaffCategories\\StaffTaxonomyContracts.cs",
+    "Hash": "AEB5DB0D366F84ADF3112BCDD55208AB278952B39F0C8924D3626AFEEC34B5CF"
+  },
+  {
+    "Path": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\cosmix-backend\\src\\Cosmix.Application\\HR\\StaffCategories\\StaffTaxonomyOperation.cs",
+    "Hash": "5894162579A5D92FA2574FABF29986A687DEA9821ADBCBCE8ABBF4774E96CC05"
+  },
+  {
+    "Path": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\cosmix-backend\\src\\Cosmix.Application\\HR\\StaffCategories\\StaffTaxonomyResolver.cs",
+    "Hash": "722ACFB621DCA9A27A8EDAD5BF6EDBD14F2438CB5BA43D397F177DCB69EDE3DC"
+  },
+  {
+    "Path": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\cosmix-backend\\src\\Cosmix.Application\\HR\\StaffCategories\\StaffTaxonomyRulesCodec.cs",
+    "Hash": "81D041BE238D60BC47520BAAF8A9EEE6355EA7C1EAE5A95375858B30EEC1BE6C"
+  },
+  {
+    "Path": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\cosmix-backend\\src\\Cosmix.Application\\HR\\StaffCategories\\StaffTaxonomyService.cs",
+    "Hash": "E5F66214B8F59559183AB78D34526D526F1EECC4913BE4D405948AAAD285EE90"
+  },
+  {
+    "Path": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\cosmix-backend\\src\\Cosmix.Infrastructure\\Repositories\\HR\\StaffTaxonomyRepository.cs",
+    "Hash": "52CCE63A1192565A661CAF99721AE91964DBC09A3BE672F474315E4A20C14D98"
+  },
+  {
+    "Path": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\cosmix-backend\\src\\Cosmix.Api\\Controllers\\HR\\StaffTaxonomyController.cs",
+    "Hash": "C1F35A279D5E3F0D1F52FE8CE1C7E7673FD7C08BD016163707A23EBAA518F9E7"
+  },
+  {
+    "Path": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\cosmix-backend\\src\\Cosmix.Api\\Controllers\\HR\\StrictStaffTaxonomyJsonAttribute.cs",
+    "Hash": "0B25BBE387AA1E9ACD19F73F9BD1D6DB690688EA06CAB91D0290CB663B3BAF56"
+  },
+  {
+    "Path": "C:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software\\cosmix-backend\\docs\\Staff-Taxonomy.md",
+    "Hash": "09DB0D0D68EE37C48AEB9F3398400BB10DB4E3A1C8C1C54C4DAF284F98961E33"
+  }
+]

@@ -1,0 +1,17 @@
+FINAL RENDER VISUAL QA - EXACT PAGES 19 THROUGH 26
+Every page was individually inspected at ORIGINAL resolution through tools.view_image(detail="original"). Files: final-page-19.png, final-page-20.png, final-page-21.png, final-page-22.png, final-page-23.png, final-page-24.png, final-page-25.png, final-page-26.png in document-build/render. These are the final-prefixed Word PDF -> Poppler renders, not the earlier page-*.png files or thumbnails. No artifact/source edit or Word/LibreOffice session opened.
+
+LAYOUT RESULT: PASS for all eight reviewed pages. No clipping, overlaps, footer collision, orphan heading, table defect or completely blank page. Entire task blocks and acceptance cases now stay together. The earlier isolated two-line D05.T2 overflow is resolved: final page 22 contains the complete D05 task. Lower whitespace on pages 19/22/26 is acceptable with complete task blocks and new Part boundaries.
+
+TEXT POLISH RESULT: small spacing defects remain; the numerical side of earlier joins was repaired, but some word-to-word/currency/unit joins are still visible.
+
+19 - PASS. Complete C07 task and acceptance retained; October 31-day/February 28/29-day now spaced correctly. No identified text/layout defect.
+20 - Layout PASS. Part D/D01/D02 retained cleanly. Remaining D01.T1 join: "exactlyfour-month" -> "exactly four-month".
+21 - PASS. Complete D03 and D04 tasks; KPI and 1.5-day numeric joins are repaired. No identified text/layout defect.
+22 - PASS. Complete D05 task, including both acceptance cases, now retained together. No isolated two-line overflow. No identified text/layout defect.
+23 - Layout PASS. Part E/E01/E02 retained together. Remaining E01.1 joins: "toPKR 400" -> "to PKR 400"; "breakfastPKR 300" -> "breakfast PKR 300"; "lunchPKR 500" -> "lunch PKR 500". E01.2: "outstationPKR 1000/day" -> "outstation PKR 1000/day".
+24 - Layout PASS. Complete E03/E04 and acceptance retained. Remaining E03.T1: "approvedkm" -> "approved km". E04.1: "atPKR 1800" -> "at PKR 1800". E04.2: "outstationkm" -> "outstation km" and "approximatelyPKR 18000" -> "approximately PKR 18000".
+25 - PASS. Complete E05/E06 including both acceptance sets; no orphan heading or split acceptance. No identified text/layout defect.
+26 - PASS. Part F touchpoints and complete F01 task fit; long title remains within margins. No identified text/layout defect.
+
+Recommendation: fix the nine listed text joins in the generation source, then confirm the same task-block pagination after re-render. These are minor textual readability defects; no substantive requirement audit or title-page-border assessment was made in this page range.

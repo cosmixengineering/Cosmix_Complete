@@ -1,0 +1,1056 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="5af7ef9b-8c00-47df-8ee6-3ff94a37bf5f" name="Huma.Khan@SOFTWARE-PC1 2026-10-12 15:00:38" runUser="COSMIXRND\Huma.Khan" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-12T15:00:38.5558777+05:00" queuing="2026-10-12T15:00:38.5558782+05:00" start="2026-10-12T15:00:03.7458789+05:00" finish="2026-10-12T15:00:57.2296716+05:00" />
+  <TestSettings name="default" id="5b432b65-bcf0-4791-8050-191cdc3c86de">
+    <Deployment runDeploymentRoot="Huma.Khan_SOFTWARE-PC1_2026-10-12_15_00_38" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="c5ca42e9-8da0-4b7b-83dd-ac6e45d8b68e" testId="fda25247-76ea-c142-ce93-d173b1df5f8c" testName="NOIR.IntegrationTests.AuthEndpointsTests.Login_WrongPassword_ShouldReturnUnauthorized" computerName="SOFTWARE-PC1" duration="00:00:00.4809291" startTime="2026-10-12T15:00:47.4707414+05:00" endTime="2026-10-12T15:00:47.9523068+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c5ca42e9-8da0-4b7b-83dd-ac6e45d8b68e" />
+    <UnitTestResult executionId="b7db6baf-90dc-4f0c-9790-9ac6e6ea9b65" testId="08c9294c-2230-a16d-46e7-ff4e977811f6" testName="NOIR.IntegrationTests.AuthEndpointsTests.Login_InvalidEmail_ShouldReturnUnauthorized" computerName="SOFTWARE-PC1" duration="00:00:00.0084232" startTime="2026-10-12T15:00:47.4051311+05:00" endTime="2026-10-12T15:00:47.4138416+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b7db6baf-90dc-4f0c-9790-9ac6e6ea9b65" />
+    <UnitTestResult executionId="f6d988be-85d5-48ea-bc55-a16f4c415ea2" testId="1ef7d1f7-355b-cc36-38a0-b23006a14f79" testName="NOIR.IntegrationTests.AuthEndpointsTests.Auth_ShouldReturnProperContentType" computerName="SOFTWARE-PC1" duration="00:00:00.1176285" startTime="2026-10-12T15:00:47.2868074+05:00" endTime="2026-10-12T15:00:47.4047953+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f6d988be-85d5-48ea-bc55-a16f4c415ea2" />
+    <UnitTestResult executionId="6eead6af-1167-4765-9132-9c0cf9946061" testId="cab9b1db-1a59-f3e8-19e7-d41202fd1e4b" testName="NOIR.IntegrationTests.AuthEndpointsTests.Auth_ShouldNotLeakSensitiveInfo_OnInvalidLogin" computerName="SOFTWARE-PC1" duration="00:00:00.0298260" startTime="2026-10-12T15:00:45.9692128+05:00" endTime="2026-10-12T15:00:45.9991137+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6eead6af-1167-4765-9132-9c0cf9946061" />
+    <UnitTestResult executionId="e8fd319f-8be4-4c17-aa73-33d572c56f47" testId="871dfce0-ceaa-6e60-5a7b-afd22962e4ae" testName="NOIR.IntegrationTests.AuthEndpointsTests.GetCurrentUser_Unauthenticated_ShouldReturnUnauthorized" computerName="SOFTWARE-PC1" duration="00:00:00.0059909" startTime="2026-10-12T15:00:47.4141679+05:00" endTime="2026-10-12T15:00:47.4206241+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e8fd319f-8be4-4c17-aa73-33d572c56f47" />
+    <UnitTestResult executionId="bf53f194-e0f7-41f8-a4f8-0ed5b6fcd445" testId="c5a84311-9da6-c856-54df-aa9ee867d4f2" testName="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/accounting/journal/&quot;)" computerName="SOFTWARE-PC1" duration="00:00:03.3164611" startTime="2026-10-12T15:00:38.8685555+05:00" endTime="2026-10-12T15:00:42.1836438+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bf53f194-e0f7-41f8-a4f8-0ed5b6fcd445" />
+    <UnitTestResult executionId="323aef4e-1a75-4011-8a04-0c6c39ec5170" testId="bd8b5394-e003-e59b-434d-cc5abd25354a" testName="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/stock/indents/?page=1&amp;pageSize=20&quot;)" computerName="SOFTWARE-PC1" duration="00:00:00.3618174" startTime="2026-10-12T15:00:43.8399070+05:00" endTime="2026-10-12T15:00:44.2020411+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="323aef4e-1a75-4011-8a04-0c6c39ec5170" />
+    <UnitTestResult executionId="32fe6fd5-9b18-4848-a706-dfc6fed9b062" testId="50e0dd03-0d2f-ac85-5fbe-a91f5d2762c1" testName="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/accounting/accounts/&quot;)" computerName="SOFTWARE-PC1" duration="00:00:00.6801499" startTime="2026-10-12T15:00:42.1842594+05:00" endTime="2026-10-12T15:00:42.8645519+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="32fe6fd5-9b18-4848-a706-dfc6fed9b062" />
+    <UnitTestResult executionId="662ed6e6-eea1-4442-be51-4bcee9e25158" testId="eb1e2260-7af6-9b00-a1dd-c658cf205448" testName="NOIR.IntegrationTests.AuthEndpointsTests.RefreshToken_EmptyTokens_ShouldReturnBadRequest" computerName="SOFTWARE-PC1" duration="00:00:00.0741970" startTime="2026-10-12T15:00:47.1915749+05:00" endTime="2026-10-12T15:00:47.2662818+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="662ed6e6-eea1-4442-be51-4bcee9e25158" />
+    <UnitTestResult executionId="448cac30-6b91-4090-8ece-eb16cc1e8200" testId="4808d1b6-5a1e-4d22-674c-9d1a40974e6c" testName="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/estimation/boqs/&quot;)" computerName="SOFTWARE-PC1" duration="00:00:00.9736937" startTime="2026-10-12T15:00:42.8649683+05:00" endTime="2026-10-12T15:00:43.8394811+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="448cac30-6b91-4090-8ece-eb16cc1e8200" />
+    <UnitTestResult executionId="4c8c7d5a-0d6a-4ef0-a3a4-7537026e11dd" testId="8124c203-88a2-dce8-f700-05d73cc4df24" testName="NOIR.IntegrationTests.AuthEndpointsTests.GetCurrentUser_InvalidToken_ShouldReturnUnauthorized" computerName="SOFTWARE-PC1" duration="00:00:00.0189787" startTime="2026-10-12T15:00:47.2669233+05:00" endTime="2026-10-12T15:00:47.2864341+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4c8c7d5a-0d6a-4ef0-a3a4-7537026e11dd" />
+    <UnitTestResult executionId="f6f2f652-024e-45b0-9e82-3bade2ccf2b5" testId="9e9414ef-b759-afd7-49a5-1cb10d019004" testName="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/stock/transfers/?page=1&amp;pageSize=20&quot;)" computerName="SOFTWARE-PC1" duration="00:00:00.3772534" startTime="2026-10-12T15:00:38.5294611+05:00" endTime="2026-10-12T15:00:38.8665908+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f6f2f652-024e-45b0-9e82-3bade2ccf2b5" />
+    <UnitTestResult executionId="0c9ba8db-78f4-47cb-a082-a2f624ed48b0" testId="c3477c75-5c6e-984b-3a90-7cd0bcf88036" testName="NOIR.IntegrationTests.AuthEndpointsTests.RefreshToken_InvalidAccessToken_ShouldReturnUnauthorized" computerName="SOFTWARE-PC1" duration="00:00:00.0088073" startTime="2026-10-12T15:00:47.4613288+05:00" endTime="2026-10-12T15:00:47.4704400+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0c9ba8db-78f4-47cb-a082-a2f624ed48b0" />
+    <UnitTestResult executionId="365c3b4f-1c55-48f9-b671-1e215b7b7388" testId="dbe878c3-b231-5fc9-01bc-b6430f460608" testName="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/invoicing/invoices/&quot;)" computerName="SOFTWARE-PC1" duration="00:00:05.5313009" startTime="2026-10-12T15:00:32.9709263+05:00" endTime="2026-10-12T15:00:38.4871062+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="365c3b4f-1c55-48f9-b671-1e215b7b7388" />
+    <UnitTestResult executionId="e6f31c3d-265b-4555-a90d-8f397b6f85f1" testId="17af8df2-e6d1-9916-2e76-b6ff521f740a" testName="NOIR.IntegrationTests.AuthEndpointsTests.Login_ValidCredentials_ShouldReturnSuccess" computerName="SOFTWARE-PC1" duration="00:00:01.7581480" startTime="2026-10-12T15:00:44.2101936+05:00" endTime="2026-10-12T15:00:45.9682999+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e6f31c3d-265b-4555-a90d-8f397b6f85f1" />
+    <UnitTestResult executionId="8d15efc4-5e3e-40ad-bf0a-036d56284a59" testId="4e28d5c3-dacb-8699-277b-04fb4342deb9" testName="NOIR.IntegrationTests.AuthEndpointsTests.Login_EmptyCredentials_ShouldReturnBadRequest" computerName="SOFTWARE-PC1" duration="00:00:00.0396029" startTime="2026-10-12T15:00:47.4210837+05:00" endTime="2026-10-12T15:00:47.4610037+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8d15efc4-5e3e-40ad-bf0a-036d56284a59" />
+    <UnitTestResult executionId="ce6747bd-4c34-4dae-b9ac-a525855d0520" testId="0b608d49-1967-f0e3-686a-49b3e82b0233" testName="NOIR.IntegrationTests.AuthEndpointsTests.GetCurrentUser_Authenticated_ShouldReturnUserProfile" computerName="SOFTWARE-PC1" duration="00:00:01.0110724" startTime="2026-10-12T15:00:47.9544777+05:00" endTime="2026-10-12T15:00:48.9642906+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ce6747bd-4c34-4dae-b9ac-a525855d0520" />
+    <UnitTestResult executionId="c4b943b8-197c-4f9f-95bf-a13fbdd712d9" testId="2621105e-7e21-0543-3826-85a013aa4ce2" testName="NOIR.IntegrationTests.AuthEndpointsTests.RefreshToken_ValidTokens_ShouldReturnNewTokens" computerName="SOFTWARE-PC1" duration="00:00:01.1910257" startTime="2026-10-12T15:00:45.9994555+05:00" endTime="2026-10-12T15:00:47.1910704+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c4b943b8-197c-4f9f-95bf-a13fbdd712d9" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.Login_InvalidEmail_ShouldReturnUnauthorized" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="08c9294c-2230-a16d-46e7-ff4e977811f6">
+      <Execution id="b7db6baf-90dc-4f0c-9790-9ac6e6ea9b65" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="Login_InvalidEmail_ShouldReturnUnauthorized" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.RefreshToken_EmptyTokens_ShouldReturnBadRequest" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="eb1e2260-7af6-9b00-a1dd-c658cf205448">
+      <Execution id="662ed6e6-eea1-4442-be51-4bcee9e25158" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="RefreshToken_EmptyTokens_ShouldReturnBadRequest" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.GetCurrentUser_Authenticated_ShouldReturnUserProfile" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="0b608d49-1967-f0e3-686a-49b3e82b0233">
+      <Execution id="ce6747bd-4c34-4dae-b9ac-a525855d0520" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="GetCurrentUser_Authenticated_ShouldReturnUserProfile" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/stock/indents/?page=1&amp;pageSize=20&quot;)" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="bd8b5394-e003-e59b-434d-cc5abd25354a">
+      <Execution id="323aef4e-1a75-4011-8a04-0c6c39ec5170" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests" name="ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.Login_EmptyCredentials_ShouldReturnBadRequest" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="4e28d5c3-dacb-8699-277b-04fb4342deb9">
+      <Execution id="8d15efc4-5e3e-40ad-bf0a-036d56284a59" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="Login_EmptyCredentials_ShouldReturnBadRequest" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/stock/transfers/?page=1&amp;pageSize=20&quot;)" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="9e9414ef-b759-afd7-49a5-1cb10d019004">
+      <Execution id="f6f2f652-024e-45b0-9e82-3bade2ccf2b5" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests" name="ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/invoicing/invoices/&quot;)" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="dbe878c3-b231-5fc9-01bc-b6430f460608">
+      <Execution id="365c3b4f-1c55-48f9-b671-1e215b7b7388" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests" name="ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.GetCurrentUser_InvalidToken_ShouldReturnUnauthorized" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="8124c203-88a2-dce8-f700-05d73cc4df24">
+      <Execution id="4c8c7d5a-0d6a-4ef0-a3a4-7537026e11dd" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="GetCurrentUser_InvalidToken_ShouldReturnUnauthorized" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/estimation/boqs/&quot;)" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="4808d1b6-5a1e-4d22-674c-9d1a40974e6c">
+      <Execution id="448cac30-6b91-4090-8ece-eb16cc1e8200" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests" name="ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.GetCurrentUser_Unauthenticated_ShouldReturnUnauthorized" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="871dfce0-ceaa-6e60-5a7b-afd22962e4ae">
+      <Execution id="e8fd319f-8be4-4c17-aa73-33d572c56f47" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="GetCurrentUser_Unauthenticated_ShouldReturnUnauthorized" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.Login_ValidCredentials_ShouldReturnSuccess" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="17af8df2-e6d1-9916-2e76-b6ff521f740a">
+      <Execution id="e6f31c3d-265b-4555-a90d-8f397b6f85f1" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="Login_ValidCredentials_ShouldReturnSuccess" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/accounting/accounts/&quot;)" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="50e0dd03-0d2f-ac85-5fbe-a91f5d2762c1">
+      <Execution id="32fe6fd5-9b18-4848-a706-dfc6fed9b062" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests" name="ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.RefreshToken_InvalidAccessToken_ShouldReturnUnauthorized" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="c3477c75-5c6e-984b-3a90-7cd0bcf88036">
+      <Execution id="0c9ba8db-78f4-47cb-a082-a2f624ed48b0" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="RefreshToken_InvalidAccessToken_ShouldReturnUnauthorized" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.Login_WrongPassword_ShouldReturnUnauthorized" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="fda25247-76ea-c142-ce93-d173b1df5f8c">
+      <Execution id="c5ca42e9-8da0-4b7b-83dd-ac6e45d8b68e" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="Login_WrongPassword_ShouldReturnUnauthorized" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.RefreshToken_ValidTokens_ShouldReturnNewTokens" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="2621105e-7e21-0543-3826-85a013aa4ce2">
+      <Execution id="c4b943b8-197c-4f9f-95bf-a13fbdd712d9" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="RefreshToken_ValidTokens_ShouldReturnNewTokens" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.Auth_ShouldReturnProperContentType" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="1ef7d1f7-355b-cc36-38a0-b23006a14f79">
+      <Execution id="f6d988be-85d5-48ea-bc55-a16f4c415ea2" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="Auth_ShouldReturnProperContentType" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.AuthEndpointsTests.Auth_ShouldNotLeakSensitiveInfo_OnInvalidLogin" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="cab9b1db-1a59-f3e8-19e7-d41202fd1e4b">
+      <Execution id="6eead6af-1167-4765-9132-9c0cf9946061" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.AuthEndpointsTests" name="Auth_ShouldNotLeakSensitiveInfo_OnInvalidLogin" />
+    </UnitTest>
+    <UnitTest name="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests.ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk(path: &quot;/api/accounting/journal/&quot;)" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix_new\code\tests\noir.integrationtests\bin\debug\net10.0\noir.integrationtests.dll" id="c5a84311-9da6-c856-54df-aa9ee867d4f2">
+      <Execution id="bf53f194-e0f7-41f8-a4f8-0ed5b6fcd445" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\NOIR.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="NOIR.IntegrationTests.Endpoints.ErpSchemaSmokeTests" name="ListEndpoints_OnFreshMigratedDatabase_ShouldReturnOk" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="fda25247-76ea-c142-ce93-d173b1df5f8c" executionId="c5ca42e9-8da0-4b7b-83dd-ac6e45d8b68e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="08c9294c-2230-a16d-46e7-ff4e977811f6" executionId="b7db6baf-90dc-4f0c-9790-9ac6e6ea9b65" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1ef7d1f7-355b-cc36-38a0-b23006a14f79" executionId="f6d988be-85d5-48ea-bc55-a16f4c415ea2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cab9b1db-1a59-f3e8-19e7-d41202fd1e4b" executionId="6eead6af-1167-4765-9132-9c0cf9946061" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="871dfce0-ceaa-6e60-5a7b-afd22962e4ae" executionId="e8fd319f-8be4-4c17-aa73-33d572c56f47" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c5a84311-9da6-c856-54df-aa9ee867d4f2" executionId="bf53f194-e0f7-41f8-a4f8-0ed5b6fcd445" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bd8b5394-e003-e59b-434d-cc5abd25354a" executionId="323aef4e-1a75-4011-8a04-0c6c39ec5170" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="50e0dd03-0d2f-ac85-5fbe-a91f5d2762c1" executionId="32fe6fd5-9b18-4848-a706-dfc6fed9b062" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="eb1e2260-7af6-9b00-a1dd-c658cf205448" executionId="662ed6e6-eea1-4442-be51-4bcee9e25158" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4808d1b6-5a1e-4d22-674c-9d1a40974e6c" executionId="448cac30-6b91-4090-8ece-eb16cc1e8200" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8124c203-88a2-dce8-f700-05d73cc4df24" executionId="4c8c7d5a-0d6a-4ef0-a3a4-7537026e11dd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9e9414ef-b759-afd7-49a5-1cb10d019004" executionId="f6f2f652-024e-45b0-9e82-3bade2ccf2b5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c3477c75-5c6e-984b-3a90-7cd0bcf88036" executionId="0c9ba8db-78f4-47cb-a082-a2f624ed48b0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dbe878c3-b231-5fc9-01bc-b6430f460608" executionId="365c3b4f-1c55-48f9-b671-1e215b7b7388" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="17af8df2-e6d1-9916-2e76-b6ff521f740a" executionId="e6f31c3d-265b-4555-a90d-8f397b6f85f1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4e28d5c3-dacb-8699-277b-04fb4342deb9" executionId="8d15efc4-5e3e-40ad-bf0a-036d56284a59" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0b608d49-1967-f0e3-686a-49b3e82b0233" executionId="ce6747bd-4c34-4dae-b9ac-a525855d0520" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2621105e-7e21-0543-3826-85a013aa4ce2" executionId="c4b943b8-197c-4f9f-95bf-a13fbdd712d9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="18" executed="18" passed="18" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.04] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)&#xD;
+[xUnit.net 00:00:01.31]   Discovering: NOIR.IntegrationTests&#xD;
+[xUnit.net 00:00:01.81]   Discovered:  NOIR.IntegrationTests&#xD;
+[xUnit.net 00:00:01.89]   Starting:    NOIR.IntegrationTests&#xD;
+To disable automatic Wolverine extension finding, and stop these messages, see:&#xD;
+https://wolverinefx.net/guide/extensions.html#disabling-assembly-scanning&#xD;
+C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll&#xD;
+To disable automatic Wolverine extension finding, and stop these messages, see:&#xD;
+https://wolverinefx.net/guide/extensions.html#disabling-assembly-scanning&#xD;
+C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll&#xD;
+To disable automatic Wolverine extension finding, and stop these messages, see:&#xD;
+https://wolverinefx.net/guide/extensions.html#disabling-assembly-scanning&#xD;
+C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\runtimes\win-x64\native\SqlServerSpatial160.dll&#xD;
+To disable automatic Wolverine extension finding, and stop these messages, see:&#xD;
+https://wolverinefx.net/guide/extensions.html#disabling-assembly-scanning&#xD;
+C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll&#xD;
+To disable automatic Wolverine extension finding, and stop these messages, see:&#xD;
+https://wolverinefx.net/guide/extensions.html#disabling-assembly-scanning&#xD;
+C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\tests\NOIR.IntegrationTests\bin\Debug\net10.0\runtimes\win-x86\native\SqlServerSpatial160.dll&#xD;
+[15:00:09 INF] Exporting Open Telemetry metrics from Wolverine with name Wolverine:NOIR.Web, version 5.27.0.0&#xD;
+[15:00:12 WRN] Entity 'JournalEntry' has a global query filter defined and is the required end of a relationship with the entity 'JournalLine'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+[15:00:12 WRN] Entity 'PermissionTemplate' has a global query filter defined and is the required end of a relationship with the entity 'PermissionTemplateItem'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+[15:00:12 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.&#xD;
+[15:00:12 WRN] The property 'Notification.Actions' is a collection or enumeration type with a value converter but with no value comparer. Set a value comparer to ensure the collection/enumeration elements are compared correctly.&#xD;
+[15:00:12 WRN] The 'EmailFrequency' property 'EmailFrequency' on entity type 'NotificationPreference' is configured with a database-generated default, but has no configured sentinel value. The database-generated default will always be used for inserts when the property has the value 'None', since this is the CLR default for the 'EmailFrequency' type. Consider using a nullable type, using a nullable backing field, or setting the sentinel value for the property to ensure the database default is used when, and only when, appropriate. See https://aka.ms/efcore-docs-default-values for more information.&#xD;
+[15:00:12 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.&#xD;
+[15:00:13 INF] Applying 1 TenantStore pending migrations: 20260129142507_InitialCreate&#xD;
+[15:00:13 INF] Successfully applied TenantStore migrations&#xD;
+[15:00:13 INF] Applying 27 pending migrations: 20260129150333_InitialCreate, 20260129173729_AddInventoryMovement, 20260129182221_AddMissingInventoryMovementColumns, 20260130042306_AddShippingProviderEntity, 20260130083313_AddShippingOrderEntities, 20260203063419_AddMissingPermissionColumns, 20260203070149_AddMissingPermissionAuditColumns, 20260218224239_AddCustomerGroups, 20260219082243_AddAuditFieldsToTenantEntities, 20260220134749_AddSequenceCounters, 20260220140719_AddPaymentConcurrencyTokens, 20260220205036_AddTenantModuleStates, 20260226165103_AddWebhookEntities, 20260227051603_AddPostContentMetadata, 20260301040621_AddHrEmployeesAndDepartments, 20260301044329_AddHrTags, 20260301071616_AddCrmModule, 20260301090430_AddPmModule, 20260301115637_GapFixesHrCrmPm, 20260310195740_AddProjectTaskArchiveColumns, 20260311055308_AddApiKeys, 20260319080733_CRM_PipelineStage_AddStageTypeAndIsSystem, 20260320134014_FixProjectColumnSoftDeleteFilter, 20260320135909_FixProjectTaskLabelSoftDelete, 20260320140905_AddPmSoftDeleteFilters, 20260429125546_EmployeeTag_RemoveIsActive, 20261012095756_AddErpModuleSchemas&#xD;
+[15:00:21 INF] Successfully applied all pending migrations&#xD;
+[15:00:22 INF] Created system role: Platform Admin (IsPlatformRole=True)&#xD;
+[15:00:22 INF] Added permission dashboard:read to role Platform Admin&#xD;
+[15:00:22 INF] Added permission search:global to role Platform Admin&#xD;
+[15:00:22 INF] Added permission tenants:read to role Platform Admin&#xD;
+[15:00:22 INF] Added permission tenants:create to role Platform Admin&#xD;
+[15:00:22 INF] Added permission tenants:update to role Platform Admin&#xD;
+[15:00:22 INF] Added permission tenants:delete to role Platform Admin&#xD;
+[15:00:22 INF] Added permission system:admin to role Platform Admin&#xD;
+[15:00:22 INF] Added permission system:audit-logs to role Platform Admin&#xD;
+[15:00:22 INF] Added permission system:settings to role Platform Admin&#xD;
+[15:00:22 INF] Added permission system:hangfire to role Platform Admin&#xD;
+[15:00:22 INF] Added permission email-templates:read to role Platform Admin&#xD;
+[15:00:22 INF] Added permission email-templates:update to role Platform Admin&#xD;
+[15:00:22 INF] Added permission legal-pages:read to role Platform Admin&#xD;
+[15:00:22 INF] Added permission legal-pages:update to role Platform Admin&#xD;
+[15:00:22 INF] Added permission audit:read to role Platform Admin&#xD;
+[15:00:22 INF] Added permission audit:export to role Platform Admin&#xD;
+[15:00:22 INF] Added permission audit:entity-history to role Platform Admin&#xD;
+[15:00:22 INF] Added permission audit:policy-read to role Platform Admin&#xD;
+[15:00:22 INF] Added permission audit:policy-write to role Platform Admin&#xD;
+[15:00:23 INF] Added permission audit:policy-delete to role Platform Admin&#xD;
+[15:00:23 INF] Added permission audit:stream to role Platform Admin&#xD;
+[15:00:23 INF] Added permission features:read to role Platform Admin&#xD;
+[15:00:23 INF] Added permission features:update to role Platform Admin&#xD;
+[15:00:23 INF] Added permission platform-settings:read to role Platform Admin&#xD;
+[15:00:23 INF] Added permission platform-settings:manage to role Platform Admin&#xD;
+[15:00:23 INF] [Seeder] Creating NEW platform admin user: platform@noir.local&#xD;
+[15:00:23 INF] [Seeder] BEFORE CreateAsync: Email=platform@noir.local, IsSystemUser=True, TenantId=NULL&#xD;
+[15:00:23 INF] [Seeder] AFTER CreateAsync: Email=platform@noir.local, IsSystemUser=True, TenantId=NULL&#xD;
+[15:00:23 INF] [Seeder] Adding PlatformAdmin role to user: platform@noir.local&#xD;
+[15:00:23 INF] [Seeder] AFTER AddToRoleAsync: Email=platform@noir.local, IsSystemUser=True, TenantId=NULL&#xD;
+[15:00:23 INF] Created platform admin user: platform@noir.local (TenantId = NULL)&#xD;
+[15:00:24 INF] Platform email templates: 13 added, 0 updated, 0 skipped (customized)&#xD;
+[15:00:24 INF] Platform legal pages: 2 added, 0 updated, 0 skipped (customized)&#xD;
+[15:00:25 INF] Seeded 5 platform SMTP settings (Mailhog defaults)&#xD;
+[15:00:25 INF] Seeded 5 platform branding settings&#xD;
+[15:00:25 INF] Seeded 5 platform contact settings&#xD;
+[15:00:25 INF] Seeded 5 platform regional settings&#xD;
+[15:00:25 INF] Seeded 4 platform payment settings&#xD;
+[15:00:25 INF] Created default tenant: default (Default Tenant)&#xD;
+[15:00:25 INF] [Seeder] SETTING tenant context to default tenant: 7b258770-16e7-4e40-947d-09e31e6e0f4a (Default Tenant)&#xD;
+[15:00:25 INF] [Seeder] Tenant context NOW SET. All subsequent saves will use TenantId: 7b258770-16e7-4e40-947d-09e31e6e0f4a&#xD;
+[15:00:25 INF] Created tenant role: Admin&#xD;
+[15:00:25 INF] Added permission dashboard:read to role Admin&#xD;
+[15:00:25 INF] Added permission search:global to role Admin&#xD;
+[15:00:25 INF] Added permission users:read to role Admin&#xD;
+[15:00:25 INF] Added permission users:create to role Admin&#xD;
+[15:00:25 INF] Added permission users:update to role Admin&#xD;
+[15:00:25 INF] Added permission users:delete to role Admin&#xD;
+[15:00:25 INF] Added permission users:manage-roles to role Admin&#xD;
+[15:00:25 INF] Added permission roles:read to role Admin&#xD;
+[15:00:25 INF] Added permission roles:create to role Admin&#xD;
+[15:00:25 INF] Added permission roles:update to role Admin&#xD;
+[15:00:25 INF] Added permission roles:delete to role Admin&#xD;
+[15:00:25 INF] Added permission roles:manage-permissions to role Admin&#xD;
+[15:00:25 INF] Added permission email-templates:read to role Admin&#xD;
+[15:00:25 INF] Added permission email-templates:update to role Admin&#xD;
+[15:00:25 INF] Added permission legal-pages:read to role Admin&#xD;
+[15:00:25 INF] Added permission legal-pages:update to role Admin&#xD;
+[15:00:25 INF] Added permission tenant-settings:read to role Admin&#xD;
+[15:00:25 INF] Added permission tenant-settings:update to role Admin&#xD;
+[15:00:25 INF] Added permission features:read to role Admin&#xD;
+[15:00:25 INF] Added permission features:update to role Admin&#xD;
+[15:00:25 INF] Added permission audit:read to role Admin&#xD;
+[15:00:25 INF] Added permission audit:export to role Admin&#xD;
+[15:00:25 INF] Added permission audit:entity-history to role Admin&#xD;
+[15:00:26 INF] Added permission blog-posts:read to role Admin&#xD;
+[15:00:26 INF] Added permission blog-posts:create to role Admin&#xD;
+[15:00:26 INF] Added permission blog-posts:update to role Admin&#xD;
+[15:00:26 INF] Added permission blog-posts:delete to role Admin&#xD;
+[15:00:26 INF] Added permission blog-posts:publish to role Admin&#xD;
+[15:00:26 INF] Added permission blog-categories:read to role Admin&#xD;
+[15:00:26 INF] Added permission blog-categories:create to role Admin&#xD;
+[15:00:26 INF] Added permission blog-categories:update to role Admin&#xD;
+[15:00:26 INF] Added permission blog-categories:delete to role Admin&#xD;
+[15:00:26 INF] Added permission blog-tags:read to role Admin&#xD;
+[15:00:26 INF] Added permission blog-tags:create to role Admin&#xD;
+[15:00:26 INF] Added permission blog-tags:update to role Admin&#xD;
+[15:00:26 INF] Added permission blog-tags:delete to role Admin&#xD;
+[15:00:26 INF] Added permission products:read to role Admin&#xD;
+[15:00:26 INF] Added permission products:create to role Admin&#xD;
+[15:00:26 INF] Added permission products:update to role Admin&#xD;
+[15:00:26 INF] Added permission products:delete to role Admin&#xD;
+[15:00:26 INF] Added permission products:publish to role Admin&#xD;
+[15:00:26 INF] Added permission product-categories:read to role Admin&#xD;
+[15:00:26 INF] Added permission product-categories:create to role Admin&#xD;
+[15:00:26 INF] Added permission product-categories:update to role Admin&#xD;
+[15:00:26 INF] Added permission product-categories:delete to role Admin&#xD;
+[15:00:26 INF] Added permission brands:read to role Admin&#xD;
+[15:00:26 INF] Added permission brands:create to role Admin&#xD;
+[15:00:26 INF] Added permission brands:update to role Admin&#xD;
+[15:00:26 INF] Added permission brands:delete to role Admin&#xD;
+[15:00:26 INF] Added permission attributes:read to role Admin&#xD;
+[15:00:26 INF] Added permission attributes:create to role Admin&#xD;
+[15:00:26 INF] Added permission attributes:update to role Admin&#xD;
+[15:00:26 INF] Added permission attributes:delete to role Admin&#xD;
+[15:00:26 INF] Added permission media:read to role Admin&#xD;
+[15:00:26 INF] Added permission media:create to role Admin&#xD;
+[15:00:26 INF] Added permission media:update to role Admin&#xD;
+[15:00:26 INF] Added permission media:delete to role Admin&#xD;
+[15:00:26 INF] Added permission media:manage to role Admin&#xD;
+[15:00:26 INF] Added permission reviews:read to role Admin&#xD;
+[15:00:26 INF] Added permission reviews:write to role Admin&#xD;
+[15:00:27 INF] Added permission reviews:manage to role Admin&#xD;
+[15:00:27 INF] Added permission customer-groups:read to role Admin&#xD;
+[15:00:27 INF] Added permission customer-groups:create to role Admin&#xD;
+[15:00:27 INF] Added permission customer-groups:update to role Admin&#xD;
+[15:00:27 INF] Added permission customer-groups:delete to role Admin&#xD;
+[15:00:27 INF] Added permission customer-groups:manage-members to role Admin&#xD;
+[15:00:27 INF] Added permission customers:read to role Admin&#xD;
+[15:00:27 INF] Added permission customers:create to role Admin&#xD;
+[15:00:27 INF] Added permission customers:update to role Admin&#xD;
+[15:00:27 INF] Added permission customers:delete to role Admin&#xD;
+[15:00:27 INF] Added permission customers:manage to role Admin&#xD;
+[15:00:27 INF] Added permission orders:read to role Admin&#xD;
+[15:00:27 INF] Added permission orders:write to role Admin&#xD;
+[15:00:27 INF] Added permission orders:manage to role Admin&#xD;
+[15:00:27 INF] Added permission promotions:read to role Admin&#xD;
+[15:00:27 INF] Added permission promotions:write to role Admin&#xD;
+[15:00:27 INF] Added permission promotions:delete to role Admin&#xD;
+[15:00:27 INF] Added permission promotions:manage to role Admin&#xD;
+[15:00:27 INF] Added permission inventory:read to role Admin&#xD;
+[15:00:27 INF] Added permission inventory:write to role Admin&#xD;
+[15:00:27 INF] Added permission inventory:manage to role Admin&#xD;
+[15:00:27 INF] Added permission wishlists:read to role Admin&#xD;
+[15:00:27 INF] Added permission wishlists:write to role Admin&#xD;
+[15:00:27 INF] Added permission wishlists:manage to role Admin&#xD;
+[15:00:27 INF] Added permission reports:read to role Admin&#xD;
+[15:00:27 INF] Added permission payments:read to role Admin&#xD;
+[15:00:27 INF] Added permission payments:create to role Admin&#xD;
+[15:00:27 INF] Added permission payments:manage to role Admin&#xD;
+[15:00:27 INF] Added permission payment-gateways:read to role Admin&#xD;
+[15:00:27 INF] Added permission payment-gateways:manage to role Admin&#xD;
+[15:00:28 INF] Added permission payment-refunds:read to role Admin&#xD;
+[15:00:28 INF] Added permission payment-refunds:manage to role Admin&#xD;
+[15:00:28 INF] Added permission payment-webhooks:read to role Admin&#xD;
+[15:00:28 INF] Added permission webhooks:read to role Admin&#xD;
+[15:00:28 INF] Added permission webhooks:manage to role Admin&#xD;
+[15:00:28 INF] Added permission webhooks:test to role Admin&#xD;
+[15:00:28 INF] Added permission api-keys:read to role Admin&#xD;
+[15:00:28 INF] Added permission api-keys:create to role Admin&#xD;
+[15:00:28 INF] Added permission api-keys:delete to role Admin&#xD;
+[15:00:28 INF] Added permission hr-employees:read to role Admin&#xD;
+[15:00:28 INF] Added permission hr-employees:create to role Admin&#xD;
+[15:00:28 INF] Added permission hr-employees:update to role Admin&#xD;
+[15:00:28 INF] Added permission hr-employees:delete to role Admin&#xD;
+[15:00:28 INF] Added permission hr-departments:read to role Admin&#xD;
+[15:00:28 INF] Added permission hr-departments:create to role Admin&#xD;
+[15:00:28 INF] Added permission hr-departments:update to role Admin&#xD;
+[15:00:28 INF] Added permission hr-departments:delete to role Admin&#xD;
+[15:00:28 INF] Added permission hr-tags:read to role Admin&#xD;
+[15:00:28 INF] Added permission hr-tags:manage to role Admin&#xD;
+[15:00:28 INF] Added permission crm-contacts:read to role Admin&#xD;
+[15:00:28 INF] Added permission crm-contacts:create to role Admin&#xD;
+[15:00:28 INF] Added permission crm-contacts:update to role Admin&#xD;
+[15:00:28 INF] Added permission crm-contacts:delete to role Admin&#xD;
+[15:00:28 INF] Added permission crm-companies:read to role Admin&#xD;
+[15:00:28 INF] Added permission crm-companies:create to role Admin&#xD;
+[15:00:29 INF] Added permission crm-companies:update to role Admin&#xD;
+[15:00:29 INF] Added permission crm-companies:delete to role Admin&#xD;
+[15:00:29 INF] Added permission crm-leads:read to role Admin&#xD;
+[15:00:29 INF] Added permission crm-leads:create to role Admin&#xD;
+[15:00:29 INF] Added permission crm-leads:update to role Admin&#xD;
+[15:00:29 INF] Added permission crm-leads:manage to role Admin&#xD;
+[15:00:29 INF] Added permission crm-pipeline:manage to role Admin&#xD;
+[15:00:29 INF] Added permission crm-activities:read to role Admin&#xD;
+[15:00:29 INF] Added permission crm-activities:create to role Admin&#xD;
+[15:00:29 INF] Added permission crm-activities:update to role Admin&#xD;
+[15:00:29 INF] Added permission crm-activities:delete to role Admin&#xD;
+[15:00:29 INF] Added permission pm-projects:read to role Admin&#xD;
+[15:00:29 INF] Added permission pm-projects:create to role Admin&#xD;
+[15:00:30 INF] Added permission pm-projects:update to role Admin&#xD;
+[15:00:30 INF] Added permission pm-projects:delete to role Admin&#xD;
+[15:00:30 INF] Added permission pm-tasks:read to role Admin&#xD;
+[15:00:30 INF] Added permission pm-tasks:create to role Admin&#xD;
+[15:00:30 INF] Added permission pm-tasks:update to role Admin&#xD;
+[15:00:30 INF] Added permission pm-tasks:delete to role Admin&#xD;
+[15:00:30 INF] Added permission pm-tasks:manage to role Admin&#xD;
+[15:00:30 INF] Added permission pm-members:manage to role Admin&#xD;
+[15:00:30 INF] Added permission estimation-boqs:read to role Admin&#xD;
+[15:00:30 INF] Added permission estimation-boqs:create to role Admin&#xD;
+[15:00:30 INF] Added permission estimation-boqs:update to role Admin&#xD;
+[15:00:30 INF] Added permission estimation-boqs:delete to role Admin&#xD;
+[15:00:30 INF] Added permission estimation-boqs:approve to role Admin&#xD;
+[15:00:30 INF] Added permission accounting-accounts:read to role Admin&#xD;
+[15:00:30 INF] Added permission accounting-accounts:manage to role Admin&#xD;
+[15:00:30 INF] Added permission accounting-journal:read to role Admin&#xD;
+[15:00:30 INF] Added permission accounting-journal:create to role Admin&#xD;
+[15:00:30 INF] Added permission accounting-journal:post to role Admin&#xD;
+[15:00:30 INF] Added permission stock-indents:read to role Admin&#xD;
+[15:00:30 INF] Added permission stock-indents:create to role Admin&#xD;
+[15:00:30 INF] Added permission stock-indents:approve to role Admin&#xD;
+[15:00:30 INF] Added permission stock-transfers:read to role Admin&#xD;
+[15:00:30 INF] Added permission stock-transfers:create to role Admin&#xD;
+[15:00:30 INF] Added permission stock-transfers:approve to role Admin&#xD;
+[15:00:30 INF] Added permission manufacturing-boms:read to role Admin&#xD;
+[15:00:30 INF] Added permission manufacturing-boms:create to role Admin&#xD;
+[15:00:31 INF] Added permission manufacturing-boms:update to role Admin&#xD;
+[15:00:31 INF] Added permission manufacturing-boms:delete to role Admin&#xD;
+[15:00:31 INF] Added permission manufacturing-orders:read to role Admin&#xD;
+[15:00:31 INF] Added permission manufacturing-orders:create to role Admin&#xD;
+[15:00:31 INF] Added permission manufacturing-orders:update to role Admin&#xD;
+[15:00:31 INF] Added permission manufacturing-orders:manage to role Admin&#xD;
+[15:00:31 INF] Created tenant role: User&#xD;
+[15:00:31 INF] Added permission users:read to role User&#xD;
+[15:00:31 INF] Created tenant admin user: admin@noir.local in tenant 7b258770-16e7-4e40-947d-09e31e6e0f4a&#xD;
+[15:00:31 INF] [Seeder] Seeded default CRM pipeline 'Sales Pipeline' with 5 stages for tenant 7b258770-16e7-4e40-947d-09e31e6e0f4a.&#xD;
+[15:00:31 INF] Seeding permission: users:read&#xD;
+[15:00:31 INF] Seeding permission: users:create&#xD;
+[15:00:31 INF] Seeding permission: users:update&#xD;
+[15:00:31 INF] Seeding permission: users:delete&#xD;
+[15:00:31 INF] Seeding permission: users:manage-roles&#xD;
+[15:00:31 INF] Seeding permission: roles:read&#xD;
+[15:00:31 INF] Seeding permission: roles:create&#xD;
+[15:00:31 INF] Seeding permission: roles:update&#xD;
+[15:00:31 INF] Seeding permission: roles:delete&#xD;
+[15:00:31 INF] Seeding permission: roles:manage-permissions&#xD;
+[15:00:31 INF] Seeding permission: tenants:read&#xD;
+[15:00:31 INF] Seeding permission: tenants:create&#xD;
+[15:00:31 INF] Seeding permission: tenants:update&#xD;
+[15:00:31 INF] Seeding permission: tenants:delete&#xD;
+[15:00:31 INF] Seeding permission: system:admin&#xD;
+[15:00:31 INF] Seeding permission: system:audit-logs&#xD;
+[15:00:31 INF] Seeding permission: system:settings&#xD;
+[15:00:31 INF] Seeding permission: system:hangfire&#xD;
+[15:00:31 INF] Seeding permission: system:config:view&#xD;
+[15:00:31 INF] Seeding permission: system:config:edit&#xD;
+[15:00:31 INF] Seeding permission: system:app:restart&#xD;
+[15:00:31 INF] Seeding permission: audit:read&#xD;
+[15:00:31 INF] Seeding permission: audit:export&#xD;
+[15:00:31 INF] Seeding permission: audit:entity-history&#xD;
+[15:00:31 INF] Seeding permission: audit:policy-read&#xD;
+[15:00:31 INF] Seeding permission: audit:policy-write&#xD;
+[15:00:31 INF] Seeding permission: audit:policy-delete&#xD;
+[15:00:31 INF] Seeding permission: audit:stream&#xD;
+[15:00:31 INF] Seeding permission: email-templates:read&#xD;
+[15:00:31 INF] Seeding permission: email-templates:update&#xD;
+[15:00:31 INF] Seeding permission: legal-pages:read&#xD;
+[15:00:31 INF] Seeding permission: legal-pages:update&#xD;
+[15:00:31 INF] Seeding permission: tenant-settings:read&#xD;
+[15:00:31 INF] Seeding permission: tenant-settings:update&#xD;
+[15:00:31 INF] Seeding permission: features:read&#xD;
+[15:00:31 INF] Seeding permission: features:update&#xD;
+[15:00:31 INF] Seeding permission: platform-settings:read&#xD;
+[15:00:31 INF] Seeding permission: platform-settings:manage&#xD;
+[15:00:31 INF] Seeding permission: blog-posts:read&#xD;
+[15:00:31 INF] Seeding permission: blog-posts:create&#xD;
+[15:00:31 INF] Seeding permission: blog-posts:update&#xD;
+[15:00:31 INF] Seeding permission: blog-posts:delete&#xD;
+[15:00:31 INF] Seeding permission: blog-posts:publish&#xD;
+[15:00:31 INF] Seeding permission: blog-categories:read&#xD;
+[15:00:31 INF] Seeding permission: blog-categories:create&#xD;
+[15:00:31 INF] Seeding permission: blog-categories:update&#xD;
+[15:00:31 INF] Seeding permission: blog-categories:delete&#xD;
+[15:00:31 INF] Seeding permission: blog-tags:read&#xD;
+[15:00:31 INF] Seeding permission: blog-tags:create&#xD;
+[15:00:31 INF] Seeding permission: blog-tags:update&#xD;
+[15:00:31 INF] Seeding permission: blog-tags:delete&#xD;
+[15:00:31 INF] Seeding permission: products:read&#xD;
+[15:00:31 INF] Seeding permission: products:create&#xD;
+[15:00:31 INF] Seeding permission: products:update&#xD;
+[15:00:31 INF] Seeding permission: products:delete&#xD;
+[15:00:31 INF] Seeding permission: products:publish&#xD;
+[15:00:31 INF] Seeding permission: product-categories:read&#xD;
+[15:00:31 INF] Seeding permission: product-categories:create&#xD;
+[15:00:31 INF] Seeding permission: product-categories:update&#xD;
+[15:00:31 INF] Seeding permission: product-categories:delete&#xD;
+[15:00:31 INF] Seeding permission: brands:read&#xD;
+[15:00:31 INF] Seeding permission: brands:create&#xD;
+[15:00:31 INF] Seeding permission: brands:update&#xD;
+[15:00:31 INF] Seeding permission: brands:delete&#xD;
+[15:00:31 INF] Seeding permission: attributes:read&#xD;
+[15:00:31 INF] Seeding permission: attributes:create&#xD;
+[15:00:31 INF] Seeding permission: attributes:update&#xD;
+[15:00:31 INF] Seeding permission: attributes:delete&#xD;
+[15:00:31 INF] Seeding permission: reviews:read&#xD;
+[15:00:31 INF] Seeding permission: reviews:write&#xD;
+[15:00:31 INF] Seeding permission: reviews:manage&#xD;
+[15:00:31 INF] Seeding permission: customer-groups:read&#xD;
+[15:00:31 INF] Seeding permission: customer-groups:create&#xD;
+[15:00:31 INF] Seeding permission: customer-groups:update&#xD;
+[15:00:31 INF] Seeding permission: customer-groups:delete&#xD;
+[15:00:31 INF] Seeding permission: customer-groups:manage-members&#xD;
+[15:00:31 INF] Seeding permission: customers:read&#xD;
+[15:00:31 INF] Seeding permission: customers:create&#xD;
+[15:00:31 INF] Seeding permission: customers:update&#xD;
+[15:00:31 INF] Seeding permission: customers:delete&#xD;
+[15:00:31 INF] Seeding permission: customers:manage&#xD;
+[15:00:31 INF] Seeding permission: orders:read&#xD;
+[15:00:31 INF] Seeding permission: orders:write&#xD;
+[15:00:31 INF] Seeding permission: orders:manage&#xD;
+[15:00:31 INF] Seeding permission: promotions:read&#xD;
+[15:00:31 INF] Seeding permission: promotions:write&#xD;
+[15:00:31 INF] Seeding permission: promotions:delete&#xD;
+[15:00:31 INF] Seeding permission: promotions:manage&#xD;
+[15:00:31 INF] Seeding permission: inventory:read&#xD;
+[15:00:31 INF] Seeding permission: inventory:write&#xD;
+[15:00:31 INF] Seeding permission: inventory:manage&#xD;
+[15:00:31 INF] Seeding permission: wishlists:read&#xD;
+[15:00:31 INF] Seeding permission: wishlists:write&#xD;
+[15:00:31 INF] Seeding permission: wishlists:manage&#xD;
+[15:00:31 INF] Seeding permission: reports:read&#xD;
+[15:00:31 INF] Seeding permission: payments:read&#xD;
+[15:00:31 INF] Seeding permission: payments:create&#xD;
+[15:00:31 INF] Seeding permission: payments:manage&#xD;
+[15:00:31 INF] Seeding permission: payment-gateways:read&#xD;
+[15:00:31 INF] Seeding permission: payment-gateways:manage&#xD;
+[15:00:31 INF] Seeding permission: payment-refunds:read&#xD;
+[15:00:31 INF] Seeding permission: payment-refunds:manage&#xD;
+[15:00:31 INF] Seeding permission: payment-webhooks:read&#xD;
+[15:00:31 INF] Seeding permission: dashboard:read&#xD;
+[15:00:31 INF] Seeding permission: search:global&#xD;
+[15:00:31 INF] Seeding permission: media:read&#xD;
+[15:00:31 INF] Seeding permission: media:create&#xD;
+[15:00:31 INF] Seeding permission: media:update&#xD;
+[15:00:31 INF] Seeding permission: media:delete&#xD;
+[15:00:31 INF] Seeding permission: media:manage&#xD;
+[15:00:31 INF] Seeding permission: api-keys:read&#xD;
+[15:00:31 INF] Seeding permission: api-keys:create&#xD;
+[15:00:31 INF] Seeding permission: api-keys:delete&#xD;
+[15:00:31 INF] Seeding permission: webhooks:read&#xD;
+[15:00:31 INF] Seeding permission: webhooks:manage&#xD;
+[15:00:31 INF] Seeding permission: webhooks:test&#xD;
+[15:00:31 INF] Seeding permission: hr-employees:read&#xD;
+[15:00:31 INF] Seeding permission: hr-employees:create&#xD;
+[15:00:31 INF] Seeding permission: hr-employees:update&#xD;
+[15:00:31 INF] Seeding permission: hr-employees:delete&#xD;
+[15:00:31 INF] Seeding permission: hr-departments:read&#xD;
+[15:00:31 INF] Seeding permission: hr-departments:create&#xD;
+[15:00:31 INF] Seeding permission: hr-departments:update&#xD;
+[15:00:31 INF] Seeding permission: hr-departments:delete&#xD;
+[15:00:31 INF] Seeding permission: hr-tags:read&#xD;
+[15:00:31 INF] Seeding permission: hr-tags:manage&#xD;
+[15:00:31 INF] Seeding permission: crm-contacts:read&#xD;
+[15:00:31 INF] Seeding permission: crm-contacts:create&#xD;
+[15:00:31 INF] Seeding permission: crm-contacts:update&#xD;
+[15:00:31 INF] Seeding permission: crm-contacts:delete&#xD;
+[15:00:31 INF] Seeding permission: crm-companies:read&#xD;
+[15:00:31 INF] Seeding permission: crm-companies:create&#xD;
+[15:00:31 INF] Seeding permission: crm-companies:update&#xD;
+[15:00:31 INF] Seeding permission: crm-companies:delete&#xD;
+[15:00:31 INF] Seeding permission: crm-leads:read&#xD;
+[15:00:31 INF] Seeding permission: crm-leads:create&#xD;
+[15:00:31 INF] Seeding permission: crm-leads:update&#xD;
+[15:00:31 INF] Seeding permission: crm-leads:manage&#xD;
+[15:00:31 INF] Seeding permission: crm-pipeline:manage&#xD;
+[15:00:31 INF] Seeding permission: crm-activities:read&#xD;
+[15:00:31 INF] Seeding permission: crm-activities:create&#xD;
+[15:00:31 INF] Seeding permission: crm-activities:update&#xD;
+[15:00:31 INF] Seeding permission: crm-activities:delete&#xD;
+[15:00:31 INF] Seeding permission: pm-projects:read&#xD;
+[15:00:31 INF] Seeding permission: pm-projects:create&#xD;
+[15:00:31 INF] Seeding permission: pm-projects:update&#xD;
+[15:00:31 INF] Seeding permission: pm-projects:delete&#xD;
+[15:00:31 INF] Seeding permission: pm-tasks:read&#xD;
+[15:00:31 INF] Seeding permission: pm-tasks:create&#xD;
+[15:00:31 INF] Seeding permission: pm-tasks:update&#xD;
+[15:00:31 INF] Seeding permission: pm-tasks:delete&#xD;
+[15:00:31 INF] Seeding permission: pm-tasks:manage&#xD;
+[15:00:31 INF] Seeding permission: pm-members:manage&#xD;
+[15:00:31 INF] Seeded 153 permissions&#xD;
+[15:00:31 WRN] Permission estimation-boqs:read not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission estimation-boqs:create not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission estimation-boqs:update not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission estimation-boqs:delete not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission estimation-boqs:approve not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission accounting-accounts:read not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission accounting-accounts:manage not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission accounting-journal:read not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission accounting-journal:create not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission accounting-journal:post not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission stock-indents:read not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission stock-indents:create not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission stock-indents:approve not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission stock-transfers:read not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission stock-transfers:create not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission stock-transfers:approve not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission manufacturing-boms:read not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission manufacturing-boms:create not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission manufacturing-boms:update not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission manufacturing-boms:delete not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission manufacturing-orders:read not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission manufacturing-orders:create not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission manufacturing-orders:update not found for template Full Admin&#xD;
+[15:00:31 WRN] Permission manufacturing-orders:manage not found for template Full Admin&#xD;
+[15:00:31 INF] Seeding permission template: Full Admin with 174 permissions&#xD;
+[15:00:31 INF] Seeding permission template: User Manager with 6 permissions&#xD;
+[15:00:31 INF] Seeding permission template: Role Administrator with 5 permissions&#xD;
+[15:00:31 INF] Seeding permission template: Tenant Administrator with 4 permissions&#xD;
+[15:00:31 INF] Seeding permission template: Auditor with 6 permissions&#xD;
+[15:00:31 INF] Seeding permission template: Content Editor with 2 permissions&#xD;
+[15:00:31 INF] Seeding permission template: Basic User with 1 permissions&#xD;
+[15:00:31 INF] Permission template seed: 7 new, 0 permissions backfilled&#xD;
+[15:00:32 INF] Validating localization resources at C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Resources/Localization&#xD;
+[15:00:32 INF] Localization validation completed successfully. Validated 4 culture(s): en, vi, en, vi&#xD;
+[15:00:32 INF] Starting Wolverine messaging for application assembly NOIR.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null&#xD;
+[15:00:32 INF] The Wolverine code generation mode is Auto with pre-generated types being loaded from NOIR.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null.&#xD;
+[15:00:32 INF] See https://wolverine.netlify.app/guide/codegen.html for more information&#xD;
+[15:00:32 INF] Searching assembly NOIR.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null for Wolverine message handlers&#xD;
+[15:00:32 INF] Clean restart detected. Previous shutdown at 10/12/2026 09:55:34 +00:00 - reason: Server is restarting&#xD;
+[15:00:32 INF] Searching assembly NOIR.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null for Wolverine message handlers&#xD;
+[15:00:32 INF] Searching assembly NOIR.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null for Wolverine message handlers&#xD;
+[15:00:32 INF] Wolverine assigned node id for envelope persistence is -1196107702&#xD;
+[15:00:32 INF] Started message listening at stub://replies/&#xD;
+[15:00:32 INF] Application started. Press Ctrl+C to shut down.&#xD;
+[15:00:32 INF] Hosting environment: Testing&#xD;
+[15:00:32 INF] Content root path: C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web&#xD;
+[15:00:32 WRN] Failed to determine the https port for redirect.&#xD;
+[15:00:37 INF] Handling LoginCommand | CorrelationId: 31d64a994a259f157e269cbbbec993fb&#xD;
+[15:00:37 INF] Server recovery notification sent to all clients&#xD;
+[15:00:37 INF] No routes can be determined for Envelope #08df2847-aa8e-e66b-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:37 WRN] SLOW HANDLER: LoginCommand took 503ms (threshold: 500ms)&#xD;
+[15:00:37 INF] Handled LoginCommand in 505ms | CorrelationId: 31d64a994a259f157e269cbbbec993fb&#xD;
+[15:00:37 INF] HTTP POST /api/auth/login responded 200 in 4983.3708 ms&#xD;
+[15:00:38 INF] HTTP GET /api/invoicing/invoices/ responded 200 in 462.9004 ms&#xD;
+[15:00:38 INF] Handling LoginCommand | CorrelationId: 54e5ca7d2c608f411c7f856aba09a803&#xD;
+[15:00:38 INF] No routes can be determined for Envelope #08df2847-ab03-8e3b-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:38 INF] Handled LoginCommand in 169ms | CorrelationId: 54e5ca7d2c608f411c7f856aba09a803&#xD;
+[15:00:38 INF] HTTP POST /api/auth/login responded 200 in 194.4849 ms&#xD;
+[15:00:38 INF] Handling GetStockTransfersQuery | CorrelationId: f09394a6de6aec92ddcd2a116f31bb01&#xD;
+[15:00:38 INF] Handled GetStockTransfersQuery in 115ms | CorrelationId: f09394a6de6aec92ddcd2a116f31bb01&#xD;
+[15:00:38 INF] HTTP GET /api/stock/transfers/ responded 200 in 178.5095 ms&#xD;
+[15:00:38 INF] Handling LoginCommand | CorrelationId: a416d8d710e70b9ed2ee55ee4f4e7376&#xD;
+[15:00:39 INF] No routes can be determined for Envelope #08df2847-ab39-3f89-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:39 INF] Handled LoginCommand in 149ms | CorrelationId: a416d8d710e70b9ed2ee55ee4f4e7376&#xD;
+[15:00:39 INF] HTTP POST /api/auth/login responded 200 in 168.6623 ms&#xD;
+[15:00:42 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Accounting.Queries.GetJournalEntries.GetJournalEntriesQuery for Service System.IServiceProvider: Directly using scoped IServiceProvider. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:42 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Accounting.Queries.GetJournalEntries.GetJournalEntriesQuery for Service NOIR.Domain.Interfaces.IFeatureChecker: Concrete type NOIR.IntegrationTests.Infrastructure.AllFeaturesEnabledFeatureChecker is not public, so requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:42 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Accounting.Queries.GetJournalEntries.GetJournalEntriesQuery for Service NOIR.Infrastructure.Persistence.ApplicationDbContext: &#xD;
+Dependency: Descriptor: ServiceType: Microsoft.EntityFrameworkCore.DbContextOptions`1[NOIR.Infrastructure.Persistence.ApplicationDbContext] Lifetime: Scoped ImplementationFactory: Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.CreateDbContextOptions&#xD;
+The service registration for Microsoft.EntityFrameworkCore.DbContextOptions&lt;NOIR.Infrastructure.Persistence.ApplicationDbContext&gt; is an 'opaque' lambda factory with the Scoped lifetime and requires service location&#xD;
+. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:42 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Accounting.Queries.GetJournalEntries.GetJournalEntriesQuery for Service NOIR.Domain.Interfaces.IRepository`2[NOIR.Domain.Entities.Accounting.JournalEntry,System.Guid]: The service registration for NOIR.Domain.Interfaces.IRepository&lt;NOIR.Domain.Entities.Accounting.JournalEntry, System.Guid&gt; is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+Generated code to C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Internal\Generated\WolverineHandlers\GetJournalEntriesQueryHandler174590972.cs&#xD;
+[15:00:42 INF] Handling GetJournalEntriesQuery | CorrelationId: 1e9e95945251f320878cef5f17c1dc25&#xD;
+[15:00:42 INF] Handled GetJournalEntriesQuery in 57ms | CorrelationId: 1e9e95945251f320878cef5f17c1dc25&#xD;
+[15:00:42 INF] HTTP GET /api/accounting/journal/ responded 200 in 3145.1066 ms&#xD;
+[15:00:42 INF] Handling LoginCommand | CorrelationId: 7c95f296ece7b0a3f3c0052b9ef1ca07&#xD;
+[15:00:42 INF] No routes can be determined for Envelope #08df2847-ad2a-50e6-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:42 INF] Handled LoginCommand in 116ms | CorrelationId: 7c95f296ece7b0a3f3c0052b9ef1ca07&#xD;
+[15:00:42 INF] HTTP POST /api/auth/login responded 200 in 120.3362 ms&#xD;
+[15:00:42 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Accounting.Queries.GetAccounts.GetAccountsQuery for Service System.IServiceProvider: Directly using scoped IServiceProvider. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:42 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Accounting.Queries.GetAccounts.GetAccountsQuery for Service NOIR.Domain.Interfaces.IFeatureChecker: Concrete type NOIR.IntegrationTests.Infrastructure.AllFeaturesEnabledFeatureChecker is not public, so requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:42 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Accounting.Queries.GetAccounts.GetAccountsQuery for Service NOIR.Infrastructure.Persistence.ApplicationDbContext: &#xD;
+Dependency: Descriptor: ServiceType: Microsoft.EntityFrameworkCore.DbContextOptions`1[NOIR.Infrastructure.Persistence.ApplicationDbContext] Lifetime: Scoped ImplementationFactory: Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.CreateDbContextOptions&#xD;
+The service registration for Microsoft.EntityFrameworkCore.DbContextOptions&lt;NOIR.Infrastructure.Persistence.ApplicationDbContext&gt; is an 'opaque' lambda factory with the Scoped lifetime and requires service location&#xD;
+. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:42 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Accounting.Queries.GetAccounts.GetAccountsQuery for Service NOIR.Domain.Interfaces.IRepository`2[NOIR.Domain.Entities.Accounting.Account,System.Guid]: The service registration for NOIR.Domain.Interfaces.IRepository&lt;NOIR.Domain.Entities.Accounting.Account, System.Guid&gt; is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+Generated code to C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Internal\Generated\WolverineHandlers\GetAccountsQueryHandler615346660.cs&#xD;
+[15:00:42 INF] Handling GetAccountsQuery | CorrelationId: 4d36a81defd939013878add47fcb29d0&#xD;
+[15:00:42 INF] Handled GetAccountsQuery in 39ms | CorrelationId: 4d36a81defd939013878add47fcb29d0&#xD;
+[15:00:42 INF] HTTP GET /api/accounting/accounts/ responded 200 in 556.4595 ms&#xD;
+[15:00:42 INF] Handling LoginCommand | CorrelationId: e364b29070025e5f8993dd84288403c6&#xD;
+[15:00:42 INF] No routes can be determined for Envelope #08df2847-ad92-a8cb-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:42 INF] Handled LoginCommand in 107ms | CorrelationId: e364b29070025e5f8993dd84288403c6&#xD;
+[15:00:42 INF] HTTP POST /api/auth/login responded 200 in 112.2506 ms&#xD;
+[15:00:43 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Estimation.Queries.GetBoqs.GetBoqsQuery for Service System.IServiceProvider: Directly using scoped IServiceProvider. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:43 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Estimation.Queries.GetBoqs.GetBoqsQuery for Service NOIR.Domain.Interfaces.IFeatureChecker: Concrete type NOIR.IntegrationTests.Infrastructure.AllFeaturesEnabledFeatureChecker is not public, so requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:43 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Estimation.Queries.GetBoqs.GetBoqsQuery for Service NOIR.Infrastructure.Persistence.ApplicationDbContext: &#xD;
+Dependency: Descriptor: ServiceType: Microsoft.EntityFrameworkCore.DbContextOptions`1[NOIR.Infrastructure.Persistence.ApplicationDbContext] Lifetime: Scoped ImplementationFactory: Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.CreateDbContextOptions&#xD;
+The service registration for Microsoft.EntityFrameworkCore.DbContextOptions&lt;NOIR.Infrastructure.Persistence.ApplicationDbContext&gt; is an 'opaque' lambda factory with the Scoped lifetime and requires service location&#xD;
+. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:43 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Estimation.Queries.GetBoqs.GetBoqsQuery for Service NOIR.Domain.Interfaces.IRepository`2[NOIR.Domain.Entities.Estimation.Boq,System.Guid]: The service registration for NOIR.Domain.Interfaces.IRepository&lt;NOIR.Domain.Entities.Estimation.Boq, System.Guid&gt; is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+Generated code to C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Internal\Generated\WolverineHandlers\GetBoqsQueryHandler1575869982.cs&#xD;
+[15:00:43 INF] Handling GetBoqsQuery | CorrelationId: 4ca8f686d050e8d42151290c507740c4&#xD;
+[15:00:43 INF] Handled GetBoqsQuery in 114ms | CorrelationId: 4ca8f686d050e8d42151290c507740c4&#xD;
+[15:00:43 INF] HTTP GET /api/estimation/boqs/ responded 200 in 858.3079 ms&#xD;
+[15:00:43 INF] Handling LoginCommand | CorrelationId: 52a77783807d8f6ef6696b41e1084117&#xD;
+[15:00:44 INF] No routes can be determined for Envelope #08df2847-ae36-634c-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenRevokedEvent)&#xD;
+[15:00:44 INF] Revoked oldest session for user 60fa34a8-274e-4dcf-91f2-061875f56610 due to session limit&#xD;
+[15:00:44 INF] No routes can be determined for Envelope #08df2847-ae36-f205-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:44 INF] Handled LoginCommand in 207ms | CorrelationId: 52a77783807d8f6ef6696b41e1084117&#xD;
+[15:00:44 INF] HTTP POST /api/auth/login responded 200 in 216.8647 ms&#xD;
+[15:00:44 INF] Handling GetStockIndentsQuery | CorrelationId: a37a991375ec6d6a5bbc8ed1a38750eb&#xD;
+[15:00:44 INF] Handled GetStockIndentsQuery in 104ms | CorrelationId: a37a991375ec6d6a5bbc8ed1a38750eb&#xD;
+[15:00:44 INF] HTTP GET /api/stock/indents/ responded 200 in 141.7661 ms&#xD;
+[15:00:44 INF] Handling LoginCommand | CorrelationId: 543f25fb45c7f84d77fc813b590bf576&#xD;
+[15:00:44 INF] No routes can be determined for Envelope #08df2847-ae6d-21f8-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenRevokedEvent)&#xD;
+[15:00:44 INF] Revoked oldest session for user 60fa34a8-274e-4dcf-91f2-061875f56610 due to session limit&#xD;
+[15:00:44 INF] No routes can be determined for Envelope #08df2847-ae6d-b120-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:44 INF] Handled LoginCommand in 183ms | CorrelationId: 543f25fb45c7f84d77fc813b590bf576&#xD;
+[15:00:44 INF] HTTP POST /api/auth/login responded 200 in 192.1678 ms&#xD;
+[15:00:45 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Users.Commands.CreateUser.CreateUserCommand for Service System.IServiceProvider: Directly using scoped IServiceProvider. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:45 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Users.Commands.CreateUser.CreateUserCommand for Service NOIR.Domain.Interfaces.IFeatureChecker: Concrete type NOIR.IntegrationTests.Infrastructure.AllFeaturesEnabledFeatureChecker is not public, so requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:45 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Users.Commands.CreateUser.CreateUserCommand for Service NOIR.Infrastructure.Persistence.ApplicationDbContext: &#xD;
+Dependency: Descriptor: ServiceType: Microsoft.EntityFrameworkCore.DbContextOptions`1[NOIR.Infrastructure.Persistence.ApplicationDbContext] Lifetime: Scoped ImplementationFactory: Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.CreateDbContextOptions&#xD;
+The service registration for Microsoft.EntityFrameworkCore.DbContextOptions&lt;NOIR.Infrastructure.Persistence.ApplicationDbContext&gt; is an 'opaque' lambda factory with the Scoped lifetime and requires service location&#xD;
+. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:45 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Users.Commands.CreateUser.CreateUserCommand for Service FluentValidation.IValidator`1[NOIR.Application.Features.Users.Commands.CreateUser.CreateUserCommand]: &#xD;
+Dependency: Descriptor: ServiceType: NOIR.Application.Common.Interfaces.ILocalizationService Lifetime: Scoped ImplementationFactory: Scrutor.ServiceTypeSelector+&lt;&gt;c__DisplayClass21_1.&lt;AsSelfWithInterfaces&gt;b__3&#xD;
+The service registration for NOIR.Application.Common.Interfaces.ILocalizationService is an 'opaque' lambda factory with the Scoped lifetime and requires service location&#xD;
+. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:45 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Users.Commands.CreateUser.CreateUserCommand for Service NOIR.Application.Common.Interfaces.IUserIdentityService: The service registration for NOIR.Application.Common.Interfaces.IUserIdentityService is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:45 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Users.Commands.CreateUser.CreateUserCommand for Service NOIR.Application.Common.Interfaces.ICurrentUser: The service registration for NOIR.Application.Common.Interfaces.ICurrentUser is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:45 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Users.Commands.CreateUser.CreateUserCommand for Service NOIR.Application.Common.Interfaces.ILocalizationService: The service registration for NOIR.Application.Common.Interfaces.ILocalizationService is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:45 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Users.Commands.CreateUser.CreateUserCommand for Service NOIR.Application.Common.Interfaces.IWelcomeEmailService: The service registration for NOIR.Application.Common.Interfaces.IWelcomeEmailService is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:45 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Users.Commands.CreateUser.CreateUserCommand for Service NOIR.Application.Common.Interfaces.IEntityUpdateHubContext: The service registration for NOIR.Application.Common.Interfaces.IEntityUpdateHubContext is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+Generated code to C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Internal\Generated\WolverineHandlers\CreateUserCommandHandler170456806.cs&#xD;
+[15:00:45 INF] Handling CreateUserCommand | CorrelationId: d050f7f56adf6b0d8b6535e4d98c07c4&#xD;
+[15:00:45 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAIS6 K=email_template:WelcomeEmail:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; call FEO[DUR=5m LKTO=/ SKMR=N SKMW=N SKDR=N SKDW=N SKDRWS=N MDUR=/ DDUR=/ JIT=0 PR=N SZ=/ FS=Y FSMAX=01:00:00 DFSMAX=/ FSTHR=30s FSTO=100ms FHTO=2s TOFC=Y DSTO=/ DHTO=/ ABDO=N SBN=N ABBO=Y AC=N]&#xD;
+[15:00:45 ERR] An exception occurred in the database while saving changes for context type 'NOIR.Infrastructure.Persistence.ApplicationDbContext'.&#xD;
+System.InvalidOperationException: A second operation was started on this context instance before a previous operation completed. This is usually caused by different threads concurrently using the same instance of DbContext. For more information on how to avoid threading issues with DbContext, see https://go.microsoft.com/fwlink/?linkid=2097913.&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.Internal.ConcurrencyDetector.EnterCriticalSection()&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+System.InvalidOperationException: A second operation was started on this context instance before a previous operation completed. This is usually caused by different threads concurrently using the same instance of DbContext. For more information on how to avoid threading issues with DbContext, see https://go.microsoft.com/fwlink/?linkid=2097913.&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.Internal.ConcurrencyDetector.EnterCriticalSection()&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+[15:00:45 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAIS6 K=email_template:WelcomeEmail:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; return FE(M)[T=2026-10-12T10:00:45.532491, LEXP=2026-10-12T10:05:45.626448][S=N, EEXP=/, LM=/, ET=/, S=/, P=Normal]&#xD;
+[15:00:45 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAIS7 K=smtp_settings:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; call FEO[DUR=5m LKTO=/ SKMR=N SKMW=N SKDR=N SKDW=N SKDRWS=N MDUR=/ DDUR=/ JIT=0 PR=N SZ=/ FS=Y FSMAX=01:00:00 DFSMAX=/ FSTHR=30s FSTO=100ms FHTO=2s TOFC=Y DSTO=/ DHTO=/ ABDO=N SBN=N ABBO=Y AC=N]&#xD;
+[15:00:45 WRN] Failed to save audit log&#xD;
+System.InvalidOperationException: A second operation was started on this context instance before a previous operation completed. This is usually caused by different threads concurrently using the same instance of DbContext. For more information on how to avoid threading issues with DbContext, see https://go.microsoft.com/fwlink/?linkid=2097913.&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.Internal.ConcurrencyDetector.EnterCriticalSection()&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at NOIR.Infrastructure.Audit.HandlerAuditMiddleware.TrySaveAuditLog(ApplicationDbContext dbContext, IServiceProvider serviceProvider) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Audit\HandlerAuditMiddleware.cs:line 238&#xD;
+[15:00:45 INF] Handled CreateUserCommand in 465ms | CorrelationId: d050f7f56adf6b0d8b6535e4d98c07c4&#xD;
+[15:00:45 INF] HTTP POST /api/users responded 200 in 1256.7767 ms&#xD;
+[15:00:45 INF] Handling LoginCommand | CorrelationId: 92d834915003bb22f8774a5fa06b32a6&#xD;
+[15:00:45 ERR] An exception occurred while iterating over the results of a query for context type 'NOIR.Infrastructure.Persistence.ApplicationDbContext'.&#xD;
+System.ObjectDisposedException: Cannot access a disposed context instance. A common cause of this error is disposing a context instance that was resolved from dependency injection and then later trying to use the same context instance elsewhere in your application. This may occur if you are calling 'Dispose' on the context instance, or wrapping it in a using statement. If you are using dependency injection, you should let the dependency injection container take care of disposing context instances.&#xD;
+Object name: 'ApplicationDbContext'.&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContext.InitializeStateManager(Boolean standAlone)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()&#xD;
+System.ObjectDisposedException: Cannot access a disposed context instance. A common cause of this error is disposing a context instance that was resolved from dependency injection and then later trying to use the same context instance elsewhere in your application. This may occur if you are calling 'Dispose' on the context instance, or wrapping it in a using statement. If you are using dependency injection, you should let the dependency injection container take care of disposing context instances.&#xD;
+Object name: 'ApplicationDbContext'.&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContext.InitializeStateManager(Boolean standAlone)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()&#xD;
+[15:00:45 WRN] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAIS7 K=smtp_settings:7b258770-16e7-4e40-947d-09e31e6e0f4a): an error occurred while calling the factory&#xD;
+System.ObjectDisposedException: Cannot access a disposed context instance. A common cause of this error is disposing a context instance that was resolved from dependency injection and then later trying to use the same context instance elsewhere in your application. This may occur if you are calling 'Dispose' on the context instance, or wrapping it in a using statement. If you are using dependency injection, you should let the dependency injection container take care of disposing context instances.&#xD;
+Object name: 'ApplicationDbContext'.&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContext.InitializeStateManager(Boolean standAlone)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()&#xD;
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)&#xD;
+   at NOIR.Infrastructure.Services.TenantSettingsService.GetSettingsAsync(String tenantId, String keyPrefix, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\TenantSettingsService.cs:line 64&#xD;
+   at NOIR.Infrastructure.Services.EmailService.FetchSmtpSettingsFromDatabaseAsync(String currentTenantId, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 253&#xD;
+   at NOIR.Infrastructure.Services.EmailService.&lt;&gt;c__DisplayClass14_0.&lt;&lt;GetSmtpSettingsWithFallbackAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 236&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at ZiggyCreatures.Caching.Fusion.Internals.RunUtils.RunAsyncFuncWithTimeoutAsync[TResult](Func`2 asyncFunc, TimeSpan timeout, Boolean cancelIfTimeout, Action`1 timedOutTaskProcessor, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/Internals/RunUtils.cs:line 69&#xD;
+   at ZiggyCreatures.Caching.Fusion.FusionCache.GetOrSetEntryInternalAsync[TValue](String operationId, String key, String originalKey, String[] tags, Func`3 factory, Boolean isRealFactory, MaybeValue`1 failSafeDefaultValue, FusionCacheEntryOptions options, Activity activity, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/FusionCache_Async.cs:line 251&#xD;
+[15:00:45 ERR] Exception while sending template email to test_81440948770645019fe9b52bbec7fa2c@example.com&#xD;
+System.ObjectDisposedException: Cannot access a disposed context instance. A common cause of this error is disposing a context instance that was resolved from dependency injection and then later trying to use the same context instance elsewhere in your application. This may occur if you are calling 'Dispose' on the context instance, or wrapping it in a using statement. If you are using dependency injection, you should let the dependency injection container take care of disposing context instances.&#xD;
+Object name: 'ApplicationDbContext'.&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContext.InitializeStateManager(Boolean standAlone)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()&#xD;
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)&#xD;
+   at NOIR.Infrastructure.Services.TenantSettingsService.GetSettingsAsync(String tenantId, String keyPrefix, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\TenantSettingsService.cs:line 64&#xD;
+   at NOIR.Infrastructure.Services.EmailService.FetchSmtpSettingsFromDatabaseAsync(String currentTenantId, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 253&#xD;
+   at NOIR.Infrastructure.Services.EmailService.&lt;&gt;c__DisplayClass14_0.&lt;&lt;GetSmtpSettingsWithFallbackAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 236&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at ZiggyCreatures.Caching.Fusion.Internals.RunUtils.RunAsyncFuncWithTimeoutAsync[TResult](Func`2 asyncFunc, TimeSpan timeout, Boolean cancelIfTimeout, Action`1 timedOutTaskProcessor, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/Internals/RunUtils.cs:line 69&#xD;
+   at ZiggyCreatures.Caching.Fusion.FusionCache.GetOrSetEntryInternalAsync[TValue](String operationId, String key, String originalKey, String[] tags, Func`3 factory, Boolean isRealFactory, MaybeValue`1 failSafeDefaultValue, FusionCacheEntryOptions options, Activity activity, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/FusionCache_Async.cs:line 251&#xD;
+   at ZiggyCreatures.Caching.Fusion.FusionCache.GetOrSetEntryInternalAsync[TValue](String operationId, String key, String originalKey, String[] tags, Func`3 factory, Boolean isRealFactory, MaybeValue`1 failSafeDefaultValue, FusionCacheEntryOptions options, Activity activity, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/FusionCache_Async.cs:line 342&#xD;
+   at ZiggyCreatures.Caching.Fusion.FusionCache.GetOrSetAsync[TValue](String key, Func`3 factory, MaybeValue`1 failSafeDefaultValue, FusionCacheEntryOptions options, IEnumerable`1 tags, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/FusionCache_Async.cs:line 408&#xD;
+   at NOIR.Infrastructure.Services.EmailService.GetSmtpSettingsWithFallbackAsync(CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 234&#xD;
+   at NOIR.Infrastructure.Services.EmailService.TrySendViaDbSettingsAsync(IReadOnlyList`1 recipients, String subject, String body, Boolean isHtml, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 178&#xD;
+   at NOIR.Infrastructure.Services.EmailService.SendTemplateAsync[T](String to, String subject, String templateName, T model, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 138&#xD;
+[15:00:45 INF] Welcome email sent to test_81440948770645019fe9b52bbec7fa2c@example.com&#xD;
+[15:00:45 INF] No routes can be determined for Envelope #08df2847-af44-017d-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:45 INF] Handled LoginCommand in 130ms | CorrelationId: 92d834915003bb22f8774a5fa06b32a6&#xD;
+[15:00:45 INF] HTTP POST /api/auth/login responded 200 in 136.5619 ms&#xD;
+[15:00:45 INF] Handling LoginCommand | CorrelationId: 136161f99f3613d1c229276c8494a117&#xD;
+[15:00:45 INF] No routes can be determined for Envelope #08df2847-af59-f824-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:45 INF] Handled LoginCommand in 136ms | CorrelationId: 136161f99f3613d1c229276c8494a117&#xD;
+[15:00:45 INF] HTTP POST /api/auth/login responded 200 in 141.5276 ms&#xD;
+[15:00:45 INF] Handling LoginCommand | CorrelationId: 041bf279d758602511a298d591a66ae4&#xD;
+[15:00:45 INF] Handled LoginCommand in 2ms | CorrelationId: 041bf279d758602511a298d591a66ae4&#xD;
+[15:00:45 WRN] HTTP POST /api/auth/login responded 401 in 24.3609 ms&#xD;
+[15:00:46 INF] Handling LoginCommand | CorrelationId: 80236c8906356112eabb4953013beec2&#xD;
+[15:00:46 INF] No routes can be determined for Envelope #08df2847-af74-587a-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenRevokedEvent)&#xD;
+[15:00:46 INF] Revoked oldest session for user 60fa34a8-274e-4dcf-91f2-061875f56610 due to session limit&#xD;
+[15:00:46 INF] No routes can be determined for Envelope #08df2847-af74-dd94-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:46 INF] Handled LoginCommand in 131ms | CorrelationId: 80236c8906356112eabb4953013beec2&#xD;
+[15:00:46 INF] HTTP POST /api/auth/login responded 200 in 136.3725 ms&#xD;
+[15:00:46 INF] Handling CreateUserCommand | CorrelationId: ece044423e8f4c9804a80642364181a8&#xD;
+[15:00:46 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAIS8 K=email_template:WelcomeEmail:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; call FEO[DUR=5m LKTO=/ SKMR=N SKMW=N SKDR=N SKDW=N SKDRWS=N MDUR=/ DDUR=/ JIT=0 PR=N SZ=/ FS=Y FSMAX=01:00:00 DFSMAX=/ FSTHR=30s FSTO=100ms FHTO=2s TOFC=Y DSTO=/ DHTO=/ ABDO=N SBN=N ABBO=Y AC=N]&#xD;
+[15:00:46 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAIS8 K=email_template:WelcomeEmail:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; return FE(M)[T=2026-10-12T10:00:45.532491, LEXP=2026-10-12T10:05:45.626448][S=N, EEXP=/, LM=/, ET=/, S=/, P=Normal]&#xD;
+[15:00:46 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAIS9 K=smtp_settings:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; call FEO[DUR=5m LKTO=/ SKMR=N SKMW=N SKDR=N SKDW=N SKDRWS=N MDUR=/ DDUR=/ JIT=0 PR=N SZ=/ FS=Y FSMAX=01:00:00 DFSMAX=/ FSTHR=30s FSTO=100ms FHTO=2s TOFC=Y DSTO=/ DHTO=/ ABDO=N SBN=N ABBO=Y AC=N]&#xD;
+[15:00:46 INF] Handled CreateUserCommand in 146ms | CorrelationId: ece044423e8f4c9804a80642364181a8&#xD;
+[15:00:46 INF] HTTP POST /api/users responded 200 in 157.3185 ms&#xD;
+[15:00:46 INF] Handling LoginCommand | CorrelationId: 315f304a569e7b2b4f01b3e4ea98addd&#xD;
+[15:00:46 ERR] An exception occurred while iterating over the results of a query for context type 'NOIR.Infrastructure.Persistence.ApplicationDbContext'.&#xD;
+System.ObjectDisposedException: Cannot access a disposed context instance. A common cause of this error is disposing a context instance that was resolved from dependency injection and then later trying to use the same context instance elsewhere in your application. This may occur if you are calling 'Dispose' on the context instance, or wrapping it in a using statement. If you are using dependency injection, you should let the dependency injection container take care of disposing context instances.&#xD;
+Object name: 'ApplicationDbContext'.&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContext.InitializeStateManager(Boolean standAlone)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()&#xD;
+System.ObjectDisposedException: Cannot access a disposed context instance. A common cause of this error is disposing a context instance that was resolved from dependency injection and then later trying to use the same context instance elsewhere in your application. This may occur if you are calling 'Dispose' on the context instance, or wrapping it in a using statement. If you are using dependency injection, you should let the dependency injection container take care of disposing context instances.&#xD;
+Object name: 'ApplicationDbContext'.&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContext.InitializeStateManager(Boolean standAlone)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()&#xD;
+[15:00:46 WRN] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAIS9 K=smtp_settings:7b258770-16e7-4e40-947d-09e31e6e0f4a): an error occurred while calling the factory&#xD;
+System.ObjectDisposedException: Cannot access a disposed context instance. A common cause of this error is disposing a context instance that was resolved from dependency injection and then later trying to use the same context instance elsewhere in your application. This may occur if you are calling 'Dispose' on the context instance, or wrapping it in a using statement. If you are using dependency injection, you should let the dependency injection container take care of disposing context instances.&#xD;
+Object name: 'ApplicationDbContext'.&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContext.InitializeStateManager(Boolean standAlone)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()&#xD;
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)&#xD;
+   at NOIR.Infrastructure.Services.TenantSettingsService.GetSettingsAsync(String tenantId, String keyPrefix, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\TenantSettingsService.cs:line 64&#xD;
+   at NOIR.Infrastructure.Services.EmailService.FetchSmtpSettingsFromDatabaseAsync(String currentTenantId, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 270&#xD;
+   at NOIR.Infrastructure.Services.EmailService.&lt;&gt;c__DisplayClass14_0.&lt;&lt;GetSmtpSettingsWithFallbackAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 236&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at ZiggyCreatures.Caching.Fusion.Internals.RunUtils.RunAsyncFuncWithTimeoutAsync[TResult](Func`2 asyncFunc, TimeSpan timeout, Boolean cancelIfTimeout, Action`1 timedOutTaskProcessor, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/Internals/RunUtils.cs:line 69&#xD;
+   at ZiggyCreatures.Caching.Fusion.FusionCache.GetOrSetEntryInternalAsync[TValue](String operationId, String key, String originalKey, String[] tags, Func`3 factory, Boolean isRealFactory, MaybeValue`1 failSafeDefaultValue, FusionCacheEntryOptions options, Activity activity, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/FusionCache_Async.cs:line 251&#xD;
+[15:00:46 ERR] Exception while sending template email to test_ea79bdb020974b0dbee1458f82b3d301@example.com&#xD;
+System.ObjectDisposedException: Cannot access a disposed context instance. A common cause of this error is disposing a context instance that was resolved from dependency injection and then later trying to use the same context instance elsewhere in your application. This may occur if you are calling 'Dispose' on the context instance, or wrapping it in a using statement. If you are using dependency injection, you should let the dependency injection container take care of disposing context instances.&#xD;
+Object name: 'ApplicationDbContext'.&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContextDependencies.get_StateManager()&#xD;
+   at Microsoft.EntityFrameworkCore.Query.QueryContext.InitializeStateManager(Boolean standAlone)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()&#xD;
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)&#xD;
+   at NOIR.Infrastructure.Services.TenantSettingsService.GetSettingsAsync(String tenantId, String keyPrefix, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\TenantSettingsService.cs:line 64&#xD;
+   at NOIR.Infrastructure.Services.EmailService.FetchSmtpSettingsFromDatabaseAsync(String currentTenantId, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 270&#xD;
+   at NOIR.Infrastructure.Services.EmailService.&lt;&gt;c__DisplayClass14_0.&lt;&lt;GetSmtpSettingsWithFallbackAsync&gt;b__0&gt;d.MoveNext() in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 236&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at ZiggyCreatures.Caching.Fusion.Internals.RunUtils.RunAsyncFuncWithTimeoutAsync[TResult](Func`2 asyncFunc, TimeSpan timeout, Boolean cancelIfTimeout, Action`1 timedOutTaskProcessor, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/Internals/RunUtils.cs:line 69&#xD;
+   at ZiggyCreatures.Caching.Fusion.FusionCache.GetOrSetEntryInternalAsync[TValue](String operationId, String key, String originalKey, String[] tags, Func`3 factory, Boolean isRealFactory, MaybeValue`1 failSafeDefaultValue, FusionCacheEntryOptions options, Activity activity, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/FusionCache_Async.cs:line 251&#xD;
+   at ZiggyCreatures.Caching.Fusion.FusionCache.GetOrSetEntryInternalAsync[TValue](String operationId, String key, String originalKey, String[] tags, Func`3 factory, Boolean isRealFactory, MaybeValue`1 failSafeDefaultValue, FusionCacheEntryOptions options, Activity activity, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/FusionCache_Async.cs:line 342&#xD;
+   at ZiggyCreatures.Caching.Fusion.FusionCache.GetOrSetAsync[TValue](String key, Func`3 factory, MaybeValue`1 failSafeDefaultValue, FusionCacheEntryOptions options, IEnumerable`1 tags, CancellationToken token) in /_/src/ZiggyCreatures.FusionCache/FusionCache_Async.cs:line 408&#xD;
+   at NOIR.Infrastructure.Services.EmailService.GetSmtpSettingsWithFallbackAsync(CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 234&#xD;
+   at NOIR.Infrastructure.Services.EmailService.TrySendViaDbSettingsAsync(IReadOnlyList`1 recipients, String subject, String body, Boolean isHtml, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 178&#xD;
+   at NOIR.Infrastructure.Services.EmailService.SendTemplateAsync[T](String to, String subject, String templateName, T model, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 138&#xD;
+[15:00:46 INF] Welcome email sent to test_ea79bdb020974b0dbee1458f82b3d301@example.com&#xD;
+[15:00:46 INF] No routes can be determined for Envelope #08df2847-afa4-ca11-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:46 INF] Handled LoginCommand in 148ms | CorrelationId: 315f304a569e7b2b4f01b3e4ea98addd&#xD;
+[15:00:46 INF] HTTP POST /api/auth/login responded 200 in 153.7733 ms&#xD;
+[15:00:47 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand for Service System.IServiceProvider: Directly using scoped IServiceProvider. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:47 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand for Service NOIR.Domain.Interfaces.IFeatureChecker: Concrete type NOIR.IntegrationTests.Infrastructure.AllFeaturesEnabledFeatureChecker is not public, so requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:47 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand for Service NOIR.Infrastructure.Persistence.ApplicationDbContext: &#xD;
+Dependency: Descriptor: ServiceType: Microsoft.EntityFrameworkCore.DbContextOptions`1[NOIR.Infrastructure.Persistence.ApplicationDbContext] Lifetime: Scoped ImplementationFactory: Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.CreateDbContextOptions&#xD;
+The service registration for Microsoft.EntityFrameworkCore.DbContextOptions&lt;NOIR.Infrastructure.Persistence.ApplicationDbContext&gt; is an 'opaque' lambda factory with the Scoped lifetime and requires service location&#xD;
+. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:47 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand for Service FluentValidation.IValidator`1[NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand]: &#xD;
+Dependency: Descriptor: ServiceType: NOIR.Application.Common.Interfaces.ILocalizationService Lifetime: Scoped ImplementationFactory: Scrutor.ServiceTypeSelector+&lt;&gt;c__DisplayClass21_1.&lt;AsSelfWithInterfaces&gt;b__3&#xD;
+The service registration for NOIR.Application.Common.Interfaces.ILocalizationService is an 'opaque' lambda factory with the Scoped lifetime and requires service location&#xD;
+. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:47 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand for Service NOIR.Application.Common.Interfaces.IUserIdentityService: The service registration for NOIR.Application.Common.Interfaces.IUserIdentityService is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:47 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand for Service NOIR.Application.Common.Interfaces.ITokenService: The service registration for NOIR.Application.Common.Interfaces.ITokenService is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:47 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand for Service NOIR.Application.Common.Interfaces.IRefreshTokenService: The service registration for NOIR.Application.Common.Interfaces.IRefreshTokenService is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:47 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand for Service NOIR.Application.Common.Interfaces.IDeviceFingerprintService: The service registration for NOIR.Application.Common.Interfaces.IDeviceFingerprintService is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:47 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand for Service NOIR.Application.Common.Interfaces.ICookieAuthService: The service registration for NOIR.Application.Common.Interfaces.ICookieAuthService is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:47 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand for Service NOIR.Application.Common.Interfaces.ILocalizationService: The service registration for NOIR.Application.Common.Interfaces.ILocalizationService is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:47 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand for Service NOIR.Application.Common.Interfaces.ICurrentUser: The service registration for NOIR.Application.Common.Interfaces.ICurrentUser is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+Generated code to C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Internal\Generated\WolverineHandlers\RefreshTokenCommandHandler1964815320.cs&#xD;
+[15:00:47 INF] Handling RefreshTokenCommand | CorrelationId: 0e143d9bd4f1e36f4cd3f3d03567abb5&#xD;
+[15:00:47 INF] No routes can be determined for Envelope #08df2847-b014-567c-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:47 INF] No routes can be determined for Envelope #08df2847-b014-610e-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenRevokedEvent)&#xD;
+[15:00:47 INF] Handled RefreshTokenCommand in 110ms | CorrelationId: 0e143d9bd4f1e36f4cd3f3d03567abb5&#xD;
+[15:00:47 INF] HTTP POST /api/auth/refresh responded 200 in 730.5977 ms&#xD;
+[15:00:47 INF] Handling RefreshTokenCommand | CorrelationId: 0e6b11d5c1b5397e486ee6fc10d7ccb7&#xD;
+[15:00:47 INF] Handled RefreshTokenCommand in 8ms | CorrelationId: 0e6b11d5c1b5397e486ee6fc10d7ccb7&#xD;
+[15:00:47 ERR] Invocation of RefreshTokenCommand { AccessToken = , RefreshToken = , UseCookies = False } failed!&#xD;
+FluentValidation.ValidationException: Validation failure on: RefreshTokenCommand { AccessToken = , RefreshToken = , UseCookies = False }&#xD;
+   at Wolverine.FluentValidation.Internals.FailureAction`1.Throw(T message, IReadOnlyList`1 failures) in /home/runner/work/wolverine/wolverine/src/Extensions/Wolverine.FluentValidation/Internals/FailureAction.cs:line 15&#xD;
+   at Wolverine.FluentValidation.Internals.FluentValidationExecutor.ExecuteOne[T](IValidator`1 validator, IFailureAction`1 failureAction, T message) in /home/runner/work/wolverine/wolverine/src/Extensions/Wolverine.FluentValidation/Internals/FluentValidationExecutor.cs:line 15&#xD;
+   at Internal.Generated.WolverineHandlers.RefreshTokenCommandHandler1964815320.HandleAsync(MessageContext context, CancellationToken cancellation)&#xD;
+   at Internal.Generated.WolverineHandlers.RefreshTokenCommandHandler1964815320.HandleAsync(MessageContext context, CancellationToken cancellation)&#xD;
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 239&#xD;
+[15:00:47 INF] Validation failed [NOIR-VAL-2400] CorrelationId=0HNP88UJPQIM7: Validation failure on: RefreshTokenCommand { AccessToken = , RefreshToken = , UseCookies = False }&#xD;
+FluentValidation.ValidationException: Validation failure on: RefreshTokenCommand { AccessToken = , RefreshToken = , UseCookies = False }&#xD;
+   at Wolverine.FluentValidation.Internals.FailureAction`1.Throw(T message, IReadOnlyList`1 failures) in /home/runner/work/wolverine/wolverine/src/Extensions/Wolverine.FluentValidation/Internals/FailureAction.cs:line 15&#xD;
+   at Wolverine.FluentValidation.Internals.FluentValidationExecutor.ExecuteOne[T](IValidator`1 validator, IFailureAction`1 failureAction, T message) in /home/runner/work/wolverine/wolverine/src/Extensions/Wolverine.FluentValidation/Internals/FluentValidationExecutor.cs:line 15&#xD;
+   at Internal.Generated.WolverineHandlers.RefreshTokenCommandHandler1964815320.HandleAsync(MessageContext context, CancellationToken cancellation)&#xD;
+   at Internal.Generated.WolverineHandlers.RefreshTokenCommandHandler1964815320.HandleAsync(MessageContext context, CancellationToken cancellation)&#xD;
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 239&#xD;
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 251&#xD;
+   at Wolverine.Runtime.Handlers.Executor.InvokeInlineAsync(Envelope envelope, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 108&#xD;
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync[T](Object message, MessageBus bus, CancellationToken cancellation, Nullable`1 timeout, DeliveryOptions options) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 152&#xD;
+   at NOIR.Web.Endpoints.AuthEndpoints.&lt;&gt;c.&lt;&lt;MapAuthEndpoints&gt;b__0_2&gt;d.MoveNext() in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Endpoints\AuthEndpoints.cs:line 58&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)&#xD;
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.&lt;&gt;c__DisplayClass102_2.&lt;&lt;HandleRequestBodyAndCompileRequestDelegateForJson&gt;b__2&gt;d.MoveNext()&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at NOIR.Infrastructure.Audit.HttpRequestAuditMiddleware.InvokeAsync(HttpContext context, ApplicationDbContext dbContext, ICurrentUser currentUser, IMultiTenantContextAccessor`1 tenantContextAccessor) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Audit\HttpRequestAuditMiddleware.cs:line 56&#xD;
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)&#xD;
+   at NOIR.Web.Middleware.CurrentUserLoaderMiddleware.InvokeAsync(HttpContext context, IUserIdentityService userIdentityService, ApplicationDbContext dbContext) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Middleware\CurrentUserLoaderMiddleware.cs:line 79&#xD;
+   at Finbuckle.MultiTenant.AspNetCore.MultiTenantMiddleware.Invoke(HttpContext context)&#xD;
+   at NOIR.Web.Middleware.FeedTenantMiddleware.InvokeAsync(HttpContext context, IOptions`1 platformSettings) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Middleware\FeedTenantMiddleware.cs:line 51&#xD;
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)&#xD;
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_20&gt;d.MoveNext() in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Program.cs:line 520&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at Microsoft.AspNetCore.OutputCaching.OutputCacheMiddleware.InvokeAwaited(HttpContext httpContext, IReadOnlyList`1 policies)&#xD;
+   at Microsoft.AspNetCore.RateLimiting.RateLimitingMiddleware.InvokeInternal(HttpContext context, EnableRateLimitingAttribute enableRateLimitingAttribute)&#xD;
+   at NOIR.Web.Middleware.SecurityHeadersMiddleware.InvokeAsync(HttpContext context) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Middleware\SecurityHeadersMiddleware.cs:line 72&#xD;
+   at NOIR.Web.Middleware.ExceptionHandlingMiddleware.InvokeAsync(HttpContext context) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Middleware\ExceptionHandlingMiddleware.cs:line 29&#xD;
+[15:00:47 WRN] HTTP POST /api/auth/refresh responded 400 in 70.6653 ms&#xD;
+[15:00:47 WRN] HTTP GET /api/auth/me responded 401 in 14.2215 ms&#xD;
+[15:00:47 INF] Handling LoginCommand | CorrelationId: 7cf6d23616e6053ef09a2f66653a2c33&#xD;
+[15:00:47 INF] No routes can be determined for Envelope #08df2847-b035-80db-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenRevokedEvent)&#xD;
+[15:00:47 INF] Revoked oldest session for user 60fa34a8-274e-4dcf-91f2-061875f56610 due to session limit&#xD;
+[15:00:47 INF] No routes can be determined for Envelope #08df2847-b035-eec7-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:47 INF] Handled LoginCommand in 110ms | CorrelationId: 7cf6d23616e6053ef09a2f66653a2c33&#xD;
+[15:00:47 INF] HTTP POST /api/auth/login responded 200 in 114.7638 ms&#xD;
+[15:00:47 INF] Handling LoginCommand | CorrelationId: a3e5c5ca481164581e00ca0b7653e9dc&#xD;
+[15:00:47 INF] Handled LoginCommand in 1ms | CorrelationId: a3e5c5ca481164581e00ca0b7653e9dc&#xD;
+[15:00:47 WRN] HTTP POST /api/auth/login responded 401 in 5.9531 ms&#xD;
+[15:00:47 WRN] HTTP GET /api/auth/me responded 401 in 2.5653 ms&#xD;
+[15:00:47 INF] Handling LoginCommand | CorrelationId: 11702f7da15301bfa17936a118f69a34&#xD;
+[15:00:47 INF] Handled LoginCommand in 1ms | CorrelationId: 11702f7da15301bfa17936a118f69a34&#xD;
+[15:00:47 ERR] Invocation of LoginCommand { Email = , Password = , UseCookies = False, TenantId =  } failed!&#xD;
+FluentValidation.ValidationException: Validation failure on: LoginCommand { Email = , Password = , UseCookies = False, TenantId =  }&#xD;
+   at Wolverine.FluentValidation.Internals.FailureAction`1.Throw(T message, IReadOnlyList`1 failures) in /home/runner/work/wolverine/wolverine/src/Extensions/Wolverine.FluentValidation/Internals/FailureAction.cs:line 15&#xD;
+   at Wolverine.FluentValidation.Internals.FluentValidationExecutor.ExecuteOne[T](IValidator`1 validator, IFailureAction`1 failureAction, T message) in /home/runner/work/wolverine/wolverine/src/Extensions/Wolverine.FluentValidation/Internals/FluentValidationExecutor.cs:line 15&#xD;
+   at Internal.Generated.WolverineHandlers.LoginCommandHandler994142760.HandleAsync(MessageContext context, CancellationToken cancellation) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Internal\Generated\WolverineHandlers\LoginCommandHandler994142760.cs:line 114&#xD;
+   at Internal.Generated.WolverineHandlers.LoginCommandHandler994142760.HandleAsync(MessageContext context, CancellationToken cancellation) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Internal\Generated\WolverineHandlers\LoginCommandHandler994142760.cs:line 145&#xD;
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 239&#xD;
+[15:00:47 INF] Validation failed [NOIR-VAL-2400] CorrelationId=0HNP88UJPQIMC: Validation failure on: LoginCommand { Email = , Password = , UseCookies = False, TenantId =  }&#xD;
+FluentValidation.ValidationException: Validation failure on: LoginCommand { Email = , Password = , UseCookies = False, TenantId =  }&#xD;
+   at Wolverine.FluentValidation.Internals.FailureAction`1.Throw(T message, IReadOnlyList`1 failures) in /home/runner/work/wolverine/wolverine/src/Extensions/Wolverine.FluentValidation/Internals/FailureAction.cs:line 15&#xD;
+   at Wolverine.FluentValidation.Internals.FluentValidationExecutor.ExecuteOne[T](IValidator`1 validator, IFailureAction`1 failureAction, T message) in /home/runner/work/wolverine/wolverine/src/Extensions/Wolverine.FluentValidation/Internals/FluentValidationExecutor.cs:line 15&#xD;
+   at Internal.Generated.WolverineHandlers.LoginCommandHandler994142760.HandleAsync(MessageContext context, CancellationToken cancellation) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Internal\Generated\WolverineHandlers\LoginCommandHandler994142760.cs:line 114&#xD;
+   at Internal.Generated.WolverineHandlers.LoginCommandHandler994142760.HandleAsync(MessageContext context, CancellationToken cancellation) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Internal\Generated\WolverineHandlers\LoginCommandHandler994142760.cs:line 145&#xD;
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 239&#xD;
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync(MessageContext context, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 251&#xD;
+   at Wolverine.Runtime.Handlers.Executor.InvokeInlineAsync(Envelope envelope, CancellationToken cancellation) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 108&#xD;
+   at Wolverine.Runtime.Handlers.Executor.InvokeAsync[T](Object message, MessageBus bus, CancellationToken cancellation, Nullable`1 timeout, DeliveryOptions options) in /home/runner/work/wolverine/wolverine/src/Wolverine/Runtime/Handlers/Executor.cs:line 152&#xD;
+   at NOIR.Web.Endpoints.AuthEndpoints.&lt;&gt;c.&lt;&lt;MapAuthEndpoints&gt;b__0_0&gt;d.MoveNext() in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Endpoints\AuthEndpoints.cs:line 26&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)&#xD;
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.&lt;&gt;c__DisplayClass102_2.&lt;&lt;HandleRequestBodyAndCompileRequestDelegateForJson&gt;b__2&gt;d.MoveNext()&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at NOIR.Infrastructure.Audit.HttpRequestAuditMiddleware.InvokeAsync(HttpContext context, ApplicationDbContext dbContext, ICurrentUser currentUser, IMultiTenantContextAccessor`1 tenantContextAccessor) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Audit\HttpRequestAuditMiddleware.cs:line 56&#xD;
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)&#xD;
+   at NOIR.Web.Middleware.CurrentUserLoaderMiddleware.InvokeAsync(HttpContext context, IUserIdentityService userIdentityService, ApplicationDbContext dbContext) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Middleware\CurrentUserLoaderMiddleware.cs:line 79&#xD;
+   at Finbuckle.MultiTenant.AspNetCore.MultiTenantMiddleware.Invoke(HttpContext context)&#xD;
+   at NOIR.Web.Middleware.FeedTenantMiddleware.InvokeAsync(HttpContext context, IOptions`1 platformSettings) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Middleware\FeedTenantMiddleware.cs:line 51&#xD;
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)&#xD;
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_20&gt;d.MoveNext() in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Program.cs:line 520&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at Microsoft.AspNetCore.OutputCaching.OutputCacheMiddleware.InvokeAwaited(HttpContext httpContext, IReadOnlyList`1 policies)&#xD;
+   at Microsoft.AspNetCore.RateLimiting.RateLimitingMiddleware.InvokeInternal(HttpContext context, EnableRateLimitingAttribute enableRateLimitingAttribute)&#xD;
+   at NOIR.Web.Middleware.SecurityHeadersMiddleware.InvokeAsync(HttpContext context) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Middleware\SecurityHeadersMiddleware.cs:line 72&#xD;
+   at NOIR.Web.Middleware.ExceptionHandlingMiddleware.InvokeAsync(HttpContext context) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Middleware\ExceptionHandlingMiddleware.cs:line 29&#xD;
+[15:00:47 WRN] HTTP POST /api/auth/login responded 400 in 36.8996 ms&#xD;
+[15:00:47 INF] Handling RefreshTokenCommand | CorrelationId: 339fa058f4f8bd905f910547d41efa10&#xD;
+[15:00:47 INF] Handled RefreshTokenCommand in 0ms | CorrelationId: 339fa058f4f8bd905f910547d41efa10&#xD;
+[15:00:47 WRN] HTTP POST /api/auth/refresh responded 401 in 6.1757 ms&#xD;
+[15:00:47 INF] Handling LoginCommand | CorrelationId: eab2d0b48b4413e966c0872844b4cd6f&#xD;
+[15:00:47 INF] No routes can be determined for Envelope #08df2847-b052-ccb0-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenRevokedEvent)&#xD;
+[15:00:47 INF] Revoked oldest session for user 60fa34a8-274e-4dcf-91f2-061875f56610 due to session limit&#xD;
+[15:00:47 INF] No routes can be determined for Envelope #08df2847-b053-3945-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:47 INF] Handled LoginCommand in 118ms | CorrelationId: eab2d0b48b4413e966c0872844b4cd6f&#xD;
+[15:00:47 INF] HTTP POST /api/auth/login responded 200 in 122.5253 ms&#xD;
+[15:00:47 INF] Handling CreateUserCommand | CorrelationId: a81ce1f568169d1b3225354002ecd6a1&#xD;
+[15:00:47 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAISA K=email_template:WelcomeEmail:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; call FEO[DUR=5m LKTO=/ SKMR=N SKMW=N SKDR=N SKDW=N SKDRWS=N MDUR=/ DDUR=/ JIT=0 PR=N SZ=/ FS=Y FSMAX=01:00:00 DFSMAX=/ FSTHR=30s FSTO=100ms FHTO=2s TOFC=Y DSTO=/ DHTO=/ ABDO=N SBN=N ABBO=Y AC=N]&#xD;
+[15:00:47 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAISA K=email_template:WelcomeEmail:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; return FE(M)[T=2026-10-12T10:00:45.532491, LEXP=2026-10-12T10:05:45.626448][S=N, EEXP=/, LM=/, ET=/, S=/, P=Normal]&#xD;
+[15:00:47 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAISB K=smtp_settings:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; call FEO[DUR=5m LKTO=/ SKMR=N SKMW=N SKDR=N SKDW=N SKDRWS=N MDUR=/ DDUR=/ JIT=0 PR=N SZ=/ FS=Y FSMAX=01:00:00 DFSMAX=/ FSTHR=30s FSTO=100ms FHTO=2s TOFC=Y DSTO=/ DHTO=/ ABDO=N SBN=N ABBO=Y AC=N]&#xD;
+[15:00:47 ERR] An exception occurred in the database while saving changes for context type 'NOIR.Infrastructure.Persistence.ApplicationDbContext'.&#xD;
+System.InvalidOperationException: A second operation was started on this context instance before a previous operation completed. This is usually caused by different threads concurrently using the same instance of DbContext. For more information on how to avoid threading issues with DbContext, see https://go.microsoft.com/fwlink/?linkid=2097913.&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.Internal.ConcurrencyDetector.EnterCriticalSection()&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+System.InvalidOperationException: A second operation was started on this context instance before a previous operation completed. This is usually caused by different threads concurrently using the same instance of DbContext. For more information on how to avoid threading issues with DbContext, see https://go.microsoft.com/fwlink/?linkid=2097913.&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.Internal.ConcurrencyDetector.EnterCriticalSection()&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+[15:00:47 WRN] Failed to save audit log&#xD;
+System.InvalidOperationException: A second operation was started on this context instance before a previous operation completed. This is usually caused by different threads concurrently using the same instance of DbContext. For more information on how to avoid threading issues with DbContext, see https://go.microsoft.com/fwlink/?linkid=2097913.&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.Internal.ConcurrencyDetector.EnterCriticalSection()&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+   at NOIR.Infrastructure.Audit.HandlerAuditMiddleware.TrySaveAuditLog(ApplicationDbContext dbContext, IServiceProvider serviceProvider) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Audit\HandlerAuditMiddleware.cs:line 238&#xD;
+[15:00:47 INF] Handled CreateUserCommand in 111ms | CorrelationId: a81ce1f568169d1b3225354002ecd6a1&#xD;
+[15:00:47 INF] HTTP POST /api/users responded 200 in 130.6362 ms&#xD;
+[15:00:47 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAISB K=smtp_settings:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; return FE(M)[T=2026-10-12T10:00:47.722442, LEXP=2026-10-12T10:05:47.728439][S=N, EEXP=/, LM=/, ET=/, S=/, P=Normal]&#xD;
+[15:00:47 INF] Handling LoginCommand | CorrelationId: 6eb04985306c74aa92e748fc526f5596&#xD;
+[15:00:47 INF] No routes can be determined for Envelope #08df2847-b077-92e7-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:47 INF] Handled LoginCommand in 101ms | CorrelationId: 6eb04985306c74aa92e748fc526f5596&#xD;
+[15:00:47 INF] HTTP POST /api/auth/login responded 200 in 104.9544 ms&#xD;
+[15:00:47 INF] Handling LoginCommand | CorrelationId: 85d9a38357bfc668ce37dfa1afb46317&#xD;
+[15:00:47 INF] Handled LoginCommand in 112ms | CorrelationId: 85d9a38357bfc668ce37dfa1afb46317&#xD;
+[15:00:47 WRN] HTTP POST /api/auth/login responded 401 in 117.3357 ms&#xD;
+[15:00:47 INF] Handling LoginCommand | CorrelationId: 2778e4e256793930b8fb8ac87346a478&#xD;
+[15:00:48 INF] No routes can be determined for Envelope #08df2847-b09c-1341-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenRevokedEvent)&#xD;
+[15:00:48 INF] Revoked oldest session for user 60fa34a8-274e-4dcf-91f2-061875f56610 due to session limit&#xD;
+[15:00:48 INF] No routes can be determined for Envelope #08df2847-b09c-6eb0-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:48 INF] Handled LoginCommand in 115ms | CorrelationId: 2778e4e256793930b8fb8ac87346a478&#xD;
+[15:00:48 INF] HTTP POST /api/auth/login responded 200 in 119.8098 ms&#xD;
+[15:00:48 INF] Handling CreateUserCommand | CorrelationId: 87e9e3b6e9e4219148b7fa0ceaf7691b&#xD;
+[15:00:48 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAISC K=email_template:WelcomeEmail:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; call FEO[DUR=5m LKTO=/ SKMR=N SKMW=N SKDR=N SKDW=N SKDRWS=N MDUR=/ DDUR=/ JIT=0 PR=N SZ=/ FS=Y FSMAX=01:00:00 DFSMAX=/ FSTHR=30s FSTO=100ms FHTO=2s TOFC=Y DSTO=/ DHTO=/ ABDO=N SBN=N ABBO=Y AC=N]&#xD;
+[15:00:48 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAISC K=email_template:WelcomeEmail:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; return FE(M)[T=2026-10-12T10:00:45.532491, LEXP=2026-10-12T10:05:45.626448][S=N, EEXP=/, LM=/, ET=/, S=/, P=Normal]&#xD;
+[15:00:48 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAISD K=smtp_settings:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; call FEO[DUR=5m LKTO=/ SKMR=N SKMW=N SKDR=N SKDW=N SKDRWS=N MDUR=/ DDUR=/ JIT=0 PR=N SZ=/ FS=Y FSMAX=01:00:00 DFSMAX=/ FSTHR=30s FSTO=100ms FHTO=2s TOFC=Y DSTO=/ DHTO=/ ABDO=N SBN=N ABBO=Y AC=N]&#xD;
+[15:00:48 INF] FUSION [N=FusionCache I=0HNP88UNEAIS5] (O=0HNP88UNEAISD K=smtp_settings:7b258770-16e7-4e40-947d-09e31e6e0f4a): GetOrSetAsync&lt;T&gt; return FE(M)[T=2026-10-12T10:00:47.722442, LEXP=2026-10-12T10:05:47.728439][S=N, EEXP=/, LM=/, ET=/, S=/, P=Normal]&#xD;
+[15:00:48 INF] Handled CreateUserCommand in 113ms | CorrelationId: 87e9e3b6e9e4219148b7fa0ceaf7691b&#xD;
+[15:00:48 INF] HTTP POST /api/users responded 200 in 123.3511 ms&#xD;
+[15:00:48 INF] Handling LoginCommand | CorrelationId: d65c075ec25960372ae6b136f805add6&#xD;
+[15:00:48 INF] No routes can be determined for Envelope #08df2847-b0c2-a1f1-1826-49c02f020000 (NOIR.Domain.Events.Auth.RefreshTokenCreatedEvent)&#xD;
+[15:00:48 INF] Handled LoginCommand in 120ms | CorrelationId: d65c075ec25960372ae6b136f805add6&#xD;
+[15:00:48 INF] HTTP POST /api/auth/login responded 200 in 124.2076 ms&#xD;
+[15:00:48 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Queries.GetCurrentUser.GetCurrentUserQuery for Service System.IServiceProvider: Directly using scoped IServiceProvider. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:48 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Queries.GetCurrentUser.GetCurrentUserQuery for Service NOIR.Domain.Interfaces.IFeatureChecker: Concrete type NOIR.IntegrationTests.Infrastructure.AllFeaturesEnabledFeatureChecker is not public, so requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:48 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Queries.GetCurrentUser.GetCurrentUserQuery for Service NOIR.Infrastructure.Persistence.ApplicationDbContext: &#xD;
+Dependency: Descriptor: ServiceType: Microsoft.EntityFrameworkCore.DbContextOptions`1[NOIR.Infrastructure.Persistence.ApplicationDbContext] Lifetime: Scoped ImplementationFactory: Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.CreateDbContextOptions&#xD;
+The service registration for Microsoft.EntityFrameworkCore.DbContextOptions&lt;NOIR.Infrastructure.Persistence.ApplicationDbContext&gt; is an 'opaque' lambda factory with the Scoped lifetime and requires service location&#xD;
+. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:48 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Queries.GetCurrentUser.GetCurrentUserQuery for Service NOIR.Application.Common.Interfaces.IUserIdentityService: The service registration for NOIR.Application.Common.Interfaces.IUserIdentityService is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:48 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Queries.GetCurrentUser.GetCurrentUserQuery for Service NOIR.Application.Common.Interfaces.ICurrentUser: The service registration for NOIR.Application.Common.Interfaces.ICurrentUser is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+[15:00:48 INF] Utilizing service location for Message Handler for NOIR.Application.Features.Auth.Queries.GetCurrentUser.GetCurrentUserQuery for Service NOIR.Application.Common.Interfaces.ILocalizationService: The service registration for NOIR.Application.Common.Interfaces.ILocalizationService is an 'opaque' lambda factory with the Scoped lifetime and requires service location. See https://wolverinefx.net/guide/codegen.html&#xD;
+Generated code to C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\Internal\Generated\WolverineHandlers\GetCurrentUserQueryHandler1012920057.cs&#xD;
+[15:00:48 INF] Handling GetCurrentUserQuery | CorrelationId: 08b7f208f7f3a3d92ccf13b71d32c2a9&#xD;
+[15:00:48 INF] Handled GetCurrentUserQuery in 6ms | CorrelationId: 08b7f208f7f3a3d92ccf13b71d32c2a9&#xD;
+[15:00:48 INF] HTTP GET /api/auth/me responded 200 in 635.1390 ms&#xD;
+[15:00:51 ERR] Failed to send email via Platform SMTP (localhost:1025)&#xD;
+System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.&#xD;
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)&#xD;
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)&#xD;
+   at System.Threading.Tasks.ValueTask.ValueTaskSourceAsTask.&lt;&gt;c.&lt;.cctor&gt;b__4_0(Object state)&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at MailKit.Net.SocketUtils.SocketConnectState.OnEndConnect(IAsyncResult ar)&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at MailKit.Net.SocketUtils.ConnectAsync(String host, Int32 port, IPEndPoint localEndPoint, CancellationToken cancellationToken)&#xD;
+   at MailKit.Net.SocketUtils.ConnectAsync(String host, Int32 port, IPEndPoint localEndPoint, Int32 timeout, CancellationToken cancellationToken)&#xD;
+   at MailKit.MailService.ConnectNetworkAsync(String host, Int32 port, CancellationToken cancellationToken)&#xD;
+   at MailKit.Net.Smtp.SmtpClient.ConnectAsync(String host, Int32 port, SecureSocketOptions options, CancellationToken cancellationToken)&#xD;
+   at NOIR.Infrastructure.Services.EmailService.TrySendViaDbSettingsAsync(IReadOnlyList`1 recipients, String subject, String body, Boolean isHtml, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 189&#xD;
+[15:00:51 INF] Welcome email sent to test_a9efad498a2a48379d1cf56610dcf0d0@example.com&#xD;
+[15:00:52 INF] Application stopping signal received&#xD;
+[15:00:52 INF] Graceful shutdown initiated - writing marker and notifying clients&#xD;
+[15:00:52 INF] Shutdown marker written to C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Web\.shutdown-marker.json&#xD;
+[15:00:52 INF] SignalR shutdown notification sent to all clients&#xD;
+[15:00:52 ERR] Failed to send email via Platform SMTP (localhost:1025)&#xD;
+System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.&#xD;
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)&#xD;
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)&#xD;
+   at System.Threading.Tasks.ValueTask.ValueTaskSourceAsTask.&lt;&gt;c.&lt;.cctor&gt;b__4_0(Object state)&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at MailKit.Net.SocketUtils.SocketConnectState.OnEndConnect(IAsyncResult ar)&#xD;
+--- End of stack trace from previous location ---&#xD;
+   at MailKit.Net.SocketUtils.ConnectAsync(String host, Int32 port, IPEndPoint localEndPoint, CancellationToken cancellationToken)&#xD;
+   at MailKit.Net.SocketUtils.ConnectAsync(String host, Int32 port, IPEndPoint localEndPoint, Int32 timeout, CancellationToken cancellationToken)&#xD;
+   at MailKit.MailService.ConnectNetworkAsync(String host, Int32 port, CancellationToken cancellationToken)&#xD;
+   at MailKit.Net.Smtp.SmtpClient.ConnectAsync(String host, Int32 port, SecureSocketOptions options, CancellationToken cancellationToken)&#xD;
+   at NOIR.Infrastructure.Services.EmailService.TrySendViaDbSettingsAsync(IReadOnlyList`1 recipients, String subject, String body, Boolean isHtml, CancellationToken cancellationToken) in C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\Cosmix_new\code\src\NOIR.Infrastructure\Services\EmailService.cs:line 189&#xD;
+[15:00:52 INF] Welcome email sent to me_122fd34e7c134b9a91ceedcbca484196@example.com&#xD;
+[15:00:57 INF] Graceful shutdown complete after 5s drain period&#xD;
+[15:00:57 INF] Application is shutting down...&#xD;
+[15:00:57 INF] Stopped message listener at stub://replies/&#xD;
+[15:00:57 INF] Stopped message listener at stub://replies/&#xD;
+[xUnit.net 00:00:50.83]   Finished:    NOIR.IntegrationTests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

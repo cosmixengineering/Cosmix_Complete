@@ -1,0 +1,557 @@
+001: Human Resources Attendance and Employee Mobile Application
+002: Software Requirements Specification
+003: Developer Handoff Baseline
+004: Document Item | Value
+005: Company | Cosmix Engineering Pakistan
+006: Version | 1.2
+007: Date | 01 October 2026
+008: Status | Revised development baseline with digital reporting, operational zones and check-in face verification
+009: Audience | Project Manager, .NET developers, React developer, React Native developer, QA and management
+010: Backend | ASP.NET Core Web API on .NET 10, written in C#
+011: Web | React
+012: Mobile | React Native for Android and iOS
+013: Purpose: This SRS defines what the HR, attendance and employee mobile application must do. It converts the approved company policy documents and the existing HTML mockup ideas into requirements that developers can implement and test. Any item marked Management Confirmation Required must not be hard-coded until management approves the value or workflow.
+014: Document Control
+015: Version | Date | Prepared For | Change
+016: 1.0 | 01 Oct 2026 | Development Team | Initial HR, attendance and employee mobile development baseline
+017: 1.1 | 01 Oct 2026 | Development Team | Moved attendance/reporting fully into the application and added employee-specific operational zone controls
+018: 1.2 | 01 Oct 2026 | Development Team | Removed attendance-machine integration and added face verification only for mobile Check In
+019: Approval and Interpretation
+020: Management has authorized the team to start HR and attendance work as an urgent priority.
+021: The signed policy documents effective 01 September 2026 are the primary source for attendance, leave, duty-hour and allowance rules described here.
+022: The existing HTML and React Native mockups are reference ideas only. They are not evidence of a working backend, approved authorization matrix or final calculation rule.
+023: The system must use configurable, effective-dated policies. Developers must not bury policy numbers in UI code.
+024: Where two statements conflict or a value is missing, this SRS marks the point for management confirmation.
+025: Contents
+026: 1 System Purpose and Scope
+027: 2 Users and Role Boundaries
+028: 3 Technology and Architecture
+029: 4 Authentication and Authorization
+030: 5 HR Employee Master
+031: 6 Organization Sites and Shifts
+032: 7 Attendance Processing
+033: 8 Company Policy Rules
+034: 9 Leave and Absence
+035: 10 Allowances Travel and Vehicle Policies
+036: 11 Employee Mobile Application
+037: 12 Approvals Notifications and Audit
+038: 13 API Requirements
+039: 14 Data Model
+040: 15 Reports and Exports
+041: 16 Security Privacy and Nonfunctional Requirements
+042: 17 Acceptance Criteria
+043: 18 Delivery Phases
+044: 19 Management Decisions Required
+045: 20 Source References
+046: 1 System Purpose and Scope
+047: The solution will provide one controlled HR and attendance platform for office employees, site staff, supervisors, HR, Accounts and management. Employees will use the mobile application for check-in, check-out and self-service. Authorized office users will use the React web application for employee administration, shifts, attendance review, policy configuration, approvals, reports and payroll handoff.
+048: 1.1 Primary Objectives
+049: Maintain a reliable employee master with personal, employment, contact, document, assignment and compensation information.
+050: Capture attendance through the mobile application with face verification at Check In and authorized correction without losing original evidence.
+051: Apply office and site policies consistently using versioned rules with effective dates.
+052: Give each employee secure access to their own attendance, salary summary, deductions, overtime, leave, advance and loan information.
+053: Provide traceable approvals and audit history for corrections, overtime, leave, allowances and policy exceptions.
+054: Generate verified attendance outputs for Accounts and payroll without allowing Accounts to rewrite original punches.
+055: 1.2 Included Scope
+056: Authentication, session management, password recovery and role-based access control.
+057: Employee master, onboarding, employment history, documents, certifications, emergency details and status lifecycle.
+058: Departments, designations, reporting lines, branches, sites, staff categories, shifts, rosters and holidays.
+059: Mobile check-in/check-out, face verification at Check In, geolocation evidence, server timestamps and attendance exceptions.
+060: In-app site arrival/departure reporting and employee-specific authorized, controlled and restricted operational zones.
+061: Office and site attendance rules, overtime, meal allowance eligibility, travel day treatment and attendance corrections.
+062: Leave requests, balances, evidence, approval and attendance integration.
+063: Employee self-service web/mobile views and supervisor-limited views.
+064: Fuel, motorcycle tuning and vehicle custody policy records where they affect employees and payroll claims.
+065: Reports, exports, notifications, audit logs and payroll-ready attendance summaries.
+066: 1.3 Out of Scope for the First Production Release
+067: Automatic salary disbursement to a bank. The first release may generate an approved payroll handoff or bank advice file only.
+068: Medical diagnosis or AI-based disciplinary decisions.
+069: Unrestricted live tracking outside an authorized attendance or assigned field-work event.
+070: Attendance-machine, time-clock or other attendance-hardware integration. The mobile application is the production attendance channel.
+071: Final payroll accounting ledger if Accounts chooses to retain it in a separate finance module.
+072: 2 Users and Role Boundaries
+073: Role | Permitted Scope
+074: Employee | Own profile summary, check-in/out, own attendance, corrections, leave, overtime, salary summary, deductions, advances and loans.
+075: Site Staff | Employee rights plus assigned site information and site attendance evidence.
+076: Site Supervisor | Own employee rights plus team attendance review and verification for assigned site only. Material/tool requests remain a separate supervisor permission.
+077: HR Officer | Employee records, shifts, attendance review, leave processing and reports according to assigned permission.
+078: HR Manager | HR administration, policy configuration, authorized corrections, approval routing and HR reports.
+079: Accounts Officer | Read approved attendance/payroll inputs, review financial impacts and record payroll processing. No right to alter raw punches.
+080: Administrator or Director | Management approvals and policy exceptions according to configured authority.
+081: System Administrator | User, role and technical configuration. No automatic access to medical, salary or restricted HR content.
+082: Auditor | Read-only access to authorized records, calculations and immutable audit history.
+083: ID | Requirement | Priority
+084: ROLE-001 | Every API and screen shall enforce role and data-scope permissions on the server, not only in the user interface. | Must
+085: ROLE-002 | A supervisor shall see only employees currently assigned to the supervisor's permitted site or team. | Must
+086: ROLE-003 | Employees shall see only their own personal, attendance and financial self-service data. | Must
+087: ROLE-004 | Medical, bank, salary, CNIC and disciplinary data shall use separate fine-grained permissions. | Must
+088: 3 Technology and Architecture
+089: Layer | Required Technology and Responsibility
+090: Web Frontend | React application for HR, attendance, Accounts handoff, management approval and reporting.
+091: Mobile Frontend | React Native application for Android and iOS employee self-service and attendance.
+092: Backend | ASP.NET Core Web API on .NET 10, written in C#. Business rules and authorization execute here.
+093: Database | SQL Server recommended. Use EF Core migrations, relational constraints and effective-dated records.
+094: Background Processing | Hosted services or a durable job queue for notifications, report generation, face-verification cleanup and recalculation.
+095: File Storage | Private object/file storage for photos, CNIC/passport, certificates, evidence and policy documents. Store metadata in SQL.
+096: Maps and Location | Approved map/geocoding provider or internal coordinates. Provider choice must pass privacy review.
+097: Observability | Structured logs, health checks, metrics, error tracking and security audit events without leaking sensitive payloads.
+098: 3.1 Logical Request Flow
+099: 1. React or React Native sends an authenticated HTTPS request to the ASP.NET Core API.
+100: 2. The API validates the access token, role, employee/site scope and request schema.
+101: 3. The application service loads effective policy, shift, roster and assignment data for the event date.
+102: 4. The domain service calculates or validates the result and records source evidence, result and audit metadata in one transaction.
+103: 5. Notifications and noncritical processing run through background jobs after the transaction commits.
+104: 3.2 Environments
+105: Development, Test/UAT and Production must use separate databases, storage, secrets and API endpoints.
+106: Production secrets must be stored in a secure secret manager or protected server configuration, never in React or React Native source code.
+107: Demo/mock data must never be mixed with production employee records.
+108: 4 Authentication and Authorization
+109: ID | Requirement | Priority
+110: AUTH-001 | Users shall authenticate with a unique employee/user identifier and password. Mobile may use approved phone/email login after identity verification. | Must
+111: AUTH-002 | The API shall issue short-lived access tokens and securely rotated refresh tokens with server-side revocation. | Must
+112: AUTH-003 | Password reset shall use a time-limited OTP or link sent through an approved company channel. | Must
+113: AUTH-004 | Management, HR, Accounts and System Administrator accounts shall support mandatory multi-factor authentication. | Must
+114: AUTH-005 | Mobile devices shall be registered to the user account. New-device sign-in shall generate an alert and may require OTP verification. | Must
+115: AUTH-006 | Repeated failed logins shall trigger throttling and temporary lockout without exposing whether an account exists. | Must
+116: AUTH-007 | Logout, password change, termination or suspension shall revoke active sessions as configured. | Must
+117: AUTH-008 | Every sensitive read and write shall record user, role, employee scope, IP/device, timestamp and correlation ID. | Must
+118: 5 HR Employee Master
+119: The Employee Master is the source of truth for employee identity and employment data. Employee information must not be duplicated separately inside attendance, payroll or mobile modules. Related modules shall reference the Employee ID.
+120: 5.1 Employee Data Fields
+121: Group | Field | Rules | Requirement
+122: Identity | Employee ID | System-generated, unique, immutable after activation | Required
+123: Identity | Full legal name | As per CNIC or passport | Required
+124: Identity | Father or spouse name | Text | Required by HR policy
+125: Identity | CNIC or passport number | Unique; format depends on document type | Required
+126: Identity | Document type and expiry | CNIC or passport; expiry where applicable | Required
+127: Identity | Date of birth | Date; age validation based on company policy | Required
+128: Identity | Gender and marital status | Controlled values | As required
+129: Identity | Profile photo | Private image file with type and size validation | Required
+130: Identity | Face verification enrollment | Encrypted verification template, enrollment status/date, authorized enroller and re-enrollment history | Required for mobile Check In
+131: Contact | Personal phone | Pakistan/international normalized number | Required
+132: Contact | Company phone or SIM | Number, issue date, status and allowed credit tier | Optional
+133: Contact | Personal email | Validated email | Optional
+134: Contact | Company email | Unique company email | Optional
+135: Contact | Current and permanent address | Separate addresses, city and province | Required
+136: Emergency | Emergency contact | Name, relationship, phone and alternate phone | Required
+137: Employment | Department and designation | References to controlled master data | Required
+138: Employment | Employment category | Permanent, contract, daily wage, trainee, outsourced or approved type | Required
+139: Employment | Staff category | Office, site, logistics, driver, rider, purchaser, field/complaint or other | Required
+140: Employment | Reporting manager | Active employee reference with history | Required
+141: Employment | Branch/base city | Office/region reference | Required
+142: Employment | Assigned site | Current assignment plus effective-dated history | Conditional
+143: Employment | Joining date and probation | Date and probation period | Required
+144: Employment | Employment status | Draft, pending approval, active, suspended, resigned, terminated, retired | Required
+145: Employment | Shift and working hours | Effective-dated shift/roster assignment | Required
+146: Compensation | Base/gross salary and wage basis | Monthly, daily or hourly; effective-dated | Restricted
+147: Compensation | Payment method | Bank, cheque, cash or approved method | Restricted
+148: Bank | Bank details | Bank, account title, account number, IBAN and verification status | Restricted
+149: Background | Previous employment | Employer, role, dates, last salary and leaving reason | Optional
+150: Documents | Employee documents | Offer, contract, CNIC, degrees, certificates, licenses and evidence | As applicable
+151: Documents | Signature or thumb impression | Private file with uploader and timestamp | As required
+152: Certification | Certificate/license | Type, number, issuer, issue/expiry and attachment | Conditional
+153: Assets | Assigned assets | Asset reference, issue/return condition and custody record | Optional
+154: Medical | Authorized medical/emergency data | Restricted record; no diagnosis automation | Optional
+155: System | Mobile access | Enabled state, username/phone and registered devices | Required for app users
+156: 5.2 Employee Lifecycle Requirements
+157: ID | Requirement | Priority
+158: HR-001 | HR shall create an employee as Draft and save incomplete work without activating attendance access. | Must
+159: HR-002 | Required fields, uniqueness, documents and approval shall be validated before activation. | Must
+160: HR-003 | Employee numbers shall be generated by the server through a controlled sequence, never through random UI code. | Must
+161: HR-004 | Salary, role, manager, shift, branch and site changes shall create effective-dated history instead of overwriting the old value. | Must
+162: HR-005 | Termination or suspension shall block future punches and mobile access according to the effective date while preserving history. | Must
+163: HR-006 | Employee deletion shall be logical/archival only where records are referenced by attendance, payroll or audit history. | Must
+164: HR-007 | The system shall detect missing or expiring required documents and certifications and notify authorized users. | Should
+165: HR-008 | Mobile Check In shall remain disabled until an authorized face enrollment is active. Re-enrollment or reset shall require a reason, authorized actor and audit record. | Must
+166: 6 Organization Sites and Shifts
+167: 6.1 Master Data
+168: Departments, designations, staff categories, employment types, branches, cities and reporting structures.
+169: Sites with code, name, client/project, address, city, coordinates, configurable attendance geofence radius, start/end dates, status and authorized supervisor.
+170: Operational zones with type, map boundary, site, instructions, effective period and employee/role/team assignment. Operational zones are separate from the attendance geofence.
+171: Holiday calendars based on Federal Government notification, with effective date and attachment/reference.
+172: 6.2 Shift Definition
+173: Shift Field | Requirement
+174: Shift code and name | Unique and user-readable
+175: Start and end time | Supports same-day and cross-midnight shifts
+176: Scheduled work duration | Daily committed hours
+177: Breaks | Paid/unpaid and duration
+178: Late threshold | Effective policy value; current policy uses 10:15 AM for 10:00 AM start
+179: Half-day threshold | Current policy describes arrival up to 12:59 PM as half day
+180: Hourly treatment | After 12:59 PM where policy applies
+181: Overtime eligibility | By staff category and approval
+182: Applicable days | Default six-day week plus exceptions
+183: Early reporting rule | Default no credit before 10:00 AM unless approved exception
+184: Effective dates | Policy/shift history must be retained
+185: ID | Requirement | Priority
+186: SHIFT-001 | Shift assignments shall be effective-dated and assignable by employee, team, site, staff category or department. | Must
+187: SHIFT-002 | Temporary site-opening time changes shall require date, approving authority, written evidence and affected employees. | Must
+188: SHIFT-003 | The calculation engine shall use the employee's applicable shift and policy on the attendance date. | Must
+189: SHIFT-004 | Changing a shift rule shall not recalculate locked prior periods unless an authorized recalculation is explicitly approved. | Must
+190: 6.3 Operational Zone Controls
+191: Operational zones keep employees within authorized work areas and away from areas restricted for safety, security, administrative or other approved reasons. A zone rule may apply to one employee, a role, a team or a site. An individual assignment or exception takes precedence when its effective dates are valid.
+192: Zone Type | Meaning and Application Behavior
+193: Green Authorized Zone | The employee is permitted to work or report in this area during the assigned schedule. The app may show the active site or task instruction.
+194: Amber Controlled Zone | Entry is allowed only when an active permission, task or approval exists. The app warns the employee and records an exception or access request when permission is missing.
+195: Red Restricted Zone | The employee is not permitted to enter during the configured period. The app displays a clear do-not-enter instruction and records a boundary or entry-attempt event for authorized review.
+196: ID | Requirement | Priority
+197: ZONE-001 | Authorized users shall define a zone as a circle or polygon with name, site, type, instructions, reason code, status and effective start/end date and time. | Must
+198: ZONE-002 | A zone shall be assignable to an employee, role, team or site population, with an explicit employee-level override and recorded approving authority. | Must
+199: ZONE-003 | The employee app shall show only the restriction and instruction needed by that employee. Confidential medical, disciplinary or security reasons shall be visible only to separately authorized roles. | Must
+200: ZONE-004 | Zone evaluation shall use server-controlled assignments and configuration. Mobile code shall not contain hard-coded employee or zone rules. | Must
+201: ZONE-005 | Green, Amber and Red are the initial zone types. Authorized administrators may add or deactivate further configured zone types without a mobile release. | Must
+202: ZONE-006 | When an employee approaches or enters an Amber or Red zone during an authorized duty or field-work window, the app shall warn the employee and send a zone event when technically available. | Must
+203: ZONE-007 | A zone event shall retain employee, zone/version, event type, server/device time, coordinates, accuracy, source, device, related assignment and acknowledgement status. | Must
+204: ZONE-008 | An attendance punch and a zone event shall remain separate records. A zone violation shall not delete, fabricate or silently change a punch or salary calculation. | Must
+205: ZONE-009 | Continuous or background boundary monitoring may run only during a configured duty or field assignment, with visible notice and approved retention. Tracking outside that window is prohibited. | Must
+206: ZONE-010 | Zone alerts shall create reviewable evidence and notifications; disciplinary action, access exception or payroll impact requires the configured human approval workflow. | Must
+207: 7 Attendance Processing
+208: Attendance must preserve evidence in two layers. Raw Punch Events store every received check-in/out event unchanged. Daily Attendance Summaries derive work time, status, late minutes, overtime and policy effects. A correction changes the interpreted summary or adds an authorized adjustment; it must not delete the original punch.
+209: 7.1 Attendance Sources
+210: Source | Required Evidence and Handling
+211: Employee mobile app | Employee, device, server timestamp, claimed action, Check-In face-verification result/token, coordinates, accuracy, site, optional attachment and online/offline state.
+212: In-app site report | Employee, assigned site/task, arrival/departure or incident type, server/device time, coordinates, notes, attachment, submission status and reviewer.
+213: File import | Source file hash, importer, mapping, duplicate report, validation errors and import batch.
+214: Authorized manual entry | Employee, time, reason, evidence, requester, approver and original/corrected values.
+215: 7.2 Mobile Check In and Check Out Flow
+216: 1. Employee signs in and the app loads the current assignment, shift and attendance state from the API.
+217: 2. For Check In, the app starts a live face challenge and requests location permission for the attendance event. Check Out does not require face verification.
+218: 3. The app confirms liveness and a one-to-one match against the signed-in employee's active face enrollment, then obtains a short-lived verification result/token.
+219: 4. The app captures coordinates, accuracy, device time and device identifier, then sends the event and required verification result over HTTPS.
+220: 5. The server uses its own receipt time as the authoritative time and validates assignment, duplicate state, allowed time window and configurable geofence.
+221: 6. The server stores the raw event, returns accepted, accepted with exception, queued for review or rejected with a clear reason.
+222: 7. The app displays the server-confirmed time, location/site and attendance status. A locally displayed success without server confirmation is not a valid punch.
+223: 7.2.1 Check In Face Verification
+224: ID | Requirement | Priority
+225: FACE-001 | Face verification shall run for Check In only. Check Out and ordinary app access shall not require a face scan. | Must
+226: FACE-002 | Verification shall be one-to-one against the signed-in employee's active enrollment and shall not search or identify a person across the employee population. | Must
+227: FACE-003 | A live-person check shall protect against printed photos, screen replays and other basic presentation attacks before matching. | Must
+228: FACE-004 | The server shall accept Check In only with a valid, unexpired and single-use verification result bound to the employee, registered device and punch request. | Must
+229: FACE-005 | A failed or unavailable verification shall not create a successful Check In. The app shall show a clear retry or attendance-correction path without exposing the match threshold. | Must
+230: FACE-006 | Enrollment, re-enrollment and verification attempts shall be audited with result, time, device, provider/version and correlation ID. Raw face captures shall not be retained unless an approved policy explicitly requires a limited retention period. | Must
+231: FACE-007 | Face templates and any retained capture shall be encrypted, isolated from ordinary profile photos and accessible only to specifically authorized services and roles. | Must
+232: FACE-008 | The system shall support approved accessibility or medical exception handling through a documented human approval and alternative Check-In process. | Must
+233: ID | Requirement | Priority
+234: ATT-001 | The system shall store check-in and check-out as separate immutable raw events and support more than two events per day where breaks or field movements are required. | Must
+235: ATT-002 | Server time and Pakistan timezone rules shall control attendance calculations. Device time shall be retained only as evidence. | Must
+236: ATT-003 | Duplicate/replayed punches shall be detected by idempotency key, employee, event type and time tolerance. | Must
+237: ATT-004 | Offline mobile punches may be queued with original capture time but shall remain Unverified until received and validated by the server. A queued Check In still requires a valid tamper-evident face-verification result. | Should
+238: ATT-005 | A configurable GPS accuracy threshold shall prevent unreliable coordinates from being silently accepted. | Must
+239: ATT-006 | Geofence radius shall be configurable by site. The existing mockup value of 80 meters is not a global approved rule. | Must
+240: ATT-007 | An out-of-geofence event shall be recorded with distance and routed for review; it shall not be silently converted to valid attendance. | Must
+241: ATT-008 | Missing check-out, overlapping shifts, impossible travel, excessive duration and sequence errors shall create exceptions. | Must
+242: ATT-009 | Daily summaries shall show scheduled hours, worked hours, payable hours, late minutes, overtime, status, exceptions and calculation version. | Must
+243: ATT-010 | Month lock shall freeze approved attendance for payroll. Reopening shall require authorized reason and audit entry. | Must
+244: ATT-011 | Employees shall submit attendance and operational reports only through the approved application and its authorized correction workflow. | Must
+245: 7.3 Attendance Correction
+246: 1. Employee or authorized supervisor submits the correction with requested time/status, reason and evidence.
+247: 2. HR or the configured authority reviews source punches, assignment, shift and evidence.
+248: 3. Approval creates a correction record and recalculates the daily summary using the applicable policy version.
+249: 4. Rejection records the reviewer and reason and notifies the requester.
+250: 5. If the payroll period is locked, the correction requires reopening or an adjustment in the next payroll period according to management policy.
+251: 8 Company Policy Rules
+252: The rules below are derived from the signed policies effective 01 September 2026. They must be configurable and effective-dated. The system shall show the rule and calculation used for each result.
+253: 8.1 Office Staff Rules
+254: Rule | System Requirement
+255: OFF-001 | Regular duty is 10:00 AM to 7:00 PM, nine hours, six days per week.
+256: OFF-002 | Time before 10:00 AM is not counted unless an approved exemption applies.
+257: OFF-003 | Arrival after 10:15 AM is late. Three late arrivals cause one day's salary deduction without marking those events as leave or absent.
+258: OFF-004 | Arrival up to 12:59 PM is treated as half day. Arrival after that may be calculated hourly.
+259: OFF-005 | If one paired employee delays another employee's work, the verified waiting duration and the late employee's late duration may be deducted according to policy.
+260: OFF-006 | Maximum annual late count is 30 without KPI deduction. Days 31-60 use 0.8 percent per day and days 61-120 use 0.5 percent per day, subject to management confirmation of calculation base.
+261: OFF-007 | Lunch is 1:00 PM to 2:00 PM. Meal-break rules shall not automatically count as overtime.
+262: OFF-008 | Continuous 13-hour office duty starting at 10:00 AM qualifies for meal allowance up to Rs. 400.
+263: OFF-009 | Both Check In and Check Out are required in the approved mobile application. Check In requires face verification; Check Out does not.
+264: OFF-010 | Named/role-based early-reporting exemptions must be maintained as effective-dated exceptions with instruction reference.
+265: OFF-011 | University/studying employee schedules, hourly treatment, make-up hours, TDA exclusion and KPI effect require a dedicated approved employee policy assignment.
+266: 8.2 Site Staff Rules
+267: Rule | System Requirement
+268: SITE-001 | Regular duty is 10:00 AM to 7:00 PM, nine hours, six days per week. Work after 7:00 PM is overtime for eligible staff.
+269: SITE-002 | Early time is not counted unless instructed and recorded with supervisor/management reference.
+270: SITE-003 | Three late arrivals cause one day's salary deduction. Late and half-day thresholds follow the signed site policy.
+271: SITE-004 | A site may start as late as 11:00 AM by Site In-Charge coordination; the nine-hour period then starts at 11:00 AM. Earlier start requires written management approval.
+272: SITE-005 | Employees paired for the same work shall have coordinated reporting time. Verified waiting loss may be attributed to the late employee.
+273: SITE-006 | Fake IN/OUT evidence shall create a disciplinary case. The system records evidence and approval; it must not automatically terminate an employee.
+274: SITE-007 | Site attendance shall include site name, arrival time and departure time. The approved mobile application is the official structured reporting channel.
+275: SITE-008 | Overtime eligibility applies only to configured categories such as site staff, drivers, riders and purchasers.
+276: SITE-009 | Cross-midnight and extended duty shall use continuous work sessions. The next-day absence/4.5-hour/12-extra-hour policy must be implemented only after management confirms the exact examples and reset logic.
+277: SITE-010 | Monthly committed-hours shortage and KPI effects must show the exact shortage and policy calculation before approval.
+278: SITE-011 | 120 annual late arrivals may trigger termination/blacklist workflow but the system shall require authorized disciplinary approval.
+279: 8.3 Overtime Rules
+280: ID | Requirement | Priority
+281: OT-001 | Overtime shall be calculated only after scheduled work is complete and only for eligible staff categories. | Must
+282: OT-002 | Overtime must retain start/end, total minutes, site/job, reason, evidence, requester, approver and rate rule. | Must
+283: OT-003 | Travel for company work is paid as a normal workday but travel hours do not automatically earn overtime. | Must
+284: OT-004 | Bulk overtime approval shall identify affected employees and shall not silently mark every employee at a site. | Must
+285: OT-005 | The overtime rate/multiplier is Management Confirmation Required because the supplied policies define eligibility but not one complete rate formula. | Must
+286: 9 Leave and Absence
+287: Rule | Requirement
+288: LEAVE-001 | Leave year is fiscal July to June. Annual entitlement is 18 days for eligible employees.
+289: LEAVE-002 | Employees with less than four months of service are not entitled under the office policy unless management approves another rule.
+290: LEAVE-003 | Six days are sick leave and require electronic hospital or medical-store evidence.
+291: LEAVE-004 | Twelve days are casual leave and require written approval before leave.
+292: LEAVE-005 | Travel to/from hometown for personal leave is leave or absence, not a working day.
+293: LEAVE-006 | Company work travel is a normal paid working day without automatic overtime for travel hours.
+294: LEAVE-007 | Exam leave requires admit card and date sheet.
+295: LEAVE-008 | Half-day emergency leave requires evidence; missing evidence may create a one-percent KPI event.
+296: LEAVE-009 | Site injury medically advised rest does not reduce regular leave, subject to evidence and authorized review.
+297: LEAVE-010 | Federal Government notifications control holidays.
+298: LEAVE-011 | Management may grant six extra leave days or equivalent pay at 100 percent KPI.
+299: LEAVE-012 | Unused 18-day leave encashment requires at least 70 percent KPI and management approval.
+300: LEAVE-013 | Long-leave pending-hours recovery for site staff shall track pre-leave and post-return commitments.
+301: 9.1 Leave Workflow
+302: 1. Employee selects leave type and dates; the server calculates duration, holidays, balance and eligibility.
+303: 2. Employee provides reason, contact during leave, handover/reliever where required and supporting evidence.
+304: 3. The system routes the request according to staff category, duration, site and configured approval matrix.
+305: 4. Approval reserves/deducts leave and updates attendance. Rejection records reason. Cancellation follows a separate controlled action.
+306: 5. Any paid/unpaid, encashment or KPI consequence is displayed before final approval and handed to payroll with traceability.
+307: 10 Allowances Travel and Vehicle Policies
+308: 10.1 Meal Allowance
+309: Category | Eligibility | Amount
+310: Office staff | Continuous 13-hour duty from 10:00 AM | Up to Rs. 400
+311: Stationed site staff dinner | Continuous 12-hour duty; cycle breaks if employee goes home | Amount requires management confirmation
+312: Stationed site staff breakfast | Still continuously working eight hours after dinner eligibility | Rs. 300
+313: Stationed site staff lunch | Still continuously working eight hours after breakfast eligibility | Rs. 500
+314: Outstation staff | Approved outstation deployment | Rs. 1,000 per day, including breakfast, lunch and dinner; no additional dinner claim
+315: ID | Requirement | Priority
+316: ALLOW-001 | The allowance engine shall prevent duplicate meal claims for the same continuous duty period. | Must
+317: ALLOW-002 | Meal eligibility shall use verified attendance/work sessions and approved staff/deployment category. | Must
+318: ALLOW-003 | Allowances shall record calculation, payable date, payroll period, status and approval. | Must
+319: ALLOW-004 | A home visit or break that ends continuous duty shall close the allowance cycle when verified. | Must
+320: 10.2 Motorcycle Fuel and Maintenance
+321: Rule | Requirement
+322: VEH-001 | Policy applies only to employees assigned to complaint resolution and field visits.
+323: VEH-002 | Home-to-office and office-to-home distance is not reimbursable. Home distance must be stored for transparent adjustment.
+324: VEH-003 | Additional distance beyond usual home-office distance may be payable; nearer assignment excess may be adjusted monthly.
+325: VEH-004 | Outstation tuning becomes eligible every 1,000 approved kilometers at fixed Rs. 1,800.
+326: VEH-005 | Engine overhaul becomes eligible after 8,000 approved outstation kilometers at approximately Rs. 18,000 including tires.
+327: VEH-006 | Fuel reimbursement uses 28 kilometers per liter for approved site-to-site travel based on approved map distance and route evidence.
+328: VEH-007 | Puncture, challan/fines, lifting, bearing, helmet, seat, cover, indicators and other excluded expenses shall not be reimbursed under this policy.
+329: VEH-008 | Company vehicle issue/return condition, accident evidence, third-party details, insurance claim and employee liability shall be recorded.
+330: VEH-009 | Workshop/service history shall identify the authorized workshop, odometer, service type and evidence.
+331: 11 Employee Mobile Application
+332: The React Native application is an employee self-service and operational attendance surface. It is not the HR department administration panel. Mobile permissions are role-based, and department management remains in the React web application.
+333: 11.1 Mobile Screens
+334: Screen | Required Capability
+335: Authentication | Login, OTP/MFA when required, password reset, device registration, logout and session expiry.
+336: Home | Employee identity, current shift/site, today's status, next action and pending requests.
+337: Check In/Out | Check In face challenge and liveness result, server-confirmed punch, site/location, accuracy, policy warning, exception state and retry/offline state. Check Out has no face challenge.
+338: Site Reporting | Submit arrival, departure, delay, access issue or operational incident with site/task, notes, location and optional evidence; view server status and review history.
+339: Zones and Restrictions | Show the employee's active Green, Amber and Red zones, instructions, effective period, permission status, warnings and acknowledgement.
+340: My Attendance | Calendar, daily details, punch events, worked/payable hours, late/absence/overtime and monthly summary.
+341: Correction Request | Select day/event, proposed correction, reason, attachment and request status/history.
+342: My Shift | Current roster, working days, start/end, breaks, holiday and temporary approved changes.
+343: Leave | Balance, request, evidence upload, handover/reliever, approval status and history.
+344: Overtime | Own overtime records, eligibility, approval status and payable amount when authorized.
+345: Salary and Deductions | Own salary summary, attendance deductions, allowance, advance/loan recovery and payslips according to permission.
+346: Advance and Loan | Submit requests and view approval/repayment history.
+347: Profile and Documents | Own approved profile summary, emergency contact and expiring documents; edits become requests where required.
+348: Notifications | Attendance exceptions, missing punch, approval result, shift change, document expiry and policy notice.
+349: 11.2 Mobile Attendance Requirements
+350: ID | Requirement | Priority
+351: MOB-001 | The app shall show Check In only when no active work session exists and Check Out when a valid active session exists, subject to approved exceptions. | Must
+352: MOB-002 | The app shall explain location permission and collect location only when required for attendance or authorized field work. | Must
+353: MOB-003 | The app shall not claim success until the API returns a server-generated attendance event ID. | Must
+354: MOB-004 | Queued offline events shall be visible as Pending Sync and shall use an idempotency key to avoid duplicate submission. | Should
+355: MOB-005 | Rooted/jailbroken device handling, mock-location detection and device-integrity checks shall be risk-based and shall create review flags rather than automatic salary deductions. | Should
+356: MOB-006 | Site Supervisor material/tool request access shall remain a separate permission and shall not be given to every site employee. | Must
+357: MOB-007 | Office and site employees shall both have access to their own attendance, salary, deductions, overtime, leave, advance and loan information. | Must
+358: MOB-008 | No HR department-wide employee management or medical record access shall be exposed in the employee mobile application. | Must
+359: MOB-009 | The app shall provide the complete official site arrival, departure, delay and incident reporting workflow. | Must
+360: MOB-010 | The app shall download only zones applicable to the signed-in employee and shall refresh them at login, assignment change and configured intervals. | Must
+361: MOB-011 | Amber or Red zone warnings shall identify the zone, instruction and next permitted action without exposing a confidential restriction reason. | Must
+362: MOB-012 | The employee shall be able to acknowledge a warning, request an Amber-zone exception where permitted and submit a correction when location evidence is inaccurate. | Must
+363: MOB-013 | Offline zone events and site reports shall show Pending Sync, retain original evidence and use idempotency keys when submitted. | Should
+364: MOB-014 | The app shall invoke camera permission for Check In face verification only when needed, explain the purpose and never expose the face template in local app storage. | Must
+365: 12 Approvals Notifications and Audit
+366: 12.1 Approval Objects
+367: Employee activation and sensitive employment/compensation changes.
+368: Attendance correction, out-of-geofence event, missing punch and manual entry.
+369: Operational zone assignment, Amber-zone exception, Red-zone incident review and disputed location evidence.
+370: Overtime, meal allowance, travel/fuel claim and vehicle maintenance eligibility.
+371: Leave, leave encashment, advance, loan and policy exception.
+372: Month lock, month reopen and post-payroll adjustment.
+373: ID | Requirement | Priority
+374: APR-001 | Approval matrices shall be configurable by request type, amount/duration, staff category, department, site and risk level. | Must
+375: APR-002 | The requester shall not approve their own request. | Must
+376: APR-003 | Every decision shall store decision, reason/comment, actor, role, timestamp and values before/after. | Must
+377: APR-004 | Delegation shall be time-bound, explicit and audited. | Should
+378: APR-005 | Notifications shall not expose sensitive salary, CNIC, medical or bank data on lock screens or email subjects. | Must
+379: 12.2 Audit History
+380: Authentication events, device registration, permission changes and failed access.
+381: Employee record create/update/status changes with field-level before/after values for sensitive fields.
+382: Raw punch receipt/import, duplicate detection, correction, recalculation and month lock/reopen.
+383: Policy creation/version/activation and which version calculated each attendance result.
+384: Document upload/download/delete, report export and sensitive data access.
+385: 13 API Requirements
+386: API paths below are the minimum contract groups. Final DTO names may follow the team's conventions, but permissions, validation, idempotency, pagination and audit behavior are mandatory.
+387: API Group | Minimum Endpoints
+388: Authentication | POST /api/auth/login; POST /api/auth/refresh; POST /api/auth/logout; POST /api/auth/forgot-password; POST /api/auth/reset-password; POST /api/auth/mfa/verify
+389: Current User | GET /api/me; GET /api/me/permissions; GET /api/me/devices; DELETE /api/me/devices/{id}
+390: Employees | GET/POST /api/hr/employees; GET/PUT /api/hr/employees/{id}; POST /submit; POST /approve; POST /status-change
+391: Employee Files | POST /api/hr/employees/{id}/documents; GET metadata/download with authorization; POST verify/expire
+392: Organization | CRUD /api/hr/departments, /designations, /branches, /staff-categories and reporting assignments
+393: Sites | CRUD /api/hr/sites; GET /{id}/assignments; POST /{id}/geofence-version
+394: Operational Zones | CRUD /api/hr/zones; POST /{id}/versions; POST assignments; GET /api/me/zones; POST /api/zones/events; POST exception request/decision
+395: Shifts | CRUD /api/hr/shifts; POST /api/hr/shift-assignments; GET employee roster; POST temporary change
+396: Policies | CRUD /api/hr/policies; POST /versions; POST /activate; GET effective policy by employee/date
+397: Mobile Punch | POST /api/attendance/punches; GET /api/attendance/today; GET /api/attendance/my-calendar
+398: Site Reporting | POST /api/site-reports; GET /api/site-reports/mine; GET authorized queue; POST review/decision
+399: Attendance Admin | GET /api/attendance/daily; GET /exceptions; POST /corrections; POST correction decision; POST month lock/reopen
+400: Face Verification | POST /api/hr/employees/{id}/face-enrollment; POST re-enroll/revoke; POST /api/attendance/face-challenges; POST verify; GET authorized attempt history
+401: Leave | GET balances; POST requests; GET history; POST approve/reject/cancel; GET team calendar by scope
+402: Overtime | POST request; GET own/team records; POST approve/reject; GET payroll-ready summary
+403: Allowances | GET eligibility; POST claim; POST approve/reject; GET payment/payroll status
+404: Vehicle and Fuel | POST trips/claims/service; GET mileage ledger; POST decision; GET vehicle custody history
+405: Reports | POST report job; GET status; GET authorized download; export audit record
+406: Notifications | GET /api/notifications; POST mark-read; GET preferences where permitted
+407: 13.1 API Standards
+408: ID | Requirement | Priority
+409: API-001 | All endpoints shall use HTTPS, versioning, standardized problem details, validation errors and correlation IDs. | Must
+410: API-002 | List endpoints shall provide pagination, filter, sorting and authorized data scope. | Must
+411: API-003 | Create/punch/approval endpoints shall support idempotency to prevent duplicate records. | Must
+412: API-004 | Optimistic concurrency/version tokens shall protect employee, policy, shift and approval updates. | Must
+413: API-005 | File endpoints shall validate extension, MIME type, signature, size and malware scan result. | Must
+414: API-006 | OpenAPI documentation shall be generated and kept consistent with the deployed API. | Must
+415: 14 Data Model
+416: Entity | Purpose
+417: User Account | Identity, credentials, MFA, status and employee link
+418: Role Permission User Scope | RBAC plus department/site/employee data scope
+419: Employee | Stable identity and current status
+420: Employee Assignment History | Department, designation, manager, branch, site and effective dates
+421: Compensation History | Salary/wage basis, effective date and restricted access
+422: Employee Document Certification | Metadata, expiry, verification and private file reference
+423: Site and Geofence Version | Location, radius, status and effective dates
+424: Operational Zone and Version | Circle/polygon boundary, zone type, instructions, reason code, site and effective configuration
+425: Zone Assignment Exception | Employee/role/team/site scope, individual override, permission, approval and effective dates
+426: Zone Event | Approach, entry, exit, warning, acknowledgement or disputed evidence with location and device metadata
+427: In-App Site Report | Arrival, departure, delay, access issue or incident report with evidence and review status
+428: Shift and Shift Assignment | Schedule definition and employee/team assignment history
+429: Policy and Policy Version | Rule set, scope, effective dates, approval and immutable version
+430: Face Enrollment | Employee-bound encrypted template reference, status, enrollment/revocation history and authorized actor
+431: Face Verification Attempt | One-to-one Check-In challenge, liveness/match result, provider/version, device, expiry and audit reference
+432: Raw Punch Event | Immutable attendance source event
+433: Work Session | Paired/checkpointed work period across same-day or cross-midnight duty
+434: Daily Attendance Summary | Derived status and payable calculations
+435: Attendance Exception Correction | Issue, request, evidence, decision and recalculation
+436: Leave Type Balance Request | Entitlement, balance, evidence and approval
+437: Overtime Request | Work duration, reason, rate rule and approval
+438: Allowance Claim | Eligibility, calculation, evidence and payroll status
+439: Vehicle Trip Fuel Claim Service | Distance, route, liters, eligibility and maintenance milestones
+440: Approval Decision | Generic approval history and segregation of duties
+441: Audit Event | Security/business event with actor, target and before/after reference
+442: Notification | Recipient, channel, safe content, status and read time
+443: 14.1 Critical Data Constraints
+444: Employee ID, CNIC/passport (where applicable), official email and active mobile username must be unique.
+445: Raw Punch Event is append-only. Attendance summaries may be recalculated but must retain calculation version and history.
+446: More than one raw punch per employee/day is valid; therefore a unique EmployeeId plus AttendanceDate constraint must not be placed on raw events.
+447: Policy, shift, assignment and compensation changes require effective dates and may not silently rewrite prior periods.
+448: Files are private objects referenced by metadata; database backups alone are not a complete backup without file storage.
+449: Zone events reference the exact zone version and assignment effective at event time; later boundary edits shall not rewrite historical evidence.
+450: 15 Reports and Exports
+451: Report | Content
+452: Daily attendance | Present, late, absent, leave, exceptions, source and site/department filters
+453: Monthly attendance register | Employee-by-day matrix plus worked/payable hours and status totals
+454: Punch audit | Raw IN/OUT events, source/device, coordinates where authorized and exception trail
+455: Operational zones | Current assignments, Amber/Red events, warnings, acknowledgements, exceptions and reviewer actions by authorized scope
+456: Site reporting | In-app arrival/departure, delay, access issue and incident reports with sync and review status
+457: Late and KPI | Counts by policy year, thresholds, policy calculation and approved disciplinary status
+458: Overtime | Requested, approved, payable and rejected overtime by employee/site/job
+459: Meal allowance | Eligibility session, amount, approval and payroll/payment status
+460: Leave | Balances, utilization, evidence status, encashment eligibility and absence
+461: Employee master | Authorized fields only; sensitive fields excluded by default
+462: Document expiry | CNIC/passport/certification/insurance expiry and reminders
+463: Fuel and mileage | Approved routes, kilometers, liters, tuning/overhaul milestones and adjustments
+464: Payroll handoff | Locked attendance, overtime, allowances and approved deductions with trace IDs
+465: Audit | Policy changes, corrections, approvals, exports and sensitive access
+466: ID | Requirement | Priority
+467: REP-001 | Exports shall generate real XLSX/PDF/CSV files through background jobs for large reports, not UI-only success messages. | Must
+468: REP-002 | Export columns shall follow the user's permission and shall record an audit event. | Must
+469: REP-003 | Reports shall show generation time, filters, policy period and data lock status. | Must
+470: 16 Security Privacy and Nonfunctional Requirements
+471: ID | Requirement
+472: SEC-001 | Encrypt all network traffic with TLS. Encrypt databases/backups and private files at rest.
+473: SEC-002 | Use least-privilege service accounts and separate application, database, file storage and face-verification service credentials.
+474: SEC-003 | Mask CNIC, bank and contact information in lists and logs. Reveal full values only to authorized roles.
+475: SEC-004 | Never store plaintext passwords, OTPs or temporary passwords. Use an approved password hashing algorithm and force secure activation.
+476: SEC-005 | Protect mobile tokens using OS secure storage. Do not store sensitive HR payloads in unencrypted local storage.
+477: SEC-006 | Rate-limit login, punch, OTP, file upload and report endpoints.
+478: SEC-007 | Validate files and scan for malware before making them available to users.
+479: SEC-008 | Location data shall be collected only for approved attendance/field purposes and retained according to approved policy.
+480: SEC-008A | Background zone monitoring shall be limited to the employee's configured duty/field-work window, use visible notice and stop when the authorized window ends.
+481: SEC-009 | External map providers must not receive employee identity or unrestricted route history.
+482: SEC-010 | Database queries, reports and exports shall enforce data scope on the server.
+483: SEC-011 | Face templates shall be encrypted with separately managed keys, excluded from routine exports/backups where policy requires, and deleted according to approved offboarding and retention rules.
+484: SEC-012 | Face verification shall be used only for employee Check In, not surveillance, unrestricted tracking or general identity search.
+485: 16.1 Performance and Availability
+486: ID | Requirement | Priority
+487: NFR-001 | Normal API responses should complete within two seconds at the agreed production load, excluding large exports and external device sync. | Should
+488: NFR-002 | Mobile punch submission should return a server result within five seconds on a stable network. | Should
+489: NFR-003 | The system shall support at least the agreed employee count plus three-year growth without redesign. Initial load target is Management Confirmation Required. | Must
+490: NFR-004 | Backups shall include SQL data, private files and configuration with tested restore procedures. | Must
+491: NFR-005 | Face-verification service failure shall not expose templates or create a false successful Check In; failures shall be observable and route employees to the approved exception process. | Must
+492: NFR-006 | Web and mobile interfaces shall meet practical accessibility, readable sizing and responsive-layout requirements. | Should
+493: 16.2 Testing Requirements
+494: Unit tests for policy calculations, cross-midnight sessions, late thresholds, leave eligibility, allowance cycles and mileage milestones.
+495: Integration tests for authentication, permissions, EF Core persistence, concurrency, audit and file authorization.
+496: Contract tests between React/React Native clients and OpenAPI DTOs.
+497: End-to-end tests for employee onboarding, face enrollment, Check-In face verification, check-out, correction approval, month lock and payroll handoff.
+498: Face-verification tests for live-person checks, replay attempts, wrong employee, expired/reused token, provider outage, re-enrollment and approved exceptions.
+499: Security tests for IDOR/data-scope bypass, token reuse, file upload, brute force and sensitive export access.
+500: UAT examples must be approved by HR/management and include office, site, overnight, outstation and exception cases.
+501: 17 Acceptance Criteria
+502: ID | Acceptance Test
+503: AC-001 | An authorized HR user can create a complete employee draft, submit it, obtain required approval and activate mobile access without losing data.
+504: AC-002 | An employee can complete live one-to-one face verification at Check In, receive a server-confirmed event, Check Out without another face scan, and see both events in My Attendance and authorized web views.
+505: AC-003 | The system preserves raw punches and shows a separate approved correction trail without deleting original evidence.
+506: AC-004 | Office and site policy test cases calculate late, half-day, hourly, overtime and allowance outcomes using the policy version effective on the date.
+507: AC-005 | An employee outside the permitted geofence receives a clear review status; unauthorized users cannot approve the exception.
+508: AC-005A | An employee receives the correct Green, Amber or Red zone instruction for their effective assignment; a Red-zone entry attempt creates a separate audited event and notification without altering the attendance punch.
+509: AC-005B | A site employee can submit arrival, departure, delay and incident reports entirely in the application without any external messaging step or dependency.
+510: AC-006 | Office and site employees can view only their own attendance, salary summary, deductions, overtime, leaves, advances and loans.
+511: AC-007 | Accounts can consume locked attendance/payroll inputs but cannot alter raw punches or HR policy.
+512: AC-008 | Exports create usable files and exclude fields the requesting user is not allowed to access.
+513: AC-009 | Suspended/terminated users cannot create new punches after the effective time and their historical records remain available to authorized users.
+514: AC-010 | All sensitive changes, approvals, policy versions and report exports are traceable in audit history.
+515: 18 Delivery Phases
+516: Phase | Developer Outcome
+517: Phase 1 Foundation | Solution architecture, environments, authentication, RBAC/data scope, audit, master data and file storage.
+518: Phase 2 Employee Master | Employee lifecycle, fields, documents, assignments, approvals and employee profile.
+519: Phase 3 Attendance Core | Sites, shifts, face enrollment and Check-In verification, raw punches, mobile check-in/out, in-app site reporting, operational zones, summaries, exceptions and corrections.
+520: Phase 4 Policy Engine | Office/site rules, overtime, leave, meal allowance, month lock and payroll handoff.
+521: Phase 5 Employee Self Service | Attendance calendar, correction, leave, salary/deductions, overtime, advance/loan and notifications.
+522: Phase 6 Claims and Reporting | Fuel/motorcycle rules, reports, exports, dashboards and production hardening.
+523: 19 Management Decisions Required
+524: ID | Decision Needed Before Final Implementation
+525: MD-001 | Final employee onboarding approval chain and which changes require management approval.
+526: MD-002 | Approved face-verification SDK/provider and whether matching runs on the registered device, company server or approved private service.
+527: MD-003 | Approved geofence radius per site and GPS accuracy threshold; 80 meters is mockup-only until confirmed.
+528: MD-003A | Final zone names/colors beyond Green, Amber and Red; boundary source/owner; alert recipients; approach distance; monitoring frequency; and which roles may approve Amber-zone exceptions.
+529: MD-004 | Approved live-person and face-match thresholds, retry count, enrollment method, alternative exception process and raw-capture retention period.
+530: MD-005 | Exact authority for attendance correction, out-of-geofence, overtime, leave and allowance decisions.
+531: MD-006 | Exact cross-midnight 10-hour reset, next-day 4.5-hour and 12-extra-hour examples for site staff.
+532: MD-007 | Overtime hourly rate/multiplier formula by staff category and day type.
+533: MD-008 | Dinner allowance amount for stationed site staff. The supplied site policy defines eligibility but not a clear dinner amount.
+534: MD-009 | KPI percentage calculation base, annual reset and whether deductions affect salary directly or performance only.
+535: MD-010 | Paired-worker waiting-time evidence, approval and maximum deduction treatment.
+536: MD-011 | Final leave approval chain, cancellation rules and additional six-day benefit handling.
+537: MD-012 | Employee categories and named early-reporting exceptions to migrate into effective-dated policy assignments.
+538: MD-013 | Face-template deletion timing after resignation/termination and the authorized roles for enrollment, re-enrollment and verification-attempt review.
+539: MD-014 | Payroll module boundary: HR calculation, Accounts verification, management approval and bank advice responsibility.
+540: MD-015 | Data retention periods for GPS, raw punches, CCTV/evidence, documents, payroll and audit logs.
+541: MD-016 | Initial production employee count, sites, peak punch concurrency and availability target.
+542: 20 Source References
+543: Source Type | Reference
+544: Signed policy | Office Timing Attendance and Meal Allowance Policy, dated 01 September 2026
+545: Signed policy | Duty Hours and Meal Allowance Policy Site Staff, effective 01 September 2026
+546: Signed policy | Motorcycle Maintenance and Tuning Policy, dated 01 September 2026
+547: Requirements | HMS ERP FSM SRS draft supplied by the project manager
+548: Project context | PROJECT_CONTEXT.md and AGENTS.md confirmed role/mobile boundaries
+549: Reference mockup | Existing hr HTML pages, shared JavaScript and React Native prototype
+550: 20.1 Developer Start Checklist
+551: Review all Management Decisions Required and assign owners/due dates.
+552: Create the domain glossary and approved status/value lists before database migrations.
+553: Finalize authentication provider, database, private file storage and deployment environments.
+554: Define OpenAPI contracts for Auth, Employee, Shift, Punch, Site Report, Operational Zone and Attendance Summary first.
+555: Build raw-punch and effective-policy tests before implementing salary-impact calculations.
+556: Prepare UAT data that contains no real employee CNIC, bank, medical or password information.
+557: End of document

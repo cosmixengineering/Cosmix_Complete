@@ -1,0 +1,8 @@
+PASS approved retirement records applied marker
+PASS retirement without policy evidence denied
+PASS future status denied before effective instant
+PASS approved suspension release preserves identity
+PASS terminal rehire cannot reuse old employment
+PASS active and suspended archival denied
+PASS archive unarchive preserves ended employment and dated history
+7 checks passed

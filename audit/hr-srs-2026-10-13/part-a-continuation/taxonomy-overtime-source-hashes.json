@@ -1,0 +1,52 @@
+[
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeTaxonomy.cs",
+    "Bytes": 4081,
+    "Sha256": "F2C64B44A9E4356FE32D1FEE7C21C399F9EEF7E265D4CDC14E93E7D295288D57"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeSources.cs",
+    "Bytes": 8309,
+    "Sha256": "968FDD19148ADC1DD161582D95C04D187C546E112347AE099C28CFA1832292D4"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeEligibilityService.cs",
+    "Bytes": 13689,
+    "Sha256": "FE234A180EDE52FFC89C1C0F6A4E387B0A654A15A9024DCC576049FE5A0B8F15"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeRules.cs",
+    "Bytes": 6902,
+    "Sha256": "BF517DF9301176D760A70B5CE78544F468E8043F0D7F3C49DC2EA09F1B9403D9"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeService.cs",
+    "Bytes": 22507,
+    "Sha256": "3335381BFED0E164A113ECD6CFB78C2266316F8CBF02347F53E6EA595D09A951"
+  },
+  {
+    "Path": "src/Cosmix.Application/Attendance/Overtime/OvertimeQueriesAndBulk.cs",
+    "Bytes": 9061,
+    "Sha256": "0E5B5114375EAFB2E0117BD6174C4E686364FA055AD5B67D393E722EEA0B5510"
+  },
+  {
+    "Path": "src/Cosmix.Infrastructure/Repositories/Attendance/OvertimeRepository.cs",
+    "Bytes": 11546,
+    "Sha256": "C584A3746B07128A39166C6E0BFFB45F08BE3296258DB33139F3FE7D3E7E3C0B"
+  },
+  {
+    "Path": "../audit/hr-srs-2026-10-13/part-a-continuation/taxonomy.OvertimeChecks.cs",
+    "Bytes": 44904,
+    "Sha256": "BBBB0B838A7B8FDA7C33ADBE4C81DFC7B7DC5A8774ED6A1D6459F21D9AB68FF1"
+  },
+  {
+    "Path": "../audit/hr-srs-2026-10-13/part-a-continuation/taxonomy.OvertimeComposition.cs",
+    "Bytes": 19004,
+    "Sha256": "C0C80E92E07D7651E29630B9473DB66D5E9FA6AE29238195D8C799DB678452E8"
+  },
+  {
+    "Path": "../audit/hr-srs-2026-10-13/part-a-continuation/taxonomy.OvertimeReplayRed.cs",
+    "Bytes": 16093,
+    "Sha256": "CF9972AE9D693ADB2438E37FD85A2BC9321A84CAB683C53FB209CB66B041402A"
+  }
+]

@@ -1,0 +1,70 @@
+COMPRE FACE SIGN-UP403 AND OPTIONAL DEMO404 - 20 OCTOBER2026
+
+Fixed behavior
+--------------
+The sign-up403 was the explicit custom Nginx registration deny. Removed that
+exact-location deny so the official /admin/user/register handler receives the
+request through the existing admin proxy. Existing LAN restrictions, request/rate
+limits, privateTLS, required administration login and raw-core restrictions remain.
+No user password, existing role, Cosmix application or service key was changed.
+
+Demo endpoint
+-------------
+/admin/user/demo/model returns the native CompreFace404 JSON with message
+"The Demo model is not available any more!". The official1.2.0 UserController only
+offers this demo key while the initial demo user exists. First owner registration
+replaces that demo user. The UI DemoEffects explicitly catches this response and
+marks the optional demo unavailable. This is expected after owner provisioning;
+it does not mean deployed CompreFace or ONNX models are missing/down, and it is
+not the cause of sign-up failure. No success response or production key is
+fabricated/exposed to suppress that browser console entry.
+
+Verified actual API lifecycle
+-----------------------------
+New unique synthetic example.com account with generated private password:
+  valid register201; duplicate register400; login200; native auth cookie issued;
+  own profile200 with matching identity; delete only that new account; subsequent
+  login rejected.9 assertions pass on a fresh full lifecycle.
+The API authenticates UI sessions via its native token cookie, not a Bearer-only
+header. No secret/cookie/token was printed. Recovery metadata was held in the
+owner-protected private folder outside Git. No real employee/image was used.
+
+RED before proxy fix: registration returned403, lifecycle failed as expected.
+GREEN after fix: registration/login lifecycle9pass and live diagnostics16pass.
+Live diagnostics include required core bootstrap, native invalid registration400,
+expected optional demo404/no APIkey, real service credentials, both model loads,
+vault readiness, and no-face rejection. Earlier document/dependency and TLS checks
+remain in the previous UI report; no rendered browser success claim is made here.
+
+During fixture development, a generated test email longer than63 characters hit
+CompreFace1.2.0's native VARCHAR(63) email limit and generic400. The fixture now
+uses a bounded37-character synthetic email. No schema was altered; this vendor
+long-email validation limitation remains. It does not affect the shown user's
+shorter email. A recovery run removed the first successful synthetic account;
+a subsequent fresh complete lifecycle created/removed a second account.
+
+Deployment and rollback
+-----------------------
+Only graceful Nginx reload; core/admin/API/Postgres and ERP were not restarted.
+Candidate and live nginx -t passed.
+Local and server nginx.conf SHA256:
+  1fcc5a782425b42fd60481b6e52922ebfe861cf68142932cfe2c866c8a04a35f
+Server backup:/opt/cosmix/face-verification/nginx.conf.before-signup-20261020
+Rollback overwrites the existing bind-mounted file from that backup, validates
+nginx -t and reloads. The backup restores the old registration block, so use it
+only if deliberately reverting the owner's requested sign-up behavior.
+
+Current entry points:
+  https://192.168.1.50:8000/sign-up
+  https://192.168.1.50:8000/login
+A newly registered CompreFace user is a native USER; it is not an ERP employee or
+an automatic member of the technical owner's existing Cosmix ERP application.
+Access to that existing application uses normal CompreFace app membership.
+
+Sources inspected:
+  https://github.com/exadel-inc/CompreFace/blob/v1.2.0/java/admin/src/main/java/com/exadel/frs/controller/UserController.java
+  https://github.com/exadel-inc/CompreFace/blob/v1.2.0/ui/src/app/store/demo/effects.ts
+  https://github.com/exadel-inc/CompreFace/blob/v1.2.0/java/admin/src/main/java/com/exadel/frs/system/security/CookieTokenExtractor.java
+Logs:C:/Users/Huma.Khan/.codex/artifacts/cosmix-face-deep-20261020/
+  signup-red.log,signup-green.log,signup-lifecycle-red.log,
+  signup-lifecycle-recovery.log,signup-lifecycle-green.log.

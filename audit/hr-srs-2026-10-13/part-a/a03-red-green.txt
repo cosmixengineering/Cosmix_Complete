@@ -1,0 +1,14 @@
+Initial behavioral baseline: Assertions: 3; failures: 3 (exit 1).
+FAIL: Formatted explicit international contact must normalize before field validation
+FAIL: Domain must reject unnormalized stored phone
+FAIL: Verification/revocation must retain separate immutable bank history
+
+Policy/normalization second red: Assertions: 3; failures: 3 (exit 1).
+FAIL: Formatted explicit international contact must normalize before field validation
+FAIL: Domain must reject unnormalized stored phone
+FAIL: Approved controlled-field/age/expiry/probation policy must be configurable without guessed defaults
+
+Basic green after production: Assertions: 3; failures: 0 (exit 0).
+Temporary dotnet run Release compiled real Application/Infrastructure/Domain projects; no SQL/accounts/provider side effects.
+Expanded fresh green: Assertions: 27; failures: 0; SQL/provider/accounts side effects: none (Release exit 0). Full solution Release separately reported 3 unrelated SiteReportsController missing-type errors. Correct OutDir invocation uses quoted -p:OutDir argument.
+Final A23 frozen-binary rerun: Assertions: 27; failures: 0; SQL/provider/accounts side effects: none; Release exit 0. IsEmployeeActiveForAccessAsync fixture derives synthetic approved Active hire; successful compilation uses only audit Program.cs and stable compiled dependencies with --artifacts-path.
