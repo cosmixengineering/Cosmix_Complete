@@ -1,0 +1,12 @@
+[submodule "cosmix-backend"]
+	path = cosmix-backend
+	url = https://github.com/cosmixengineering/cosmix-backend.git
+[submodule "cosmix_frotned"]
+	path = cosmix_frotned
+	url = https://github.com/cosmixengineering/Cosmix-Frontend.git
+[submodule "cosmix_mobile"]
+	path = cosmix_mobile
+	url = https://github.com/cosmixengineering/Cosmix-Mobile-App.git
+[submodule "Cosmix_new/code"]
+	path = Cosmix_new/code
+	url = https://github.com/bkhanzaza551-a11y/cosmix_New.git
