@@ -1,0 +1,341 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Tags, Plus, Trash2, GripVertical } from 'lucide-react'
+import {
+  useCategoryAttributesQuery,
+  useActiveProductAttributesQuery,
+  useAssignCategoryAttributeMutation,
+  useUpdateCategoryAttributeMutation,
+  useRemoveCategoryAttributeMutation,
+} from '@/portal-app/products/queries'
+import {
+  Badge,
+  Button,
+  Checkbox,
+  Credenza,
+  CredenzaBody,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+  EmptyState,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@uikit'
+
+import { toast } from 'sonner'
+import type { ProductCategoryListItem } from '@/types/product'
+import type { CategoryAttribute } from '@/types/productAttribute'
+
+interface ProductCategoryAttributesDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  category: ProductCategoryListItem | null
+}
+
+export const ProductCategoryAttributesDialog = ({
+  open,
+  onOpenChange,
+  category,
+}: ProductCategoryAttributesDialogProps) => {
+  const { t } = useTranslation('common')
+  const [showAddAttribute, setShowAddAttribute] = useState(false)
+  const [selectedAttributeId, setSelectedAttributeId] = useState<string>('')
+  const [selectedIsRequired, setSelectedIsRequired] = useState(false)
+  const [attributeToRemove, setAttributeToRemove] = useState<CategoryAttribute | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { data: categoryAttributes = [], isLoading: loading } = useCategoryAttributesQuery(category?.id)
+  const { data: allAttributes = [], isLoading: loadingAttributes } = useActiveProductAttributesQuery()
+  const assignMutation = useAssignCategoryAttributeMutation()
+  const updateMutation = useUpdateCategoryAttributeMutation()
+  const removeMutation = useRemoveCategoryAttributeMutation()
+
+  // Filter out already assigned attributes
+  const availableAttributes = allAttributes.filter(
+    (attr) => !categoryAttributes.find((ca) => ca.attributeId === attr.id)
+  )
+
+  const handleAddAttribute = async () => {
+    if (!selectedAttributeId || !category) return
+
+    setIsSubmitting(true)
+    try {
+      await assignMutation.mutateAsync({
+        categoryId: category.id,
+        request: {
+          attributeId: selectedAttributeId,
+          isRequired: selectedIsRequired,
+          sortOrder: categoryAttributes.length,
+        },
+      })
+      toast.success(t('categoryAttributes.assignSuccess', 'Attribute assigned successfully'))
+      setShowAddAttribute(false)
+      setSelectedAttributeId('')
+      setSelectedIsRequired(false)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('categoryAttributes.assignError', 'Failed to assign attribute')
+      toast.error(message)
+    }
+    setIsSubmitting(false)
+  }
+
+  const handleToggleRequired = async (ca: CategoryAttribute) => {
+    if (!category) return
+    try {
+      await updateMutation.mutateAsync({
+        categoryId: category.id,
+        attributeId: ca.attributeId,
+        request: {
+          isRequired: !ca.isRequired,
+          sortOrder: ca.sortOrder,
+        },
+      })
+      toast.success(t('categoryAttributes.updateSuccess', 'Attribute updated'))
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('categoryAttributes.updateError', 'Failed to update attribute')
+      toast.error(message)
+    }
+  }
+
+  const confirmRemoveAttribute = async () => {
+    if (!attributeToRemove || !category) return
+
+    try {
+      await removeMutation.mutateAsync({
+        categoryId: category.id,
+        attributeId: attributeToRemove.attributeId,
+      })
+      toast.success(t('categoryAttributes.removeSuccess', 'Attribute removed'))
+      setAttributeToRemove(null)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('categoryAttributes.removeError', 'Failed to remove attribute')
+      toast.error(message)
+    }
+  }
+
+  if (!category) return null
+
+  return (
+    <>
+      <Credenza open={open} onOpenChange={onOpenChange}>
+        <CredenzaContent className="sm:max-w-[600px]">
+          <CredenzaHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
+                <Tags className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CredenzaTitle>
+                  {t('categoryAttributes.title', 'Category Attributes')}
+                </CredenzaTitle>
+                <CredenzaDescription>
+                  {t('categoryAttributes.description', 'Manage which attributes are available for products in "{name}"', { name: category.name })}
+                </CredenzaDescription>
+              </div>
+            </div>
+          </CredenzaHeader>
+
+          <CredenzaBody>
+            <div className="space-y-4">
+              {/* Add Attribute Section */}
+              {showAddAttribute ? (
+                <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                  <label className="text-sm font-medium">
+                    {t('categoryAttributes.selectAttribute', 'Select Attribute')}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <Select
+                        value={selectedAttributeId}
+                        onValueChange={setSelectedAttributeId}
+                        disabled={loadingAttributes}
+                      >
+                        <SelectTrigger className="cursor-pointer" aria-label={t('categoryAttributes.selectAttribute', 'Select Attribute')}>
+                          <SelectValue placeholder={t('categoryAttributes.selectPlaceholder', 'Choose an attribute...')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableAttributes.map((attr) => (
+                            <SelectItem key={attr.id} value={attr.id} className="cursor-pointer">
+                              <div className="flex items-center gap-2">
+                                <span>{attr.name}</span>
+                                <Badge variant="outline" className="text-xs">{attr.type}</Badge>
+                              </div>
+                            </SelectItem>
+                          ))}
+                          {availableAttributes.length === 0 && (
+                            <SelectItem value="none" disabled>
+                              {t('categoryAttributes.noAvailableAttributes', 'No available attributes')}
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="isRequired"
+                        checked={selectedIsRequired}
+                        onCheckedChange={(checked) => setSelectedIsRequired(checked === true)}
+                        className="cursor-pointer"
+                      />
+                      <label htmlFor="isRequired" className="text-sm cursor-pointer">
+                        {t('labels.required', 'Required')}
+                      </label>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={handleAddAttribute}
+                      disabled={!selectedAttributeId || isSubmitting}
+                      className="cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      {t('labels.add', 'Add')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setShowAddAttribute(false)
+                        setSelectedAttributeId('')
+                        setSelectedIsRequired(false)
+                      }}
+                      className="cursor-pointer"
+                    >
+                      {t('labels.cancel', 'Cancel')}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddAttribute(true)}
+                  disabled={availableAttributes.length === 0}
+                  className="cursor-pointer"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('categoryAttributes.addAttribute', 'Add Attribute')}
+                </Button>
+              )}
+
+              {/* Attributes List */}
+              <div className="rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10 sticky left-0 z-10 bg-background"></TableHead>
+                      <TableHead className="w-8"></TableHead>
+                      <TableHead>{t('labels.name', 'Name')}</TableHead>
+                      <TableHead>{t('labels.code', 'Code')}</TableHead>
+                      <TableHead className="text-center">{t('labels.required', 'Required')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      [...Array(3)].map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="sticky left-0 z-10 bg-background"><Skeleton className="h-8 w-8 rounded" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : categoryAttributes.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="p-0">
+                          <EmptyState
+                            icon={Tags}
+                            title={t('categoryAttributes.noAttributes', 'No attributes assigned')}
+                            description={t('categoryAttributes.noAttributesDescription', 'Add attributes to define what information products in this category should have.')}
+                            className="border-0 rounded-none py-8"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      categoryAttributes.map((ca) => (
+                        <TableRow key={ca.id} className="group">
+                          <TableCell className="sticky left-0 z-10 bg-background">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="cursor-pointer h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => setAttributeToRemove(ca)}
+                              aria-label={t('categoryAttributes.removeAttribute', 'Remove {name}', { name: ca.attributeName })}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-medium">{ca.attributeName}</span>
+                          </TableCell>
+                          <TableCell>
+                            <code className="text-sm bg-muted px-1.5 py-0.5 rounded">
+                              {ca.attributeCode}
+                            </code>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Checkbox
+                              checked={ca.isRequired}
+                              onCheckedChange={() => handleToggleRequired(ca)}
+                              className="cursor-pointer"
+                              aria-label={t('categoryAttributes.toggleRequired', 'Toggle required for {name}', { name: ca.attributeName })}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </CredenzaBody>
+        </CredenzaContent>
+      </Credenza>
+
+      {/* Remove Confirmation Dialog */}
+      <Credenza open={!!attributeToRemove} onOpenChange={(open) => !open && setAttributeToRemove(null)}>
+        <CredenzaContent>
+          <CredenzaHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-destructive/10 border border-destructive/20">
+                <Trash2 className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <CredenzaTitle>{t('categoryAttributes.removeTitle', 'Remove Attribute')}</CredenzaTitle>
+                <CredenzaDescription>
+                  {t('categoryAttributes.removeDescription', 'Are you sure you want to remove "{name}" from this category?', { name: attributeToRemove?.attributeName })}
+                </CredenzaDescription>
+              </div>
+            </div>
+          </CredenzaHeader>
+          <CredenzaBody />
+          <CredenzaFooter>
+            <Button variant="outline" onClick={() => setAttributeToRemove(null)} className="cursor-pointer">{t('labels.cancel', 'Cancel')}</Button>
+            <Button
+              variant="destructive"
+              onClick={confirmRemoveAttribute}
+              className="cursor-pointer bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+            >
+              {t('labels.remove', 'Remove')}
+            </Button>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
+    </>
+  )
+}

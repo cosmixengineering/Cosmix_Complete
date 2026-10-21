@@ -1,0 +1,66 @@
+/**
+ * NotificationEmpty Component
+ *
+ * Animated empty state for notification list with engaging illustration
+ */
+import { useTranslation } from 'react-i18next'
+import { motion } from 'framer-motion'
+import { BellOff, Mail, MessageSquare } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+interface NotificationEmptyProps {
+  className?: string
+}
+
+export const NotificationEmpty = ({ className }: NotificationEmptyProps) => {
+  const { t } = useTranslation('common')
+
+  return (
+    <div className={cn('flex flex-col items-center justify-center py-12 px-6', className)}>
+      {/* Animated illustration with 3 icons */}
+      <div className="flex justify-center isolate mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 30 }}
+          className="bg-background size-12 grid place-items-center rounded-xl relative left-2.5 top-1.5 -rotate-6 shadow-lg ring-1 ring-border"
+        >
+          <Mail className="h-6 w-6 text-muted-foreground" />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, type: 'spring', stiffness: 300, damping: 30 }}
+          className="bg-background size-12 grid place-items-center rounded-xl relative z-10 shadow-lg ring-1 ring-border"
+        >
+          <BellOff className="h-6 w-6 text-muted-foreground" />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, type: 'spring', stiffness: 300, damping: 30 }}
+          className="bg-background size-12 grid place-items-center rounded-xl relative right-2.5 top-1.5 rotate-6 shadow-lg ring-1 ring-border"
+        >
+          <MessageSquare className="h-6 w-6 text-muted-foreground" />
+        </motion.div>
+      </div>
+
+      <motion.h3
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="text-base font-semibold text-foreground mb-1.5"
+      >
+        {t('notifications.emptyCaughtUp')}
+      </motion.h3>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="text-sm text-muted-foreground text-center max-w-[240px]"
+      >
+        {t('notifications.emptyMessage')}
+      </motion.p>
+    </div>
+  )
+}

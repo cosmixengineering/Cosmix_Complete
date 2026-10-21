@@ -1,0 +1,25 @@
+﻿{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:4000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PAYMENT_ENCRYPTION_KEY_PAYMENT_CREDENTIALS_KEY": "RGV2ZWxvcG1lbnRPbmx5S2V5MTIzNDU2Nzg5MDEyMzQ1Ng=="
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:4443;http://localhost:4000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PAYMENT_ENCRYPTION_KEY_PAYMENT_CREDENTIALS_KEY": "RGV2ZWxvcG1lbnRPbmx5S2V5MTIzNDU2Nzg5MDEyMzQ1Ng=="
+      }
+    }
+  }
+}

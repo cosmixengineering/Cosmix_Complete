@@ -1,0 +1,724 @@
+/* Leave & Absence Management Enterprise Styling */
+
+.leave-management-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: #1e293b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Header & Action Bar */
+.leave-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.leave-title-group h1 {
+  font-size: 16px;
+  font-weight: 750;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.leave-title-group p {
+  font-size: 11px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.leave-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-leave-create {
+  height: 28px;
+  padding: 0 10px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-leave-create:hover {
+  background: #1d4ed8;
+}
+
+.btn-leave-secondary {
+  height: 28px;
+  padding: 0 10px;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+
+.btn-leave-secondary:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+/* 4 Metric / KPI Cards */
+.leave-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+@media (max-width: 992px) {
+  .leave-kpis-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 576px) {
+  .leave-kpis-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leave-kpi-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+  min-width: 0;
+}
+
+.leave-kpi-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.leave-kpi-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.leave-kpi-icon-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-bg-mint {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.kpi-bg-pink {
+  background: #fee2e2;
+  color: #ef4444;
+}
+.kpi-bg-amber {
+  background: #fef9c3;
+  color: #ca8a04;
+}
+.kpi-bg-purple {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+.leave-kpi-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.leave-kpi-label {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 550;
+}
+
+.leave-kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin: 1px 0;
+}
+
+.leave-kpi-value {
+  font-size: 20px;
+  font-weight: 750;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.leave-kpi-unit {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.leave-kpi-sub {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.leave-kpi-sub.trend-up {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* Two-Column Section Layouts */
+.leave-split-grid {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .leave-split-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leave-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.leave-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.leave-card-title {
+  font-size: 14px;
+  font-weight: 750;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Tabs Bar */
+.leave-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 2px;
+}
+
+.leave-tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.leave-tab-btn:hover {
+  color: #0f172a;
+}
+
+.leave-tab-btn.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+.leave-tab-badge {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 1px 5px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* Dense Leave Requests Table */
+.leave-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.leave-dense-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+
+.leave-dense-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 650;
+  font-size: 11px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.leave-dense-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+.leave-dense-table tr:hover td {
+  background: #f8fafc;
+}
+
+/* Badges for Leave Types */
+.badge-type-annual {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.badge-type-sick {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.badge-type-casual {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #fef9c3;
+  color: #854d0e;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.badge-type-maternity {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #f3e8ff;
+  color: #7e22ce;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.badge-type-unpaid {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* Status Badges */
+.badge-status-pending {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-status-approved {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-status-rejected {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-evidence-submitted {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Right Panel: Balances List */
+.leave-balances-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.leave-balance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.leave-balance-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.leave-balance-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  font-weight: 550;
+}
+
+.leave-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.leave-balance-num {
+  font-weight: 650;
+  color: #0f172a;
+}
+
+/* Right Panel: Policy & Guidelines */
+.policy-guidelines-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 11.5px;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.policy-guidelines-box ul {
+  margin: 6px 0 0 0;
+  padding-left: 16px;
+}
+
+.policy-guidelines-box li {
+  margin-bottom: 4px;
+}
+
+/* Team Leave Calendar Gantt Timeline */
+.timeline-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.timeline-month-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 650;
+  font-size: 12.5px;
+  color: #0f172a;
+}
+
+.timeline-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.timeline-grid-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.timeline-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+  font-size: 11.5px;
+}
+
+.timeline-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 650;
+  padding: 6px 4px;
+  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid #f1f5f9;
+  text-align: center;
+  min-width: 34px;
+}
+
+.timeline-table th.emp-col {
+  text-align: left;
+  padding: 6px 10px;
+  min-width: 130px;
+  position: sticky;
+  left: 0;
+  background: #f8fafc;
+  z-index: 2;
+}
+
+.timeline-table td {
+  padding: 6px 2px;
+  border-bottom: 1px solid #f1f5f9;
+  border-right: 1px solid #f8fafc;
+  height: 38px;
+  vertical-align: middle;
+  text-align: center;
+  position: relative;
+}
+
+.timeline-table td.emp-col {
+  text-align: left;
+  padding: 6px 10px;
+  position: sticky;
+  left: 0;
+  background: #ffffff;
+  z-index: 1;
+  border-right: 1px solid #e2e8f0;
+}
+
+.timeline-table tr:hover td.emp-col {
+  background: #f8fafc;
+}
+
+/* Gantt Bar Pill Overlays */
+.gantt-bar-annual {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 650;
+  white-space: nowrap;
+  display: block;
+}
+
+.gantt-bar-sick {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 650;
+  white-space: nowrap;
+  display: block;
+}
+
+.gantt-bar-casual {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fef08a;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 650;
+  white-space: nowrap;
+  display: block;
+}
+
+/* Upcoming Absences List */
+.upcoming-absences-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.upcoming-absence-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 10px;
+}
+
+.upcoming-absence-item:last-child {
+  border-bottom: none;
+}
+
+.upcoming-absence-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.upcoming-absence-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.upcoming-absence-info h4 {
+  font-size: 12px;
+  font-weight: 650;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.upcoming-absence-info p {
+  font-size: 11px;
+  color: #64748b;
+  margin: 1px 0 0 0;
+}
+
+.upcoming-absence-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.upcoming-absence-dates {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.upcoming-absence-dur {
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+/* Modal Overlay & Card */
+.leave-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.leave-modal-dialog {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.leave-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.leave-modal-header h3 {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.leave-modal-body {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.leave-modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background: #f8fafc;
+  border-radius: 0 0 12px 12px;
+}

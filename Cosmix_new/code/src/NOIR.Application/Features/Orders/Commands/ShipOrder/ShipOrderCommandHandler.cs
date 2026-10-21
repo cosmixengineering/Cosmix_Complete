@@ -1,0 +1,65 @@
+namespace NOIR.Application.Features.Orders.Commands.ShipOrder;
+
+/// <summary>
+/// Wolverine handler for shipping an order.
+/// </summary>
+public class ShipOrderCommandHandler
+{
+    private readonly IRepository<Order, Guid> _orderRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IEntityUpdateHubContext _entityUpdateHub;
+
+    public ShipOrderCommandHandler(
+        IRepository<Order, Guid> orderRepository,
+        IUnitOfWork unitOfWork,
+        IEntityUpdateHubContext entityUpdateHub)
+    {
+        _orderRepository = orderRepository;
+        _unitOfWork = unitOfWork;
+        _entityUpdateHub = entityUpdateHub;
+    }
+
+    public async Task<Result<OrderDto>> Handle(
+        ShipOrderCommand command,
+        CancellationToken cancellationToken)
+    {
+        var spec = new OrderByIdForUpdateSpec(command.OrderId);
+        var order = await _orderRepository.FirstOrDefaultAsync(spec, cancellationToken);
+
+        if (order is null)
+        {
+            return Result.Failure<OrderDto>(
+                Error.NotFound($"Order with ID '{command.OrderId}' not found.", ErrorCodes.Order.NotFound));
+        }
+
+        // Intentional auto-transition: If order is in Confirmed state, automatically
+        // transition through Processing before Shipping. The Processing state has no
+        // dedicated frontend action - it's an internal fulfillment step.
+        // This produces two domain events (OrderProcessingStarted + OrderShipped).
+        if (order.Status == OrderStatus.Confirmed)
+        {
+            order.StartProcessing();
+        }
+
+        try
+        {
+            order.Ship(command.TrackingNumber, command.ShippingCarrier);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Result.Failure<OrderDto>(
+                Error.Validation("Status", ex.Message, ErrorCodes.Order.InvalidShipTransition));
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _entityUpdateHub.PublishEntityUpdatedAsync(
+            entityType: "Order",
+            entityId: order.Id,
+            operation: EntityOperation.Updated,
+            tenantId: order.TenantId!,
+            ct: cancellationToken);
+
+        return Result.Success(OrderMapper.ToDto(order));
+    }
+}

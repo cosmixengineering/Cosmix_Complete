@@ -1,0 +1,45 @@
+.hiring-queue .hr-page-heading {
+  flex-wrap: wrap;
+}
+.hiring-queue .hr-page-heading h1 {
+  font-size: 24px;
+}
+.hiring-row-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hiring-queue .hr-request-row > div {
+  min-width: 0;
+}
+.hiring-queue .hr-text-button {
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.hiring-review-dialog {
+  width: min(960px, calc(100% - 32px));
+  border-radius: 8px;
+}
+.hiring-review-dialog .hr-dl dd {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.hiring-review-dialog .hr-tabs {
+  flex-wrap: wrap;
+}
+.hiring-review-dialog .hr-form-section > fieldset {
+  min-width: 0;
+}
+.hiring-review-dialog .hr-form-section fieldset > .field,
+.hiring-review-dialog .hr-form-section fieldset > .hr-reference {
+  margin-bottom: 16px;
+}
+@media (max-width: 600px) {
+  .hiring-review-dialog {
+    padding: 20px;
+  }
+  .hiring-row-actions {
+    width: 100%;
+  }
+}

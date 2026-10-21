@@ -1,0 +1,54 @@
+.employee-records {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.employee-records fieldset {
+  min-width: 0;
+}
+.employee-records .record-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid #dfe4e9;
+}
+.employee-records .record-facts {
+  flex: 1;
+  min-width: 0;
+}
+.employee-records .record-row > .hr-actions {
+  max-width: 210px;
+  flex-shrink: 0;
+}
+.employee-records .record-asof {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 100%;
+}
+.employee-records .field {
+  min-width: 0;
+  max-width: 100%;
+}
+.employee-records input,
+.employee-records select {
+  max-width: 100%;
+  min-width: 0;
+}
+.employee-records .button {
+  white-space: normal;
+}
+@media (max-width: 760px) {
+  .employee-records .record-row {
+    flex-direction: column;
+  }
+  .employee-records .record-row > .hr-actions {
+    max-width: 100%;
+  }
+  .employee-records .record-asof,
+  .employee-records .hr-toolbar .field {
+    width: 100%;
+  }
+}

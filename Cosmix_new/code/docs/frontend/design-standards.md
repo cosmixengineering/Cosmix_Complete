@@ -1,0 +1,216 @@
+# NOIR Frontend Design Standards
+
+> Verified against 44 pages and 96 Storybook stories. Version 2.0 (2026-02-22).
+
+> Gold Standard: Payment Provider Settings (`PaymentGatewaysTab.tsx` + `GatewayCard.tsx`)
+
+## Brand Color Palette
+
+**Reference**: Full brand kit at `brand/noir-brandkit.html` (open locally in browser).
+
+### Primary: Sapphire Blue
+| Role | Hex | OKLCH | Tailwind |
+|------|-----|-------|----------|
+| Primary (light) | `#2563EB` | `oklch(0.55 0.245 263)` | `bg-primary` / `text-primary` |
+| Primary (dark) | `#3B82F6` | `oklch(0.65 0.22 263)` | auto via `.dark` theme |
+| Press/Active | `#1D4ED8` | — | — |
+| Deeper | `#1E40AF` | — | — |
+
+### Accent: Amber Gold
+| Role | Hex | OKLCH | Tailwind |
+|------|-----|-------|----------|
+| Amber accent | `#F59E0B` | `oklch(0.72 0.17 80)` | `bg-highlight` / `text-highlight` |
+| Amber 200 | `#FDE68A` | `oklch(0.87 0.13 80)` | — (used for `::selection`) |
+
+### Usage Rules
+- **Primary (Sapphire)**: Buttons, links, focus rings, sidebar active, orbital logo — all interactive elements
+- **Accent (Amber)**: Text selection (`::selection`), brand gradients (`.brand-gradient`), decorative highlights. NOT for buttons or primary actions
+- **Never** mix amber into the orbital logo — keep all 3 circles sapphire blue
+- **Brand gradient**: `linear-gradient(135deg, #FDE68A, #F59E0B, #2563EB, #1E40AF)` — amber to sapphire, for decorative text or hero sections. Use `.brand-gradient` CSS class for text gradient.
+- **Brandkit file**: `brand/noir-brandkit.html` is the source of truth for all brand assets, color swatches, typography, logo variants, and usage guidelines
+
+## Orbital Logo Mark
+
+NOIR's logo is 3 concentric offset SVG circles animated with CSS. Always use the pre-built SVG — never recreate it.
+
+### SVG Structure
+```tsx
+<svg width={SIZE} height={SIZE} viewBox="0 0 110 110" fill="none"
+  className="orbital-animated [COLOR_CLASS]" aria-hidden="true">
+  <circle cx="56" cy="58" r="48" stroke={COLOR} strokeWidth="7"/>
+  <circle cx="48" cy="50" r="30" stroke={COLOR} strokeWidth="7"/>
+  <circle cx="57" cy="50" r="13" stroke={COLOR} strokeWidth="7"/>
+</svg>
+```
+
+### Usage Patterns
+
+| Context | Size | stroke | className |
+|---------|------|--------|-----------|
+| Page header (light bg) | 56px | `currentColor` | `orbital-animated text-primary` |
+| Navbar logo | 40px | `currentColor` | `orbital-animated text-primary flex-shrink-0` |
+| Footer mini logo | 22px | `currentColor` | `orbital-animated text-primary flex-shrink-0` |
+| Auth right panel (dark bg) | 80px | `white` w/ `strokeOpacity="0.9"` | `orbital-animated mx-auto` |
+| Sidebar (portal) | 32px | `currentColor` | `orbital-animated text-sidebar-primary` |
+| Favicon (`public/favicon.svg`) | — | `#2563EB` hardcoded | *(CSS vars unavailable in favicon context)* |
+
+### Animation
+Defined in `src/index.css` as `.orbital-animated`:
+- Outer ring: 12s clockwise
+- Middle ring: 8s **counter-clockwise** (`animation-direction: reverse`)
+- Inner ring: 5s clockwise
+
+Respects `prefers-reduced-motion` (animation disabled automatically).
+
+### Rules
+- **Always** `aria-hidden="true"` — decorative SVG, not meaningful content
+- **Never** recreate the SVG inline with different circle positions — use the exact cx/cy/r values
+- **Never** wrap in a gradient `div` container — use `stroke="currentColor"` + Tailwind text color class
+- `strokeWidth="7"` for page logos, `strokeWidth="10"` for 22px and smaller
+
+## Card Patterns
+
+### List Page Cards
+- `shadow-sm hover:shadow-lg transition-all duration-300`
+- CardHeader: `pb-4`
+- CardContent: opacity transitions for loading states
+
+### Detail Page Cards
+- `shadow-sm hover:shadow-lg transition-all duration-300 gap-4 py-5`
+- Container: `container max-w-6xl py-6 space-y-6`
+- Grid layout: `grid grid-cols-1 lg:grid-cols-3 gap-6`
+- Column spacing: `space-y-6`
+
+### Stateful Cards (Config/Gateway)
+- Active: `ring-2 ring-green-500/50 shadow-green-500/10 shadow-lg`
+- Disabled: `opacity-75`
+- Transitions: `transition-all duration-200`
+
+## Table Patterns
+- Container: `rounded-xl border border-border/50 overflow-hidden`
+- Row hover: `group transition-colors hover:bg-muted/50 cursor-pointer`
+- Sticky column: `w-10 sticky left-0 z-10 bg-background`
+- Loading: 5 skeleton rows with `animate-pulse`
+- Empty state: `EmptyState` component from `@uikit`, `border-0 rounded-none px-4 py-12`
+
+## Button Patterns
+- Primary/Create action: `className="group transition-all duration-300"` — NO `shadow-lg hover:shadow-xl`
+- Create button icon: `group-hover:rotate-90 duration-300`
+- Icon sizing: `h-4 w-4 mr-2`
+- ALL buttons: `cursor-pointer`
+- Loading: `<Loader2 className="h-4 w-4 mr-2 animate-spin" />`
+- Size: `sm` for table actions, `default` for forms, `lg` for page CTAs
+- NO gradient buttons (`bg-gradient-to-r`) — use default Button variants
+
+## Destructive Actions
+
+### Destructive Buttons
+```tsx
+<Button
+  variant="destructive"
+  onClick={handleDelete}
+  disabled={mutation.isPending}
+  className="cursor-pointer bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+>
+  {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+  {mutation.isPending ? t('labels.deleting', 'Deleting...') : t('labels.delete', 'Delete')}
+</Button>
+```
+
+### Destructive Dialogs
+- Use `Credenza` (NEVER `AlertDialog`) with `CredenzaContent className="border-destructive/30"`
+- Header: icon in `p-2 rounded-xl bg-destructive/10 border border-destructive/20` with `Trash2`/`XCircle` icon
+- Footer: Cancel (`variant="outline"`, disabled during pending) + Delete (destructive soft style above)
+- Cancel button must have `onClick` handler (not rely on `AlertDialogCancel` auto-close)
+
+## Status Badges
+- ALWAYS: `variant="outline"` + `getStatusBadgeClasses('green'|'gray'|'red'|...)` from `@/utils/statusBadge`
+- NEVER: `variant="default"` or `variant="secondary"` for active/inactive status
+- Health indicators: icon + text with matching color (`text-green-500`, `text-yellow-500`, `text-red-600`)
+
+## Empty States
+- ALWAYS: `<EmptyState icon={IconComponent} title={t('...')} description={t('...')} />` from `@uikit`
+- NEVER: `<div className="text-center py-8 text-muted-foreground">{text}</div>`
+
+## Dialog Patterns
+- Component: `Credenza` (NEVER `AlertDialog`) — handles mobile responsiveness
+- Width: `sm:max-w-[550px]` (standard), adjust for content
+- Header icon: `p-2 bg-primary/10 rounded-lg` with `h-5 w-5 text-primary`
+- Footer: Cancel (outline) left, Submit (default) right
+- Form spacing: `space-y-4` (NEVER `space-y-5`)
+- MUST use `useUrlDialog` for create, `useUrlEditDialog` for edit
+
+## Filter Patterns
+- SelectTrigger: `h-9 cursor-pointer`
+- Search input: `pl-9 h-9` with icon at `left-3 top-1/2 -translate-y-1/2`
+
+## Typography
+- Headings: `text-lg font-semibold`
+- Body/labels: `text-sm`
+- Meta info: `text-xs text-muted-foreground`
+- Section dividers: `text-xs text-muted-foreground uppercase tracking-wider`
+
+## Spacing
+- Section gaps: `gap-6` (24px) or `space-y-4` (16px)
+- Medium gaps: `gap-3` (12px)
+- Button groups: `gap-2` (8px)
+- Tight spacing: `gap-1` (4px)
+- CardHeader bottom: `pb-3` or `pb-4`
+- Dialog body form fields: `space-y-4` (NEVER `space-y-5`)
+
+## Color Semantics
+- Primary: `bg-primary/10`, `text-primary`
+- Success: `text-green-500`, `bg-green-500/10`
+- Warning: `text-yellow-500`, `text-yellow-600`
+- Error: `text-red-600`, `bg-red-50`, `text-destructive`, `bg-destructive/10`
+- Muted: `text-muted-foreground`, `bg-muted`
+
+## Error States
+- Container: `p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive`
+- Retry button: with `group-hover:rotate-180` icon animation
+
+## Accessibility
+- `cursor-pointer` on ALL interactive elements (Buttons, Tabs, Checkboxes, Select, DropdownMenu, Switch)
+- `aria-label` on ALL icon-only buttons (contextual, e.g., `Delete ${item.name}`)
+- Confirmation dialogs for ALL destructive actions
+
+## Responsive
+- Grid: `grid gap-6 sm:grid-cols-2`
+- Dialog: Credenza handles mobile responsiveness
+- TabsList: `flex-wrap h-auto` for wrapping
+
+## Interactive Elements
+- ALL clickable rows: `cursor-pointer`
+- ALL Tabs/TabsTrigger: `cursor-pointer`
+- ALL Select/SelectTrigger: `cursor-pointer`
+- ALL Switch: `cursor-pointer`
+- ALL Checkbox: `cursor-pointer`
+- ALL DropdownMenuItem: `cursor-pointer`
+
+## Form Layout
+- Grid: `grid gap-6 sm:grid-cols-2`
+- Stack: `space-y-4` for vertical form fields
+- Validation: react-hook-form + Zod + `mode: 'onBlur'`
+
+## Loading States
+- Tables: Skeleton rows with `animate-pulse`
+- Cards: Skeleton with matching layout dimensions
+- Buttons: `disabled` + Loader2 spinner
+- Pending transitions: `opacity-70 transition-opacity duration-200`
+
+## Transitions & Animations
+- Card hover: `transition-all duration-300`
+- Color changes: `transition-colors duration-300`
+- Opacity transitions: `transition-opacity duration-200`
+- Icon rotation: `transition-transform duration-300 group-hover:rotate-180` (or rotate-90 for Plus icon)
+- Never use transitions slower than 300ms
+
+## URL State
+- Tabs: `useUrlTab({ defaultTab: 'tabName' })`
+- Create dialogs: `useUrlDialog({ paramValue: 'create-entity' })`
+- Edit dialogs: `useUrlEditDialog<EntityType>(items)`
+
+## Localization
+- ALL user-facing text: `t('namespace.key', 'Fallback')`
+- Both EN and VI locale files must have the same keys
+- See `.claude/rules/localization-check.md` for full rules

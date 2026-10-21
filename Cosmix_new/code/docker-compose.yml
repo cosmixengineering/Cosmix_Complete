@@ -1,0 +1,48 @@
+# NOIR Development Docker Compose
+# Usage: docker-compose up -d
+
+services:
+  # SQL Server for development (Azure SQL Edge for ARM64/M1 Mac support)
+  sqlserver:
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    container_name: noir-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=coffee123@@
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+  # SMTP server for development (MailHog)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: noir-mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+
+  # NOIR API (optional - can run locally for development)
+  # Uncomment to run API in Docker
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: noir-api
+  #   ports:
+  #     - "5000:8080"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=NOIR;User Id=sa;Password=coffee123@@;TrustServerCertificate=True
+  #     - Email__SmtpHost=mailhog
+  #     - Email__SmtpPort=1025
+  #   depends_on:
+  #     sqlserver:
+  #       condition: service_healthy
+  #     mailhog:
+  #       condition: service_started
+  #   volumes:
+  #     - uploads:/app/uploads
+
+volumes:
+  sqlserver-data:
+  uploads:

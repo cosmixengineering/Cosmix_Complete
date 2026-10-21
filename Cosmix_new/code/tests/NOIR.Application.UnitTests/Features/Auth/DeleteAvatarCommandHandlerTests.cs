@@ -1,0 +1,392 @@
+namespace NOIR.Application.UnitTests.Features.Auth;
+
+/// <summary>
+/// Unit tests for DeleteAvatarCommandHandler.
+/// Tests avatar deletion scenarios with mocked dependencies.
+/// </summary>
+public class DeleteAvatarCommandHandlerTests
+{
+    #region Test Setup
+
+    private readonly Mock<IUserIdentityService> _userIdentityServiceMock;
+    private readonly Mock<IFileStorage> _fileStorageMock;
+    private readonly Mock<ILocalizationService> _localizationServiceMock;
+    private readonly Mock<ILogger<DeleteAvatarCommandHandler>> _loggerMock;
+    private readonly DeleteAvatarCommandHandler _handler;
+
+    public DeleteAvatarCommandHandlerTests()
+    {
+        _userIdentityServiceMock = new Mock<IUserIdentityService>();
+        _fileStorageMock = new Mock<IFileStorage>();
+        _localizationServiceMock = new Mock<ILocalizationService>();
+        _loggerMock = new Mock<ILogger<DeleteAvatarCommandHandler>>();
+
+        // Setup localization to return the key (pass-through for testing)
+        _localizationServiceMock
+            .Setup(x => x[It.IsAny<string>()])
+            .Returns<string>(key => key);
+
+        // Setup file storage GetStoragePath to strip /media/ prefix
+        _fileStorageMock
+            .Setup(x => x.MediaUrlPrefix)
+            .Returns("/media");
+
+        _fileStorageMock
+            .Setup(x => x.GetStoragePath(It.IsAny<string>()))
+            .Returns<string>(url =>
+            {
+                if (url.StartsWith("/media/", StringComparison.OrdinalIgnoreCase))
+                    return url["/media/".Length..];
+                return null;
+            });
+
+        _handler = new DeleteAvatarCommandHandler(
+            _userIdentityServiceMock.Object,
+            _fileStorageMock.Object,
+            _localizationServiceMock.Object,
+            _loggerMock.Object);
+    }
+
+    private UserIdentityDto CreateTestUserDto(
+        string id = "user-123",
+        string? avatarUrl = null)
+    {
+        return new UserIdentityDto(
+            Id: id,
+            Email: "test@example.com",
+            TenantId: "default",
+            FirstName: "Test",
+            LastName: "User",
+            DisplayName: null,
+            FullName: "Test User",
+            PhoneNumber: null,
+            AvatarUrl: avatarUrl,
+            IsActive: true,
+            IsDeleted: false,
+            IsSystemUser: false,
+            CreatedAt: DateTimeOffset.UtcNow,
+            ModifiedAt: null);
+    }
+
+    private static DeleteAvatarCommand CreateTestCommand(string? userId = "user-123")
+    {
+        return new DeleteAvatarCommand { UserId = userId };
+    }
+
+    #endregion
+
+    #region Success Scenarios
+
+    [Fact]
+    public async Task Handle_WithExistingAvatar_ShouldSucceed()
+    {
+        // Arrange
+        const string userId = "user-123";
+        const string avatarUrl = "/media/avatars/user-123/avatar-medium.webp";
+
+        var user = CreateTestUserDto(userId, avatarUrl);
+        _userIdentityServiceMock
+            .Setup(x => x.FindByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        _fileStorageMock
+            .Setup(x => x.ExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _fileStorageMock
+            .Setup(x => x.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _userIdentityServiceMock
+            .Setup(x => x.UpdateUserAsync(userId, It.IsAny<UpdateUserDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(IdentityOperationResult.Success());
+
+        var command = CreateTestCommand(userId);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBe(true);
+        result.Value.Success.ShouldBe(true);
+    }
+
+    [Fact]
+    public async Task Handle_WithExistingAvatar_ShouldClearUserAvatarUrl()
+    {
+        // Arrange
+        const string userId = "user-123";
+        const string avatarUrl = "/media/avatars/user-123/avatar-medium.webp";
+
+        var user = CreateTestUserDto(userId, avatarUrl);
+        _userIdentityServiceMock
+            .Setup(x => x.FindByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        _fileStorageMock
+            .Setup(x => x.ExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _fileStorageMock
+            .Setup(x => x.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _userIdentityServiceMock
+            .Setup(x => x.UpdateUserAsync(userId, It.IsAny<UpdateUserDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(IdentityOperationResult.Success());
+
+        var command = CreateTestCommand(userId);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert - AvatarUrl should be set to empty string
+        _userIdentityServiceMock.Verify(
+            x => x.UpdateUserAsync(
+                userId,
+                It.Is<UpdateUserDto>(dto => dto.AvatarUrl == string.Empty),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region No Avatar Scenarios
+
+    [Fact]
+    public async Task Handle_WhenUserHasNoAvatar_ShouldSucceedWithMessage()
+    {
+        // Arrange
+        const string userId = "user-123";
+
+        var user = CreateTestUserDto(userId, null); // No avatar
+        _userIdentityServiceMock
+            .Setup(x => x.FindByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        var command = CreateTestCommand(userId);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBe(true);
+        result.Value.Success.ShouldBe(true);
+        result.Value.Message.ShouldBe("profile.avatar.noAvatar");
+    }
+
+    [Fact]
+    public async Task Handle_WhenUserHasNoAvatar_ShouldNotCallDeleteOrUpdate()
+    {
+        // Arrange
+        const string userId = "user-123";
+
+        var user = CreateTestUserDto(userId, null); // No avatar
+        _userIdentityServiceMock
+            .Setup(x => x.FindByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        var command = CreateTestCommand(userId);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert - Should not call delete or update
+        _fileStorageMock.Verify(
+            x => x.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _userIdentityServiceMock.Verify(
+            x => x.UpdateUserAsync(It.IsAny<string>(), It.IsAny<UpdateUserDto>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_WhenUserHasEmptyAvatarUrl_ShouldSucceedWithMessage()
+    {
+        // Arrange
+        const string userId = "user-123";
+
+        var user = CreateTestUserDto(userId, string.Empty); // Empty avatar URL
+        _userIdentityServiceMock
+            .Setup(x => x.FindByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        var command = CreateTestCommand(userId);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBe(true);
+        result.Value.Success.ShouldBe(true);
+    }
+
+    #endregion
+
+    #region Authentication Failure Scenarios
+
+    [Fact]
+    public async Task Handle_WhenUserIdIsEmpty_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        var command = CreateTestCommand(string.Empty);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.ShouldBe(true);
+        result.Error.Code.ShouldBe(ErrorCodes.Auth.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Handle_WhenUserIdIsNull_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        var command = CreateTestCommand(null);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.ShouldBe(true);
+        result.Error.Code.ShouldBe(ErrorCodes.Auth.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Handle_WhenUserNotFound_ShouldReturnNotFound()
+    {
+        // Arrange
+        const string userId = "non-existent-user";
+
+        _userIdentityServiceMock
+            .Setup(x => x.FindByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserIdentityDto?)null);
+
+        var command = CreateTestCommand(userId);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.ShouldBe(true);
+        result.Error.Code.ShouldBe(ErrorCodes.Auth.UserNotFound);
+    }
+
+    #endregion
+
+    #region Update Failure Scenarios
+
+    [Fact]
+    public async Task Handle_WhenUpdateFails_ShouldReturnFailure()
+    {
+        // Arrange
+        const string userId = "user-123";
+        const string avatarUrl = "/media/avatars/user-123/avatar-medium.webp";
+
+        var user = CreateTestUserDto(userId, avatarUrl);
+        _userIdentityServiceMock
+            .Setup(x => x.FindByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        _fileStorageMock
+            .Setup(x => x.ExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _fileStorageMock
+            .Setup(x => x.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _userIdentityServiceMock
+            .Setup(x => x.UpdateUserAsync(userId, It.IsAny<UpdateUserDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(IdentityOperationResult.Failure("Update failed"));
+
+        var command = CreateTestCommand(userId);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.ShouldBe(true);
+        result.Error.Code.ShouldBe(ErrorCodes.Auth.UpdateFailed);
+    }
+
+    #endregion
+
+    #region URL Path Processing
+
+    [Fact]
+    public async Task Handle_WithUrlContainingMediaPrefix_ShouldUseGetStoragePath()
+    {
+        // Arrange
+        const string userId = "user-123";
+        const string avatarUrl = "/media/avatars/user-123/slug-medium.webp";
+
+        var user = CreateTestUserDto(userId, avatarUrl);
+        _userIdentityServiceMock
+            .Setup(x => x.FindByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        _fileStorageMock
+            .Setup(x => x.ExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _fileStorageMock
+            .Setup(x => x.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _userIdentityServiceMock
+            .Setup(x => x.UpdateUserAsync(userId, It.IsAny<UpdateUserDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(IdentityOperationResult.Success());
+
+        var command = CreateTestCommand(userId);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert - Should call GetStoragePath
+        _fileStorageMock.Verify(x => x.GetStoragePath(avatarUrl), Times.Once);
+    }
+
+    #endregion
+
+    #region Edge Cases
+
+    [Fact]
+    public async Task Handle_WithCancellationToken_ShouldPassItToServices()
+    {
+        // Arrange
+        const string userId = "user-123";
+        const string avatarUrl = "/media/avatars/user-123/avatar-medium.webp";
+
+        var user = CreateTestUserDto(userId, avatarUrl);
+        _userIdentityServiceMock
+            .Setup(x => x.FindByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        _fileStorageMock
+            .Setup(x => x.ExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _fileStorageMock
+            .Setup(x => x.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _userIdentityServiceMock
+            .Setup(x => x.UpdateUserAsync(userId, It.IsAny<UpdateUserDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(IdentityOperationResult.Success());
+
+        var command = CreateTestCommand(userId);
+        var cts = new CancellationTokenSource();
+        var token = cts.Token;
+
+        // Act
+        await _handler.Handle(command, token);
+
+        // Assert
+        _userIdentityServiceMock.Verify(x => x.FindByIdAsync(userId, token), Times.Once);
+        _userIdentityServiceMock.Verify(x => x.UpdateUserAsync(userId, It.IsAny<UpdateUserDto>(), token), Times.Once);
+    }
+
+    #endregion
+}

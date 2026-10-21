@@ -1,0 +1,116 @@
+# Use an existing authorized backend. This file starts no host and creates no fixtures.
+# Replace identifiers/token with your own authorized session and retained server results.
+# Web requests require a prior genuine web MFA login in this client's cookie jar.
+# Unsafe web requests also require its existing browser context and fresh CSRF token.
+@baseUrl = https://localhost:7240
+@mobileAccessToken = REPLACE_WITH_OWN_MOBILE_ACCESS_TOKEN
+@csrfToken = REPLACE_WITH_CURRENT_WEB_CSRF_TOKEN
+@siteId = REPLACE_WITH_GRANTED_SITE_ID
+@reportId = REPLACE_WITH_RECEIVED_REPORT_ID
+@returnedReviewId = REPLACE_WITH_LATEST_RETURNED_REVIEW_ID
+@responseId = REPLACE_WITH_RESPONSE_ID
+@from = 2026-10-01
+@to = 2026-10-31
+@expectedReviewSequence = 0
+@expectedResponseSequence = 0
+@originalSubmissionKey = b07-online-example-0001
+
+### Web: discover readable queues using only report Read grants
+GET {{baseUrl}}/api/v1/site-reports/queue/sites?page=1&pageSize=25
+
+### Web: read the selected site's date-bounded queue
+GET {{baseUrl}}/api/v1/site-reports/queue?siteId={{siteId}}&from={{from}}&to={{to}}&page=1&pageSize=25
+
+### Mobile: submit online. Retain the key/body for exact uncertain-result retries.
+POST {{baseUrl}}/api/v1/site-reports
+Authorization: Bearer {{mobileAccessToken}}
+Idempotency-Key: {{originalSubmissionKey}}
+Content-Type: application/json
+
+{"siteId":"{{siteId}}","kind":1,"notes":"Arrived at the assigned site entrance.","taskReference":"TASK-014","latitude":24.8607,"longitude":67.0011,"accuracyMeters":8.50,"isOffline":false}
+
+### Mobile: recover an expired/missing original submission receipt by the SAME exact-case key
+# Read-only. 200 {resultKind:"current_retained_report",detail:{...}} is current history, not the frozen receipt.
+# Retain detail.report.id and original key/body; mark this original as received and stop intake retry.
+# 404 remains unresolved: preserve the pending original, do not automatically generate a new key.
+# Changed payload/device still cannot use recovery to authorize a new submission.
+# Submission-Key is only the original submission identifier; never put credentials/proofs in it.
+GET {{baseUrl}}/api/v1/site-reports/mine/reconcile
+Authorization: Bearer {{mobileAccessToken}}
+Submission-Key: {{originalSubmissionKey}}
+
+### Web: read-only own reconciliation after current genuine web authentication
+# Uses the same own-history authority. No client employee/account/site selector.
+GET {{baseUrl}}/api/v1/site-reports/mine/reconcile
+Submission-Key: {{originalSubmissionKey}}
+
+### Mobile: offline original evidence. Choose a capture inside actual historical membership.
+POST {{baseUrl}}/api/v1/site-reports
+Authorization: Bearer {{mobileAccessToken}}
+Idempotency-Key: b07-offline-example-0001
+Content-Type: application/json
+
+{"siteId":"{{siteId}}","kind":3,"notes":"Access was delayed at the assigned site.","deviceCapturedAtUtc":"2026-10-12T07:00:00Z","latitude":24.8607,"longitude":67.0011,"accuracyMeters":8.50,"isOffline":true}
+
+### Mobile: recover the offline example using its ORIGINAL offline key
+# Same recovery rules: 200 links this original; 404 stays unresolved without a fresh-key retry.
+GET {{baseUrl}}/api/v1/site-reports/mine/reconcile
+Authorization: Bearer {{mobileAccessToken}}
+Submission-Key: b07-offline-example-0001
+
+### Mobile: own received-date history
+GET {{baseUrl}}/api/v1/site-reports/mine?from={{from}}&to={{to}}&page=1&pageSize=25
+Authorization: Bearer {{mobileAccessToken}}
+
+### Mobile: own detail, fresh sequences and complete review/response trail
+GET {{baseUrl}}/api/v1/site-reports/mine/{{reportId}}
+Authorization: Bearer {{mobileAccessToken}}
+
+### Mobile: download the original scanned attachment (404 if absent)
+GET {{baseUrl}}/api/v1/site-reports/mine/{{reportId}}/evidence
+Authorization: Bearer {{mobileAccessToken}}
+
+### Web: granted-site detail before deciding
+GET {{baseUrl}}/api/v1/site-reports/sites/{{siteId}}/{{reportId}}
+
+### Web: Return. Set both expected sequences from fresh detail; Decide is separately granted.
+POST {{baseUrl}}/api/v1/site-reports/sites/{{siteId}}/{{reportId}}/decisions
+X-CSRF-TOKEN: {{csrfToken}}
+Idempotency-Key: b07-return-example-0001
+Content-Type: application/json
+
+{"expectedReviewSequence":{{expectedReviewSequence}},"expectedResponseSequence":{{expectedResponseSequence}},"outcome":2,"reason":"Please explain the access delay."}
+
+### Web: Accept a pending report, using both sequences from a newly fetched detail
+POST {{baseUrl}}/api/v1/site-reports/sites/{{siteId}}/{{reportId}}/decisions
+X-CSRF-TOKEN: {{csrfToken}}
+Idempotency-Key: b07-accept-example-0001
+Content-Type: application/json
+
+{"expectedReviewSequence":{{expectedReviewSequence}},"expectedResponseSequence":{{expectedResponseSequence}},"outcome":1,"reason":"Reviewed the submitted evidence and explanation."}
+
+### Web: Reject a pending report, using both sequences from a newly fetched detail
+POST {{baseUrl}}/api/v1/site-reports/sites/{{siteId}}/{{reportId}}/decisions
+X-CSRF-TOKEN: {{csrfToken}}
+Idempotency-Key: b07-reject-example-0001
+Content-Type: application/json
+
+{"expectedReviewSequence":{{expectedReviewSequence}},"expectedResponseSequence":{{expectedResponseSequence}},"outcome":3,"reason":"The submitted explanation is insufficient."}
+
+### Mobile: answer the latest Return once, using fresh sequences and Returned review ID
+POST {{baseUrl}}/api/v1/site-reports/mine/{{reportId}}/responses
+Authorization: Bearer {{mobileAccessToken}}
+Idempotency-Key: b07-response-example-0001
+Content-Type: application/json
+
+{"expectedReviewSequence":{{expectedReviewSequence}},"expectedResponseSequence":{{expectedResponseSequence}},"returnedReviewId":"{{returnedReviewId}}","writtenResponse":"The entrance was blocked; the site contact was informed."}
+
+### Mobile: scanned response attachment (404 if absent)
+GET {{baseUrl}}/api/v1/site-reports/mine/{{reportId}}/responses/{{responseId}}/evidence
+Authorization: Bearer {{mobileAccessToken}}
+
+### Web: scanned original evidence inside the granted site
+GET {{baseUrl}}/api/v1/site-reports/sites/{{siteId}}/{{reportId}}/evidence
+
+### Web: scanned response evidence inside the granted site
+GET {{baseUrl}}/api/v1/site-reports/sites/{{siteId}}/{{reportId}}/responses/{{responseId}}/evidence

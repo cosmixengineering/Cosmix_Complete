@@ -1,0 +1,346 @@
+namespace NOIR.Application.Features.ProductAttributes.Specifications;
+
+/// <summary>
+/// Specification to find a product attribute by ID.
+/// </summary>
+public sealed class ProductAttributeByIdSpec : Specification<ProductAttribute>
+{
+    public ProductAttributeByIdSpec(Guid id, bool includeValues = false)
+    {
+        Query.Where(a => a.Id == id);
+
+        if (includeValues)
+        {
+            Query.Include(a => a.Values);
+        }
+
+        Query.TagWith("GetProductAttributeById");
+    }
+}
+
+/// <summary>
+/// Specification to find a product attribute by ID for update (with tracking).
+/// </summary>
+public sealed class ProductAttributeByIdForUpdateSpec : Specification<ProductAttribute>
+{
+    public ProductAttributeByIdForUpdateSpec(Guid id, bool includeValues = false)
+    {
+        Query.Where(a => a.Id == id)
+             .AsTracking();
+
+        if (includeValues)
+        {
+            Query.Include(a => a.Values);
+        }
+
+        Query.TagWith("GetProductAttributeByIdForUpdate");
+    }
+}
+
+/// <summary>
+/// Specification to find a product attribute by code.
+/// </summary>
+public sealed class ProductAttributeByCodeSpec : Specification<ProductAttribute>
+{
+    public ProductAttributeByCodeSpec(string code)
+    {
+        Query.Where(a => a.Code == code.ToLowerInvariant().Replace(" ", "_"))
+             .TagWith("GetProductAttributeByCode");
+    }
+}
+
+/// <summary>
+/// Specification to check if a product attribute code exists (for uniqueness validation).
+/// </summary>
+public sealed class ProductAttributeCodeExistsSpec : Specification<ProductAttribute>
+{
+    public ProductAttributeCodeExistsSpec(string code, Guid? excludeId = null)
+    {
+        Query.Where(a => a.Code == code.ToLowerInvariant().Replace(" ", "_"));
+
+        if (excludeId.HasValue)
+        {
+            Query.Where(a => a.Id != excludeId.Value);
+        }
+
+        Query.TagWith("CheckProductAttributeCodeExists");
+    }
+}
+
+/// <summary>
+/// Specification to retrieve all active product attributes.
+/// </summary>
+public sealed class ActiveProductAttributesSpec : Specification<ProductAttribute>
+{
+    public ActiveProductAttributesSpec(string? search = null, bool includeValues = false)
+    {
+        Query.Where(a => a.IsActive);
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            Query.Where(a => a.Name.Contains(search) || a.Code.Contains(search));
+        }
+
+        if (includeValues)
+        {
+            Query.Include(a => a.Values);
+        }
+
+        Query.OrderBy(a => a.SortOrder)
+             .ThenBy(a => a.Name)
+             .TagWith("GetActiveProductAttributes");
+    }
+}
+
+/// <summary>
+/// Specification to retrieve filterable product attributes (for filter sidebar).
+/// </summary>
+public sealed class FilterableProductAttributesSpec : Specification<ProductAttribute>
+{
+    public FilterableProductAttributesSpec()
+    {
+        Query.Where(a => a.IsActive && a.IsFilterable)
+             .Include(a => a.Values)
+             .OrderBy(a => a.SortOrder)
+             .ThenBy(a => a.Name)
+             .TagWith("GetFilterableProductAttributes");
+    }
+}
+
+/// <summary>
+/// Specification to retrieve variant product attributes.
+/// </summary>
+public sealed class VariantProductAttributesSpec : Specification<ProductAttribute>
+{
+    public VariantProductAttributesSpec()
+    {
+        Query.Where(a => a.IsActive && a.IsVariantAttribute)
+             .Include(a => a.Values)
+             .OrderBy(a => a.SortOrder)
+             .ThenBy(a => a.Name)
+             .TagWith("GetVariantProductAttributes");
+    }
+}
+
+/// <summary>
+/// Specification for paginated product attribute listing with filters.
+/// </summary>
+public sealed class ProductAttributesPagedSpec : Specification<ProductAttribute>
+{
+    public ProductAttributesPagedSpec(
+        string? search,
+        bool? isActive,
+        bool? isFilterable,
+        bool? isVariantAttribute,
+        string? type,
+        int page,
+        int pageSize,
+        bool includeValues = false,
+        string? orderBy = null,
+        bool isDescending = true)
+    {
+        if (!string.IsNullOrEmpty(search))
+        {
+            Query.Where(a => a.Name.Contains(search) || a.Code.Contains(search));
+        }
+
+        if (isActive.HasValue)
+        {
+            Query.Where(a => a.IsActive == isActive.Value);
+        }
+
+        if (isFilterable.HasValue)
+        {
+            Query.Where(a => a.IsFilterable == isFilterable.Value);
+        }
+
+        if (isVariantAttribute.HasValue)
+        {
+            Query.Where(a => a.IsVariantAttribute == isVariantAttribute.Value);
+        }
+
+        if (!string.IsNullOrEmpty(type) && Enum.TryParse<AttributeType>(type, true, out var attributeType))
+        {
+            Query.Where(a => a.Type == attributeType);
+        }
+
+        if (includeValues)
+        {
+            Query.Include(a => a.Values);
+        }
+
+        // Sorting
+        switch (orderBy?.ToLowerInvariant())
+        {
+            case "name":
+                if (isDescending) Query.OrderByDescending(a => a.Name);
+                else Query.OrderBy(a => a.Name);
+                break;
+            case "code":
+                if (isDescending) Query.OrderByDescending(a => a.Code);
+                else Query.OrderBy(a => a.Code);
+                break;
+            case "type":
+                if (isDescending) Query.OrderByDescending(a => a.Type);
+                else Query.OrderBy(a => a.Type);
+                break;
+            case "isactive":
+            case "status":
+                if (isDescending) Query.OrderByDescending(a => a.IsActive);
+                else Query.OrderBy(a => a.IsActive);
+                break;
+            case "isfilterable":
+            case "filterable":
+                if (isDescending) Query.OrderByDescending(a => a.IsFilterable);
+                else Query.OrderBy(a => a.IsFilterable);
+                break;
+            case "isvariantattribute":
+            case "variant":
+                if (isDescending) Query.OrderByDescending(a => a.IsVariantAttribute);
+                else Query.OrderBy(a => a.IsVariantAttribute);
+                break;
+            case "sortorder":
+                if (isDescending) Query.OrderByDescending(a => a.SortOrder);
+                else Query.OrderBy(a => a.SortOrder);
+                break;
+            case "values":
+            case "valuecount":
+                if (isDescending) Query.OrderByDescending(a => a.Values.Count);
+                else Query.OrderBy(a => a.Values.Count);
+                break;
+            case "createdby":
+            case "creator":
+                if (isDescending) Query.OrderByDescending(a => a.CreatedBy);
+                else Query.OrderBy(a => a.CreatedBy);
+                break;
+            case "modifiedby":
+            case "editor":
+                if (isDescending) Query.OrderByDescending(a => a.ModifiedBy);
+                else Query.OrderBy(a => a.ModifiedBy);
+                break;
+            default:
+                Query.OrderBy(a => a.SortOrder).ThenBy(a => a.Name);
+                break;
+        }
+
+        Query.Skip((page - 1) * pageSize)
+             .Take(pageSize)
+             .TagWith("GetProductAttributesPaged");
+    }
+}
+
+/// <summary>
+/// Specification for counting product attributes with filters (for pagination).
+/// </summary>
+public sealed class ProductAttributesCountSpec : Specification<ProductAttribute>
+{
+    public ProductAttributesCountSpec(
+        string? search,
+        bool? isActive,
+        bool? isFilterable,
+        bool? isVariantAttribute,
+        string? type)
+    {
+        if (!string.IsNullOrEmpty(search))
+        {
+            Query.Where(a => a.Name.Contains(search) || a.Code.Contains(search));
+        }
+
+        if (isActive.HasValue)
+        {
+            Query.Where(a => a.IsActive == isActive.Value);
+        }
+
+        if (isFilterable.HasValue)
+        {
+            Query.Where(a => a.IsFilterable == isFilterable.Value);
+        }
+
+        if (isVariantAttribute.HasValue)
+        {
+            Query.Where(a => a.IsVariantAttribute == isVariantAttribute.Value);
+        }
+
+        if (!string.IsNullOrEmpty(type) && Enum.TryParse<AttributeType>(type, true, out var attributeType))
+        {
+            Query.Where(a => a.Type == attributeType);
+        }
+
+        Query.TagWith("CountProductAttributes");
+    }
+}
+
+/// <summary>
+/// Specification to retrieve product attributes by type.
+/// </summary>
+public sealed class ProductAttributesByTypeSpec : Specification<ProductAttribute>
+{
+    public ProductAttributesByTypeSpec(AttributeType type)
+    {
+        Query.Where(a => a.IsActive && a.Type == type)
+             .Include(a => a.Values)
+             .OrderBy(a => a.SortOrder)
+             .ThenBy(a => a.Name)
+             .TagWith("GetProductAttributesByType");
+    }
+}
+
+/// <summary>
+/// Specification to retrieve active product attributes by a list of IDs.
+/// Used for getting category-specific attributes.
+/// </summary>
+public sealed class ProductAttributesByIdsSpec : Specification<ProductAttribute>
+{
+    public ProductAttributesByIdsSpec(IEnumerable<Guid> ids, bool includeValues = false, bool activeOnly = true)
+    {
+        var idList = ids.ToList();
+        Query.Where(a => idList.Contains(a.Id));
+
+        if (activeOnly)
+        {
+            Query.Where(a => a.IsActive);
+        }
+
+        if (includeValues)
+        {
+            Query.Include(a => a.Values.Where(v => v.IsActive));
+        }
+
+        Query.OrderBy(a => a.SortOrder)
+             .ThenBy(a => a.Name)
+             .TagWith("GetProductAttributesByIds");
+    }
+}
+
+/// <summary>
+/// Specification to retrieve active product attributes by a list of codes.
+/// Used for bulk import attribute lookup.
+/// </summary>
+public sealed class ProductAttributesByCodesSpec : Specification<ProductAttribute>
+{
+    public ProductAttributesByCodesSpec(IEnumerable<string> codes, bool includeValues = true)
+    {
+        var codeList = codes.Select(c => c.ToLowerInvariant().Replace(" ", "_")).ToList();
+        Query.Where(a => a.IsActive && codeList.Contains(a.Code));
+
+        if (includeValues)
+        {
+            Query.Include(a => a.Values.Where(v => v.IsActive));
+        }
+
+        Query.TagWith("GetProductAttributesByCodes");
+    }
+}
+
+/// <summary>
+/// Specification to find a product attribute value by ID.
+/// </summary>
+public sealed class ProductAttributeValueByIdSpec : Specification<ProductAttributeValue>
+{
+    public ProductAttributeValueByIdSpec(Guid id)
+    {
+        Query.Where(v => v.Id == id)
+             .Include(v => v.Attribute)
+             .TagWith("GetProductAttributeValueById");
+    }
+}

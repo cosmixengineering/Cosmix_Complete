@@ -1,0 +1,194 @@
+// Global using directives for NOIR.Application
+
+// System
+global using System;
+global using System.Collections.Concurrent;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Linq.Expressions;
+global using System.Reflection;
+global using System.Text;
+global using System.Threading;
+global using System.Threading.Tasks;
+
+// Microsoft - Extensions
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+
+// System - ComponentModel
+global using System.ComponentModel.DataAnnotations;
+
+// FluentValidation
+global using FluentValidation;
+global using FluentValidation.Results;
+
+// System - Net
+global using System.Net;
+global using System.Net.Http;
+global using System.Net.Sockets;
+
+// System - Security
+global using System.Security.Claims;
+global using System.Security.Cryptography;
+
+// System - Text
+global using System.Text.RegularExpressions;
+
+// Microsoft - Entity Framework Core (used by handlers via IApplicationDbContext)
+global using Microsoft.EntityFrameworkCore;
+
+// NOIR Application
+global using NOIR.Application.Common.DTOs;
+global using NOIR.Application.Common.Exceptions;
+global using NOIR.Application.Common.Interfaces;
+global using NOIR.Application.Common.Models;
+global using NOIR.Application.Common.Settings;
+global using NOIR.Application.Features.Auth.DTOs;
+global using NOIR.Application.Features.Auth.Queries.GetUserById;
+global using NOIR.Application.Features.Audit.DTOs;
+global using NOIR.Application.Features.Blog.DTOs;
+global using NOIR.Application.Features.Blog.Specifications;
+global using NOIR.Application.Features.Users.DTOs;
+global using NOIR.Application.Features.Roles.DTOs;
+global using NOIR.Application.Features.EmailTemplates.DTOs;
+global using NOIR.Application.Features.EmailTemplates.Specifications;
+global using NOIR.Application.Features.LegalPages.DTOs;
+global using NOIR.Application.Features.Notifications.DTOs;
+global using NOIR.Application.Features.PlatformSettings.DTOs;
+global using NOIR.Application.Features.TenantSettings.DTOs;
+global using NOIR.Application.Features.Tenants.DTOs;
+global using NOIR.Application.Features.Payments.DTOs;
+global using NOIR.Application.Features.Payments.Specifications;
+global using NOIR.Application.Features.Cart.Common;
+global using NOIR.Application.Features.Cart.DTOs;
+global using NOIR.Application.Features.Cart.Specifications;
+global using NOIR.Application.Features.Products.Common;
+global using NOIR.Application.Features.Products.DTOs;
+global using NOIR.Application.Features.Products.Specifications;
+global using NOIR.Application.Features.Customers.DTOs;
+global using NOIR.Application.Features.Customers.Specifications;
+global using NOIR.Application.Features.CustomerGroups.DTOs;
+global using NOIR.Application.Features.CustomerGroups.Specifications;
+global using NOIR.Application.Features.Orders.DTOs;
+global using NOIR.Application.Features.Orders.Specifications;
+global using NOIR.Application.Features.Reviews.DTOs;
+global using NOIR.Application.Features.Reviews.Specifications;
+global using NOIR.Application.Features.Inventory.Specifications;
+global using NOIR.Application.Features.Checkout.DTOs;
+global using NOIR.Application.Features.Checkout.Specifications;
+global using NOIR.Application.Features.Brands.DTOs;
+global using NOIR.Application.Features.Brands.Specifications;
+global using NOIR.Application.Features.ProductAttributes.DTOs;
+global using NOIR.Application.Features.ProductAttributes.Specifications;
+global using NOIR.Application.Features.ProductFilter.DTOs;
+global using NOIR.Application.Features.ProductFilter.Specifications;
+global using NOIR.Application.Features.FilterAnalytics.DTOs;
+global using NOIR.Application.Features.Reports;
+global using NOIR.Application.Features.Reports.DTOs;
+global using NOIR.Application.Features.Promotions.DTOs;
+global using NOIR.Application.Features.Promotions.Specifications;
+global using NOIR.Application.Features.Shipping.DTOs;
+global using NOIR.Application.Features.Shipping.Specifications;
+global using NOIR.Application.Features.Wishlists.Common;
+global using NOIR.Application.Features.Wishlists.DTOs;
+global using NOIR.Application.Features.Wishlists.Specifications;
+global using NOIR.Application.Features.FeatureManagement.DTOs;
+global using NOIR.Application.Features.FeatureManagement.Specifications;
+global using NOIR.Application.Features.Webhooks.DTOs;
+global using NOIR.Application.Features.Webhooks.Specifications;
+global using NOIR.Application.Features.Hr.DTOs;
+global using NOIR.Application.Features.Hr.Specifications;
+global using NOIR.Application.Features.Crm.DTOs;
+global using NOIR.Application.Features.Crm.Specifications;
+global using NOIR.Application.Features.Pm.DTOs;
+global using NOIR.Application.Features.Pm.Specifications;
+global using NOIR.Application.Features.Estimation.DTOs;
+global using NOIR.Application.Features.Estimation.Specifications;
+global using NOIR.Application.Features.Accounting.DTOs;
+global using NOIR.Application.Features.Accounting.Specifications;
+global using NOIR.Application.Features.Stock.DTOs;
+global using NOIR.Application.Features.Stock.Specifications;
+global using NOIR.Application.Features.Manufacturing.DTOs;
+global using NOIR.Application.Features.Manufacturing.Specifications;
+global using NOIR.Application.Features.Dashboard;
+global using NOIR.Application.Features.Dashboard.DTOs;
+global using NOIR.Application.Features.Search.DTOs;
+global using NOIR.Application.Modules;
+global using NOIR.Application.Specifications;
+global using NOIR.Application.Specifications.Notifications;
+global using NOIR.Application.Specifications.PasswordResetOtps;
+
+// Finbuckle MultiTenant Abstractions
+// Note: For Tenant CRUD, use IMultiTenantStore<Tenant> (registered by Finbuckle)
+// instead of IRepository<Tenant, Guid> (Tenant doesn't inherit from AggregateRoot)
+global using Finbuckle.MultiTenant.Abstractions;
+
+// NOIR Domain
+global using NOIR.Domain.Common;
+global using NOIR.Domain.Entities;
+global using NOIR.Domain.Entities.Cart;
+global using NOIR.Domain.Entities.Checkout;
+global using NOIR.Domain.Entities.Customer;
+global using NOIR.Domain.Entities.Inventory;
+global using NOIR.Domain.Entities.Order;
+global using NOIR.Domain.Entities.Payment;
+global using NOIR.Domain.Entities.Product;
+global using NOIR.Domain.Entities.Analytics;
+global using NOIR.Domain.Entities.Review;
+global using NOIR.Domain.Entities.Shipping;
+global using NOIR.Domain.Entities.Webhook;
+global using NOIR.Domain.Entities.Wishlist;
+global using NOIR.Domain.Entities.Hr;
+global using NOIR.Domain.Entities.Crm;
+global using NOIR.Domain.Entities.Pm;
+global using NOIR.Domain.Entities.Estimation;
+global using NOIR.Domain.Entities.Accounting;
+global using NOIR.Domain.Entities.Stock;
+global using NOIR.Domain.Entities.Manufacturing;
+global using NOIR.Domain.Entities.Fsm;
+global using NOIR.Domain.Entities.Complaints;
+global using NOIR.Domain.Entities.Procurement;
+global using NOIR.Domain.Entities.Fulfillment;
+global using NOIR.Domain.Entities.Stores;
+global using NOIR.Domain.Entities.Invoicing;
+global using NOIR.Domain.Entities.MasterData;
+global using NOIR.Domain.Entities.Intake;
+global using NOIR.Domain.Entities.Engineering;
+global using NOIR.Domain.Entities.Commercial;
+global using NOIR.Domain.Entities.Helpdesk;
+global using NOIR.Domain.Entities.Qa;
+global using NOIR.Domain.Enums;
+global using NOIR.Domain.Events.Cart;
+global using NOIR.Domain.Events.Checkout;
+global using NOIR.Domain.Events.Customer;
+global using NOIR.Domain.Events.Inventory;
+global using NOIR.Domain.Events.Order;
+global using NOIR.Domain.Events.Payment;
+global using NOIR.Domain.Events.Product;
+global using NOIR.Domain.Events.Review;
+global using NOIR.Domain.Events.Shipping;
+global using NOIR.Domain.Events.Webhook;
+global using NOIR.Domain.Events.Wishlist;
+global using NOIR.Domain.Events.Hr;
+global using NOIR.Domain.Events.Crm;
+global using NOIR.Domain.Events.Pm;
+global using NOIR.Domain.Events.Promotion;
+global using NOIR.Domain.Events.Blog;
+global using NOIR.Domain.Entities.Promotion;
+global using NOIR.Domain.ValueObjects;
+global using NOIR.Domain.Interfaces;
+global using NOIR.Domain.Specifications;
+
+// System.Text.Json
+global using System.Text.Json;
+
+// Wolverine
+global using Wolverine;
+
+// Scrutor (DI auto-registration)
+global using Scrutor;
+
+// Diagnostics
+global using System.Diagnostics;

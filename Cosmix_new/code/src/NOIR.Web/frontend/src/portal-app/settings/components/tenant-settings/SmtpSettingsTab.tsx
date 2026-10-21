@@ -1,0 +1,515 @@
+import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useForm, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { toast } from 'sonner'
+import {
+  Mail,
+  Send,
+  Loader2,
+  Check,
+  GitFork,
+  Info,
+  RotateCcw,
+} from 'lucide-react'
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Form,
+  FormControl,
+  FormDescription,
+  FormErrorBanner,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
+  Skeleton,
+  Switch,
+} from '@uikit'
+
+import { getStatusBadgeClasses } from '@/utils/statusBadge'
+import { ApiError } from '@/services/apiClient'
+import {
+  useTenantSmtpSettingsQuery,
+  useUpdateTenantSmtpSettings,
+  useRevertTenantSmtpSettings,
+  useTestTenantSmtpConnection,
+} from '@/portal-app/settings/queries'
+import { getRequiredFields, handleFormError } from '@/lib/form'
+
+// ============================================================================
+// Form Schema Factories
+// ============================================================================
+const createTenantSmtpSettingsSchema = (t: (key: string, options?: Record<string, unknown>) => string) =>
+  z.object({
+    host: z.string().min(1, t('validation.required')),
+    port: z.coerce.number().int().min(1).max(65535),
+    username: z.string().optional().nullable(),
+    password: z.string().optional().nullable(),
+    fromEmail: z.string().email(t('validation.invalidEmail')),
+    fromName: z.string().min(1, t('validation.required')),
+    useSsl: z.boolean(),
+  })
+
+type TenantSmtpFormData = z.infer<ReturnType<typeof createTenantSmtpSettingsSchema>>
+
+const createTestEmailSchema = (t: (key: string, options?: Record<string, unknown>) => string) =>
+  z.object({
+    recipientEmail: z.string().email(t('validation.invalidEmail')),
+  })
+
+type TestEmailFormData = z.infer<ReturnType<typeof createTestEmailSchema>>
+
+export interface SmtpSettingsTabProps {
+  canEdit: boolean
+}
+
+export const SmtpSettingsTab = ({ canEdit }: SmtpSettingsTabProps) => {
+  const { t } = useTranslation('common')
+
+  const { data: smtpData, isLoading } = useTenantSmtpSettingsQuery()
+  const updateMutation = useUpdateTenantSmtpSettings()
+  const revertMutation = useRevertTenantSmtpSettings()
+  const testMutation = useTestTenantSmtpConnection()
+
+  const [testDialogOpen, setTestDialogOpen] = useState(false)
+  const [isConfigured, setIsConfigured] = useState(false)
+  const [isInherited, setIsInherited] = useState(true)
+  const [hasPassword, setHasPassword] = useState(false)
+  const [serverErrors, setServerErrors] = useState<string[]>([])
+  const [testServerErrors, setTestServerErrors] = useState<string[]>([])
+
+  const schema = useMemo(() => createTenantSmtpSettingsSchema(t), [t])
+  const requiredFields = useMemo(() => getRequiredFields(schema), [schema])
+
+  const form = useForm<TenantSmtpFormData>({
+    // TypeScript cannot infer resolver types from dynamic schema factories
+    // Using 'as unknown as Resolver<T>' for type-safe assertion
+    resolver: zodResolver(schema) as unknown as Resolver<TenantSmtpFormData>,
+    defaultValues: {
+      host: '',
+      port: 587,
+      username: '',
+      password: '',
+      fromEmail: '',
+      fromName: '',
+      useSsl: true,
+    },
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+  })
+
+  const testForm = useForm<TestEmailFormData>({
+    // TypeScript cannot infer resolver types from dynamic schema factories
+    // Using 'as unknown as Resolver<T>' for type-safe assertion
+    resolver: zodResolver(createTestEmailSchema(t)) as unknown as Resolver<TestEmailFormData>,
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+    defaultValues: {
+      recipientEmail: '',
+    },
+  })
+
+  useEffect(() => {
+    if (smtpData) {
+      setServerErrors([])
+      setIsConfigured(smtpData.isConfigured)
+      setIsInherited(smtpData.isInherited)
+      setHasPassword(smtpData.hasPassword)
+
+      form.reset({
+        host: smtpData.host,
+        port: smtpData.port,
+        username: smtpData.username ?? '',
+        password: '',
+        fromEmail: smtpData.fromEmail,
+        fromName: smtpData.fromName,
+        useSsl: smtpData.useSsl,
+      })
+    }
+  }, [smtpData, form])
+
+  const onSubmit = (data: TenantSmtpFormData) => {
+    updateMutation.mutate(
+      {
+        host: data.host,
+        port: data.port,
+        username: data.username || null,
+        password: data.password || null,
+        fromEmail: data.fromEmail,
+        fromName: data.fromName,
+        useSsl: data.useSsl,
+      },
+      {
+        onSuccess: (result) => {
+          setIsConfigured(result.isConfigured)
+          setIsInherited(result.isInherited)
+          setHasPassword(result.hasPassword)
+          form.reset({
+            ...data,
+            password: '',
+          })
+          toast.success(t('tenantSettings.saved'))
+        },
+        onError: (error) => {
+          handleFormError(error, form, setServerErrors, t)
+        },
+      },
+    )
+  }
+
+  const handleRevert = () => {
+    revertMutation.mutate(undefined, {
+      onSuccess: (result) => {
+        setIsConfigured(result.isConfigured)
+        setIsInherited(result.isInherited)
+        setHasPassword(result.hasPassword)
+
+        form.reset({
+          host: result.host,
+          port: result.port,
+          username: result.username ?? '',
+          password: '',
+          fromEmail: result.fromEmail,
+          fromName: result.fromName,
+          useSsl: result.useSsl,
+        })
+
+        toast.success(t('tenantSettings.saved'))
+      },
+      onError: (error) => {
+        const message = error instanceof ApiError ? error.message : t('platformSettings.smtp.failedToSaveSettings')
+        setServerErrors([message])
+      },
+    })
+  }
+
+  const onTestSubmit = (data: TestEmailFormData) => {
+    testMutation.mutate(
+      { recipientEmail: data.recipientEmail },
+      {
+        onSuccess: () => {
+          toast.success(t('platformSettings.smtp.testSuccess'))
+          setTestDialogOpen(false)
+          testForm.reset()
+        },
+        onError: (error) => {
+          const message = error instanceof ApiError ? error.message : t('platformSettings.smtp.testFailed')
+          setTestServerErrors([message])
+        },
+      },
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-3/4" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <>
+      <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-md bg-blue-500/10 flex items-center justify-center">
+                <Mail className="h-4 w-4 text-blue-500" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">{t('platformSettings.smtp.title')}</CardTitle>
+                <CardDescription>{t('platformSettings.smtp.description')}</CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {!isInherited && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRevert}
+                  disabled={revertMutation.isPending}
+                >
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  {t('legalPages.revertToDefault')}
+                </Button>
+              )}
+              <Badge variant="outline" className={getStatusBadgeClasses(isInherited ? 'gray' : 'green')}>
+                {isInherited ? (
+                  <>
+                    <GitFork className="h-3 w-3 mr-1" />
+                    {t('legalPages.platformDefault')}
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-3 w-3 mr-1" />
+                    {t('legalPages.customized')}
+                  </>
+                )}
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Copy-on-Write notice */}
+          {isInherited && (
+            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 text-sm text-purple-800 dark:text-purple-200 flex items-start gap-3 mb-6">
+              <Info className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">{t('legalPages.customizingPlatform')}</p>
+                <p className="text-purple-600 dark:text-purple-300 mt-1">
+                  {t('legalPages.customizingPlatformDescription')}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <Form {...form} requiredFields={requiredFields}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormErrorBanner
+                errors={serverErrors}
+                onDismiss={() => setServerErrors([])}
+                title={t('validation.unableToSave', 'Unable to save')}
+              />
+              <div className="grid gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="host"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('platformSettings.smtp.host')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t('platformSettings.smtp.hostPlaceholder')}
+                          {...field}
+                          disabled={!canEdit}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="port"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('platformSettings.smtp.port')}</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="587" {...field} disabled={!canEdit} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('platformSettings.smtp.username')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t('platformSettings.smtp.usernamePlaceholder')}
+                          {...field}
+                          value={field.value ?? ''}
+                          disabled={!canEdit}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('platformSettings.smtp.password')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder={
+                            hasPassword
+                              ? t('platformSettings.smtp.passwordPlaceholder')
+                              : t('platformSettings.smtp.enterPassword')
+                          }
+                          {...field}
+                          value={field.value ?? ''}
+                          disabled={!canEdit}
+                        />
+                      </FormControl>
+                      {hasPassword && !field.value && (
+                        <FormDescription className="text-xs text-amber-600">
+                          {t('platformSettings.smtp.passwordHidden')}
+                        </FormDescription>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="fromEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('platformSettings.smtp.fromEmail')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder={t('platformSettings.smtp.fromEmailPlaceholder')}
+                          {...field}
+                          disabled={!canEdit}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="fromName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('platformSettings.smtp.fromName')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t('platformSettings.smtp.fromNamePlaceholder')}
+                          {...field}
+                          disabled={!canEdit}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="useSsl"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">{t('platformSettings.smtp.useSsl')}</FormLabel>
+                      <FormDescription>{t('platformSettings.smtp.useSslHint')}</FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} disabled={!canEdit} className="cursor-pointer" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {canEdit && (
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setTestDialogOpen(true)}
+                    disabled={!isConfigured || updateMutation.isPending}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {t('platformSettings.smtp.testConnection')}
+                  </Button>
+                  <Button type="submit" disabled={updateMutation.isPending || !form.formState.isDirty}>
+                    {updateMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {t('buttons.saving')}
+                      </>
+                    ) : (
+                      t('buttons.save')
+                    )}
+                  </Button>
+                </div>
+              )}
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      {/* Test Connection Dialog */}
+      <Dialog open={testDialogOpen} onOpenChange={(open) => { setTestDialogOpen(open); if (open) setTestServerErrors([]) }}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{t('platformSettings.smtp.testConnectionTitle')}</DialogTitle>
+            <DialogDescription>{t('platformSettings.smtp.testConnectionDescription')}</DialogDescription>
+          </DialogHeader>
+          <Form {...testForm}>
+            <form onSubmit={testForm.handleSubmit(onTestSubmit)} className="space-y-4">
+              <FormErrorBanner
+                errors={testServerErrors}
+                onDismiss={() => setTestServerErrors([])}
+                title={t('platformSettings.smtp.testFailed', 'Test failed')}
+              />
+              <FormField
+                control={testForm.control}
+                name="recipientEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('platformSettings.smtp.testRecipient')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder={t('platformSettings.smtp.testRecipientPlaceholder')}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setTestDialogOpen(false)} disabled={testMutation.isPending} className="cursor-pointer">
+                  {t('buttons.cancel')}
+                </Button>
+                <Button type="submit" disabled={testMutation.isPending} className="cursor-pointer">
+                  {testMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {t('platformSettings.smtp.sendingTest')}
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      {t('platformSettings.smtp.sendTestButton')}
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}

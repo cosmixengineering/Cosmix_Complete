@@ -1,0 +1,235 @@
+/**
+ * ProductActivityLog Component
+ *
+ * Displays a compact activity timeline for a specific product.
+ * Uses the existing audit system to fetch and display activity entries.
+ */
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { translateAuditDescription } from '@/lib/utils/auditDescriptionTranslator'
+import { ViewTransitionLink } from '@/components/navigation/ViewTransitionLink'
+import {
+  Activity,
+  Clock,
+  Plus,
+  Pencil,
+  Trash2,
+  XCircle,
+  RefreshCw,
+  ExternalLink,
+} from 'lucide-react'
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  ScrollArea,
+  Skeleton,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@uikit'
+
+import { cn } from '@/lib/utils'
+import { useRegionalSettings } from '@/contexts/RegionalSettingsContext'
+import { type ActivityTimelineEntry } from '@/services/audit'
+import { useActivityTimelineQuery } from '@/portal-app/systems/queries'
+import { ActivityDetailsDialog } from '@/portal-app/systems/components/activity-timeline/ActivityDetailsDialog'
+
+interface ProductActivityLogProps {
+  productId: string
+  productName?: string
+  className?: string
+  maxEntries?: number
+}
+
+// Operation type config
+const operationConfig = {
+  Create: { icon: Plus, color: 'text-green-600', bgColor: 'bg-green-100 dark:bg-green-900/30' },
+  Update: { icon: Pencil, color: 'text-blue-600', bgColor: 'bg-blue-100 dark:bg-blue-900/30' },
+  Delete: { icon: Trash2, color: 'text-red-600', bgColor: 'bg-red-100 dark:bg-red-900/30' },
+}
+
+// Compact Timeline Entry
+const CompactTimelineEntry = ({
+  entry,
+  onViewDetails,
+}: {
+  entry: ActivityTimelineEntry
+  onViewDetails: () => void
+}) => {
+  const { t } = useTranslation('common')
+  const { formatRelativeTime, formatDateTime } = useRegionalSettings()
+  const config = operationConfig[entry.operationType as keyof typeof operationConfig] || operationConfig.Update
+  const Icon = config.icon
+
+  return (
+    <button
+      type="button"
+      onClick={onViewDetails}
+      className={cn(
+        'w-full flex items-start gap-3 p-3 rounded-lg text-left transition-all',
+        'hover:bg-muted/50 cursor-pointer',
+        !entry.isSuccess && 'bg-red-50/50 dark:bg-red-950/20'
+      )}
+    >
+      {/* Icon */}
+      <div className={cn('p-1.5 rounded-md flex-shrink-0', config.bgColor)}>
+        <Icon className={cn('h-3.5 w-3.5', config.color)} />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium truncate">
+            {translateAuditDescription(t, entry.actionDescription || entry.operationType)}
+          </span>
+          {!entry.isSuccess && (
+            <XCircle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+          <span className="truncate">{entry.userEmail || t('activityTimeline.systemUser', 'System')}</span>
+          <span>·</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex items-center gap-1 cursor-default">
+                <Clock className="h-3 w-3" />
+                {formatRelativeTime(entry.timestamp)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              {formatDateTime(entry.timestamp)}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+
+      {/* Badge */}
+      <Badge variant="outline" className={cn('text-xs flex-shrink-0', config.color)}>
+        {t(`activityTimeline.operations.${entry.operationType.toLowerCase()}`, entry.operationType)}
+      </Badge>
+    </button>
+  )
+}
+
+export const ProductActivityLog = ({
+  productId,
+  productName: _productName,
+  className,
+  maxEntries = 10,
+}: ProductActivityLogProps) => {
+  const { t } = useTranslation('common')
+  const [selectedEntry, setSelectedEntry] = useState<ActivityTimelineEntry | null>(null)
+
+  const { data: timelineData, isLoading: loading, error: queryError, refetch } = useActivityTimelineQuery({
+    targetId: productId,
+    pageContext: 'Products',
+    pageSize: maxEntries,
+    page: 1,
+  })
+
+  const entries = timelineData?.items ?? []
+  const error = queryError ? (queryError instanceof Error ? queryError.message : t('activityTimeline.loadFailed', 'Failed to load activity')) : null
+
+  return (
+    <>
+      <Card className={cn('shadow-sm hover:shadow-lg transition-all duration-300', className)}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">
+                {t('products.activityLog', 'Activity Log')}
+              </CardTitle>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 cursor-pointer"
+              onClick={() => refetch()}
+              disabled={loading}
+              aria-label={t('buttons.refresh', 'Refresh')}
+            >
+              <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+            </Button>
+          </div>
+          <CardDescription className="text-xs">
+            {t('products.activityLogDescription', 'Recent changes to this product')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {loading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-start gap-3 p-3">
+                  <Skeleton className="h-8 w-8 rounded-md flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-6 text-muted-foreground">
+              <XCircle className="h-8 w-8 mx-auto mb-2 text-destructive" />
+              <p className="text-sm">{error}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 cursor-pointer"
+                onClick={() => refetch()}
+              >
+                {t('buttons.retry', 'Retry')}
+              </Button>
+            </div>
+          ) : entries.length === 0 ? (
+            <EmptyState
+              icon={Activity}
+              title={t('products.noActivity', 'No activity recorded yet')}
+              description={t('products.noActivityDescription', 'Activity will appear here as changes are made to this product.')}
+              className="border-0 rounded-none px-4 py-12"
+            />
+          ) : (
+            <ScrollArea className="h-[280px] -mx-2">
+              <div className="space-y-1 px-2">
+                {entries.map((entry) => (
+                  <CompactTimelineEntry
+                    key={entry.id}
+                    entry={entry}
+                    onViewDetails={() => setSelectedEntry(entry)}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+
+          {/* View All Link */}
+          {entries.length > 0 && (
+            <div className="pt-3 border-t mt-3">
+              <ViewTransitionLink
+                to={`/portal/admin/activity-timeline?targetId=${productId}`}
+                className="flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t('products.viewAllActivity', 'View all activity')}
+                <ExternalLink className="h-3 w-3" />
+              </ViewTransitionLink>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Details Dialog */}
+      <ActivityDetailsDialog
+        entry={selectedEntry}
+        open={!!selectedEntry}
+        onOpenChange={(open) => !open && setSelectedEntry(null)}
+      />
+    </>
+  )
+}

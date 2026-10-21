@@ -1,0 +1,79 @@
+/**
+ * Authentication-related types
+ * These mirror the backend Auth DTOs exactly
+ */
+
+/**
+ * Login request payload
+ * Maps to backend LoginCommand (UseCookies handled by auth.ts service)
+ */
+export interface LoginRequest {
+  email: string
+  password: string
+  tenantId?: string | null
+}
+
+/**
+ * Tenant option for tenant selection during login
+ */
+export interface TenantOption {
+  tenantId: string | null
+  identifier: string | null
+  name: string
+}
+
+/**
+ * Login response - can either be successful auth or require tenant selection
+ * Matches backend LoginResponse DTO
+ */
+export interface LoginResponse {
+  success: boolean
+  requiresTenantSelection: boolean
+  availableTenants: TenantOption[] | null
+  auth: AuthResponse | null
+}
+
+/**
+ * Authentication response with tokens
+ * Matches backend AuthResponse DTO from NOIR.Application.Features.Auth.DTOs
+ */
+export interface AuthResponse {
+  userId: string
+  email: string
+  accessToken: string
+  refreshToken: string
+  expiresAt: string // DateTimeOffset serializes as ISO 8601 string
+}
+
+/**
+ * Current authenticated user info
+ * Matches backend CurrentUserDto from GetCurrentUser query
+ */
+export interface CurrentUser {
+  id: string
+  email: string
+  firstName: string | null
+  lastName: string | null
+  displayName: string | null
+  fullName: string
+  phoneNumber: string | null
+  avatarUrl: string | null
+  roles: string[]
+  tenantId: string | null
+  isActive: boolean
+  createdAt: string // DateTimeOffset serializes as ISO 8601 string
+}
+
+/**
+ * Active session/device information
+ * Matches backend ActiveSessionDto from GetActiveSessions query
+ */
+export interface ActiveSession {
+  id: string
+  deviceName: string | null
+  userAgent: string | null
+  ipAddress: string | null
+  createdAt: string
+  expiresAt: string
+  isCurrent: boolean
+}

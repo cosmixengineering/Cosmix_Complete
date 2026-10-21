@@ -1,0 +1,874 @@
+namespace NOIR.Domain.Common;
+
+/// <summary>
+/// Granular permission constants for authorization.
+/// Format: "resource:action" (e.g., "users:read", "orders:create")
+/// </summary>
+public static class Permissions
+{
+    /// <summary>
+    /// Custom claim type for permissions in JWT tokens and role claims.
+    /// </summary>
+    public const string ClaimType = "permission";
+
+    // Users
+    public const string UsersRead = "users:read";
+    public const string UsersCreate = "users:create";
+    public const string UsersUpdate = "users:update";
+    public const string UsersDelete = "users:delete";
+    public const string UsersManageRoles = "users:manage-roles";
+
+    // Roles
+    public const string RolesRead = "roles:read";
+    public const string RolesCreate = "roles:create";
+    public const string RolesUpdate = "roles:update";
+    public const string RolesDelete = "roles:delete";
+    public const string RolesManagePermissions = "roles:manage-permissions";
+
+    // Tenants (for multi-tenancy)
+    public const string TenantsRead = "tenants:read";
+    public const string TenantsCreate = "tenants:create";
+    public const string TenantsUpdate = "tenants:update";
+    public const string TenantsDelete = "tenants:delete";
+
+    // System
+    public const string SystemAdmin = "system:admin";
+    public const string SystemAuditLogs = "system:audit-logs";
+    public const string SystemSettings = "system:settings";
+    public const string HangfireDashboard = "system:hangfire";
+
+    // Audit (granular permissions)
+    public const string AuditRead = "audit:read";
+    public const string AuditExport = "audit:export";
+    public const string AuditEntityHistory = "audit:entity-history";
+    public const string AuditPolicyRead = "audit:policy-read";
+    public const string AuditPolicyWrite = "audit:policy-write";
+    public const string AuditPolicyDelete = "audit:policy-delete";
+    public const string AuditStream = "audit:stream";
+
+    // Email Templates
+    public const string EmailTemplatesRead = "email-templates:read";
+    public const string EmailTemplatesUpdate = "email-templates:update";
+
+    // Blog Posts
+    public const string BlogPostsRead = "blog-posts:read";
+    public const string BlogPostsCreate = "blog-posts:create";
+    public const string BlogPostsUpdate = "blog-posts:update";
+    public const string BlogPostsDelete = "blog-posts:delete";
+    public const string BlogPostsPublish = "blog-posts:publish";
+
+    // Blog Categories
+    public const string BlogCategoriesRead = "blog-categories:read";
+    public const string BlogCategoriesCreate = "blog-categories:create";
+    public const string BlogCategoriesUpdate = "blog-categories:update";
+    public const string BlogCategoriesDelete = "blog-categories:delete";
+
+    // Blog Tags
+    public const string BlogTagsRead = "blog-tags:read";
+    public const string BlogTagsCreate = "blog-tags:create";
+    public const string BlogTagsUpdate = "blog-tags:update";
+    public const string BlogTagsDelete = "blog-tags:delete";
+
+    // Products
+    public const string ProductsRead = "products:read";
+    public const string ProductsCreate = "products:create";
+    public const string ProductsUpdate = "products:update";
+    public const string ProductsDelete = "products:delete";
+    public const string ProductsPublish = "products:publish";
+
+    // Product Categories
+    public const string ProductCategoriesRead = "product-categories:read";
+    public const string ProductCategoriesCreate = "product-categories:create";
+    public const string ProductCategoriesUpdate = "product-categories:update";
+    public const string ProductCategoriesDelete = "product-categories:delete";
+
+    // Brands
+    public const string BrandsRead = "brands:read";
+    public const string BrandsCreate = "brands:create";
+    public const string BrandsUpdate = "brands:update";
+    public const string BrandsDelete = "brands:delete";
+
+    // Product Attributes
+    public const string AttributesRead = "attributes:read";
+    public const string AttributesCreate = "attributes:create";
+    public const string AttributesUpdate = "attributes:update";
+    public const string AttributesDelete = "attributes:delete";
+
+    // Reviews
+    public const string ReviewsRead = "reviews:read";
+    public const string ReviewsWrite = "reviews:write";
+    public const string ReviewsManage = "reviews:manage";
+
+    // Customer Groups
+    public const string CustomerGroupsRead = "customer-groups:read";
+    public const string CustomerGroupsCreate = "customer-groups:create";
+    public const string CustomerGroupsUpdate = "customer-groups:update";
+    public const string CustomerGroupsDelete = "customer-groups:delete";
+    public const string CustomerGroupsManageMembers = "customer-groups:manage-members";
+
+    // Customers
+    public const string CustomersRead = "customers:read";
+    public const string CustomersCreate = "customers:create";
+    public const string CustomersUpdate = "customers:update";
+    public const string CustomersDelete = "customers:delete";
+    public const string CustomersManage = "customers:manage";
+
+    // Orders
+    public const string OrdersRead = "orders:read";
+    public const string OrdersWrite = "orders:write";
+    public const string OrdersManage = "orders:manage";
+
+    // Promotions
+    public const string PromotionsRead = "promotions:read";
+    public const string PromotionsWrite = "promotions:write";
+    public const string PromotionsDelete = "promotions:delete";
+    public const string PromotionsManage = "promotions:manage";
+
+    // Inventory
+    public const string InventoryRead = "inventory:read";
+    public const string InventoryWrite = "inventory:write";
+    public const string InventoryManage = "inventory:manage";
+
+    // Wishlists
+    public const string WishlistsRead = "wishlists:read";
+    public const string WishlistsWrite = "wishlists:write";
+    public const string WishlistsManage = "wishlists:manage";
+
+    // Reports
+    public const string ReportsRead = "reports:read";
+
+    // Legal Pages
+    public const string LegalPagesRead = "legal-pages:read";
+    public const string LegalPagesUpdate = "legal-pages:update";
+
+    // Tenant Settings
+    public const string TenantSettingsRead = "tenant-settings:read";
+    public const string TenantSettingsUpdate = "tenant-settings:update";
+
+    // Feature Management
+    public const string FeaturesRead = "features:read";
+    public const string FeaturesUpdate = "features:update";
+
+    // Platform Settings
+    public const string PlatformSettingsRead = "platform-settings:read";
+    public const string PlatformSettingsManage = "platform-settings:manage";
+
+    // Payments
+    public const string PaymentsRead = "payments:read";
+    public const string PaymentsCreate = "payments:create";
+    public const string PaymentsManage = "payments:manage";
+    public const string PaymentGatewaysRead = "payment-gateways:read";
+    public const string PaymentGatewaysManage = "payment-gateways:manage";
+    public const string PaymentRefundsRead = "payment-refunds:read";
+    public const string PaymentRefundsManage = "payment-refunds:manage";
+    public const string PaymentWebhooksRead = "payment-webhooks:read";
+
+    // Dashboard
+    public const string DashboardRead = "dashboard:read";
+
+    // Media
+    public const string MediaRead = "media:read";
+    public const string MediaCreate = "media:create";
+    public const string MediaUpdate = "media:update";
+    public const string MediaDelete = "media:delete";
+    public const string MediaManage = "media:manage";
+
+    // Webhooks
+    public const string WebhooksRead = "webhooks:read";
+    public const string WebhooksManage = "webhooks:manage";
+    public const string WebhooksTest = "webhooks:test";
+
+    // HR Employees
+    public const string HrEmployeesRead = "hr-employees:read";
+    public const string HrEmployeesCreate = "hr-employees:create";
+    public const string HrEmployeesUpdate = "hr-employees:update";
+    public const string HrEmployeesDelete = "hr-employees:delete";
+
+    // HR Departments
+    public const string HrDepartmentsRead = "hr-departments:read";
+    public const string HrDepartmentsCreate = "hr-departments:create";
+    public const string HrDepartmentsUpdate = "hr-departments:update";
+    public const string HrDepartmentsDelete = "hr-departments:delete";
+
+    // HR Tags
+    public const string HrTagsRead = "hr-tags:read";
+    public const string HrTagsManage = "hr-tags:manage";
+
+    // CRM Contacts
+    public const string CrmContactsRead = "crm-contacts:read";
+    public const string CrmContactsCreate = "crm-contacts:create";
+    public const string CrmContactsUpdate = "crm-contacts:update";
+    public const string CrmContactsDelete = "crm-contacts:delete";
+
+    // CRM Companies
+    public const string CrmCompaniesRead = "crm-companies:read";
+    public const string CrmCompaniesCreate = "crm-companies:create";
+    public const string CrmCompaniesUpdate = "crm-companies:update";
+    public const string CrmCompaniesDelete = "crm-companies:delete";
+
+    // CRM Leads
+    public const string CrmLeadsRead = "crm-leads:read";
+    public const string CrmLeadsCreate = "crm-leads:create";
+    public const string CrmLeadsUpdate = "crm-leads:update";
+    public const string CrmLeadsManage = "crm-leads:manage";
+
+    // CRM Pipeline
+    public const string CrmPipelineManage = "crm-pipeline:manage";
+
+    // CRM Activities
+    public const string CrmActivitiesRead = "crm-activities:read";
+    public const string CrmActivitiesCreate = "crm-activities:create";
+    public const string CrmActivitiesUpdate = "crm-activities:update";
+    public const string CrmActivitiesDelete = "crm-activities:delete";
+
+    // PM - Projects
+    public const string PmProjectsRead = "pm-projects:read";
+    public const string PmProjectsCreate = "pm-projects:create";
+    public const string PmProjectsUpdate = "pm-projects:update";
+    public const string PmProjectsDelete = "pm-projects:delete";
+
+    // PM - Tasks
+    public const string PmTasksRead = "pm-tasks:read";
+    public const string PmTasksCreate = "pm-tasks:create";
+    public const string PmTasksUpdate = "pm-tasks:update";
+    public const string PmTasksDelete = "pm-tasks:delete";
+    public const string PmTasksManage = "pm-tasks:manage";
+
+    // PM - Members
+    public const string PmMembersManage = "pm-members:manage";
+
+    // Estimation - BOQ
+    public const string EstimationBoqsRead = "estimation-boqs:read";
+    public const string EstimationBoqsCreate = "estimation-boqs:create";
+    public const string EstimationBoqsUpdate = "estimation-boqs:update";
+    public const string EstimationBoqsDelete = "estimation-boqs:delete";
+    public const string EstimationBoqsApprove = "estimation-boqs:approve";
+
+    // Accounting
+    public const string AccountingAccountsRead = "accounting-accounts:read";
+    public const string AccountingAccountsManage = "accounting-accounts:manage";
+    public const string AccountingJournalRead = "accounting-journal:read";
+    public const string AccountingJournalCreate = "accounting-journal:create";
+    public const string AccountingJournalPost = "accounting-journal:post";
+
+    // Stock - Vouchers (Indent/Transfer)
+    public const string StockIndentsRead = "stock-indents:read";
+    public const string StockIndentsCreate = "stock-indents:create";
+    public const string StockIndentsApprove = "stock-indents:approve";
+    public const string StockTransfersRead = "stock-transfers:read";
+    public const string StockTransfersCreate = "stock-transfers:create";
+    public const string StockTransfersApprove = "stock-transfers:approve";
+
+    // Manufacturing
+    public const string ManufacturingBomsRead = "manufacturing-boms:read";
+    public const string ManufacturingBomsCreate = "manufacturing-boms:create";
+    public const string ManufacturingBomsUpdate = "manufacturing-boms:update";
+    public const string ManufacturingBomsDelete = "manufacturing-boms:delete";
+    public const string ManufacturingOrdersRead = "manufacturing-orders:read";
+    public const string ManufacturingOrdersCreate = "manufacturing-orders:create";
+    public const string ManufacturingOrdersUpdate = "manufacturing-orders:update";
+    public const string ManufacturingOrdersManage = "manufacturing-orders:manage";
+
+    // API Keys
+    public const string ApiKeysRead = "api-keys:read";
+    public const string ApiKeysCreate = "api-keys:create";
+    public const string ApiKeysDelete = "api-keys:delete";
+
+    // Search
+    public const string SearchGlobal = "search:global";
+
+    /// <summary>
+    /// All permissions grouped by resource.
+    /// </summary>
+    public static class Groups
+    {
+        public static readonly IReadOnlyList<string> Users =
+            [UsersRead, UsersCreate, UsersUpdate, UsersDelete, UsersManageRoles];
+
+        public static readonly IReadOnlyList<string> Roles =
+            [RolesRead, RolesCreate, RolesUpdate, RolesDelete, RolesManagePermissions];
+
+        public static readonly IReadOnlyList<string> Tenants =
+            [TenantsRead, TenantsCreate, TenantsUpdate, TenantsDelete];
+
+        public static readonly IReadOnlyList<string> SystemPermissions =
+            [SystemAdmin, SystemAuditLogs, SystemSettings, HangfireDashboard];
+
+        public static readonly IReadOnlyList<string> Audit =
+            [AuditRead, AuditExport, AuditEntityHistory, AuditPolicyRead, AuditPolicyWrite, AuditPolicyDelete, AuditStream];
+
+        public static readonly IReadOnlyList<string> EmailTemplates =
+            [EmailTemplatesRead, EmailTemplatesUpdate];
+
+        public static readonly IReadOnlyList<string> BlogPosts =
+            [BlogPostsRead, BlogPostsCreate, BlogPostsUpdate, BlogPostsDelete, BlogPostsPublish];
+
+        public static readonly IReadOnlyList<string> BlogCategories =
+            [BlogCategoriesRead, BlogCategoriesCreate, BlogCategoriesUpdate, BlogCategoriesDelete];
+
+        public static readonly IReadOnlyList<string> BlogTags =
+            [BlogTagsRead, BlogTagsCreate, BlogTagsUpdate, BlogTagsDelete];
+
+        public static readonly IReadOnlyList<string> Products =
+            [ProductsRead, ProductsCreate, ProductsUpdate, ProductsDelete, ProductsPublish];
+
+        public static readonly IReadOnlyList<string> ProductCategories =
+            [ProductCategoriesRead, ProductCategoriesCreate, ProductCategoriesUpdate, ProductCategoriesDelete];
+
+        public static readonly IReadOnlyList<string> Brands =
+            [BrandsRead, BrandsCreate, BrandsUpdate, BrandsDelete];
+
+        public static readonly IReadOnlyList<string> Attributes =
+            [AttributesRead, AttributesCreate, AttributesUpdate, AttributesDelete];
+
+        public static readonly IReadOnlyList<string> Reviews =
+            [ReviewsRead, ReviewsWrite, ReviewsManage];
+
+        public static readonly IReadOnlyList<string> CustomerGroups =
+            [CustomerGroupsRead, CustomerGroupsCreate, CustomerGroupsUpdate, CustomerGroupsDelete, CustomerGroupsManageMembers];
+
+        public static readonly IReadOnlyList<string> Customers =
+            [CustomersRead, CustomersCreate, CustomersUpdate, CustomersDelete, CustomersManage];
+
+        public static readonly IReadOnlyList<string> Orders =
+            [OrdersRead, OrdersWrite, OrdersManage];
+
+        public static readonly IReadOnlyList<string> Promotions =
+            [PromotionsRead, PromotionsWrite, PromotionsDelete, PromotionsManage];
+
+        public static readonly IReadOnlyList<string> Inventory =
+            [InventoryRead, InventoryWrite, InventoryManage];
+
+        public static readonly IReadOnlyList<string> Wishlists =
+            [WishlistsRead, WishlistsWrite, WishlistsManage];
+
+        public static readonly IReadOnlyList<string> Reports =
+            [ReportsRead];
+
+        public static readonly IReadOnlyList<string> LegalPages =
+            [LegalPagesRead, LegalPagesUpdate];
+
+        public static readonly IReadOnlyList<string> TenantSettings =
+            [TenantSettingsRead, TenantSettingsUpdate];
+
+        public static readonly IReadOnlyList<string> Features =
+            [FeaturesRead, FeaturesUpdate];
+
+        public static readonly IReadOnlyList<string> PlatformSettings =
+            [PlatformSettingsRead, PlatformSettingsManage];
+
+        public static readonly IReadOnlyList<string> Payments =
+            [PaymentsRead, PaymentsCreate, PaymentsManage, PaymentGatewaysRead, PaymentGatewaysManage,
+             PaymentRefundsRead, PaymentRefundsManage, PaymentWebhooksRead];
+
+        public static readonly IReadOnlyList<string> Media =
+            [MediaRead, MediaCreate, MediaUpdate, MediaDelete, MediaManage];
+
+        public static readonly IReadOnlyList<string> Webhooks =
+            [WebhooksRead, WebhooksManage, WebhooksTest];
+
+        public static readonly IReadOnlyList<string> HrEmployees =
+            [HrEmployeesRead, HrEmployeesCreate, HrEmployeesUpdate, HrEmployeesDelete];
+
+        public static readonly IReadOnlyList<string> HrDepartments =
+            [HrDepartmentsRead, HrDepartmentsCreate, HrDepartmentsUpdate, HrDepartmentsDelete];
+
+        public static readonly IReadOnlyList<string> HrTags =
+            [HrTagsRead, HrTagsManage];
+
+        public static readonly IReadOnlyList<string> CrmContacts =
+            [CrmContactsRead, CrmContactsCreate, CrmContactsUpdate, CrmContactsDelete];
+
+        public static readonly IReadOnlyList<string> CrmCompanies =
+            [CrmCompaniesRead, CrmCompaniesCreate, CrmCompaniesUpdate, CrmCompaniesDelete];
+
+        public static readonly IReadOnlyList<string> CrmLeads =
+            [CrmLeadsRead, CrmLeadsCreate, CrmLeadsUpdate, CrmLeadsManage];
+
+        public static readonly IReadOnlyList<string> CrmPipeline =
+            [CrmPipelineManage];
+
+        public static readonly IReadOnlyList<string> CrmActivities =
+            [CrmActivitiesRead, CrmActivitiesCreate, CrmActivitiesUpdate, CrmActivitiesDelete];
+
+        public static readonly IReadOnlyList<string> PmProjects =
+            [PmProjectsRead, PmProjectsCreate, PmProjectsUpdate, PmProjectsDelete];
+
+        public static readonly IReadOnlyList<string> PmTasks =
+            [PmTasksRead, PmTasksCreate, PmTasksUpdate, PmTasksDelete, PmTasksManage];
+
+        public static readonly IReadOnlyList<string> PmMembers =
+            [PmMembersManage];
+
+        public static readonly IReadOnlyList<string> EstimationBoqs =
+            [EstimationBoqsRead, EstimationBoqsCreate, EstimationBoqsUpdate, EstimationBoqsDelete, EstimationBoqsApprove];
+
+        public static readonly IReadOnlyList<string> AccountingAccounts =
+            [AccountingAccountsRead, AccountingAccountsManage];
+
+        public static readonly IReadOnlyList<string> AccountingJournal =
+            [AccountingJournalRead, AccountingJournalCreate, AccountingJournalPost];
+
+        public static readonly IReadOnlyList<string> StockIndents =
+            [StockIndentsRead, StockIndentsCreate, StockIndentsApprove];
+
+        public static readonly IReadOnlyList<string> StockTransfers =
+            [StockTransfersRead, StockTransfersCreate, StockTransfersApprove];
+
+        public static readonly IReadOnlyList<string> ManufacturingBoms =
+            [ManufacturingBomsRead, ManufacturingBomsCreate, ManufacturingBomsUpdate, ManufacturingBomsDelete];
+
+        public static readonly IReadOnlyList<string> ManufacturingOrders =
+            [ManufacturingOrdersRead, ManufacturingOrdersCreate, ManufacturingOrdersUpdate, ManufacturingOrdersManage];
+
+        public static readonly IReadOnlyList<string> Dashboard =
+            [DashboardRead];
+
+        public static readonly IReadOnlyList<string> Search =
+            [SearchGlobal];
+
+        public static readonly IReadOnlyList<string> ApiKeys =
+            [ApiKeysRead, ApiKeysCreate, ApiKeysDelete];
+    }
+
+    /// <summary>
+    /// All available permissions.
+    /// </summary>
+    /// <summary>
+    /// All available permissions ordered to match sidebar navigation sections.
+    /// SortOrder is derived from the index in this list, so order matters.
+    /// </summary>
+    public static IReadOnlyList<string> All =>
+    [
+        // ── Dashboard ────────────────────────────────────────────────
+        DashboardRead,
+
+        // ── Search ──────────────────────────────────────────────────
+        SearchGlobal,
+
+        // ── Marketing ──────────────────────────────────────────────────
+        ReportsRead,
+        PromotionsRead, PromotionsWrite, PromotionsDelete, PromotionsManage,
+
+        // ── Orders ─────────────────────────────────────────────────────
+        OrdersRead, OrdersWrite, OrdersManage,
+        PaymentsRead, PaymentsCreate, PaymentsManage,
+        PaymentGatewaysRead, PaymentGatewaysManage,
+        PaymentRefundsRead, PaymentRefundsManage,
+        PaymentWebhooksRead,
+        InventoryRead, InventoryWrite, InventoryManage,
+
+        // ── Customers ──────────────────────────────────────────────────
+        CustomersRead, CustomersCreate, CustomersUpdate, CustomersDelete, CustomersManage,
+        CustomerGroupsRead, CustomerGroupsCreate, CustomerGroupsUpdate, CustomerGroupsDelete, CustomerGroupsManageMembers,
+        ReviewsRead, ReviewsWrite, ReviewsManage,
+        WishlistsRead, WishlistsWrite, WishlistsManage,
+
+        // ── Catalog ────────────────────────────────────────────────────
+        ProductsRead, ProductsCreate, ProductsUpdate, ProductsDelete, ProductsPublish,
+        ProductCategoriesRead, ProductCategoriesCreate, ProductCategoriesUpdate, ProductCategoriesDelete,
+        BrandsRead, BrandsCreate, BrandsUpdate, BrandsDelete,
+        AttributesRead, AttributesCreate, AttributesUpdate, AttributesDelete,
+        MediaRead, MediaCreate, MediaUpdate, MediaDelete, MediaManage,
+
+        // ── HR ────────────────────────────────────────────────────────
+        HrEmployeesRead, HrEmployeesCreate, HrEmployeesUpdate, HrEmployeesDelete,
+        HrDepartmentsRead, HrDepartmentsCreate, HrDepartmentsUpdate, HrDepartmentsDelete,
+        HrTagsRead, HrTagsManage,
+
+        // ── CRM ────────────────────────────────────────────────────────
+        CrmContactsRead, CrmContactsCreate, CrmContactsUpdate, CrmContactsDelete,
+        CrmCompaniesRead, CrmCompaniesCreate, CrmCompaniesUpdate, CrmCompaniesDelete,
+        CrmLeadsRead, CrmLeadsCreate, CrmLeadsUpdate, CrmLeadsManage,
+        CrmPipelineManage,
+        CrmActivitiesRead, CrmActivitiesCreate, CrmActivitiesUpdate, CrmActivitiesDelete,
+
+        // ── PM ────────────────────────────────────────────────────────
+        PmProjectsRead, PmProjectsCreate, PmProjectsUpdate, PmProjectsDelete,
+        PmTasksRead, PmTasksCreate, PmTasksUpdate, PmTasksDelete, PmTasksManage,
+        PmMembersManage,
+
+        // ── Estimation (BOQ) ─────────────────────────────────────────
+        EstimationBoqsRead, EstimationBoqsCreate, EstimationBoqsUpdate, EstimationBoqsDelete, EstimationBoqsApprove,
+
+        // ── Accounting ───────────────────────────────────────────────
+        AccountingAccountsRead, AccountingAccountsManage,
+        AccountingJournalRead, AccountingJournalCreate, AccountingJournalPost,
+
+        // ── Stock Vouchers ───────────────────────────────────────────
+        StockIndentsRead, StockIndentsCreate, StockIndentsApprove,
+        StockTransfersRead, StockTransfersCreate, StockTransfersApprove,
+
+        // ── Manufacturing ────────────────────────────────────────────
+        ManufacturingBomsRead, ManufacturingBomsCreate, ManufacturingBomsUpdate, ManufacturingBomsDelete,
+        ManufacturingOrdersRead, ManufacturingOrdersCreate, ManufacturingOrdersUpdate, ManufacturingOrdersManage,
+
+        // ── Content ────────────────────────────────────────────────────
+        BlogPostsRead, BlogPostsCreate, BlogPostsUpdate, BlogPostsDelete, BlogPostsPublish,
+        BlogCategoriesRead, BlogCategoriesCreate, BlogCategoriesUpdate, BlogCategoriesDelete,
+        BlogTagsRead, BlogTagsCreate, BlogTagsUpdate, BlogTagsDelete,
+
+        // ── Users & Access ─────────────────────────────────────────────
+        UsersRead, UsersCreate, UsersUpdate, UsersDelete, UsersManageRoles,
+        RolesRead, RolesCreate, RolesUpdate, RolesDelete, RolesManagePermissions,
+
+        // ── Tenant Management (platform-only) ──────────────────────────
+        TenantsRead, TenantsCreate, TenantsUpdate, TenantsDelete,
+
+        // ── Settings ───────────────────────────────────────────────────
+        TenantSettingsRead, TenantSettingsUpdate,
+        FeaturesRead, FeaturesUpdate,
+        EmailTemplatesRead, EmailTemplatesUpdate,
+        LegalPagesRead, LegalPagesUpdate,
+        WebhooksRead, WebhooksManage, WebhooksTest,
+        ApiKeysRead, ApiKeysCreate, ApiKeysDelete,
+
+        // ── System ─────────────────────────────────────────────────────
+        SystemAdmin, SystemAuditLogs, SystemSettings, HangfireDashboard,
+        AuditRead, AuditExport, AuditEntityHistory, AuditPolicyRead, AuditPolicyWrite, AuditPolicyDelete, AuditStream,
+
+        // ── Platform (platform-only) ───────────────────────────────────
+        PlatformSettingsRead, PlatformSettingsManage,
+    ];
+
+    /// <summary>
+    /// Default permissions for PlatformAdmin role.
+    /// Platform admins have all system-level permissions for managing tenants and platform settings.
+    /// </summary>
+    public static IReadOnlyList<string> PlatformAdminDefaults =>
+    [
+        // Dashboard access
+        DashboardRead,
+        // Global search
+        SearchGlobal,
+        // Full tenant management
+        TenantsRead, TenantsCreate, TenantsUpdate, TenantsDelete,
+        // System administration
+        SystemAdmin, SystemAuditLogs, SystemSettings, HangfireDashboard,
+        // Platform-level email templates
+        EmailTemplatesRead, EmailTemplatesUpdate,
+        // Platform-level legal pages
+        LegalPagesRead, LegalPagesUpdate,
+        // Platform-level audit (all tenants)
+        AuditRead, AuditExport, AuditEntityHistory, AuditPolicyRead, AuditPolicyWrite, AuditPolicyDelete, AuditStream,
+        // Feature management
+        FeaturesRead, FeaturesUpdate,
+        // Platform settings
+        PlatformSettingsRead, PlatformSettingsManage
+    ];
+
+    /// <summary>
+    /// Default permissions for Admin role (tenant-level).
+    /// Tenant admins have full access within their own tenant.
+    /// </summary>
+    public static IReadOnlyList<string> AdminDefaults =>
+    [
+        // Dashboard access within tenant
+        DashboardRead,
+        // Global search within tenant
+        SearchGlobal,
+        // User management within tenant
+        UsersRead, UsersCreate, UsersUpdate, UsersDelete, UsersManageRoles,
+        // Role management within tenant
+        RolesRead, RolesCreate, RolesUpdate, RolesDelete, RolesManagePermissions,
+        // Tenant-level email templates (copy-on-write)
+        EmailTemplatesRead, EmailTemplatesUpdate,
+        // Tenant-level legal pages (copy-on-write)
+        LegalPagesRead, LegalPagesUpdate,
+        // Tenant settings (branding, contact, regional)
+        TenantSettingsRead, TenantSettingsUpdate,
+        // Feature management within tenant
+        FeaturesRead, FeaturesUpdate,
+        // Audit within tenant
+        AuditRead, AuditExport, AuditEntityHistory,
+        // Blog within tenant
+        BlogPostsRead, BlogPostsCreate, BlogPostsUpdate, BlogPostsDelete, BlogPostsPublish,
+        BlogCategoriesRead, BlogCategoriesCreate, BlogCategoriesUpdate, BlogCategoriesDelete,
+        BlogTagsRead, BlogTagsCreate, BlogTagsUpdate, BlogTagsDelete,
+        // Products within tenant
+        ProductsRead, ProductsCreate, ProductsUpdate, ProductsDelete, ProductsPublish,
+        ProductCategoriesRead, ProductCategoriesCreate, ProductCategoriesUpdate, ProductCategoriesDelete,
+        BrandsRead, BrandsCreate, BrandsUpdate, BrandsDelete,
+        AttributesRead, AttributesCreate, AttributesUpdate, AttributesDelete,
+        // Media within tenant
+        MediaRead, MediaCreate, MediaUpdate, MediaDelete, MediaManage,
+        // Reviews within tenant
+        ReviewsRead, ReviewsWrite, ReviewsManage,
+        // Customer Groups within tenant
+        CustomerGroupsRead, CustomerGroupsCreate, CustomerGroupsUpdate, CustomerGroupsDelete, CustomerGroupsManageMembers,
+        // Customers within tenant
+        CustomersRead, CustomersCreate, CustomersUpdate, CustomersDelete, CustomersManage,
+        // Orders within tenant
+        OrdersRead, OrdersWrite, OrdersManage,
+        // Promotions within tenant
+        PromotionsRead, PromotionsWrite, PromotionsDelete, PromotionsManage,
+        // Inventory within tenant
+        InventoryRead, InventoryWrite, InventoryManage,
+        // Wishlists within tenant
+        WishlistsRead, WishlistsWrite, WishlistsManage,
+        // Reports within tenant
+        ReportsRead,
+        // Payments within tenant
+        PaymentsRead, PaymentsCreate, PaymentsManage, PaymentGatewaysRead, PaymentGatewaysManage,
+        PaymentRefundsRead, PaymentRefundsManage, PaymentWebhooksRead,
+        // Webhooks within tenant
+        WebhooksRead, WebhooksManage, WebhooksTest,
+        // API Keys within tenant
+        ApiKeysRead, ApiKeysCreate, ApiKeysDelete,
+        // HR within tenant
+        HrEmployeesRead, HrEmployeesCreate, HrEmployeesUpdate, HrEmployeesDelete,
+        HrDepartmentsRead, HrDepartmentsCreate, HrDepartmentsUpdate, HrDepartmentsDelete,
+        HrTagsRead, HrTagsManage,
+        // CRM within tenant
+        CrmContactsRead, CrmContactsCreate, CrmContactsUpdate, CrmContactsDelete,
+        CrmCompaniesRead, CrmCompaniesCreate, CrmCompaniesUpdate, CrmCompaniesDelete,
+        CrmLeadsRead, CrmLeadsCreate, CrmLeadsUpdate, CrmLeadsManage,
+        CrmPipelineManage,
+        CrmActivitiesRead, CrmActivitiesCreate, CrmActivitiesUpdate, CrmActivitiesDelete,
+        // PM within tenant
+        PmProjectsRead, PmProjectsCreate, PmProjectsUpdate, PmProjectsDelete,
+        PmTasksRead, PmTasksCreate, PmTasksUpdate, PmTasksDelete, PmTasksManage,
+        PmMembersManage,
+        // Estimation within tenant
+        EstimationBoqsRead, EstimationBoqsCreate, EstimationBoqsUpdate, EstimationBoqsDelete, EstimationBoqsApprove,
+        // Accounting within tenant
+        AccountingAccountsRead, AccountingAccountsManage,
+        AccountingJournalRead, AccountingJournalCreate, AccountingJournalPost,
+        // Stock within tenant
+        StockIndentsRead, StockIndentsCreate, StockIndentsApprove,
+        StockTransfersRead, StockTransfersCreate, StockTransfersApprove,
+        // Manufacturing within tenant
+        ManufacturingBomsRead, ManufacturingBomsCreate, ManufacturingBomsUpdate, ManufacturingBomsDelete,
+        ManufacturingOrdersRead, ManufacturingOrdersCreate, ManufacturingOrdersUpdate, ManufacturingOrdersManage
+    ];
+
+    /// <summary>
+    /// Default permissions for User role.
+    /// </summary>
+    public static IReadOnlyList<string> UserDefaults =>
+        [UsersRead];
+
+    /// <summary>
+    /// Permission scope definitions for multi-tenant validation.
+    /// </summary>
+    public static class Scopes
+    {
+        /// <summary>
+        /// Permissions that can ONLY be assigned to system roles (TenantId = null).
+        /// These permissions affect cross-tenant or platform-level operations.
+        /// Note: Email templates are NOT system-only because tenants have copy-on-write templates.
+        /// </summary>
+        public static IReadOnlySet<string> SystemOnly { get; } = new HashSet<string>
+        {
+            // Tenant management is system-only
+            TenantsRead,
+            TenantsCreate,
+            TenantsUpdate,
+            TenantsDelete,
+            // System administration is system-only
+            SystemAdmin,
+            SystemAuditLogs,
+            SystemSettings,
+            HangfireDashboard,
+            // Platform settings management
+            PlatformSettingsRead,
+            PlatformSettingsManage
+        };
+
+        /// <summary>
+        /// Permissions that can be assigned to tenant-specific roles.
+        /// These permissions are scoped to within-tenant operations.
+        /// </summary>
+        public static IReadOnlySet<string> TenantAllowed { get; } = new HashSet<string>
+        {
+            // Dashboard within tenant
+            DashboardRead,
+            // Search within tenant
+            SearchGlobal,
+            // Users within tenant
+            UsersRead,
+            UsersCreate,
+            UsersUpdate,
+            UsersDelete,
+            UsersManageRoles,
+            // Roles within tenant
+            RolesRead,
+            RolesCreate,
+            RolesUpdate,
+            RolesDelete,
+            RolesManagePermissions,
+            // Email templates within tenant (copy-on-write)
+            EmailTemplatesRead,
+            EmailTemplatesUpdate,
+            // Legal pages within tenant (copy-on-write)
+            LegalPagesRead,
+            LegalPagesUpdate,
+            // Tenant settings (branding, contact, regional)
+            TenantSettingsRead,
+            TenantSettingsUpdate,
+            // Feature management within tenant
+            FeaturesRead,
+            FeaturesUpdate,
+            // Audit within tenant (read and export only)
+            AuditRead,
+            AuditExport,
+            AuditEntityHistory,
+            // Blog within tenant
+            BlogPostsRead,
+            BlogPostsCreate,
+            BlogPostsUpdate,
+            BlogPostsDelete,
+            BlogPostsPublish,
+            BlogCategoriesRead,
+            BlogCategoriesCreate,
+            BlogCategoriesUpdate,
+            BlogCategoriesDelete,
+            BlogTagsRead,
+            BlogTagsCreate,
+            BlogTagsUpdate,
+            BlogTagsDelete,
+            // Products within tenant
+            ProductsRead,
+            ProductsCreate,
+            ProductsUpdate,
+            ProductsDelete,
+            ProductsPublish,
+            ProductCategoriesRead,
+            ProductCategoriesCreate,
+            ProductCategoriesUpdate,
+            ProductCategoriesDelete,
+            BrandsRead,
+            BrandsCreate,
+            BrandsUpdate,
+            BrandsDelete,
+            AttributesRead,
+            AttributesCreate,
+            AttributesUpdate,
+            AttributesDelete,
+            // Media within tenant
+            MediaRead,
+            MediaCreate,
+            MediaUpdate,
+            MediaDelete,
+            MediaManage,
+            // Reviews within tenant
+            ReviewsRead,
+            ReviewsWrite,
+            ReviewsManage,
+            // Customer Groups within tenant
+            CustomerGroupsRead,
+            CustomerGroupsCreate,
+            CustomerGroupsUpdate,
+            CustomerGroupsDelete,
+            CustomerGroupsManageMembers,
+            // Customers within tenant
+            CustomersRead,
+            CustomersCreate,
+            CustomersUpdate,
+            CustomersDelete,
+            CustomersManage,
+            // Orders within tenant
+            OrdersRead,
+            OrdersWrite,
+            OrdersManage,
+            // Promotions within tenant
+            PromotionsRead,
+            PromotionsWrite,
+            PromotionsDelete,
+            PromotionsManage,
+            // Inventory within tenant
+            InventoryRead,
+            InventoryWrite,
+            InventoryManage,
+            // Wishlists within tenant
+            WishlistsRead,
+            WishlistsWrite,
+            WishlistsManage,
+            // Reports within tenant
+            ReportsRead,
+            // Payments within tenant
+            PaymentsRead,
+            PaymentsCreate,
+            PaymentsManage,
+            PaymentGatewaysRead,
+            PaymentGatewaysManage,
+            PaymentRefundsRead,
+            PaymentRefundsManage,
+            PaymentWebhooksRead,
+            // Webhooks within tenant
+            WebhooksRead,
+            WebhooksManage,
+            WebhooksTest,
+            // API Keys within tenant
+            ApiKeysRead,
+            ApiKeysCreate,
+            ApiKeysDelete,
+            // HR within tenant
+            HrEmployeesRead,
+            HrEmployeesCreate,
+            HrEmployeesUpdate,
+            HrEmployeesDelete,
+            HrDepartmentsRead,
+            HrDepartmentsCreate,
+            HrDepartmentsUpdate,
+            HrDepartmentsDelete,
+            HrTagsRead,
+            HrTagsManage,
+            // CRM within tenant
+            CrmContactsRead,
+            CrmContactsCreate,
+            CrmContactsUpdate,
+            CrmContactsDelete,
+            CrmCompaniesRead,
+            CrmCompaniesCreate,
+            CrmCompaniesUpdate,
+            CrmCompaniesDelete,
+            CrmLeadsRead,
+            CrmLeadsCreate,
+            CrmLeadsUpdate,
+            CrmLeadsManage,
+            CrmPipelineManage,
+            CrmActivitiesRead,
+            CrmActivitiesCreate,
+            CrmActivitiesUpdate,
+            CrmActivitiesDelete,
+            // PM within tenant
+            PmProjectsRead,
+            PmProjectsCreate,
+            PmProjectsUpdate,
+            PmProjectsDelete,
+            PmTasksRead,
+            PmTasksCreate,
+            PmTasksUpdate,
+            PmTasksDelete,
+            PmTasksManage,
+            PmMembersManage
+        };
+
+        /// <summary>
+        /// Checks if a permission is allowed for tenant-scoped roles.
+        /// </summary>
+        public static bool IsTenantAllowed(string permission) => TenantAllowed.Contains(permission);
+
+        /// <summary>
+        /// Checks if a permission is system-only.
+        /// </summary>
+        public static bool IsSystemOnly(string permission) => SystemOnly.Contains(permission);
+
+        /// <summary>
+        /// Validates that all permissions are valid for the given tenant context.
+        /// Returns the list of invalid permissions if any.
+        /// </summary>
+        public static IReadOnlyList<string> ValidateForTenant(IEnumerable<string> permissions, Guid? tenantId)
+        {
+            if (!tenantId.HasValue)
+            {
+                // System roles can have any permission
+                return [];
+            }
+
+            // Tenant-specific roles can only have tenant-allowed permissions
+            return permissions.Where(p => !TenantAllowed.Contains(p)).ToList();
+        }
+    }
+}

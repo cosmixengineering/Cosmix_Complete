@@ -1,0 +1,135 @@
+# B03 backend/client contract examples ONLY. NOT executed by this pack.
+# No host, SQL, fixtures, face service or payroll posting is started here.
+# Web requests need the existing MFA browser session/context cookie jar.
+# Each unsafe web request needs a fresh token from GET /api/v1/auth/web/csrf.
+# All REPLACE values must come from current server previews/configuration.
+# Never use real employees in a disposable acceptance setup.
+@baseUrl = https://localhost:7240
+@mobileAccessToken = REPLACE_WITH_CURRENT_OWN_MOBILE_TOKEN
+@csrfToken = REPLACE_WITH_CURRENT_WEB_CSRF_TOKEN
+@employeeId = REPLACE_WITH_SCOPED_SYNTHETIC_EMPLOYEE_ID
+@kind = 2
+@effectiveFrom = REPLACE_WITH_EXPLICIT_APPROVED_EFFECTIVE_DATE
+@expectedLatestVersion = REPLACE_WITH_ACTUAL_LATEST_INTEGER_OR_FIRST_ZERO
+@requiresSupportingDocuments = REPLACE_WITH_EXPLICIT_APPROVED_BOOLEAN
+@allowedDocumentTypesJson = REPLACE_WITH_EXPLICIT_APPROVED_NUMERIC_ARRAY
+@approvalReference = REPLACE_WITH_ACTUAL_EVIDENCE_POLICY_APPROVAL_REFERENCE
+@businessDate = REPLACE_WITH_RETAINED_SHIFT_START_BUSINESS_DATE
+@from = REPLACE_WITH_INCLUSIVE_FILTER_DATE
+@to = REPLACE_WITH_EXCLUSIVE_FILTER_DATE
+@startUtc = REPLACE_WITH_PROPOSED_UTC_START
+@endUtc = REPLACE_WITH_PROPOSED_UTC_END
+@assessmentIdJson = REPLACE_WITH_EXACT_JSON_GUID_STRING_OR_NULL
+@summaryIdJson = REPLACE_WITH_EXACT_JSON_GUID_STRING_OR_NULL
+@sourceFingerprint = REPLACE_WITH_FRESH_PREVIEW_FINGERPRINT
+@policyId = REPLACE_WITH_CURRENT_EFFECTIVE_REQUIREMENTS_POLICY_ID
+@evidenceDocumentIdsJson = REPLACE_WITH_SELECTED_VERIFIED_IDS_JSON_ARRAY
+@requestId = REPLACE_WITH_RECEIVED_REQUEST_ID
+@requestVersion = REPLACE_WITH_FRESH_REQUEST_VERSION
+@sourceLockEventId = REPLACE_WITH_FROZEN_LOCK_EVENT_ID
+@sourceSummaryId = REPLACE_WITH_FROZEN_SUMMARY_ID
+@priorAdjustmentIdJson = REPLACE_WITH_EXACT_PREVIEW_JSON_GUID_STRING_OR_NULL
+@targetMonthStart = REPLACE_WITH_FIRST_LATER_UNLOCKED_PREVIEW_MONTH
+@carryFingerprint = REPLACE_WITH_FRESH_FROZEN_PREVIEW_FINGERPRINT
+@carryRequestId = REPLACE_WITH_RECEIVED_CARRY_REQUEST_ID
+@carryVersion = REPLACE_WITH_FRESH_CARRY_REQUEST_VERSION
+
+### Fixed Admin: immutable configured policy history, with configure All-scope grant
+GET {{baseUrl}}/api/v1/attendance/corrections/alternatives/policies
+
+### Fixed Admin: explicit company evidence policy, no invented defaults
+# kind: 1 Medical / 2 Accessibility / 3 OutOfBoundary.
+# A synthetic written-only policy must be explicitly approved as such; not a production default.
+# Later versions strictly prospective; expectedLatestVersion copied from history.
+# Exact retry: SAME key + SAME original body. New approved version uses a new key.
+POST {{baseUrl}}/api/v1/attendance/corrections/alternatives/policies
+X-CSRF-TOKEN: {{csrfToken}}
+Idempotency-Key: b03-policy-example-0001
+Content-Type: application/json
+
+{"kind":{{kind}},"effectiveFrom":"{{effectiveFrom}}","expectedLatestVersion":{{expectedLatestVersion}},"requiresSupportingDocuments":{{requiresSupportingDocuments}},"allowedDocumentTypes":{{allowedDocumentTypesJson}},"approvalReference":"{{approvalReference}}","reason":"Record the explicitly approved synthetic evidence requirement."}
+
+### Mobile self: safe requirements, no employee/role/authority selector
+# not_configured means stop; do not manufacture a policyId or document requirement.
+GET {{baseUrl}}/api/v1/me/attendance/corrections/alternatives/requirements?kind={{kind}}
+Authorization: Bearer {{mobileAccessToken}}
+
+### Web self: same safe requirements with existing web MFA cookies
+GET {{baseUrl}}/api/v1/me/attendance/corrections/alternatives/requirements?kind={{kind}}
+
+### Mobile self: authoritative correction source, retaining real Office or Site
+# Office preview has officeSource; never substitute branchId into siteId.
+# For retained failed raw supply its real rawPunchId in a separate preview request.
+GET {{baseUrl}}/api/v1/me/attendance/corrections/sources?businessDate={{businessDate}}
+Authorization: Bearer {{mobileAccessToken}}
+
+### Mobile self: explicit alternative manual duty, not an accepted punch
+# kind=4 ManualSession. Written evidence required in all cases.
+# assessment/summary JSON selectors are copied INCLUDING null when truly absent.
+# policyId from effective requirements; selected documents from existing verified employee records.
+# Explicit [] only when an approved configured policy permits written-only evidence.
+# Raw stays null for missing Check-In; no face/employee/Office/source-schema selectors.
+POST {{baseUrl}}/api/v1/me/attendance/corrections
+Authorization: Bearer {{mobileAccessToken}}
+Idempotency-Key: b03-alternative-request-0001
+Content-Type: application/json
+
+{"businessDate":"{{businessDate}}","kind":4,"rawPunchId":null,"expectedAssessmentId":{{assessmentIdJson}},"expectedSummaryId":{{summaryIdJson}},"requestedTimeUtc":"{{startUtc}}","requestedEndUtc":"{{endUtc}}","requestedStatus":null,"reason":"Request review of documented alternative duty.","writtenEvidence":"Synthetic employee statement describing the exact duty and alternative case.","expectedSourceFingerprint":"{{sourceFingerprint}}","alternativeKind":{{kind}},"expectedAlternativePolicyId":"{{policyId}}","alternativeEvidenceDocumentIds":{{evidenceDocumentIdsJson}}}
+
+### Fixed Admin: dedicated queue, Employee scope covers retained Office membership
+# scope=2 Employee; same current fixed ADMIN assignment must carry the dedicated grant.
+# Follow nextCursor with identical filters, even after empty pages. No Branch-to-Site conversion.
+GET {{baseUrl}}/api/v1/attendance/corrections/alternatives/review?from={{from}}&to={{to}}&scope=2&targetId={{employeeId}}&state=0&pageSize=25
+
+### Fixed Admin: exact case, protected evidence and fresh version
+GET {{baseUrl}}/api/v1/attendance/employees/{{employeeId}}/corrections/alternatives/{{requestId}}
+
+### Different fixed Admin: explicit matching alternative decision
+# decision: 1 Approve / 2 Return / 3 Reject. No self-review; no payment/face success.
+# Missing kind -> 400; mismatched stored kind/stale version -> conflict; HR-only -> 403.
+POST {{baseUrl}}/api/v1/attendance/employees/{{employeeId}}/corrections/alternatives/{{requestId}}/decide
+X-CSRF-TOKEN: {{csrfToken}}
+Idempotency-Key: b03-alternative-decision-0001
+Content-Type: application/json
+
+{"expectedVersion":"{{requestVersion}}","decision":1,"reason":"Reviewed the exact configured evidence and documented duty.","alternativeKind":{{kind}}}
+
+### Mobile self: locked source and first later unlocked target preview
+# Exact frozen Office/Site source retained; never reopen the original month.
+GET {{baseUrl}}/api/v1/me/attendance/carry-forward/sources?businessDate={{businessDate}}
+Authorization: Bearer {{mobileAccessToken}}
+
+### Mobile self: explicit locked-month alternative request, no salary input
+# This is a new ManualSession example. Time revisions instead retain actual targetSessionKey.
+# All source/target selectors are copied from the same fresh preview.
+POST {{baseUrl}}/api/v1/me/attendance/carry-forward/requests
+Authorization: Bearer {{mobileAccessToken}}
+Idempotency-Key: b03-carry-alternative-request-0001
+Content-Type: application/json
+
+{"sourceBusinessDate":"{{businessDate}}","kind":4,"targetSessionKey":null,"rawPunchId":null,"requestedTimeUtc":"{{startUtc}}","requestedEndUtc":"{{endUtc}}","expectedSourceLockEventId":"{{sourceLockEventId}}","expectedSourceSummaryId":"{{sourceSummaryId}}","expectedPriorAdjustmentId":{{priorAdjustmentIdJson}},"expectedTargetMonthStart":"{{targetMonthStart}}","expectedSourceFingerprint":"{{carryFingerprint}}","reason":"Request a factual correction for retained locked-month duty.","writtenEvidence":"Synthetic documented alternative duty; source lock must stay unchanged.","alternativeKind":{{kind}},"expectedAlternativePolicyId":"{{policyId}}","alternativeEvidenceDocumentIds":{{evidenceDocumentIdsJson}}}
+
+### Fixed Admin: locked-month dedicated queue, both original/current source and target scopes
+GET {{baseUrl}}/api/v1/attendance/carry-forward/alternatives/review?from={{from}}&to={{to}}&scope=2&targetId={{employeeId}}&state=0&pageSize=25
+
+### Fixed Admin: exact frozen case, target, policy/documents and fresh request version
+GET {{baseUrl}}/api/v1/attendance/employees/{{employeeId}}/carry-forward/alternatives/{{carryRequestId}}
+
+### Different fixed Admin: approve only signed factual carry-forward
+# Changed prior/target/source -> conflict, no silent rerouting.
+# financialState stays pending_policy. No target worked session, posting/settlement/payment.
+POST {{baseUrl}}/api/v1/attendance/employees/{{employeeId}}/carry-forward/alternatives/{{carryRequestId}}/decide
+X-CSRF-TOKEN: {{csrfToken}}
+Idempotency-Key: b03-carry-alternative-decision-0001
+Content-Type: application/json
+
+{"expectedVersion":"{{carryVersion}}","decision":1,"reason":"Reviewed retained alternative evidence and the exact proposed factual target.","alternativeKind":{{kind}}}
+
+### Negative example: dedicated route cannot downgrade to normal HR by omitting kind
+# Expected 400 alternative_decision_kind_required, before the business service is invoked.
+POST {{baseUrl}}/api/v1/attendance/employees/{{employeeId}}/corrections/alternatives/{{requestId}}/decide
+X-CSRF-TOKEN: {{csrfToken}}
+Idempotency-Key: b03-missing-kind-example-0001
+Content-Type: application/json
+
+{"expectedVersion":"{{requestVersion}}","decision":1,"reason":"Negative synthetic contract example only."}

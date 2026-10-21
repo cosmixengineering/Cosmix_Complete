@@ -1,0 +1,282 @@
+using NOIR.Application.Features.ProductAttributes.Commands.AssignCategoryAttribute;
+using NOIR.Application.Features.ProductAttributes.Commands.RemoveCategoryAttribute;
+using NOIR.Application.Features.ProductAttributes.Commands.UpdateCategoryAttribute;
+using NOIR.Application.Features.ProductAttributes.DTOs;
+using NOIR.Application.Features.ProductAttributes.Queries.GetCategoryAttributes;
+using NOIR.Application.Features.ProductAttributes.Queries.GetCategoryAttributeFormSchema;
+using NOIR.Application.Features.Products.Commands.CreateProductCategory;
+using NOIR.Application.Features.Products.Commands.DeleteProductCategory;
+using NOIR.Application.Features.Products.Commands.ReorderProductCategories;
+using NOIR.Application.Features.Products.Commands.UpdateProductCategory;
+using NOIR.Application.Features.Products.DTOs;
+using NOIR.Application.Features.Products.Queries.GetProductCategories;
+using NOIR.Application.Features.Products.Queries.GetProductCategoryById;
+
+namespace NOIR.Web.Endpoints;
+
+/// <summary>
+/// Product Category API endpoints.
+/// Provides CRUD operations for product categories.
+/// </summary>
+public static class ProductCategoryEndpoints
+{
+    public static void MapProductCategoryEndpoints(this IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/api/products/categories")
+            .WithTags("Product Categories")
+            .RequireFeature(ModuleNames.Ecommerce.Categories)
+            .RequireAuthorization();
+
+        // Get all categories
+        group.MapGet("/", async (
+            [FromQuery] string? search,
+            [FromQuery] bool? topLevelOnly,
+            [FromQuery] bool? includeChildren,
+            IMessageBus bus) =>
+        {
+            var query = new GetProductCategoriesQuery(search, topLevelOnly ?? false, includeChildren ?? false);
+            var result = await bus.InvokeAsync<Result<List<ProductCategoryListDto>>>(query);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(Permissions.ProductCategoriesRead)
+        .WithName("GetProductCategories")
+        .WithSummary("Get list of product categories")
+        .WithDescription("Returns all product categories with optional filtering.")
+        .Produces<List<ProductCategoryListDto>>(StatusCodes.Status200OK);
+
+        // Get category by ID
+        group.MapGet("/{id:guid}", async (Guid id, IMessageBus bus) =>
+        {
+            var query = new GetProductCategoryByIdQuery(id);
+            var result = await bus.InvokeAsync<Result<ProductCategoryDto>>(query);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(Permissions.ProductCategoriesRead)
+        .WithName("GetProductCategoryById")
+        .WithSummary("Get product category by ID")
+        .WithDescription("Returns product category details including children.")
+        .Produces<ProductCategoryDto>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // Create category
+        group.MapPost("/", async (
+            CreateProductCategoryRequest request,
+            [FromServices] ICurrentUser currentUser,
+            IMessageBus bus) =>
+        {
+            var command = new CreateProductCategoryCommand(
+                request.Name,
+                request.Slug,
+                request.Description,
+                request.MetaTitle,
+                request.MetaDescription,
+                request.ImageUrl,
+                request.SortOrder,
+                request.ParentId)
+            {
+                UserId = currentUser.UserId
+            };
+            var result = await bus.InvokeAsync<Result<ProductCategoryDto>>(command);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(Permissions.ProductCategoriesCreate)
+        .WithName("CreateProductCategory")
+        .WithSummary("Create a new product category")
+        .WithDescription("Creates a new product category. Can be nested under a parent category.")
+        .Produces<ProductCategoryDto>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status409Conflict);
+
+        // Update category
+        group.MapPut("/{id:guid}", async (
+            Guid id,
+            UpdateProductCategoryRequest request,
+            [FromServices] ICurrentUser currentUser,
+            IMessageBus bus) =>
+        {
+            var command = new UpdateProductCategoryCommand(
+                id,
+                request.Name,
+                request.Slug,
+                request.Description,
+                request.MetaTitle,
+                request.MetaDescription,
+                request.ImageUrl,
+                request.SortOrder,
+                request.ParentId)
+            {
+                UserId = currentUser.UserId
+            };
+            var result = await bus.InvokeAsync<Result<ProductCategoryDto>>(command);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(Permissions.ProductCategoriesUpdate)
+        .WithName("UpdateProductCategory")
+        .WithSummary("Update an existing product category")
+        .WithDescription("Updates category details and parent relationship.")
+        .Produces<ProductCategoryDto>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status409Conflict);
+
+        // Delete category (soft delete)
+        group.MapDelete("/{id:guid}", async (
+            Guid id,
+            [FromServices] ICurrentUser currentUser,
+            IMessageBus bus) =>
+        {
+            var command = new DeleteProductCategoryCommand(id) { UserId = currentUser.UserId };
+            var result = await bus.InvokeAsync<Result<bool>>(command);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(Permissions.ProductCategoriesDelete)
+        .WithName("DeleteProductCategory")
+        .WithSummary("Soft-delete a product category")
+        .WithDescription("Soft-deletes a category. Will fail if it has child categories or products.")
+        .Produces(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status409Conflict);
+
+        // Reorder categories
+        group.MapPut("/reorder", async (
+            ReorderProductCategoriesRequest request,
+            [FromServices] ICurrentUser currentUser,
+            IMessageBus bus) =>
+        {
+            var command = new ReorderProductCategoriesCommand(
+                request.Items.Select(i => new CategorySortOrderItem(i.CategoryId, i.ParentId, i.SortOrder)).ToList())
+            {
+                UserId = currentUser.UserId
+            };
+            var result = await bus.InvokeAsync<Result<List<ProductCategoryListDto>>>(command);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(Permissions.ProductCategoriesUpdate)
+        .WithName("ReorderProductCategories")
+        .WithSummary("Reorder product categories")
+        .WithDescription("Updates the sort order and parent of multiple categories in bulk.")
+        .Produces<List<ProductCategoryListDto>>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest);
+
+        // ===== Category Attributes =====
+
+        // Get category's assigned attributes
+        group.MapGet("/{id:guid}/attributes", async (Guid id, IMessageBus bus) =>
+        {
+            var query = new GetCategoryAttributesQuery(id);
+            var result = await bus.InvokeAsync<Result<IReadOnlyList<CategoryAttributeDto>>>(query);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(Permissions.ProductCategoriesRead)
+        .WithName("GetCategoryAttributes")
+        .WithSummary("Get attributes assigned to a category")
+        .WithDescription("Returns all attributes assigned to the specified category.")
+        .Produces<IReadOnlyList<CategoryAttributeDto>>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // Get category's attribute form schema (for new product creation)
+        group.MapGet("/{id:guid}/attribute-form-schema", async (Guid id, IMessageBus bus) =>
+        {
+            var query = new GetCategoryAttributeFormSchemaQuery(id);
+            var result = await bus.InvokeAsync<Result<CategoryAttributeFormSchemaDto>>(query);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(Permissions.ProductCategoriesRead)
+        .WithName("GetCategoryAttributeFormSchema")
+        .WithSummary("Get attribute form schema for a category")
+        .WithDescription("""
+            Returns all attributes applicable to products in this category with their form field definitions.
+            Used for new product creation - provides form schema without requiring a productId.
+            Unlike GetProductAttributeFormSchema, currentValue and currentDisplayValue will be null.
+            """)
+        .Produces<CategoryAttributeFormSchemaDto>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // Assign attribute to category
+        group.MapPost("/{id:guid}/attributes", async (
+            Guid id,
+            AssignCategoryAttributeRequest request,
+            [FromServices] ICurrentUser currentUser,
+            IMessageBus bus) =>
+        {
+            var command = new AssignCategoryAttributeCommand(
+                id,
+                request.AttributeId,
+                request.IsRequired,
+                request.SortOrder)
+            {
+                UserId = currentUser.UserId
+            };
+            var result = await bus.InvokeAsync<Result<CategoryAttributeDto>>(command);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(Permissions.ProductCategoriesUpdate)
+        .WithName("AssignCategoryAttribute")
+        .WithSummary("Assign an attribute to a category")
+        .WithDescription("Assigns a product attribute to a category, making it available for products in this category.")
+        .Produces<CategoryAttributeDto>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status409Conflict);
+
+        // Update category attribute settings
+        group.MapPut("/{id:guid}/attributes/{attributeId:guid}", async (
+            Guid id,
+            Guid attributeId,
+            UpdateCategoryAttributeRequest request,
+            [FromServices] ICurrentUser currentUser,
+            IMessageBus bus) =>
+        {
+            var command = new UpdateCategoryAttributeCommand(
+                id,
+                attributeId,
+                request.IsRequired,
+                request.SortOrder)
+            {
+                UserId = currentUser.UserId
+            };
+            var result = await bus.InvokeAsync<Result<CategoryAttributeDto>>(command);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(Permissions.ProductCategoriesUpdate)
+        .WithName("UpdateCategoryAttribute")
+        .WithSummary("Update category attribute settings")
+        .WithDescription("Updates the settings for an attribute assigned to a category (required flag, sort order).")
+        .Produces<CategoryAttributeDto>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // Remove attribute from category
+        group.MapDelete("/{id:guid}/attributes/{attributeId:guid}", async (
+            Guid id,
+            Guid attributeId,
+            [FromServices] ICurrentUser currentUser,
+            IMessageBus bus) =>
+        {
+            var command = new RemoveCategoryAttributeCommand(id, attributeId) { UserId = currentUser.UserId };
+            var result = await bus.InvokeAsync<Result<bool>>(command);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(Permissions.ProductCategoriesUpdate)
+        .WithName("RemoveCategoryAttribute")
+        .WithSummary("Remove an attribute from a category")
+        .WithDescription("Removes an attribute assignment from a category.")
+        .Produces(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+    }
+}
+
+/// <summary>
+/// Request to assign an attribute to a category.
+/// </summary>
+public sealed record AssignCategoryAttributeRequest(
+    Guid AttributeId,
+    bool IsRequired = false,
+    int SortOrder = 0);
+
+/// <summary>
+/// Request to update category attribute settings.
+/// </summary>
+public sealed record UpdateCategoryAttributeRequest(
+    bool IsRequired,
+    int SortOrder);

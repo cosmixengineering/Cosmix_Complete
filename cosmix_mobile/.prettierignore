@@ -1,0 +1,9 @@
+node_modules/
+android/
+ios/
+package-lock.json
+Gemfile
+.bundle/
+coverage/
+dist/
+artifacts/

@@ -1,0 +1,273 @@
+// Global using directives for NOIR.Infrastructure
+
+// System
+global using System;
+global using System.Collections.Concurrent;
+global using System.Collections.Generic;
+global using System.ComponentModel.DataAnnotations;
+global using System.Diagnostics;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.IO.Compression;
+global using System.Linq;
+global using System.Linq.Expressions;
+global using System.Reflection;
+global using System.Security.Claims;
+global using System.Security.Cryptography;
+global using System.Text;
+global using System.Text.Json;
+global using System.Text.Json.Nodes;
+global using System.Text.Json.Serialization;
+global using System.Text.RegularExpressions;
+global using System.Net.Http.Json;
+global using System.Runtime.CompilerServices;
+global using System.Threading;
+global using System.Threading.Channels;
+global using System.Threading.Tasks;
+
+// Microsoft - ASP.NET Core
+global using Microsoft.AspNetCore.Authentication;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
+// Microsoft - Entity Framework Core
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.ChangeTracking;
+global using Microsoft.EntityFrameworkCore.Design;
+global using Microsoft.EntityFrameworkCore.Diagnostics;
+global using Microsoft.EntityFrameworkCore.Storage;
+
+// EFCore.BulkExtensions (High Performance Bulk Operations)
+global using EFCore.BulkExtensions;
+
+// Microsoft - Extensions
+global using Microsoft.Extensions.Caching.Memory;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Hosting;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using Microsoft.IdentityModel.Tokens;
+
+// Finbuckle MultiTenant
+global using Finbuckle.MultiTenant;
+global using Finbuckle.MultiTenant.Abstractions;
+global using Finbuckle.MultiTenant.AspNetCore.Extensions;
+global using Finbuckle.MultiTenant.EntityFrameworkCore;
+global using Finbuckle.MultiTenant.EntityFrameworkCore.Extensions;
+global using Finbuckle.MultiTenant.Extensions;
+
+// FluentEmail
+global using FluentEmail.Core;
+global using FluentEmail.MailKitSmtp;
+
+// FluentValidation
+global using FluentValidation;
+
+// FluentStorage
+global using FluentStorage;
+global using FluentStorage.Blobs;
+
+// Hangfire
+global using Hangfire;
+global using Hangfire.Common;
+global using Hangfire.SqlServer;
+global using Hangfire.States;
+
+// Wolverine
+global using Wolverine;
+
+// Scrutor
+global using Scrutor;
+
+// FusionCache (Hybrid L1/L2 Caching)
+global using ZiggyCreatures.Caching.Fusion;
+
+// NOIR Application
+global using NOIR.Application.Common.Interfaces;
+global using NOIR.Application.Common.Models;
+global using NOIR.Application.Common.Settings;
+global using NOIR.Application.Common.Utilities;
+global using NOIR.Application.Modules;
+global using NOIR.Application.Features.Auth.Commands.Login;
+global using NOIR.Application.Features.Auth.Commands.Logout;
+global using NOIR.Application.Features.Auth.Commands.RefreshToken;
+global using NOIR.Application.Features.Auth.Commands.UpdateUserProfile;
+global using NOIR.Application.Features.Auth.DTOs;
+global using NOIR.Application.Features.Auth.Queries.GetCurrentUser;
+global using NOIR.Application.Features.Auth.Queries.GetUserById;
+global using NOIR.Application.Features.Roles.Commands.CreateRole;
+global using NOIR.Application.Features.Roles.Commands.UpdateRole;
+global using NOIR.Application.Features.Roles.Commands.DeleteRole;
+global using NOIR.Application.Features.Roles.Queries.GetRoles;
+global using NOIR.Application.Features.Roles.Queries.GetRoleById;
+global using NOIR.Application.Features.Roles.DTOs;
+global using NOIR.Application.Features.Users.Commands.CreateUser;
+global using NOIR.Application.Features.Users.Commands.UpdateUser;
+global using NOIR.Application.Features.Users.Commands.DeleteUser;
+global using NOIR.Application.Features.Users.Commands.AssignRoles;
+global using NOIR.Application.Features.Users.Queries.GetUsers;
+global using NOIR.Application.Features.Users.Queries.GetUserRoles;
+global using NOIR.Application.Features.Users.DTOs;
+global using NOIR.Application.Features.Tenants.DTOs;
+global using NOIR.Application.Features.Tenants.Queries.GetTenantById;
+global using NOIR.Application.Features.Permissions.Commands.AssignToRole;
+global using NOIR.Application.Features.Permissions.Commands.RemoveFromRole;
+global using NOIR.Application.Features.Permissions.Queries.GetRolePermissions;
+global using NOIR.Application.Features.Permissions.Queries.GetUserPermissions;
+global using NOIR.Application.Specifications;
+global using NOIR.Application.Specifications.EmailChangeOtps;
+global using NOIR.Application.Specifications.Notifications;
+global using NOIR.Application.Specifications.RefreshTokens;
+global using NOIR.Application.Specifications.ResourceShares;
+global using NOIR.Application.Specifications.PasswordResetOtps;
+global using NOIR.Application.Specifications.TenantSettings;
+global using NOIR.Application.Features.EmailTemplates.Specifications;
+global using NOIR.Application.Features.DeveloperLogs.DTOs;
+global using NOIR.Application.Features.Blog.DTOs;
+global using NOIR.Application.Features.Blog.Queries.GetPost;
+global using NOIR.Application.Features.Blog.Queries.GetCategoryById;
+global using NOIR.Application.Features.Blog.Queries.GetTagById;
+global using NOIR.Application.Features.EmailTemplates.DTOs;
+global using NOIR.Application.Features.EmailTemplates.Queries.GetEmailTemplate;
+global using NOIR.Application.Features.LegalPages.DTOs;
+global using NOIR.Application.Features.LegalPages.Queries.GetLegalPage;
+global using NOIR.Application.Features.Products.DTOs;
+global using NOIR.Application.Features.Products.Queries.GetProductById;
+global using NOIR.Application.Features.Products.Queries.GetProductCategoryById;
+global using NOIR.Application.Features.Products.Queries.GetProductOptionById;
+global using NOIR.Application.Features.Products.Queries.GetProductOptionValueById;
+global using NOIR.Application.Features.Brands.DTOs;
+global using NOIR.Application.Features.Brands.Queries.GetBrandById;
+global using NOIR.Application.Features.Shipping.DTOs;
+global using NOIR.Application.Features.Shipping.Queries.GetShippingProviderById;
+global using NOIR.Application.Features.Shipping.Specifications;
+global using NOIR.Application.Features.FeatureManagement.DTOs;
+global using NOIR.Application.Features.FeatureManagement.Specifications;
+global using NOIR.Application.Features.Payments.DTOs;
+global using NOIR.Application.Features.Payments.Queries.GetPaymentTransaction;
+global using NOIR.Application.Features.Payments.Queries.GetPaymentGateway;
+global using NOIR.Application.Features.ProductAttributes.DTOs;
+global using NOIR.Application.Features.ProductAttributes.Queries.GetProductAttributeById;
+global using NOIR.Application.Features.Customers.DTOs;
+global using NOIR.Application.Features.Customers.Queries.GetCustomerById;
+global using NOIR.Application.Features.Customers.Specifications;
+global using NOIR.Application.Features.CustomerGroups.DTOs;
+global using NOIR.Application.Features.CustomerGroups.Queries.GetCustomerGroupById;
+global using NOIR.Application.Features.Orders.DTOs;
+global using NOIR.Application.Features.Orders.Queries.GetOrderById;
+global using NOIR.Application.Features.Reviews.DTOs;
+global using NOIR.Application.Features.Reviews.Queries.GetReviewById;
+global using NOIR.Application.Features.Promotions.DTOs;
+global using NOIR.Application.Features.Promotions.Queries.GetPromotionById;
+global using NOIR.Application.Features.PlatformSettings.DTOs;
+global using NOIR.Application.Features.PlatformSettings.Queries.GetSmtpSettings;
+global using NOIR.Application.Features.TenantSettings.DTOs;
+global using NOIR.Application.Features.TenantSettings.Queries.GetBrandingSettings;
+global using NOIR.Application.Features.TenantSettings.Queries.GetContactSettings;
+global using NOIR.Application.Features.TenantSettings.Queries.GetRegionalSettings;
+global using NOIR.Application.Features.TenantSettings.Queries.GetTenantSmtpSettings;
+global using NOIR.Application.Features.Checkout.DTOs;
+global using NOIR.Application.Features.Checkout.Queries.GetCheckoutSession;
+global using NOIR.Application.Features.Cart.DTOs;
+global using NOIR.Application.Features.Cart.Queries.GetCartById;
+global using NOIR.Application.Features.ProductAttributes.Queries.GetProductAttributeValueById;
+global using NOIR.Application.Features.ProductAttributes.Queries.GetCategoryAttributeById;
+global using NOIR.Application.Features.Shipping.Queries.GetShippingOrder;
+global using NOIR.Application.Features.Inventory.DTOs;
+global using NOIR.Application.Features.Inventory.Queries.GetInventoryReceiptById;
+global using NOIR.Application.Features.Reports;
+global using NOIR.Application.Features.Reports.DTOs;
+global using NOIR.Application.Features.Wishlists.DTOs;
+global using NOIR.Application.Features.Wishlists.Queries.GetWishlistById;
+global using NOIR.Application.Features.Hr.DTOs;
+global using NOIR.Application.Features.Hr.Queries.GetEmployeeById;
+global using NOIR.Application.Features.Hr.Queries.GetDepartmentById;
+global using NOIR.Application.Features.Hr.Queries.GetEmployeeTagById;
+global using NOIR.Application.Features.Hr.Specifications;
+global using NOIR.Application.Features.Dashboard;
+global using NOIR.Application.Features.Dashboard.DTOs;
+
+// NOIR Domain
+global using NOIR.Domain.Common;
+global using NOIR.Domain.Enums;
+global using NOIR.Domain.Interfaces;
+global using NOIR.Domain.Specifications;
+global using NOIR.Domain.ValueObjects;
+
+// Microsoft - Authorization
+global using Microsoft.AspNetCore.Authorization;
+
+// NOIR Infrastructure
+global using NOIR.Infrastructure.Lifecycle;
+global using NOIR.Infrastructure.Audit;
+global using NOIR.Infrastructure.BackgroundJobs;
+global using NOIR.Infrastructure.Email;
+global using NOIR.Infrastructure.Hubs;
+global using NOIR.Infrastructure.Identity;
+global using NOIR.Infrastructure.Identity.Authorization;
+global using NOIR.Infrastructure.Logging;
+global using NOIR.Infrastructure.Persistence;
+global using NOIR.Infrastructure.Persistence.Configurations;
+global using NOIR.Infrastructure.Persistence.Interceptors;
+global using NOIR.Infrastructure.Persistence.Repositories;
+global using NOIR.Infrastructure.Persistence.Seeders;
+global using NOIR.Infrastructure.Services;
+global using NOIR.Infrastructure.Services.Payment;
+global using NOIR.Infrastructure.Services.Shipping;
+global using NOIR.Infrastructure.Storage;
+global using NOIR.Infrastructure.Localization;
+global using NOIR.Infrastructure.Caching;
+global using NOIR.Infrastructure.Media;
+global using NOIR.Infrastructure.Sse;
+global using NOIR.Infrastructure.Persistence.SeedData;
+global using NOIR.Infrastructure.Persistence.SeedData.Data;
+
+// NOIR Domain Entities
+global using NOIR.Domain.Entities;
+global using NOIR.Domain.Entities.Cart;
+global using NOIR.Domain.Entities.Checkout;
+global using NOIR.Domain.Entities.Customer;
+global using NOIR.Domain.Entities.Order;
+global using NOIR.Domain.Entities.Payment;
+global using NOIR.Domain.Entities.Product;
+global using NOIR.Domain.Entities.Analytics;
+global using NOIR.Domain.Entities.Inventory;
+global using NOIR.Domain.Entities.Review;
+global using NOIR.Domain.Entities.Shipping;
+global using NOIR.Domain.Entities.Webhook;
+global using NOIR.Domain.Entities.Hr;
+global using NOIR.Domain.Entities.Crm;
+global using NOIR.Domain.Entities.Pm;
+global using NOIR.Domain.Entities.Estimation;
+global using NOIR.Domain.Entities.Accounting;
+global using NOIR.Domain.Entities.Stock;
+global using NOIR.Domain.Entities.Manufacturing;
+global using NOIR.Domain.Entities.Fsm;
+global using NOIR.Domain.Entities.Complaints;
+global using NOIR.Domain.Entities.Procurement;
+global using NOIR.Domain.Entities.Fulfillment;
+global using NOIR.Domain.Entities.Stores;
+global using NOIR.Domain.Entities.Invoicing;
+global using NOIR.Domain.Entities.MasterData;
+global using NOIR.Domain.Entities.Intake;
+global using NOIR.Domain.Entities.Engineering;
+global using NOIR.Domain.Entities.Commercial;
+global using NOIR.Domain.Entities.Helpdesk;
+global using NOIR.Domain.Entities.Qa;
+global using NOIR.Domain.Entities.Promotion;
+global using NOIR.Domain.Entities.Wishlist;
+global using NOIR.Domain.Events.Cart;
+global using NOIR.Domain.Events.Checkout;
+global using NOIR.Domain.Events.Order;
+global using NOIR.Domain.Events.Payment;
+global using NOIR.Domain.Events.Product;
+global using NOIR.Application.Features.Payments.Specifications;
+global using NOIR.Application.Features.ProductFilterIndex.Services;
+
+// Microsoft - Entity Framework Core Metadata
+global using Microsoft.EntityFrameworkCore.Metadata;
+global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+global using Microsoft.EntityFrameworkCore.Storage.ValueConversion;

@@ -1,0 +1,51 @@
+{
+  "name": "cosmix-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start --host 127.0.0.1 --max-workers 2",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "npm run lint && npm run format:check && npm run typecheck"
+  },
+  "dependencies": {
+    "@bam.tech/react-native-image-resizer": "3.0.11",
+    "@react-native-community/geolocation": "3.4.0",
+    "@react-native-documents/picker": "12.0.3",
+    "@react-navigation/bottom-tabs": "7.21.0",
+    "@react-navigation/native": "7.5.1",
+    "@react-navigation/native-stack": "7.21.0",
+    "react": "19.2.3",
+    "react-native": "0.87.1",
+    "react-native-blob-util": "0.25.1",
+    "react-native-get-random-values": "2.0.0",
+    "react-native-image-picker": "8.3.0",
+    "react-native-keychain": "10.0.0",
+    "react-native-safe-area-context": "5.10.1",
+    "react-native-screens": "4.30.0",
+    "react-native-svg": "15.16.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
+    "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "20.2.0",
+    "@react-native-community/cli-platform-android": "20.2.0",
+    "@react-native-community/cli-platform-ios": "20.2.0",
+    "@react-native/babel-preset": "0.87.1",
+    "@react-native/eslint-config": "0.87.1",
+    "@react-native/metro-config": "0.87.1",
+    "@react-native/typescript-config": "0.87.1",
+    "@types/react": "^19.2.0",
+    "eslint": "^8.19.0",
+    "prettier": "2.8.8",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": "^22.13.0 || ^24.3.0 || >=26.0.0"
+  }
+}

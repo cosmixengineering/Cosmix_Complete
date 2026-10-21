@@ -1,0 +1,155 @@
+/**
+ * Image upload hook for avatar and other image uploads
+ *
+ * Provides:
+ * - File selection via hidden input
+ * - Local preview before upload
+ * - File validation (type, size)
+ * - Clean up on unmount
+ */
+import { useState, useRef, useCallback, useEffect, type RefObject } from 'react'
+import { i18n } from '@/i18n'
+
+interface UseImageUploadOptions {
+  /** Maximum file size in bytes (default: 2MB) */
+  maxSize?: number
+  /** Allowed MIME types */
+  allowedTypes?: string[]
+}
+
+interface UseImageUploadReturn {
+  /** Current preview URL (local blob or existing URL) */
+  previewUrl: string | null
+  /** Currently selected file (null if none selected) */
+  selectedFile: File | null
+  /** Reference to hidden file input */
+  fileInputRef: RefObject<HTMLInputElement | null>
+  /** Trigger file picker dialog */
+  openFilePicker: () => void
+  /** Handle file selection from input */
+  handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  /** Clear current selection */
+  clearSelection: () => void
+  /** Set an existing URL as preview (for initial state) */
+  setExistingUrl: (url: string | null) => void
+  /** Validation error message (if any) */
+  error: string | null
+  /** Whether a file is selected but not yet uploaded */
+  hasChanges: boolean
+}
+
+const DEFAULT_MAX_SIZE = 2 * 1024 * 1024 // 2MB
+const DEFAULT_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+
+export const useImageUpload = (options: UseImageUploadOptions = {}): UseImageUploadReturn => {
+  const {
+    maxSize = DEFAULT_MAX_SIZE,
+    allowedTypes = DEFAULT_ALLOWED_TYPES,
+  } = options
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [existingUrl, setExistingUrlState] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Cleanup blob URLs on unmount only
+  // Note: We track the URL to revoke separately to avoid revoking the current preview
+  const previousBlobUrl = useRef<string | null>(null)
+
+  useEffect(() => {
+    // If we have a new blob URL and there was a previous one, revoke the old one
+    if (previewUrl?.startsWith('blob:') && previousBlobUrl.current && previousBlobUrl.current !== previewUrl) {
+      URL.revokeObjectURL(previousBlobUrl.current)
+    }
+    // Track current blob URL for cleanup
+    if (previewUrl?.startsWith('blob:')) {
+      previousBlobUrl.current = previewUrl
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (previousBlobUrl.current) {
+        URL.revokeObjectURL(previousBlobUrl.current)
+      }
+    }
+  }, [previewUrl])
+
+  const openFilePicker = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
+
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setError(null)
+      const file = event.target.files?.[0]
+
+      if (!file) {
+        return
+      }
+
+      // Validate type
+      if (!allowedTypes.includes(file.type)) {
+        setError(i18n.t('validation.invalidFileType', { ns: 'common', types: allowedTypes.map(t => t.split('/')[1]).join(', '), defaultValue: 'Invalid file type. Allowed: {{types}}' }))
+        return
+      }
+
+      // Validate size
+      if (file.size > maxSize) {
+        const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1)
+        setError(i18n.t('validation.fileTooLarge', { ns: 'common', maxSize: maxSizeMB, defaultValue: 'File too large. Maximum size: {{maxSize}}MB' }))
+        return
+      }
+
+      // Revoke previous blob URL if exists
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
+
+      // Create preview
+      const blobUrl = URL.createObjectURL(file)
+      setPreviewUrl(blobUrl)
+      setSelectedFile(file)
+    },
+    [allowedTypes, maxSize, previewUrl]
+  )
+
+  const clearSelection = useCallback(() => {
+    // Revoke current blob URL if exists
+    if (previousBlobUrl.current) {
+      URL.revokeObjectURL(previousBlobUrl.current)
+      previousBlobUrl.current = null
+    }
+
+    setPreviewUrl(existingUrl) // Revert to existing URL
+    setSelectedFile(null)
+    setError(null)
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }, [existingUrl])
+
+  const setExistingUrl = useCallback((url: string | null) => {
+    setExistingUrlState(url)
+    if (!selectedFile) {
+      setPreviewUrl(url)
+    }
+  }, [selectedFile])
+
+  const hasChanges = selectedFile !== null
+
+  return {
+    previewUrl,
+    selectedFile,
+    fileInputRef,
+    openFilePicker,
+    handleFileChange,
+    clearSelection,
+    setExistingUrl,
+    error,
+    hasChanges,
+  }
+}

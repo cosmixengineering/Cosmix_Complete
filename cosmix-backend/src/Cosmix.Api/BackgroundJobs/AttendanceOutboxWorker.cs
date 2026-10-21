@@ -1,0 +1,34 @@
+using Cosmix.Application.Common.BackgroundJobs;
+
+namespace Cosmix.Api.BackgroundJobs;
+
+public sealed class AttendanceOutboxWorker(IServiceScopeFactory scopes, AttendanceJobOptions options,
+    ILogger<AttendanceOutboxWorker> logger) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        // Enabling requires the correct database/storage and authorized operating setup. Registration alone writes nothing.
+        if (!options.Enabled) return;
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(options.PollSeconds));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(stoppingToken))
+            {
+                try
+                {
+                    for (var i = 0; i < options.BatchSize; i++)
+                    {
+                        using var scope = scopes.CreateScope();
+                        if (!await scope.ServiceProvider.GetRequiredService<DurableJobProcessor>().DispatchOneAsync(stoppingToken)) break;
+                    }
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
+                catch (Exception error)
+                {
+                    logger.LogWarning("Attendance outbox unavailable ({ExceptionType}); no dispatch success assumed.", error.GetType().Name);
+                }
+            }
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
+    }
+}

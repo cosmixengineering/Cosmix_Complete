@@ -1,0 +1,87 @@
+{
+  "email": {
+    "required": "Email is required.",
+    "invalid": "Invalid email format."
+  },
+  "password": {
+    "required": "Password is required.",
+    "tooShort": "Password must be at least {0} characters.",
+    "tooWeak": "Password is too weak."
+  },
+  "firstName": {
+    "maxLength": "First name cannot exceed {0} characters."
+  },
+  "lastName": {
+    "maxLength": "Last name cannot exceed {0} characters."
+  },
+  "displayName": {
+    "maxLength": "Display name cannot exceed {0} characters."
+  },
+  "userId": {
+    "required": "User ID is required."
+  },
+  "roleId": {
+    "required": "Role ID is required."
+  },
+  "roleName": {
+    "required": "Role name is required.",
+    "minLength": "Role name must be at least {0} characters.",
+    "maxLength": "Role name cannot exceed {0} characters.",
+    "pattern": "Role name must start with a letter and contain only letters, numbers, underscores, and hyphens.",
+    "empty": "Role name cannot be empty."
+  },
+  "rolesList": {
+    "required": "Roles list is required."
+  },
+  "permissions": {
+    "required": "Permissions list is required.",
+    "minOne": "At least one permission must be specified.",
+    "empty": "Permission cannot be empty.",
+    "invalid": "Invalid permission: {0}."
+  },
+  "accessToken": {
+    "required": "Access token is required."
+  },
+  "refreshToken": {
+    "required": "Refresh token is required when not using cookies."
+  },
+  "correlationId": {
+    "required": "Correlation ID is required."
+  },
+  "entityType": {
+    "required": "Entity type and entity ID are required."
+  },
+  "maxRows": {
+    "positive": "Max rows must be greater than 0."
+  },
+  "dateRange": {
+    "exceeded": "Date range cannot exceed {0} days. Requested: {1} days.",
+    "invalid": "From date must be before to date.",
+    "filterRequired": "At least one filter (from date, to date, entity type, or user ID) is required."
+  },
+  "tenantId": {
+    "required": "Tenant ID is required."
+  },
+  "tenantIdentifier": {
+    "required": "Tenant identifier is required.",
+    "minLength": "Tenant identifier must be at least {0} characters.",
+    "maxLength": "Tenant identifier cannot exceed {0} characters.",
+    "pattern": "Tenant identifier must contain only lowercase letters, numbers, and hyphens."
+  },
+  "tenantName": {
+    "required": "Tenant name is required.",
+    "minLength": "Tenant name must be at least {0} characters.",
+    "maxLength": "Tenant name cannot exceed {0} characters."
+  },
+  "url": {
+    "maxLength": "URL cannot exceed {0} characters.",
+    "invalid": "Invalid URL format."
+  },
+  "color": {
+    "maxLength": "Color value cannot exceed {0} characters.",
+    "invalidHex": "Color must be a valid hex color code (e.g., #FF5733)."
+  },
+  "theme": {
+    "invalid": "Theme must be 'Light', 'Dark', or 'System'."
+  }
+}

@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>NOIR.Application</RootNamespace>
+        <AssemblyName>NOIR.Application</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- CQRS/Mediator -->
+        <PackageReference Include="WolverineFx" Version="5.27.0" />
+
+        <!-- Validation -->
+        <PackageReference Include="FluentValidation" Version="12.1.1" />
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+
+        <!-- Object Mapping -->
+        <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
+
+        <!-- DI Auto-Registration -->
+        <PackageReference Include="Scrutor" Version="7.0.0" />
+
+        <!-- HTTP Client Factory (for webhook delivery) -->
+        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.5" />
+
+        <!-- EF Core Abstractions (for IQueryable extensions) -->
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
+        <PackageReference Include="WolverineFx.FluentValidation" Version="5.27.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\NOIR.Domain\NOIR.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

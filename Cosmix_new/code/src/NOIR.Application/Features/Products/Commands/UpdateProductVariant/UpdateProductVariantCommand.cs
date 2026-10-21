@@ -1,0 +1,25 @@
+namespace NOIR.Application.Features.Products.Commands.UpdateProductVariant;
+
+/// <summary>
+/// Command to update a product variant.
+/// </summary>
+public sealed record UpdateProductVariantCommand(
+    Guid ProductId,
+    Guid VariantId,
+    string Name,
+    decimal Price,
+    string? Sku,
+    decimal? CompareAtPrice,
+    decimal? CostPrice,
+    int StockQuantity,
+    Dictionary<string, string>? Options,
+    int SortOrder) : IAuditableCommand<ProductDto>
+{
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? UserId { get; init; }
+
+    public AuditOperationType OperationType => AuditOperationType.Update;
+    public object? GetTargetId() => ProductId;
+    public string? GetTargetDisplayName() => Name;
+    public string? GetActionDescription() => $"Updated variant '{Name}'";
+}

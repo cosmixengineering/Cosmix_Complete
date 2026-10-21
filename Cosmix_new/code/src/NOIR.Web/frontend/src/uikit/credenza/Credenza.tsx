@@ -1,0 +1,186 @@
+'use client'
+
+import * as React from 'react'
+import { useIsMobile } from '@/hooks/useMobile'
+import { cn } from '@/lib/utils'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../dialog/Dialog'
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '../drawer/Drawer'
+
+interface CredenzaContextValue {
+  isMobile: boolean
+}
+
+const CredenzaContext = React.createContext<CredenzaContextValue | undefined>(undefined)
+
+const useCredenzaContext = () => {
+  const context = React.useContext(CredenzaContext)
+  if (!context) {
+    throw new Error('Credenza components must be used within a Credenza')
+  }
+  return context
+}
+
+interface CredenzaProps {
+  children: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
+const Credenza = ({ children, ...props }: CredenzaProps) => {
+  const isMobile = useIsMobile()
+
+  const contextValue = React.useMemo(() => ({ isMobile }), [isMobile])
+
+  const Comp = isMobile ? Drawer : Dialog
+
+  // Freeze children when closing (open transitions to false) to prevent content
+  // flash during the Drawer slide-down animation. Parent state clears (e.g. entity
+  // becomes null) before the animation finishes, causing a visible content change.
+  // Only effective for controlled Credenza (explicit open prop). Uncontrolled instances
+  // (using CredenzaTrigger, open=undefined) always update since open !== false.
+  const stableChildrenRef = React.useRef(children)
+  if (props.open !== false) {
+    stableChildrenRef.current = children
+  }
+
+  return (
+    <CredenzaContext.Provider value={contextValue}>
+      <Comp {...props}>{stableChildrenRef.current}</Comp>
+    </CredenzaContext.Provider>
+  )
+}
+
+const CredenzaTrigger = ({
+  className,
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogTrigger>) => {
+  const { isMobile } = useCredenzaContext()
+  const Comp = isMobile ? DrawerTrigger : DialogTrigger
+
+  return (
+    <Comp className={className} {...props}>
+      {children}
+    </Comp>
+  )
+}
+
+const CredenzaClose = ({
+  className,
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogClose>) => {
+  const { isMobile } = useCredenzaContext()
+  const Comp = isMobile ? DrawerClose : DialogClose
+
+  return (
+    <Comp className={className} {...props}>
+      {children}
+    </Comp>
+  )
+}
+
+const CredenzaContent = ({
+  className,
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogContent>) => {
+  const { isMobile } = useCredenzaContext()
+  const Comp = isMobile ? DrawerContent : DialogContent
+
+  return (
+    <Comp className={className} {...props}>
+      {children}
+    </Comp>
+  )
+}
+
+const CredenzaHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
+  const { isMobile } = useCredenzaContext()
+  const Comp = isMobile ? DrawerHeader : DialogHeader
+
+  return <Comp className={className} {...props} />
+}
+
+const CredenzaTitle = ({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogTitle>) => {
+  const { isMobile } = useCredenzaContext()
+  const Comp = isMobile ? DrawerTitle : DialogTitle
+
+  return <Comp className={className} {...props} />
+}
+
+const CredenzaDescription = ({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogDescription>) => {
+  const { isMobile } = useCredenzaContext()
+  const Comp = isMobile ? DrawerDescription : DialogDescription
+
+  return <Comp className={className} {...props} />
+}
+
+const CredenzaBody = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
+  const { isMobile } = useCredenzaContext()
+  return (
+    <div
+      className={cn(
+        'px-4 md:px-0',
+        isMobile && 'overflow-y-auto max-h-[60vh]',
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+const CredenzaFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
+  const { isMobile } = useCredenzaContext()
+
+  // Both paths use the same layout: reversed column on mobile (primary action on top), row on desktop.
+  // DialogFooter already has this. DrawerFooter uses flex-col (not reversed), so we override it.
+  // mt-4 ensures consistent separation from the last form field regardless of whether the
+  // wrapping <form> uses space-y-4 (mt-4 on child wins over parent space-y in CSS specificity).
+  if (isMobile) {
+    return (
+      <DrawerFooter
+        className={cn('flex flex-col-reverse gap-2 pb-6', className)}
+        {...props}
+      />
+    )
+  }
+
+  return <DialogFooter className={cn('mt-4', className)} {...props} />
+}
+
+export {
+  Credenza,
+  CredenzaTrigger,
+  CredenzaClose,
+  CredenzaContent,
+  CredenzaHeader,
+  CredenzaTitle,
+  CredenzaDescription,
+  CredenzaBody,
+  CredenzaFooter,
+}

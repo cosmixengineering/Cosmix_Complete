@@ -1,0 +1,162 @@
+.foundation-policies {
+  min-width: 0;
+}
+.foundation-policies h2,
+.foundation-policies h3,
+.foundation-policies h4 {
+  overflow-wrap: anywhere;
+}
+.foundation-heading,
+.foundation-request-row,
+.foundation-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.foundation-heading {
+  margin: 12px 0;
+}
+.foundation-heading h2,
+.foundation-heading h4 {
+  margin: 0;
+}
+.foundation-kinds {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 12px 0 20px;
+}
+.foundation-kinds a {
+  padding: 8px 0;
+  border-bottom: 2px solid transparent;
+}
+.foundation-kinds a[aria-current='page'] {
+  font-weight: 600;
+  border-bottom-color: currentColor;
+}
+.foundation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+.foundation-value-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 8px;
+  align-items: end;
+  margin: 8px 0;
+}
+.foundation-value-row .button {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 16px;
+}
+.foundation-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
+  margin: 20px 0;
+}
+.foundation-facts div,
+.foundation-policies .field {
+  min-width: 0;
+}
+.foundation-facts dt {
+  font-size: 13px;
+  color: var(--color-text-muted, #58616a);
+  margin-bottom: 4px;
+}
+.foundation-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.foundation-policies fieldset {
+  min-width: 0;
+  margin: 12px 0;
+  padding: 0;
+  border: 0;
+}
+.foundation-policies .foundation-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding: 12px 0;
+}
+.foundation-checks legend {
+  padding: 0;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.foundation-checks label,
+.foundation-document-rule > .foundation-heading label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.foundation-policies input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.foundation-policies .foundation-document-rule {
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border, #d5dbe0);
+}
+.foundation-document-rule legend {
+  font-weight: 600;
+}
+.foundation-history-row,
+.foundation-request-row,
+.foundation-request-actions {
+  padding: 18px 0;
+  border-top: 1px solid var(--color-border, #d5dbe0);
+}
+.foundation-request-row > div {
+  min-width: 0;
+  flex: 1 1 240px;
+  overflow-wrap: anywhere;
+}
+.foundation-request-row p {
+  margin: 6px 0;
+}
+.foundation-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.foundation-toolbar {
+  margin: 18px 0;
+}
+.foundation-toolbar form {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+.foundation-toolbar .field {
+  margin: 0;
+}
+.foundation-policies .button {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .foundation-grid,
+  .foundation-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .foundation-toolbar form {
+    width: 100%;
+  }
+  .foundation-toolbar .field {
+    flex: 1 1 200px;
+  }
+  .foundation-heading {
+    align-items: flex-start;
+  }
+}

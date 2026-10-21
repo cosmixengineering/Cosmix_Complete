@@ -1,0 +1,273 @@
+namespace NOIR.Application.Common.Interfaces;
+
+/// <summary>
+/// Abstracts ASP.NET Core Identity operations for user management.
+/// This interface allows handlers in the Application layer to perform identity operations
+/// without directly depending on UserManager and SignInManager types.
+/// Implementations in Infrastructure layer provide the actual identity logic.
+/// </summary>
+public interface IUserIdentityService
+{
+    #region User Lookup
+
+    /// <summary>
+    /// Finds a user by their unique identifier.
+    /// </summary>
+    Task<UserIdentityDto?> FindByIdAsync(string userId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Finds a user by their email address within a specific tenant.
+    /// Email uniqueness is scoped to tenant (same email can exist in different tenants).
+    /// </summary>
+    Task<UserIdentityDto?> FindByEmailAsync(string email, string? tenantId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Finds all tenant IDs where a user with the given email exists.
+    /// Used for progressive login flow - tenant detection before authentication.
+    /// Returns empty list if no user found with this email.
+    /// </summary>
+    Task<IReadOnlyList<UserTenantInfo>> FindTenantsByEmailAsync(string email, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets a queryable for paginated user listing.
+    /// Returns a projection to UserIdentityDto.
+    /// Note: This returns a projected queryable - use GetUsersPaginatedAsync for EF-compatible pagination.
+    /// </summary>
+    IQueryable<UserIdentityDto> GetUsersQueryable();
+
+    /// <summary>
+    /// Gets paginated users within a tenant with optional search, role, and lockout filters.
+    /// Handles EF Core translation properly by doing projection after ordering.
+    /// All filters are applied at the database level for accurate pagination.
+    /// </summary>
+    Task<(IReadOnlyList<UserIdentityDto> Users, int TotalCount)> GetUsersPaginatedAsync(
+        string? tenantId,
+        string? search,
+        int page,
+        int pageSize,
+        string? role = null,
+        bool? isLocked = null,
+        string? orderBy = null,
+        bool isDescending = true,
+        CancellationToken ct = default);
+
+    #endregion
+
+    #region Authentication
+
+    /// <summary>
+    /// Validates user credentials and handles lockout logic.
+    /// </summary>
+    /// <returns>A result indicating success, lockout, or invalid credentials.</returns>
+    Task<PasswordSignInResult> CheckPasswordSignInAsync(
+        string userId,
+        string password,
+        bool lockoutOnFailure = true,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Normalizes an email address for consistent comparison.
+    /// </summary>
+    string NormalizeEmail(string email);
+
+    #endregion
+
+    #region User CRUD
+
+    /// <summary>
+    /// Creates a new user with the specified password.
+    /// </summary>
+    Task<IdentityOperationResult> CreateUserAsync(
+        CreateUserDto user,
+        string password,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Updates an existing user's profile information.
+    /// </summary>
+    Task<IdentityOperationResult> UpdateUserAsync(
+        string userId,
+        UpdateUserDto updates,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Soft deletes a user (marks as deleted).
+    /// </summary>
+    Task<IdentityOperationResult> SoftDeleteUserAsync(
+        string userId,
+        string deletedBy,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Locks or unlocks a user account.
+    /// When locked, the user cannot sign in.
+    /// </summary>
+    Task<IdentityOperationResult> SetUserLockoutAsync(
+        string userId,
+        bool locked,
+        string? lockedBy = null,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Resets a user's password without requiring the old password.
+    /// Used for password reset flow after OTP verification.
+    /// </summary>
+    Task<IdentityOperationResult> ResetPasswordAsync(
+        string userId,
+        string newPassword,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Changes user password after verifying current password.
+    /// Updates PasswordLastChangedAt timestamp.
+    /// </summary>
+    Task<IdentityOperationResult> ChangePasswordAsync(
+        string userId,
+        string currentPassword,
+        string newPassword,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Updates a user's email address.
+    /// Used after OTP verification in email change flow.
+    /// </summary>
+    Task<IdentityOperationResult> UpdateEmailAsync(
+        string userId,
+        string newEmail,
+        CancellationToken ct = default);
+
+    #endregion
+
+    #region Role Management
+
+    /// <summary>
+    /// Gets all roles assigned to a user.
+    /// </summary>
+    Task<IReadOnlyList<string>> GetRolesAsync(string userId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Adds a user to multiple roles.
+    /// </summary>
+    Task<IdentityOperationResult> AddToRolesAsync(
+        string userId,
+        IEnumerable<string> roleNames,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Removes a user from multiple roles.
+    /// </summary>
+    Task<IdentityOperationResult> RemoveFromRolesAsync(
+        string userId,
+        IEnumerable<string> roleNames,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Checks if a user is in a specific role.
+    /// </summary>
+    Task<bool> IsInRoleAsync(string userId, string roleName, CancellationToken ct = default);
+
+    /// <summary>
+    /// Assigns roles to a user, replacing existing roles if specified.
+    /// </summary>
+    Task<IdentityOperationResult> AssignRolesAsync(
+        string userId,
+        IEnumerable<string> roleNames,
+        bool replaceExisting = false,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets roles for multiple users in a single query (batch operation to avoid N+1).
+    /// </summary>
+    Task<IReadOnlyDictionary<string, IReadOnlyList<string>>> GetRolesForUsersAsync(
+        IEnumerable<string> userIds,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets users in a specific role within a tenant (efficient single query).
+    /// </summary>
+    Task<IReadOnlyList<UserIdentityDto>> GetUsersInRoleAsync(
+        string? tenantId,
+        string roleName,
+        CancellationToken ct = default);
+
+    #endregion
+}
+
+#region DTOs for Identity Operations
+
+/// <summary>
+/// DTO representing user identity information.
+/// Decouples Application layer from ApplicationUser entity.
+/// Each user belongs to exactly one tenant (single-tenant-per-user model).
+/// Platform admins have TenantId = null and operate across all tenants.
+/// </summary>
+public record UserIdentityDto(
+    string Id,
+    string Email,
+    string? TenantId,
+    string? FirstName,
+    string? LastName,
+    string? DisplayName,
+    string FullName,
+    string? PhoneNumber,
+    string? AvatarUrl,
+    bool IsActive,
+    bool IsDeleted,
+    bool IsSystemUser,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? ModifiedAt);
+
+/// <summary>
+/// DTO for creating a new user.
+/// Each user belongs to exactly one tenant (single-tenant-per-user model).
+/// </summary>
+public record CreateUserDto(
+    string Email,
+    string? FirstName,
+    string? LastName,
+    string? DisplayName,
+    string? TenantId);
+
+/// <summary>
+/// DTO for updating user information.
+/// </summary>
+public record UpdateUserDto(
+    string? FirstName = null,
+    string? LastName = null,
+    string? DisplayName = null,
+    string? PhoneNumber = null,
+    string? AvatarUrl = null,
+    bool? IsActive = null);
+
+/// <summary>
+/// Result of a password sign-in attempt.
+/// </summary>
+public record PasswordSignInResult(
+    bool Succeeded,
+    bool IsLockedOut,
+    bool IsNotAllowed,
+    bool RequiresTwoFactor);
+
+/// <summary>
+/// Result of an identity operation.
+/// </summary>
+public record IdentityOperationResult(
+    bool Succeeded,
+    string? UserId = null,
+    IReadOnlyList<string>? Errors = null)
+{
+    public static IdentityOperationResult Success(string? userId = null) => new(true, userId);
+    public static IdentityOperationResult Failure(params string[] errors) => new(false, null, errors);
+}
+
+/// <summary>
+/// Information about a user's tenant membership.
+/// Used in progressive login flow to show available tenants for an email.
+/// </summary>
+public record UserTenantInfo(
+    string UserId,
+    string? TenantId,
+    string TenantName,
+    string? TenantIdentifier);
+
+#endregion

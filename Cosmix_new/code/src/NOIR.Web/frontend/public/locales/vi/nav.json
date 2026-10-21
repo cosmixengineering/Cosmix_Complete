@@ -1,0 +1,24 @@
+{
+  "menu": {
+    "dashboard": "Tổng quan",
+    "customers": "Khách hàng",
+    "orders": "Đơn hàng",
+    "products": "Sản phẩm",
+    "reports": "Báo cáo",
+    "settings": "Cài đặt",
+    "users": "Người dùng",
+    "roles": "Vai trò",
+    "permissions": "Quyền",
+    "profile": "Hồ sơ",
+    "logout": "Đăng xuất"
+  },
+  "header": {
+    "search": "Tìm kiếm...",
+    "notifications": "Thông báo",
+    "noNotifications": "Không có thông báo mới",
+    "viewAll": "Xem tất cả"
+  },
+  "breadcrumb": {
+    "home": "Trang chủ"
+  }
+}

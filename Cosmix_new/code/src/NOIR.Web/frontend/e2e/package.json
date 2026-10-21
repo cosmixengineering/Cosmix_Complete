@@ -1,0 +1,33 @@
+{
+  "name": "noir-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "description": "E2E tests for NOIR Portal using Playwright",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:auth": "playwright test tests/auth/",
+    "test:ecommerce": "playwright test tests/ecommerce/",
+    "test:crm": "playwright test tests/crm/",
+    "test:hr": "playwright test tests/hr/",
+    "test:admin": "playwright test tests/admin/",
+    "test:chromium": "playwright test --project=chromium",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:headed": "playwright test --headed",
+    "test:shard:1": "playwright test --shard=1/4",
+    "test:shard:2": "playwright test --shard=2/4",
+    "test:shard:3": "playwright test --shard=3/4",
+    "test:shard:4": "playwright test --shard=4/4",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen http://localhost:3000",
+    "audit": "playwright test --project=ui-audit --project=ui-audit-platform",
+    "audit:pages": "playwright test --project=ui-audit --project=ui-audit-platform",
+    "audit:storybook": "playwright test --project=ui-audit --grep storybook",
+    "install:browsers": "playwright install --with-deps"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@axe-core/playwright": "^4.11.1"
+  }
+}

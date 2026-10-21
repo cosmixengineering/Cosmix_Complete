@@ -1,0 +1,169 @@
+.staff-taxonomy {
+  min-width: 0;
+  color: #252d37;
+}
+.staff-taxonomy h1 {
+  font-size: 26px;
+}
+.staff-taxonomy h2 {
+  font-size: 20px;
+  margin: 20px 0 12px;
+}
+.staff-taxonomy h3 {
+  font-size: 16px;
+  margin: 12px 0;
+}
+.staff-taxonomy .taxonomy-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+.staff-taxonomy .taxonomy-toolbar > .field {
+  flex: 1 1 190px;
+}
+.staff-taxonomy .taxonomy-grid,
+.staff-taxonomy .taxonomy-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.staff-taxonomy .taxonomy-facts {
+  padding: 16px 0;
+  margin: 0;
+  border-bottom: 1px solid #e3e7ec;
+}
+.staff-taxonomy dt {
+  color: #55616f;
+  font-size: 13px;
+}
+.staff-taxonomy dd {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+}
+.staff-taxonomy .taxonomy-notice {
+  border-left: 3px solid #507f68;
+  padding: 8px 12px;
+  background: #f0f6f3;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.staff-taxonomy .taxonomy-form {
+  margin: 20px 0;
+}
+.staff-taxonomy .taxonomy-form-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.staff-taxonomy .taxonomy-category {
+  min-width: 0;
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid #d7dde4;
+  padding: 16px 0;
+}
+.staff-taxonomy .taxonomy-category > legend {
+  font-weight: 600;
+  padding: 0 10px 0 0;
+}
+.staff-taxonomy .taxonomy-choice {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.staff-taxonomy .taxonomy-choice legend {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.staff-taxonomy .taxonomy-choice label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 18px;
+  min-height: 32px;
+}
+.staff-taxonomy .taxonomy-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  line-height: 1.5;
+}
+.staff-taxonomy input[type='checkbox'],
+.staff-taxonomy input[type='radio'] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.staff-taxonomy .taxonomy-reference {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) minmax(180px, 2fr);
+  gap: 16px;
+  margin: 14px 0;
+}
+.staff-taxonomy .taxonomy-mapping,
+.staff-taxonomy .taxonomy-publication {
+  border-bottom: 1px solid #d7dde4;
+  padding: 12px 0 20px;
+}
+.staff-taxonomy .taxonomy-table {
+  width: 100%;
+  overflow-x: auto;
+}
+.staff-taxonomy table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  text-align: left;
+  font-size: 14px;
+}
+.staff-taxonomy th,
+.staff-taxonomy td {
+  padding: 10px;
+  border-bottom: 1px solid #e3e7ec;
+  overflow-wrap: anywhere;
+}
+.staff-taxonomy .taxonomy-request-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #e3e7ec;
+  padding: 16px 0;
+}
+.staff-taxonomy .taxonomy-request-row > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.staff-taxonomy .taxonomy-request-row p {
+  margin: 6px 0;
+}
+.staff-taxonomy .field,
+.staff-taxonomy input,
+.staff-taxonomy select {
+  min-width: 0;
+  max-width: 100%;
+}
+.staff-taxonomy .button {
+  flex-shrink: 0;
+  max-width: 100%;
+  white-space: normal;
+}
+@media (max-width: 620px) {
+  .staff-taxonomy .taxonomy-grid,
+  .staff-taxonomy .taxonomy-facts,
+  .staff-taxonomy .taxonomy-reference {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .staff-taxonomy .taxonomy-request-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .staff-taxonomy .hr-tabs {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+}

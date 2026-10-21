@@ -1,0 +1,350 @@
+/* ==========================================================================
+   BIOMETRIC & LIVE FACE ID STYLES
+   Compact Enterprise ERP Density
+   ========================================================================== */
+
+.bio-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.bio-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.bio-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bio-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bio-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.bio-subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Two-column layout */
+.bio-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .bio-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Camera viewport */
+.bio-camera-box {
+  background: #0f172a;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  aspect-ratio: 4 / 3;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.bio-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror camera for natural look */
+}
+
+.bio-captured-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Oval alignment guide overlay */
+.bio-oval-guide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 180px;
+  height: 230px;
+  border: 2px dashed rgba(59, 130, 246, 0.7);
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.45);
+  pointer-events: none;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bio-oval-guide.is-matched {
+  border-color: #22c55e;
+  border-style: solid;
+  box-shadow:
+    0 0 0 9999px rgba(15, 23, 42, 0.25),
+    0 0 20px rgba(34, 197, 94, 0.5);
+}
+
+/* Scanning line animation */
+.bio-scan-line {
+  position: absolute;
+  top: 15%;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+  box-shadow: 0 0 8px #38bdf8;
+  animation: bioScan 2s ease-in-out infinite alternate;
+}
+
+@keyframes bioScan {
+  0% {
+    top: 15%;
+  }
+  100% {
+    top: 85%;
+  }
+}
+
+.bio-camera-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+.bio-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: bioPulse 1.5s infinite;
+}
+
+@keyframes bioPulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.bio-guide-instruction {
+  position: absolute;
+  bottom: 12px;
+  background: rgba(15, 23, 42, 0.8);
+  color: #f1f5f9;
+  font-size: 11.5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 2;
+  text-align: center;
+}
+
+/* Controls */
+.bio-controls-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.bio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bio-btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.bio-btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.bio-btn-secondary {
+  background: #f8fafc;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.bio-btn-secondary:hover {
+  background: #f1f5f9;
+}
+
+.bio-btn-success {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.bio-btn-success:hover {
+  background: #15803d;
+}
+
+.bio-btn-danger {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.bio-btn-danger:hover {
+  background: #fecaca;
+}
+
+/* Status & Template Metrics */
+.bio-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+
+.bio-status-banner.is-active {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.bio-status-banner.is-pending {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+.bio-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bio-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.bio-detail-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.bio-detail-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.bio-detail-val {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Attempt history table */
+.bio-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+.bio-history-table th {
+  background: #f8fafc;
+  text-align: left;
+  padding: 7px 10px;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 11px;
+}
+
+.bio-history-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+}
+
+.bio-match-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.bio-match-pill.match--pass {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.bio-match-pill.match--fail {
+  background: #fee2e2;
+  color: #b91c1c;
+}

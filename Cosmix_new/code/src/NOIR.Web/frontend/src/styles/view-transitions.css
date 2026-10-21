@@ -1,0 +1,124 @@
+/* ===================================
+ * View Transitions — Native Browser API
+ * ===================================
+ * Provides Astro-like page transitions using the browser's
+ * View Transitions API (Chrome 111+, Edge 111+, Safari 18+).
+ * Ignored entirely by browsers that don't support the API.
+ *
+ * How it works:
+ *   1. ViewTransitionLink / useViewTransitionNavigate call
+ *      document.startViewTransition(() => flushSync(() => navigate()))
+ *   2. Browser captures old snapshot → updates DOM → captures new snapshot
+ *   3. CSS animations below run between old/new snapshots
+ *   4. Animations execute on the compositor thread (off main thread, 60fps)
+ */
+
+/* --- View Transition Name classes --- */
+
+.vt-main-content {
+  view-transition-name: main-content;
+}
+
+.vt-sidebar {
+  view-transition-name: sidebar;
+}
+
+.vt-mobile-header {
+  view-transition-name: mobile-header;
+}
+
+.vt-page-title {
+  view-transition-name: page-title;
+}
+
+.vt-page-icon {
+  view-transition-name: page-icon;
+}
+
+/* --- Keyframes --- */
+
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vt-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+
+/* --- Default transition: instant swap for fastest perceived performance --- */
+/* Skeleton handles loading state; no animation delay before showing real data. */
+/* Shared elements (page-title, page-icon, product-image) still morph smoothly. */
+
+::view-transition-old(main-content) {
+  animation: none;
+  display: none; /* Hide old snapshot immediately — prevents overlap flash */
+}
+
+::view-transition-new(main-content) {
+  animation: none;
+}
+
+/* --- Stable layout elements: NO animation --- */
+
+::view-transition-group(sidebar) {
+  animation: none;
+}
+
+::view-transition-group(mobile-header) {
+  animation: none;
+}
+
+/* --- Shared element: page title --- */
+
+::view-transition-group(page-title) {
+  animation-duration: 250ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(page-title) {
+  animation: 120ms cubic-bezier(0.4, 0, 1, 1) both vt-fade-out;
+}
+
+::view-transition-new(page-title) {
+  animation: 200ms cubic-bezier(0, 0, 0.2, 1) both vt-fade-in;
+}
+
+/* --- Shared element: page icon --- */
+
+::view-transition-group(page-icon) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Shared element: product image (morphs between list card and detail) --- */
+/* Dynamic names: product-image-{id} — browser default morph handles matching */
+
+::view-transition-group(product-image) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+/* --- Shared element: blog featured image (morphs between list thumbnail and editor) --- */
+/* Dynamic names: blog-featured-{id} — browser default morph handles matching */
+
+::view-transition-group(blog-featured) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+/* --- Accessibility: respect reduced motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+  }
+}

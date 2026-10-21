@@ -1,0 +1,126 @@
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Loader2, MessageSquare } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  Button,
+  Credenza,
+  CredenzaBody,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+  FormErrorBanner,
+  Textarea,
+} from '@uikit'
+import { useReviewQuery, useAddAdminResponse } from '@/portal-app/reviews/queries'
+
+interface AdminResponseDialogProps {
+  reviewId: string | undefined
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSuccess: () => void
+}
+
+export const AdminResponseDialog = ({
+  reviewId,
+  open,
+  onOpenChange,
+  onSuccess,
+}: AdminResponseDialogProps) => {
+  const { t } = useTranslation('common')
+  const { data: review } = useReviewQuery(reviewId)
+  const addResponseMutation = useAddAdminResponse()
+  const [response, setResponse] = useState('')
+  const [serverErrors, setServerErrors] = useState<string[]>([])
+
+
+  // Pre-fill with existing admin response when dialog opens
+  useEffect(() => {
+    if (open) {
+      setServerErrors([])
+      if (review?.adminResponse) {
+        setResponse(review.adminResponse)
+      }
+    } else {
+      setResponse('')
+    }
+  }, [open, review?.adminResponse])
+
+  const handleSubmit = async () => {
+    if (!reviewId || !response.trim()) return
+    try {
+      await addResponseMutation.mutateAsync({ id: reviewId, response: response.trim() })
+      toast.success(t('reviews.responseSuccess', 'Admin response added successfully'))
+      onSuccess()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('reviews.responseFailed', 'Failed to add admin response')
+      setServerErrors([message])
+    }
+  }
+
+  return (
+    <Credenza open={open} onOpenChange={onOpenChange}>
+      <CredenzaContent className="sm:max-w-[500px]">
+        <CredenzaHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <MessageSquare className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CredenzaTitle>
+                {review?.adminResponse
+                  ? t('reviews.editResponse', 'Edit Response')
+                  : t('reviews.addResponse', 'Add Response')}
+              </CredenzaTitle>
+              <CredenzaDescription>
+                {t(
+                  'reviews.adminResponseDescription',
+                  'Write a public response to this review. This will be visible to all customers.',
+                )}
+              </CredenzaDescription>
+            </div>
+          </div>
+        </CredenzaHeader>
+
+        <CredenzaBody className="space-y-4">
+          <FormErrorBanner
+            errors={serverErrors}
+            onDismiss={() => setServerErrors([])}
+            title={t('validation.unableToSave', 'Unable to save')}
+          />
+          <div className="py-2">
+            <Textarea
+              placeholder={t('reviews.responsePlaceholder', 'Write your response...')}
+              value={response}
+              onChange={(e) => setResponse(e.target.value)}
+              rows={5}
+              className="resize-none"
+            />
+          </div>
+        </CredenzaBody>
+
+        <CredenzaFooter>
+          <Button
+            variant="outline"
+            className="cursor-pointer"
+            onClick={() => onOpenChange(false)}
+          >
+            {t('buttons.cancel', 'Cancel')}
+          </Button>
+          <Button
+            className="cursor-pointer"
+            onClick={handleSubmit}
+            disabled={!response.trim() || addResponseMutation.isPending}
+          >
+            {addResponseMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {addResponseMutation.isPending
+              ? t('reviews.submitting', 'Submitting...')
+              : t('reviews.submitResponse', 'Submit Response')}
+          </Button>
+        </CredenzaFooter>
+      </CredenzaContent>
+    </Credenza>
+  )
+}

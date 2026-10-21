@@ -1,0 +1,26 @@
+{
+  "profiles": {
+    "Cosmix.Api.FaceVerification": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "https://localhost:7240;http://localhost:5240",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "COSMIX_LOCAL_TESTING_SETTINGS": "",
+        "COSMIX_FRESH_TESTING_HOST": "",
+        "COSMIX_EXISTING_TESTING_HOST": ""
+      }
+    },
+    "Cosmix.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "https://localhost:7240;http://localhost:5240",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "COSMIX_LOCAL_TESTING_SETTINGS": "C:\\Users\\Huma.Khan\\AppData\\Local\\Cosmix\\LocalTesting\\settings.json"
+      }
+    }
+  }
+}

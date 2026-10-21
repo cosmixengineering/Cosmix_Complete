@@ -1,0 +1,68 @@
+using Finbuckle.MultiTenant.EntityFrameworkCore.Stores;
+
+namespace NOIR.Infrastructure.Persistence;
+
+/// <summary>
+/// Separate DbContext for Finbuckle tenant storage.
+/// Required because EFCoreStore needs a DbContext that inherits from EFCoreStoreDbContext{T},
+/// but ApplicationDbContext already inherits from IdentityDbContext.
+/// </summary>
+public class TenantStoreDbContext : EFCoreStoreDbContext<Tenant>
+{
+    public TenantStoreDbContext(DbContextOptions<TenantStoreDbContext> options)
+        : base(options)
+    {
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Ignore entities that are managed by ApplicationDbContext
+        // These are related to Tenant via navigation properties but should only
+        // be configured in ApplicationDbContext to avoid duplicate table creation
+        modelBuilder.Ignore<TenantSetting>();
+
+        // Apply the same configuration as in ApplicationDbContext for Tenant
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.ToTable("Tenants");
+            entity.HasKey(t => t.Id);
+
+            // Unique identifier constraint
+            entity.HasIndex(t => t.Identifier)
+                .IsUnique()
+                .HasDatabaseName("IX_Tenants_Identifier");
+
+            // Property configurations
+            entity.Property(t => t.Id)
+                .HasMaxLength(36);
+
+            entity.Property(t => t.Identifier)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(t => t.Name)
+                .HasMaxLength(200);
+
+            // Domain-based tenant resolution
+            entity.Property(t => t.Domain)
+                .HasMaxLength(500);
+
+            // Metadata fields
+            entity.Property(t => t.Description)
+                .HasMaxLength(1000);
+
+            entity.Property(t => t.Note)
+                .HasMaxLength(2000);
+
+            // Audit fields
+            entity.Property(t => t.CreatedBy).HasMaxLength(100);
+            entity.Property(t => t.ModifiedBy).HasMaxLength(100);
+            entity.Property(t => t.DeletedBy).HasMaxLength(100);
+
+            // Soft delete filter - exclude deleted tenants from queries
+            entity.HasQueryFilter(t => !t.IsDeleted);
+        });
+    }
+}

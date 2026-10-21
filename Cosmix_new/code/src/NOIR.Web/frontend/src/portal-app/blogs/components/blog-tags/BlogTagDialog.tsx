@@ -1,0 +1,248 @@
+import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Loader2, Tag, Pencil } from 'lucide-react'
+import { useForm, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import {
+  Button,
+  ColorPicker,
+  Credenza,
+  CredenzaBody,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormErrorBanner,
+  FormMessage,
+  Input,
+  Textarea,
+} from '@uikit'
+
+import { toast } from 'sonner'
+import { getRequiredFields, handleFormError } from '@/lib/form'
+import { useCreateBlogTag, useUpdateBlogTag } from '@/portal-app/blogs/queries/useBlogMutations'
+import type { PostTagListItem, CreateTagRequest } from '@/types'
+
+const createFormSchema = (t: (key: string, options?: Record<string, unknown>) => string) =>
+  z.object({
+    name: z.string().min(2, t('validation.minLength', { count: 2 })).max(50, t('validation.maxLength', { count: 50 })),
+    slug: z.string().min(2, t('validation.minLength', { count: 2 })).max(50, t('validation.maxLength', { count: 50 })).regex(/^[a-z0-9-]+$/, t('validation.identifierFormat')),
+    description: z.string().max(500, t('validation.maxLength', { count: 500 })).optional(),
+    color: z.string().optional(),
+  })
+
+type FormValues = z.infer<ReturnType<typeof createFormSchema>>
+
+interface BlogTagDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  tag?: PostTagListItem | null
+  onSuccess: () => void
+}
+
+export const BlogTagDialog = ({ open, onOpenChange, tag, onSuccess }: BlogTagDialogProps) => {
+  const { t } = useTranslation('common')
+  const [serverErrors, setServerErrors] = useState<string[]>([])
+  const createMutation = useCreateBlogTag()
+  const updateMutation = useUpdateBlogTag()
+  const isPending = createMutation.isPending || updateMutation.isPending
+  const isEdit = !!tag
+
+  const schema = useMemo(() => createFormSchema(t), [t])
+  const requiredFields = useMemo(() => getRequiredFields(schema), [schema])
+
+  const form = useForm<FormValues>({
+    // TypeScript cannot infer resolver types from dynamic schema factories
+    // Using 'as unknown as Resolver<T>' for type-safe assertion
+    resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+    defaultValues: {
+      name: '',
+      slug: '',
+      description: '',
+      color: '#6b7280',
+    },
+  })
+
+  useEffect(() => {
+    if (open) {
+      setServerErrors([])
+      // Reset form with tag data if editing
+      if (tag) {
+        form.reset({
+          name: tag.name,
+          slug: tag.slug,
+          description: tag.description || '',
+          color: tag.color || '#6b7280',
+        })
+      } else {
+        form.reset({
+          name: '',
+          slug: '',
+          description: '',
+          color: '#6b7280',
+        })
+      }
+    }
+  }, [open, tag, form])
+
+  // Auto-generate slug from name
+  const watchName = form.watch('name')
+  useEffect(() => {
+    if (!isEdit && watchName) {
+      const slug = watchName
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+      form.setValue('slug', slug)
+    }
+  }, [watchName, isEdit, form])
+
+  const onSubmit = async (values: FormValues) => {
+    try {
+      const request: CreateTagRequest = {
+        name: values.name,
+        slug: values.slug,
+        description: values.description || undefined,
+        color: values.color || undefined,
+      }
+
+      if (isEdit && tag) {
+        await updateMutation.mutateAsync({ id: tag.id, request })
+        toast.success(t('blog.tagUpdated'))
+      } else {
+        await createMutation.mutateAsync(request)
+        toast.success(t('blog.tagCreated'))
+      }
+
+      form.reset()
+      onOpenChange(false)
+      onSuccess()
+    } catch (err) {
+      handleFormError(err, form, setServerErrors, t)
+    }
+  }
+
+  return (
+    <Credenza open={open} onOpenChange={onOpenChange}>
+      <CredenzaContent className="sm:max-w-[500px]">
+        <CredenzaHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              {isEdit ? (
+                <Pencil className="h-5 w-5 text-primary" />
+              ) : (
+                <Tag className="h-5 w-5 text-primary" />
+              )}
+            </div>
+            <div>
+              <CredenzaTitle>
+                {isEdit ? t('blog.editTag') : t('blog.createNewTag')}
+              </CredenzaTitle>
+              <CredenzaDescription>
+                {isEdit
+                  ? t('blog.editTagDescription')
+                  : t('blog.createTagDescription')}
+              </CredenzaDescription>
+            </div>
+          </div>
+        </CredenzaHeader>
+
+        <Form {...form} requiredFields={requiredFields}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <CredenzaBody className="space-y-4">
+              <FormErrorBanner
+                errors={serverErrors}
+                onDismiss={() => setServerErrors([])}
+                title={t('validation.unableToSave', 'Unable to save')}
+              />
+
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('blog.tagName')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t('blog.tagNamePlaceholder')} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('labels.slug')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t('blog.tagSlugPlaceholder')} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('blog.descriptionOptional')}</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={t('blog.tagDescription')}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="color"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('blog.color')}</FormLabel>
+                    <FormControl>
+                      <ColorPicker
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CredenzaBody>
+
+            <CredenzaFooter>
+              <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)} className="cursor-pointer">
+                {t('buttons.cancel')}
+              </Button>
+              <Button type="submit" disabled={isPending} className="cursor-pointer">
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isPending
+                  ? t('buttons.saving')
+                  : (isEdit ? t('buttons.update') : t('buttons.create'))}
+              </Button>
+            </CredenzaFooter>
+          </form>
+        </Form>
+      </CredenzaContent>
+    </Credenza>
+  )
+}

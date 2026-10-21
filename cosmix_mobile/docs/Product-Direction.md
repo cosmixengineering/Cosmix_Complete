@@ -1,0 +1,23 @@
+# Mobile product direction
+
+Owner instruction, 20 October 2026. Keep this as durable project memory.
+
+- One shared React Native app will serve employees and, in a later phase, company customers.
+- Current approved scope: employee mobile login, dashboard, attendance Check In and Check Out, connected to the existing .NET backend.
+- Check In must use a new camera capture and server face/liveness verification before submitting attendance. Check Out does not require face verification.
+- Supervisors, site staff and company riders will eventually have different panels/actions. Implement those when their workflows are specified; derive access from the server, never an employee-selected role.
+- Do not duplicate employee/customer/role-specific source trees. Preserve the established shared architecture and add only feature-required folders.
+- Customer functionality is deferred. Do not add customer registration or speculative customer screens now.
+- First device target: Android emulator on the current Windows laptop. Physical camera/anti-spoof acceptance follows on a real device with an enrolled employee.
+- The owner confirmed no SMS provider is currently available. Preserve the existing registered-phone/SMS OTP backend contract and fail closed; no hardcoded OTP, fake login, seed account or production bypass.
+- Security, clear boundaries, efficient code and maintainability are explicit owner requirements.
+- Later same-day scope expansion: add employee self-service leave, resignation/job-left requests, advances/loans and the other existing employee services to the shared app, with a professional UI. This applies across employee types; available actions remain subject to server permissions and business eligibility.
+- The code-only phase ended when the owner explicitly requested builds and testing later on 20 October 2026. Build and verify the employee flow, history/records and remaining leave balances; preserve the distinction between synthetic verification and real authenticated biometric acceptance. Earlier passing counts do not automatically validate new additions.
+- The owner explicitly requires employees to see their own historical records/reports and remaining leave balances. Paged attendance receipts, requests, repaid loan agreements and payroll handoff history are included; own-record scopes and exact backend leave balances remain authoritative. PDF/export and payment-receipt claims are not implied by these record views.
+- Later navigation instruction: one central History page with selectable record-category buttons, including Check In and Check Out with full recorded date/year/time. Reuse the existing own-record APIs and distinguish receipt time from accepted attendance. Operational service pages retain their request/review actions.
+- The owner supplied a bottom-navigation reference: a pale gray rounded tray, five white circular buttons, a bright lime selected circle and dark outline icons. Use appropriate Home, Services, Attendance, History and Profile icons; Attendance occupies the center. Preserve safe areas, accessibility and the attendance submission lock. Do not copy the reference's unrelated financial/search destinations.
+- Later login/OTP reference: soft lavender surroundings, rounded white cards and indigo controls. Show Pakistan flags and the +92 prefix; accept local/international Pakistan mobile formats and Urdu/Arabic digits. Keep phone-only authentication with no email selector or self-registration. Replace the reference's signup action with a working Need help sheet for HR/account/SMS/device guidance. Social login was not requested and is not part of the existing contract.
+- OTP uses six visual cells backed by one native autofill/paste-capable field, masked initially with an explicit Show/Hide option, the existing server challenge, resend timing and expiry. Keep edit/back controls unavailable during requests. Add subtle card/press/security-artwork motion, respect Reduce Motion, and stop decorative animation on background/blur. Preserve shared architecture and real authentication enforcement.
+- Later branding instruction: replace the login phone-lock illustration with the supplied Cosmix Engineering logo, with its background removed and a high-resolution transparent asset. Preserve the brand lettering, globe and colours. Add clearer phone-focus glow/border/label transitions, number-format feedback, button press effects and restrained logo/background motion. Keep the OTP security illustration and existing authentication contract; respect Reduce Motion and pause decorative motion when inactive.
+
+CompreFace owner credentials belong to server administration. They must never enter this app or become employee login credentials.

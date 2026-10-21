@@ -1,0 +1,677 @@
+/* ==========================================================================
+   SITE DETAIL & INTERACTIVE LIVE GEOFENCE MAP STYLES
+   Compact, High-Density Professional ERP Layout
+   ========================================================================== */
+
+.site-detail-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 4px 0 20px;
+}
+
+/* Header & Breadcrumb Bar */
+.site-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #ffffff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.site-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 5px;
+  transition: all 0.15s ease;
+}
+
+.site-back-btn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.site-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.site-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.site-title-row h1 {
+  font-size: 17px;
+  font-weight: 750;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.site-code-badge {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.site-meta-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+.site-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Metric Cards Grid - Compact High-Density */
+.site-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.site-metric-card {
+  background: #ffffff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.site-metric-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+.site-metric-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.site-metric-icon-box.blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.site-metric-icon-box.green {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.site-metric-icon-box.amber {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.site-metric-icon-box.purple {
+  background: #faf5ff;
+  color: #7c3aed;
+}
+
+.site-metric-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.site-metric-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.site-metric-value {
+  font-size: 15px;
+  font-weight: 750;
+  color: #0f172a;
+  margin-top: 1px;
+}
+
+.site-metric-subtext {
+  font-size: 10.5px;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+
+/* Two-column layout for Supervisor + Shift and Map */
+.site-content-layout {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 1080px) {
+  .site-content-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.site-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Panel Card Base */
+.site-panel-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+.site-panel-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+}
+
+.site-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Supervisor Card */
+.site-supervisor-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.supervisor-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.supervisor-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.supervisor-names {
+  display: flex;
+  flex-direction: column;
+}
+
+.supervisor-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.supervisor-role {
+  font-size: 11.5px;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.supervisor-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 650;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.supervisor-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: #f8fafc;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #f1f5f9;
+  font-size: 11.5px;
+}
+
+.supervisor-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.supervisor-detail-label {
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.supervisor-detail-val {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Shift Info Card */
+.site-shift-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shift-highlight-box {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.shift-name-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #166534;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.shift-hours-banner {
+  font-size: 15px;
+  font-weight: 750;
+  color: #14532d;
+  letter-spacing: -0.01em;
+}
+
+/* Interactive Leaflet Map Card */
+.site-map-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-map-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: #f8fafc;
+}
+
+.site-map-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.site-map-filter-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.site-map-filter-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.2);
+}
+
+.map-control-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.map-control-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Workforce Table Panel */
+.site-workforce-panel {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+.site-workforce-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.workforce-title-group h3 {
+  font-size: 13.5px;
+  font-weight: 750;
+  color: #0f172a;
+  margin: 0;
+}
+
+.workforce-title-group p {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 1px 0 0;
+}
+
+.workforce-search-input {
+  width: 200px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid #cbd5e1;
+  font-size: 11.5px;
+  outline: none;
+}
+
+.workforce-search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* Worker Table Styling */
+.workforce-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.workforce-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 650;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 7px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.workforce-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.workforce-table tr:hover {
+  background: #f8fafc;
+}
+
+.worker-cell-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.worker-avatar-small {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  background: #e2e8f0;
+  color: #334155;
+  font-weight: 700;
+  font-size: 10.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.worker-name-text {
+  font-weight: 650;
+  color: #0f172a;
+  font-size: 12px;
+}
+
+.worker-num-text {
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+.badge-inside-site {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 650;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-near-boundary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 650;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.btn-locate-worker {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-locate-worker:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+/* ==========================================================================
+   SITES WORKSPACE LIST & TABLE - UNIFORM ENTERPRISE STYLING
+   ========================================================================== */
+
+.sites-list-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  margin-bottom: 12px;
+}
+
+.sites-filter-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  margin-bottom: 12px;
+}
+
+.site-cell-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 0;
+  cursor: pointer;
+  text-align: left;
+  background: none;
+  border: none;
+  width: 100%;
+}
+
+.site-cell-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  transition: all 0.15s ease;
+}
+
+.site-cell-item:hover .site-cell-avatar {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.site-cell-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.site-cell-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  transition: color 0.15s ease;
+}
+
+.site-cell-item:hover .site-cell-name {
+  color: #0284c7;
+}
+
+.site-cell-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.site-cell-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.site-btn-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-radius: 5px;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.site-btn-view:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}

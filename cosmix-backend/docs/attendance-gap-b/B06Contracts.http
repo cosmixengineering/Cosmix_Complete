@@ -1,0 +1,70 @@
+# Existing authorized backend only. This pack creates no host, SQL or fixtures.
+# Actual intake needs parent wiring/migration and explicit approved policy/claim storage.
+# Missing configuration is unavailable; a 200 is only an unverified employee report.
+@baseUrl = https://localhost:7240
+@mobileAccessToken = REPLACE_WITH_CURRENT_OWN_MOBILE_TOKEN
+@windowId = REPLACE_WITH_ORIGINAL_SERVER_WINDOW_ID
+@assignmentId = REPLACE_WITH_ORIGINAL_ASSIGNMENT_ID
+@configurationVersionId = REPLACE_WITH_ORIGINAL_CONFIGURATION_VERSION_ID
+@sessionKey = REPLACE_WITH_ORIGINAL_WORK_SESSION_KEY
+@noticeSha256 = REPLACE_WITH_EXACT_RETAINED_NOTICE_SHA256
+@capturedAtUtc = REPLACE_WITH_ORIGINAL_UTC_CAPTURE_TIME
+@originalKey = b06-claim-example-0001
+@siteId = REPLACE_WITH_GRANTED_SITE_ID
+@eventId = REPLACE_WITH_RECEIVED_EVENT_ID
+@lastResponseId = REPLACE_WITH_CURRENT_LAST_RESPONSE_ID
+@csrfToken = REPLACE_WITH_CURRENT_WEB_CSRF_TOKEN
+
+### Mobile: submit a written claim against the ORIGINAL already-created window
+# Default: 503 zone_offline_policy_unavailable.
+# Approved configured policy/storage: 200 evidenceStatus=unverified_employee_report.
+# Replay only exact same original body/device/key; never generate a fresh key after lost response.
+# Expired/missing receipt: reconcile below. 503 is not received.
+# The hint is a belief, never a verified Entered/Exited event or access grant.
+# Omit GPS, employee/account/device selectors, Source, IsOffline and private references.
+POST {{baseUrl}}/api/v1/me/attendance/zones/monitoring-windows/{{windowId}}/offline-observations
+Authorization: Bearer {{mobileAccessToken}}
+Idempotency-Key: {{originalKey}}
+Content-Type: application/json
+
+{"assignmentId":"{{assignmentId}}","configurationVersionId":"{{configurationVersionId}}","sessionKey":"{{sessionKey}}","noticeSha256":"{{noticeSha256}}","deviceCapturedAtUtc":"{{capturedAtUtc}}","eventKindHint":2,"writtenClaim":"I believe I approached the area during the retained duty window."}
+
+### Mobile: readonly original-key recovery after lost/expired/missing receipt
+# Returns current retained report/responses, NOT frozen original receipt; no claim text/private paths.
+# Found=false and canResubmit=false do not authorize automatic resubmission.
+GET {{baseUrl}}/api/v1/me/attendance/zones/monitoring-windows/{{windowId}}/offline-observations/reconciliation
+Authorization: Bearer {{mobileAccessToken}}
+Idempotency-Key: {{originalKey}}
+
+### Mobile: existing own coarse history includes unverified reports
+GET {{baseUrl}}/api/v1/me/attendance/zones/events?pageSize=25
+Authorization: Bearer {{mobileAccessToken}}
+
+### Mobile: acknowledge retained unverified event using its fresh response identity
+# expectedLastResponseId must be fresh; null only if no response exists.
+POST {{baseUrl}}/api/v1/me/attendance/zones/events/{{eventId}}/responses
+Authorization: Bearer {{mobileAccessToken}}
+Idempotency-Key: b06-acknowledge-example-0001
+Content-Type: application/json
+
+{"kind":1,"reason":"Acknowledged the retained public instruction.","expectedLastResponseId":null}
+
+### Mobile: dispute claim metadata; use CURRENT last response ID from history/reconciliation
+POST {{baseUrl}}/api/v1/me/attendance/zones/events/{{eventId}}/responses
+Authorization: Bearer {{mobileAccessToken}}
+Idempotency-Key: b06-dispute-example-0001
+Content-Type: application/json
+
+{"kind":2,"reason":"Disputed the unverified claim metadata.","expectedLastResponseId":"{{lastResponseId}}"}
+
+### Web: existing reviewer metadata queue; genuine MFA and historical/current scopes
+GET {{baseUrl}}/api/v1/attendance/sites/{{siteId}}/zones/events?pageSize=25
+
+### Web: factual review of an ALREADY retained event
+# A review leaves offline evidence unverified and grants no Red exception or pay change.
+POST {{baseUrl}}/api/v1/attendance/sites/{{siteId}}/zones/events/{{eventId}}/review
+X-CSRF-TOKEN: {{csrfToken}}
+Idempotency-Key: b06-review-example-0001
+Content-Type: application/json
+
+{"kind":3,"reason":"Factual evidence review only.","expectedLastResponseId":null}

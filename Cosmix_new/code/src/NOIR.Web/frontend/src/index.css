@@ -1,0 +1,582 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "tippy.js/dist/tippy.css";
+@import "tippy.js/animations/shift-away-subtle.css";
+@import "./styles/tippy-custom.css";
+@import "./styles/view-transitions.css";
+@import "./styles/uikit.css";
+
+/* Typography: Inter (sans) + Geist Mono (mono) */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/geist-mono";
+
+/* Custom dark variant for targeting dark mode elements */
+@custom-variant dark (&:is(.dark *));
+
+/* CSS variables and theme definitions */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  /* Typography */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  /* Sidebar colors */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+ * Color Scheme: Sapphire Blue (OKLCH)
+ * - Blue primary: Trust, professionalism, technical precision
+ * - Warm-tinted neutrals: Approachable, modern feel
+ * - Semantic colors: Success (green), Warning (amber), Destructive (red), Info (cyan)
+ * - WCAG AA compliant contrast ratios throughout
+ */
+
+/* Light theme variables */
+:root {
+  --radius: 0.625rem;
+  /* Backgrounds & surfaces */
+  --background: oklch(0.985 0.002 263);
+  --foreground: oklch(0.205 0.015 260);
+  --card: oklch(1.0 0 0);
+  --card-foreground: oklch(0.205 0.015 260);
+  --popover: oklch(1.0 0 0);
+  --popover-foreground: oklch(0.205 0.015 260);
+  /* Sapphire blue primary — #2563EB */
+  --primary: oklch(0.55 0.245 263);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0.002 263);
+  --secondary-foreground: oklch(0.205 0.015 260);
+  --muted: oklch(0.97 0.002 263);
+  /* Darkened for WCAG AA compliance (4.5:1 contrast on white background) */
+  --muted-foreground: oklch(0.48 0.01 260);
+  --accent: oklch(0.96 0.005 263);  /* neutral hover — subtle cool gray */
+  --accent-foreground: oklch(0.205 0.015 260);
+  /* Semantic colors — matches brandkit hex values */
+  --destructive: oklch(0.55 0.24 25);       /* ~#d32f2f — WCAG AA 4.5:1 with white */
+  --destructive-foreground: oklch(0.985 0 0);
+  --success: oklch(0.72 0.19 150);          /* #22C55E */
+  --warning: oklch(0.75 0.16 75);           /* #F59E0B */
+  --info: oklch(0.72 0.17 255);             /* #60A5FA */
+  /* Amber brand accent — secondary highlight, decorative use */
+  --highlight: oklch(0.72 0.17 80);
+  --highlight-foreground: oklch(0.15 0 0);
+  /* Borders & inputs */
+  --border: oklch(0.922 0.004 263);
+  --input: oklch(0.922 0.004 263);
+  --ring: oklch(0.55 0.245 263);
+  /* Sidebar - uses deeper blue for consistency */
+  --sidebar: oklch(0.985 0.002 263);
+  --sidebar-foreground: oklch(0.205 0.015 260);
+  --sidebar-primary: oklch(0.55 0.245 263);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.96 0.005 263);
+  --sidebar-accent-foreground: oklch(0.205 0.015 260);
+  --sidebar-border: oklch(0.922 0.004 263);
+  --sidebar-ring: oklch(0.55 0.245 263);
+  /* Chart palette */
+  --chart-1: oklch(0.55 0.245 263);
+  --chart-2: oklch(0.72 0.19 150);
+  --chart-3: oklch(0.75 0.16 75);
+  --chart-4: oklch(0.72 0.17 255);
+  --chart-5: oklch(0.65 0.18 330);
+}
+
+/* Dark theme variables */
+.dark {
+  /* Deep blue-black background */
+  --background: oklch(0.145 0.014 260);
+  --foreground: oklch(0.93 0.005 260);
+  --card: oklch(0.195 0.014 260);
+  --card-foreground: oklch(0.93 0.005 260);
+  --popover: oklch(0.195 0.014 260);
+  --popover-foreground: oklch(0.93 0.005 260);
+  /* Lighter blue for dark backgrounds */
+  --primary: oklch(0.65 0.22 263);
+  --primary-foreground: oklch(0.145 0.014 260);
+  --secondary: oklch(0.25 0.014 260);
+  --secondary-foreground: oklch(0.93 0.005 260);
+  --muted: oklch(0.25 0.014 260);
+  --muted-foreground: oklch(0.65 0.005 260);
+  --accent: oklch(0.26 0.015 260);  /* neutral hover — subtle dark gray */
+  --accent-foreground: oklch(0.93 0.005 260);
+  /* Semantic colors (lighter for dark mode) — brandkit-aligned */
+  --destructive: oklch(0.71 0.24 25);       /* lighter #EF4444 */
+  --destructive-foreground: oklch(0.985 0 0);
+  --success: oklch(0.79 0.19 150);          /* lighter #22C55E */
+  --warning: oklch(0.82 0.14 75);           /* lighter #F59E0B */
+  --info: oklch(0.79 0.15 255);             /* lighter #60A5FA */
+  /* Amber brand accent — brighter for dark backgrounds */
+  --highlight: oklch(0.80 0.17 80);
+  --highlight-foreground: oklch(0.15 0 0);
+  /* Borders & inputs — raised from 10%/15% for Nachos-level dark contrast */
+  --border: oklch(1 0 0 / 14%);
+  --input: oklch(1 0 0 / 18%);
+  --ring: oklch(0.65 0.22 263);
+  /* Sidebar */
+  --sidebar: oklch(0.195 0.014 260);
+  --sidebar-foreground: oklch(0.93 0.005 260);
+  --sidebar-primary: oklch(0.65 0.22 263);
+  --sidebar-primary-foreground: oklch(0.145 0.014 260);
+  --sidebar-accent: oklch(0.26 0.015 260);
+  --sidebar-accent-foreground: oklch(0.93 0.005 260);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.65 0.22 263);
+  /* Chart palette — brighter for dark backgrounds */
+  --chart-1: oklch(0.65 0.22 263);
+  --chart-2: oklch(0.79 0.19 150);
+  --chart-3: oklch(0.82 0.14 75);
+  --chart-4: oklch(0.79 0.15 255);
+  --chart-5: oklch(0.72 0.18 330);
+}
+
+/*
+ * High Contrast Theme
+ * - Minimum 7:1 contrast ratio for all text (WCAG AAA)
+ * - Increased border widths for better visibility
+ * - Stronger focus indicators
+ */
+.high-contrast {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0 0 0);
+  /* High contrast blue - darker for maximum contrast */
+  --primary: oklch(0.35 0.25 263);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0 0);
+  --secondary-foreground: oklch(0 0 0);
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.25 0 0);
+  --accent: oklch(0.95 0 0);
+  --accent-foreground: oklch(0 0 0);
+  --destructive: oklch(0.45 0.30 25);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.45 0.24 150);
+  --warning: oklch(0.55 0.22 75);
+  --info: oklch(0.50 0.20 255);
+  /* Amber brand accent — high contrast */
+  --highlight: oklch(0.50 0.22 80);
+  --highlight-foreground: oklch(1 0 0);
+  --border: oklch(0 0 0);
+  --input: oklch(0 0 0);
+  --ring: oklch(0 0 0);
+  /* Sidebar - high contrast */
+  --sidebar: oklch(0.98 0 0);
+  --sidebar-foreground: oklch(0 0 0);
+  --sidebar-primary: oklch(0.35 0.25 263);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0 0);
+  --sidebar-accent-foreground: oklch(0 0 0);
+  --sidebar-border: oklch(0 0 0);
+  --sidebar-ring: oklch(0 0 0);
+}
+
+/* High contrast mode enhancements */
+.high-contrast *:focus-visible {
+  outline-width: 3px !important;
+  outline-offset: 2px !important;
+  outline-color: oklch(0 0 0) !important;
+}
+
+.high-contrast .border {
+  border-width: 2px;
+}
+
+.high-contrast a:not([class]) {
+  text-decoration: underline;
+}
+
+/* Tailwind base styles */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+  }
+  html {
+    font-size: 93.75%; /* 15/16 = 0.9375 of browser default — respects user preferences */
+  }
+  /* Text selection — Amber 200 background from brand palette */
+  ::selection {
+    background: oklch(0.87 0.13 80);
+    color: oklch(0.15 0 0);
+  }
+  body {
+    @apply bg-background text-foreground;
+    line-height: 1.5; /* Minimum 1.5 for Vietnamese diacritics */
+  }
+}
+
+/*
+ * Typography Scale (93.75% root = 15px at default 16px browser setting)
+ * --text-xs:   0.75rem  (11.25px) - labels, captions
+ * --text-sm:   0.8125rem (12.2px) - table cells, secondary
+ * --text-base: 0.875rem (13.1px) - body text
+ * --text-lg:   1rem     (15px) - section headers
+ * --text-xl:   1.25rem  (18.75px) - page titles
+ * --text-2xl:  1.5rem   (22.5px) - KPI values
+ * --text-3xl:  2rem     (30px) - hero numbers
+ *
+ * Note: Uses % instead of px to respect browser user preferences for accessibility.
+ */
+
+/* Hide scrollbar but keep scrollable — used for Kanban board pan */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tabular numbers for aligned data columns */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Content Density System
+ * Three modes: compact (32px rows), normal (44px rows), comfortable (56px rows)
+ * Applied via data-density attribute on DataTable container
+ */
+:root, [data-density="normal"] {
+  --density-row-height: 44px;
+  --density-cell-padding-y: 8px;
+  --density-cell-padding-x: 12px;
+  --density-font-size: 0.875rem;
+  --density-header-height: 48px;
+}
+
+[data-density="compact"] {
+  --density-row-height: 32px;
+  --density-cell-padding-y: 4px;
+  --density-cell-padding-x: 8px;
+  --density-font-size: 0.8125rem;
+  --density-header-height: 36px;
+}
+
+[data-density="comfortable"] {
+  --density-row-height: 56px;
+  --density-cell-padding-y: 14px;
+  --density-cell-padding-x: 16px;
+  --density-font-size: 0.875rem;
+  --density-header-height: 60px;
+}
+
+/* Custom animations for landing and login pages */
+
+/* Gradient shift animation for backgrounds */
+@keyframes gradient-shift {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Blob floating animation */
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fade in with upward movement */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animation utility classes */
+.animate-gradient-shift {
+  animation: gradient-shift 8s ease infinite;
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out;
+}
+
+/* Animation delays */
+.animation-delay-200 {
+  animation-delay: 0.2s;
+  animation-fill-mode: both;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+  animation-fill-mode: both;
+}
+
+.animation-delay-600 {
+  animation-delay: 0.6s;
+  animation-fill-mode: both;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Tiptap Rich Text Editor Styles */
+.tiptap-content .tiptap {
+  padding: 1rem;
+  outline: none;
+  color: var(--foreground);
+  font-size: 0.9375rem;
+  line-height: 1.625;
+}
+
+.tiptap-content .tiptap > * + * {
+  margin-top: 0.5em;
+}
+
+.tiptap-content .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptap-content .tiptap h1 { font-size: 2em; font-weight: 700; }
+.tiptap-content .tiptap h2 { font-size: 1.5em; font-weight: 600; }
+.tiptap-content .tiptap h3 { font-size: 1.25em; font-weight: 600; }
+.tiptap-content .tiptap h4 { font-size: 1.125em; font-weight: 600; }
+
+.tiptap-content .tiptap ul { list-style: disc; padding-left: 1.5em; }
+.tiptap-content .tiptap ol { list-style: decimal; padding-left: 1.5em; }
+
+.tiptap-content .tiptap blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1em;
+  margin-left: 0;
+  color: var(--muted-foreground);
+}
+
+.tiptap-content .tiptap pre {
+  background: var(--muted);
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  overflow-x: auto;
+}
+
+.tiptap-content .tiptap code {
+  background: var(--muted);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+.tiptap-content .tiptap pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.tiptap-content .tiptap a {
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tiptap-content .tiptap img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+}
+
+.tiptap-content .tiptap img.ProseMirror-selectednode {
+  outline: 2px solid var(--primary);
+  border-radius: 0.375rem;
+}
+
+.tiptap-content .tiptap table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0.5em 0;
+}
+
+.tiptap-content .tiptap table td,
+.tiptap-content .tiptap table th {
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  min-width: 1em;
+  vertical-align: top;
+}
+
+.tiptap-content .tiptap table th {
+  background: var(--muted);
+  font-weight: 600;
+}
+
+.tiptap-content .tiptap table .selectedCell {
+  background: color-mix(in oklch, var(--primary) 15%, transparent);
+}
+
+.tiptap-content .tiptap mark {
+  background-color: #fef08a;
+  border-radius: 0.125rem;
+}
+
+.tiptap-content .tiptap hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1em 0;
+}
+
+/* ─── Orbital Logo Animation ─────────────────────────────────── */
+@keyframes orbital-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Fast speeds — outer 12s, middle 8s reverse, inner 5s */
+.orbital-animated circle:nth-child(1) {
+  transform-origin: 55px 55px;
+  animation: orbital-spin 12s linear infinite;
+}
+.orbital-animated circle:nth-child(2) {
+  transform-origin: 55px 55px;
+  animation: orbital-spin 8s linear infinite reverse;
+}
+.orbital-animated circle:nth-child(3) {
+  transform-origin: 55px 55px;
+  animation: orbital-spin 5s linear infinite;
+}
+
+/* Brand gradient — amber to sapphire (matches brandkit) */
+.brand-gradient {
+  background: linear-gradient(135deg, oklch(0.83 0.16 80), var(--highlight), var(--primary), oklch(0.40 0.20 263));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── DataTable Row Animations ─────────────────────────────── */
+
+/* Highlight pulse for newly created/updated rows */
+@keyframes row-highlight {
+  0% {
+    background-color: color-mix(in oklch, var(--primary) 20%, transparent);
+  }
+  40% {
+    background-color: color-mix(in oklch, var(--primary) 12%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* Fade-out for deleted rows */
+@keyframes row-fadeout {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+.animate-row-highlight {
+  animation: row-highlight 1.5s ease-out forwards;
+}
+
+.animate-row-fadeout {
+  animation: row-fadeout 400ms ease-in forwards;
+  pointer-events: none;
+}
+
+/* Respect user's motion preferences (accessibility) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-blob,
+  .animate-gradient-shift,
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-bounce,
+  .animate-row-highlight,
+  .animate-row-fadeout,
+  .orbital-animated circle {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,135 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
+import { Mail, Pencil, Eye, GitFork } from 'lucide-react'
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, EmptyState, Skeleton } from '@uikit'
+import { getStatusBadgeClasses } from '@/utils/statusBadge'
+
+import { ApiError } from '@/services/apiClient'
+import {
+  previewEmailTemplate,
+  getDefaultSampleData,
+  type EmailTemplateListDto,
+  type EmailPreviewResponse,
+} from '@/services/emailTemplates'
+import { useEmailTemplatesQuery } from '@/portal-app/settings/queries'
+import { formatDisplayName } from '@/lib/utils'
+import { EmailPreviewDialog } from './EmailPreviewDialog'
+
+export interface EmailTemplatesTabProps {
+  onEdit: (id: string) => void
+}
+
+export const EmailTemplatesTab = ({ onEdit }: EmailTemplatesTabProps) => {
+  const { t } = useTranslation('common')
+  const { data: templates = [], isLoading: loading } = useEmailTemplatesQuery()
+
+  // Preview dialog state
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewData, setPreviewData] = useState<EmailPreviewResponse | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+
+  const handlePreview = async (template: EmailTemplateListDto) => {
+    setPreviewData(null)
+    setPreviewLoading(true)
+    setPreviewOpen(true)
+
+    try {
+      const sampleData = getDefaultSampleData(template.availableVariables)
+      const preview = await previewEmailTemplate(template.id, { sampleData })
+      setPreviewData(preview)
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : t('emailTemplates.failedToLoadPreview')
+      toast.error(message)
+      setPreviewOpen(false)
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 sm:grid-cols-2">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-48 rounded-lg" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <>
+      <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+        <CardHeader>
+          <CardTitle className="text-lg">{t('emailTemplates.title')}</CardTitle>
+          <CardDescription>{t('emailTemplates.description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 sm:grid-cols-2">
+            {templates.map((template) => (
+              <Card key={template.id} className="overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <h4 className="font-medium">{formatDisplayName(template.name)}</h4>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {template.description}
+                      </p>
+                      <div className="flex items-center gap-2 pt-2">
+                        <Badge variant="outline" className={getStatusBadgeClasses(template.isActive ? 'green' : 'gray')}>
+                          {template.isActive ? t('labels.active') : t('labels.inactive')}
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${
+                            template.isInherited
+                              ? 'text-purple-600 border-purple-600/30'
+                              : 'text-green-600 border-green-600/30'
+                          }`}
+                        >
+                          <GitFork className="h-3 w-3 mr-1" />
+                          {template.isInherited ? t('legalPages.platformDefault') : t('legalPages.customized')}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => onEdit(template.id)} className="cursor-pointer" aria-label={`${t('buttons.edit')} ${formatDisplayName(template.name)}`}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handlePreview(template)} className="cursor-pointer" aria-label={`${t('buttons.preview')} ${formatDisplayName(template.name)}`}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          {templates.length === 0 && (
+            <EmptyState
+              icon={Mail}
+              title={t('emailTemplates.noTemplatesFound')}
+              size="sm"
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Preview Dialog */}
+      <EmailPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        preview={previewData}
+        loading={previewLoading}
+      />
+    </>
+  )
+}

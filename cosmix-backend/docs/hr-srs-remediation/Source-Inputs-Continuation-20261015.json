@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-15",
+  "head": "ddc1a9f5c98aac90263261e8b03b5714f1886371",
+  "scope": "git ls-files --cached --others --exclude-standard -- src *.props *.targets global.json NuGet.Config Cosmix.Backend.sln; existing files sorted uniquely by relative path",
+  "fileCount": 1052,
+  "digestAlgorithm": "SHA256 of UTF8 compressed JSON array of ordered Path/SHA256 objects",
+  "sourceDigestBeforeBuild": "B03EBF717EBF6DF8580C8D87489FCA13BA80BACEA13559B3A517BAB2CD799AC8",
+  "sourceDigestAfterBuild": "B03EBF717EBF6DF8580C8D87489FCA13BA80BACEA13559B3A517BAB2CD799AC8",
+  "buildOutput": "D:/CosmixVerification/hr-remediation-c-20261015/reviewed/bin/Cosmix.Api/release",
+  "buildWarnings": 0,
+  "buildErrors": 0,
+  "primarySuiteEvidence": "D:/CosmixVerification/part-c-parent-20261013/managed-96d7fc12a0004bc490000929fcf90324",
+  "primarySuiteCount": 17,
+  "primaryPassedAssertions": 1425,
+  "widerSuiteEvidence": "D:/CosmixVerification/part-c-parent-20261013/managed-40f60fe5ee8049fb86eeafe18c5c2ce1",
+  "totalPassingSuites": 23,
+  "totalPassingSuiteAssertions": 1956,
+  "knownFailingOtSuiteEvidence": "D:/CosmixVerification/part-c-parent-20261013/managed-1cae9fe2c1d44531a05206a2cc6f7592",
+  "knownFailingOtSuite": { "passed": 17, "failed": 2 },
+  "acceptance": "standalone services, synthetic IO, actual SQL translation and generated MVC/OpenAPI; no HTTP host, SQL execution or external provider acceptance"
+}

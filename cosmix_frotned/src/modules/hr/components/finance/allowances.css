@@ -1,0 +1,382 @@
+.allowances-page {
+  --allowance-ink: #24292f;
+  --allowance-muted: #626a73;
+  --allowance-line: #e1e4e8;
+  --allowance-accent: #285c9d;
+  min-width: 0;
+  padding: 24px;
+  background: #fff;
+  color: var(--allowance-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.allowances-page *,
+.allowances-page *::before,
+.allowances-page *::after {
+  box-sizing: border-box;
+  letter-spacing: 0;
+}
+
+.allowances-heading {
+  margin-bottom: 20px;
+}
+
+.allowances-heading p {
+  margin: 0 0 8px;
+  color: var(--allowance-muted);
+  font-size: 12px;
+}
+
+.allowances-heading h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.allowances-page .hr-tabs {
+  margin: 0;
+  gap: 20px;
+  border-color: var(--allowance-line);
+}
+
+.allowances-page .hr-tabs button {
+  padding: 10px 0;
+  color: var(--allowance-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.allowances-page .hr-tabs [aria-selected='true'] {
+  color: var(--allowance-accent);
+  border-color: var(--allowance-accent);
+}
+
+.allowances-page .hr-form-section {
+  padding: 24px 0;
+  border-color: var(--allowance-line);
+}
+
+.allowances-page .hr-form-section:last-child {
+  border-bottom: 0;
+}
+
+.allowances-page .hr-form-section h2 {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.allowance-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-bottom: 16px;
+}
+
+.allowances-page .allowance-section-heading h2 {
+  margin: 0;
+}
+
+.allowance-section-meta {
+  color: var(--allowance-muted);
+  font-size: 12px;
+}
+
+.allowances-page .hr-toolbar {
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.allowances-page .hr-toolbar .field {
+  width: 180px;
+  max-width: 100%;
+}
+
+.allowances-page .field label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b535c;
+}
+
+.allowances-page :is(input, select, textarea) {
+  border: 1px solid #d1d6dc;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: none;
+  color: var(--allowance-ink);
+  font-size: 13px;
+}
+
+.allowances-page :is(input, select) {
+  height: 36px;
+  padding: 6px 10px;
+}
+
+.allowances-page textarea {
+  min-height: 76px;
+  padding: 8px 10px;
+}
+
+.allowances-page :is(button, input, select, textarea, a, summary):focus-visible {
+  outline: 2px solid var(--allowance-accent);
+  outline-offset: 2px;
+}
+
+.allowances-page .button {
+  min-height: 36px;
+  padding: 7px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: none;
+  transform: none;
+}
+
+.allowances-page :is(.button--primary, .button--success) {
+  background: var(--allowance-accent);
+  border-color: var(--allowance-accent);
+  color: #fff;
+}
+
+.allowances-page :is(.button--primary, .button--success):hover:not(:disabled) {
+  background: #224e85;
+  box-shadow: none;
+  transform: none;
+}
+
+.allowances-page .button--secondary {
+  background: #fff;
+  border-color: #d1d6dc;
+  color: #414953;
+}
+
+.allowances-page .button--secondary:hover:not(:disabled) {
+  background: #f6f7f8;
+  border-color: #a5afb9;
+  box-shadow: none;
+  transform: none;
+}
+
+.allowances-page .button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.allowances-page .hr-form-grid {
+  max-width: 920px;
+  gap: 16px 24px;
+}
+
+.allowance-claim-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.allowance-claim-amount > span {
+  color: var(--allowance-muted);
+  font-size: 12px;
+}
+
+.allowance-claim-amount strong {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.allowance-claim-blocked {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 2px solid #c7cdd4;
+  background: #f6f7f8;
+  color: var(--allowance-muted);
+  font-size: 12px;
+}
+
+.allowances-page .hr-actions {
+  padding: 0;
+}
+
+.allowance-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 16px;
+  background: #f6f7f8;
+  color: var(--allowance-muted);
+  font-size: 12px;
+}
+
+.allowance-state > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.allowance-state > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.allowance-state h3 {
+  margin: 0 0 4px;
+  color: var(--allowance-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.allowance-state p {
+  margin: 0;
+  max-width: 800px;
+  overflow-wrap: anywhere;
+}
+
+.allowance-state--error {
+  border-left: 2px solid #9b5c20;
+}
+
+.allowance-state details {
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.allowance-state summary {
+  cursor: pointer;
+}
+
+.allowance-state code {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+.allowances-page .hr-status {
+  padding: 2px 0;
+  color: #4b535c;
+  background: transparent;
+  font-weight: 500;
+  white-space: normal;
+}
+
+.allowances-page .hr-status::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #8c959f;
+}
+
+.allowances-page .hr-status--negative::before {
+  background: #9b5c20;
+}
+
+.allowances-page .hr-table-scroll {
+  border: 0;
+  border-block: 1px solid var(--allowance-line);
+  border-radius: 0;
+}
+
+.allowances-page .hr-prepared-table {
+  width: 100%;
+  font-size: 12px;
+}
+
+.allowances-page .hr-prepared-table th {
+  background: #f6f7f8;
+  color: var(--allowance-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.allowances-page .hr-prepared-table :is(th, td) {
+  padding: 10px 12px;
+  border-color: var(--allowance-line);
+}
+
+.allowances-page .hr-prepared-table td:last-child {
+  min-width: 220px;
+  white-space: normal;
+}
+
+.allowances-page .hr-notice {
+  padding: 18px 0;
+  color: var(--allowance-muted);
+  text-align: left;
+  font-size: 12px;
+}
+
+.allowances-page .hr-repeat-heading {
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.allowances-page .hr-repeat h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.allowances-page .hr-dl {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 24px;
+}
+
+.allowances-page .hr-dl dt {
+  margin-bottom: 3px;
+  color: var(--allowance-muted);
+  font-size: 11px;
+}
+
+.allowances-page .hr-dl dd {
+  font-size: 12px;
+}
+
+@media (max-width: 1000px) {
+  .allowances-page .hr-dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .allowances-page {
+    padding: 18px 14px;
+  }
+
+  .allowances-heading h1 {
+    font-size: 21px;
+  }
+
+  .allowances-page .hr-tabs {
+    gap: 16px;
+  }
+
+  .allowances-page .hr-tabs button {
+    font-size: 12px;
+  }
+
+  .allowances-page .hr-form-grid,
+  .allowances-page .hr-dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .allowances-page .hr-toolbar {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+
+  .allowances-page .hr-toolbar .field {
+    width: auto;
+    flex: 1 1 150px;
+  }
+
+  .allowance-state {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+}

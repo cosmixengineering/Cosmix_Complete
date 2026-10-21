@@ -1,0 +1,63 @@
+{
+  "SchemaVersion": 1,
+  "RunId": "ATTREPLACEWITHFRESHRUNID",
+  "Database": "Cosmix_Testing",
+  "DataSource": "(localdb)\\MSSQLLocalDB",
+  "ExistingRunId": "ACC202610098E9C6465",
+  "ExistingPrivateRoot": "C:\\Users\\Affan.Ahmed\\AppData\\Local\\Cosmix\\AccessAcceptance\\20261009",
+  "BaselineMigration": "20261009064639_AddDirectSiteSchedulingAndTemporaryAmendments",
+  "TargetMigration": "REPLACE_AFTER_ALL_LOCAL_SCHEMA_CHANGES_ARE_FINAL",
+  "MigrationScript": "docs/attendance-completion/REPLACE_WITH_REVIEWED_UPGRADE.sql",
+  "MigrationScriptSha256": "REPLACE_WITH_REVIEWED_SHA256",
+  "FixtureManifestSha256": "REPLACE_WITH_RETAINED_attendance-manifest.json_SHA256",
+  "AccessResultsSha256": "REPLACE_WITH_RETAINED_access-results.json_SHA256",
+  "SettingsSha256": "REPLACE_WITH_UNCHANGED_RETAINED_settings.json_SHA256",
+  "WebRunnerSha256": "REPLACE_WITH_FINAL_Invoke-AttendanceWebAcceptance.ps1_SHA256",
+  "HttpHelperSha256": "REPLACE_WITH_REVIEWED_LocalAcceptanceHttp.ps1_SHA256",
+  "UpgradeRunnerSha256": "REPLACE_WITH_FINAL_Upgrade-AttendanceAcceptance.ps1_SHA256",
+  "RunnerSha256": "REPLACE_WITH_FINAL_Run-AttendanceAcceptance.ps1_SHA256",
+  "ApiAssemblySha256": "REPLACE_WITH_REVIEWED_RELEASE_ASSEMBLY_SHA256",
+  "RuntimeAssemblySha256": {
+    "Cosmix.Domain.dll": "REPLACE_WITH_REVIEWED_SHA256",
+    "Cosmix.Application.dll": "REPLACE_WITH_REVIEWED_SHA256",
+    "Cosmix.Infrastructure.dll": "REPLACE_WITH_REVIEWED_SHA256"
+  },
+  "WebRoleProfile": "existing-three-attendance-factual-v1",
+  "BusinessDate": "2026-10-09",
+  "ExpectedSummaryRevision": 0,
+  "MonthLockYear": 2026,
+  "MonthLockMonth": 10,
+  "WorkerEnabled": false,
+  "HistoricalFixtureWrites": false,
+  "NewRoles": [
+    {
+      "CodeSuffix": "EMPLOYEE",
+      "AssignedAccount": "retained AdminAccountId",
+      "ScopeKind": "Employee",
+      "Target": "retained EmployeeId (HR)",
+      "Permissions": [
+        "attendance.corrections.submit",
+        "attendance.corrections.review",
+        "attendance.corrections.decide",
+        "attendance.summaries.read",
+        "attendance.summaries.calculate",
+        "attendance.reports.read",
+        "attendance.reports.export"
+      ]
+    },
+    {
+      "CodeSuffix": "MONTH",
+      "AssignedAccount": "retained AdminAccountId",
+      "ScopeKind": "All",
+      "Target": null,
+      "Permissions": ["attendance.month-locks.read", "attendance.month-locks.finalize"]
+    },
+    {
+      "CodeSuffix": "SELF",
+      "AssignedAccount": "retained HrAccountId",
+      "ScopeKind": "Self",
+      "Target": "server-derived HR employee",
+      "Permissions": ["attendance.corrections.self", "attendance.summaries.self"]
+    }
+  ]
+}

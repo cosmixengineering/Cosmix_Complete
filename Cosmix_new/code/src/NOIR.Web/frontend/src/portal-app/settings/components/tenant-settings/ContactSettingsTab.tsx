@@ -1,0 +1,140 @@
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
+import { Save } from 'lucide-react'
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  Skeleton,
+  Textarea,
+} from '@uikit'
+
+import { ApiError } from '@/services/apiClient'
+import {
+  useContactSettingsQuery,
+  useUpdateContactSettings,
+} from '@/portal-app/settings/queries'
+
+export interface ContactSettingsTabProps {
+  canEdit: boolean
+}
+
+export const ContactSettingsTab = ({ canEdit }: ContactSettingsTabProps) => {
+  const { t } = useTranslation('common')
+  const { data, isLoading } = useContactSettingsQuery()
+  const updateMutation = useUpdateContactSettings()
+
+  // Form state
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [address, setAddress] = useState('')
+
+  useEffect(() => {
+    if (data) {
+      setEmail(data.email || '')
+      setPhone(data.phone || '')
+      setAddress(data.address || '')
+    }
+  }, [data])
+
+  const handleSave = () => {
+    updateMutation.mutate(
+      {
+        email: email.trim() || null,
+        phone: phone.trim() || null,
+        address: address.trim() || null,
+      },
+      {
+        onSuccess: () => {
+          toast.success(t('tenantSettings.saved'))
+        },
+        onError: (error) => {
+          if (error instanceof ApiError) {
+            toast.error(error.message)
+          } else {
+            toast.error(t('messages.operationFailed'))
+          }
+        },
+      },
+    )
+  }
+
+  const hasChanges = data && (
+    (email.trim() || '') !== (data.email || '') ||
+    (phone.trim() || '') !== (data.phone || '') ||
+    (address.trim() || '') !== (data.address || '')
+  )
+
+  if (isLoading) {
+    return (
+      <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+        <CardContent className="py-8">
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+      <CardHeader>
+        <CardTitle className="text-lg">{t('tenantSettings.contact.title')}</CardTitle>
+        <CardDescription>{t('tenantSettings.contact.description')}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="contactEmail">{t('tenantSettings.contact.email')}</Label>
+          <Input
+            id="contactEmail"
+            type="text"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t('tenantSettings.contact.emailPlaceholder', 'contact@example.com')}
+            disabled={!canEdit}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="contactPhone">{t('tenantSettings.contact.phone')}</Label>
+          <Input
+            id="contactPhone"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder={t('tenantSettings.contact.phonePlaceholder', '+1 (555) 123-4567')}
+            disabled={!canEdit}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="contactAddress">{t('tenantSettings.contact.address')}</Label>
+          <Textarea
+            id="contactAddress"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder={t('tenantSettings.contact.addressPlaceholder', '123 Business St, Suite 100, City, State 12345')}
+            className="min-h-[80px]"
+            disabled={!canEdit}
+          />
+        </div>
+
+        {canEdit && (
+          <div className="flex justify-end">
+            <Button onClick={handleSave} disabled={updateMutation.isPending || !hasChanges}>
+              <Save className="h-4 w-4 mr-2" />
+              {updateMutation.isPending ? t('buttons.saving') : t('buttons.save')}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}

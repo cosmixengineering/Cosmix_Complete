@@ -1,0 +1,10 @@
+{
+  "profile": "HumaHrVehicle20261020V1",
+  "bindingSource": "parent-read-only-inspection-20261020",
+  "adminAccountId": "94a83b62-5b56-4450-9175-2a7a9e3261bf",
+  "adminEmployeeId": "7c505086-87ea-4fd2-980e-823ecccbe36a",
+  "hrAccountId": "8475187f-bf3b-4f9c-a3ed-4bac32253005",
+  "hrEmployeeId": "35d19922-70a8-4c80-8578-e1029360e9fc",
+  "issuedAt": "2026-10-20T07:00:00Z",
+  "returnedAt": "2026-10-20T07:05:00Z"
+}

@@ -1,0 +1,84 @@
+{
+  "recordedOn": "2026-10-15",
+  "auditBase": "686d5027e79d1dfa0c2c7df2aadd7d3975e79253",
+  "concurrentHeadObserved": "ddc1a9f5c98aac90263261e8b03b5714f1886371",
+  "scope": "A/B scoped source and verification inputs, plus six preserved concurrent files. Not a whole-repository reproducibility manifest or live SQL proof.",
+  "files": [
+    {
+      "path": "src/Cosmix.Api/Controllers/HR/EmployeeTrackingController.cs",
+      "sha256": "2469A082AD4ADD73E21C4965895776913D003E872562EC8E51AC81CC28443935"
+    },
+    {
+      "path": "src/Cosmix.Api/Controllers/HR/HrReportsController.cs",
+      "sha256": "6D9CC8CB3BAB4E06C576B29448A9642183F4C15C6BE073E9087168DCE58D35F8"
+    },
+    {
+      "path": "src/Cosmix.Application/HR/Reports/HrReportAuthorization.cs",
+      "sha256": "9A5A985D75FFD3FE2CAE880DA4AA4CD0DD27480FC2779FC1D3811E676397860B"
+    },
+    {
+      "path": "src/Cosmix.Application/HR/Reports/HrReportContracts.cs",
+      "sha256": "EF63D8C77DFFF0CA4E2B14285238A45770AE4BB077F08DD2B5A244B320F9BEC8"
+    },
+    {
+      "path": "src/Cosmix.Application/HR/Reports/HrReportRegistration.cs",
+      "sha256": "2F7292921A056C2713C9FE59125F8C6D1D1F16267F8F7388CD00CFA42AEB8CC3"
+    },
+    {
+      "path": "src/Cosmix.Application/HR/Reports/HrReportService.cs",
+      "sha256": "1D5BBCC1C309797A79AFA6E2F0C73680DDEC071B987145F5A9CA0EABE102640E"
+    },
+    {
+      "path": "src/Cosmix.Application/HR/Reports/IHrReportRepository.cs",
+      "sha256": "B0C6FB039EF026A09B9149F9B5CD83480D8DA24059BCC90111A92E4268631DE0"
+    },
+    {
+      "path": "src/Cosmix.Infrastructure/Repositories/HR/HrReportRepository.cs",
+      "sha256": "AC38CEF2EBEBF0598399AF9A3D03839FDA5813AD7B8182A44FA2E5A852BA6493"
+    },
+    {
+      "path": "src/Cosmix.Infrastructure/Repositories/HR/HrReportScopeRepository.cs",
+      "sha256": "F9921B867C23821018DB051E67D8291EBE7256A90645A6B30CDD543241051017"
+    },
+    {
+      "path": "docs/hr-srs-remediation/VerifyTrackingBoundary.cs",
+      "sha256": "73107FE7D044C996C60427E09A2229D7D9E1EEE03ABCC0589215050C6D6E2F70"
+    },
+    {
+      "path": "docs/hr-srs-remediation/VerifyHrReportBoundary.cs",
+      "sha256": "43D61B564C070936551D23EAF9E0377F1F5A32DB5E2032B51DB5962C45FCB3FB"
+    },
+    {
+      "path": "docs/hr-srs-remediation/VerifyHrReportQueries.cs",
+      "sha256": "428B3F1CD1B983A3D51FBB30BEC87E64FC7702D4D55EF7E2588AD676FF763001"
+    },
+    {
+      "path": "docs/attendance-completion/VerifyAttendanceComposition.cs",
+      "sha256": "06982B6120FB1993B09268022EE919BD202388C7EC1BA40E700464BF88A701D4"
+    },
+    {
+      "path": "src/Cosmix.Api/Controllers/HR/PayrollHandoffController.cs",
+      "sha256": "8A78DD86E0A992DB77B70AE487B596420E9BFF9617DB5F6BEE48015F5E83A155"
+    },
+    {
+      "path": "src/Cosmix.Application/HR/PayrollHandoff/PayrollHandoffContracts.cs",
+      "sha256": "382E09802F6DC5A90CB5407B748465464D3AEF39354EF1481339346DDCF93A4A"
+    },
+    {
+      "path": "src/Cosmix.Application/HR/PayrollHandoff/PayrollHandoffService.cs",
+      "sha256": "860CA2F6ED11C015807D402A0CA76530F30B955947FB64039FB5EA5D09ABC225"
+    },
+    {
+      "path": "src/Cosmix.Application/HR/VehicleFuel/VehicleFuelService.cs",
+      "sha256": "C11708FBA8762C180A2BD9FA9D67449F11B1D967F1BD801378AB2E2DE49B758F"
+    },
+    {
+      "path": "src/Cosmix.Infrastructure/Repositories/HR/PayrollHandoffRepository.cs",
+      "sha256": "1885213A7965BD12C4868255B7D29E5C1C05D909A1B22B8AEB92FCD2276F1C24"
+    },
+    {
+      "path": "src/Cosmix.Infrastructure/Repositories/HR/VehicleFuelRepository.cs",
+      "sha256": "DFC21CA1DF1E48F959A4C465DFF815E16CB4F2B1266C3DB844E695AD24260B6A"
+    }
+  ]
+}

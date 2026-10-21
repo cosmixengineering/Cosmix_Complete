@@ -1,0 +1,344 @@
+namespace NOIR.Application.UnitTests.Features.Reviews;
+
+/// <summary>
+/// Unit tests for GetReviewsQueryHandler.
+/// Tests paged review list retrieval (admin moderation queue) with mocked dependencies.
+/// </summary>
+public class GetReviewsQueryHandlerTests
+{
+    #region Test Setup
+
+    private readonly Mock<IRepository<ProductReview, Guid>> _reviewRepositoryMock;
+    private readonly Mock<IUserDisplayNameService> _userDisplayNameServiceMock;
+    private readonly GetReviewsQueryHandler _handler;
+
+    public GetReviewsQueryHandlerTests()
+    {
+        _reviewRepositoryMock = new Mock<IRepository<ProductReview, Guid>>();
+        _userDisplayNameServiceMock = new Mock<IUserDisplayNameService>();
+        _userDisplayNameServiceMock
+            .Setup(x => x.GetDisplayNamesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, string?>());
+
+        var productRepositoryMock = new Mock<IRepository<Product, Guid>>();
+        productRepositoryMock
+            .Setup(x => x.ListAsync(It.IsAny<ISpecification<Product>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Product>());
+        _handler = new GetReviewsQueryHandler(_reviewRepositoryMock.Object, productRepositoryMock.Object, _userDisplayNameServiceMock.Object);
+    }
+
+    private static ProductReview CreateTestReview(
+        Guid? productId = null,
+        string userId = "user-123",
+        int rating = 4)
+    {
+        return ProductReview.Create(
+            productId ?? Guid.NewGuid(),
+            userId,
+            rating,
+            "Test Review",
+            "This is a great product worth buying.",
+            tenantId: "tenant-123");
+    }
+
+    private static List<ProductReview> CreateTestReviews(int count)
+    {
+        return Enumerable.Range(1, count)
+            .Select(i => CreateTestReview(userId: $"user-{i}", rating: (i % 5) + 1))
+            .ToList();
+    }
+
+    #endregion
+
+    #region Success Scenarios
+
+    [Fact]
+    public async Task Handle_WithDefaultPaging_ShouldReturnPagedResult()
+    {
+        // Arrange
+        var reviews = CreateTestReviews(5);
+
+        _reviewRepositoryMock
+            .Setup(x => x.ListAsync(
+                It.IsAny<ReviewsModerationListSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reviews);
+
+        _reviewRepositoryMock
+            .Setup(x => x.CountAsync(
+                It.IsAny<ReviewsModerationCountSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(5);
+
+        var query = new GetReviewsQuery(Page: 1, PageSize: 20);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBe(true);
+        result.Value.Items.Count().ShouldBe(5);
+        result.Value.TotalCount.ShouldBe(5);
+        result.Value.PageNumber.ShouldBe(1);
+        result.Value.PageSize.ShouldBe(20);
+    }
+
+    [Fact]
+    public async Task Handle_WithPaging_ShouldReturnCorrectPage()
+    {
+        // Arrange
+        var page2Reviews = CreateTestReviews(10);
+
+        _reviewRepositoryMock
+            .Setup(x => x.ListAsync(
+                It.IsAny<ReviewsModerationListSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(page2Reviews);
+
+        _reviewRepositoryMock
+            .Setup(x => x.CountAsync(
+                It.IsAny<ReviewsModerationCountSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(25);
+
+        var query = new GetReviewsQuery(Page: 2, PageSize: 10);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBe(true);
+        result.Value.Items.Count().ShouldBe(10);
+        result.Value.TotalCount.ShouldBe(25);
+        result.Value.PageNumber.ShouldBe(2);
+        result.Value.PageSize.ShouldBe(10);
+        result.Value.TotalPages.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task Handle_WithEmptyResult_ShouldReturnEmptyPagedResult()
+    {
+        // Arrange
+        _reviewRepositoryMock
+            .Setup(x => x.ListAsync(
+                It.IsAny<ReviewsModerationListSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ProductReview>());
+
+        _reviewRepositoryMock
+            .Setup(x => x.CountAsync(
+                It.IsAny<ReviewsModerationCountSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        var query = new GetReviewsQuery(Page: 1, PageSize: 20);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBe(true);
+        result.Value.Items.ShouldBeEmpty();
+        result.Value.TotalCount.ShouldBe(0);
+        result.Value.TotalPages.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldMapReviewsToDto()
+    {
+        // Arrange
+        var review = CreateTestReview(rating: 5);
+
+        _reviewRepositoryMock
+            .Setup(x => x.ListAsync(
+                It.IsAny<ReviewsModerationListSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ProductReview> { review });
+
+        _reviewRepositoryMock
+            .Setup(x => x.CountAsync(
+                It.IsAny<ReviewsModerationCountSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        var query = new GetReviewsQuery(Page: 1, PageSize: 20);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBe(true);
+        var item = result.Value.Items.First();
+        item.Rating.ShouldBe(5);
+        item.Title.ShouldBe("Test Review");
+        item.Status.ShouldBe(ReviewStatus.Pending);
+    }
+
+    #endregion
+
+    #region Filter Scenarios
+
+    [Fact]
+    public async Task Handle_WithStatusFilter_ShouldPassToSpecification()
+    {
+        // Arrange
+        _reviewRepositoryMock
+            .Setup(x => x.ListAsync(
+                It.IsAny<ReviewsModerationListSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ProductReview>());
+
+        _reviewRepositoryMock
+            .Setup(x => x.CountAsync(
+                It.IsAny<ReviewsModerationCountSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        var query = new GetReviewsQuery(
+            Page: 1,
+            PageSize: 20,
+            Status: ReviewStatus.Pending);
+
+        // Act
+        await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        _reviewRepositoryMock.Verify(
+            x => x.ListAsync(It.IsAny<ReviewsModerationListSpec>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _reviewRepositoryMock.Verify(
+            x => x.CountAsync(It.IsAny<ReviewsModerationCountSpec>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WithProductIdFilter_ShouldPassToSpecification()
+    {
+        // Arrange
+        _reviewRepositoryMock
+            .Setup(x => x.ListAsync(
+                It.IsAny<ReviewsModerationListSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ProductReview>());
+
+        _reviewRepositoryMock
+            .Setup(x => x.CountAsync(
+                It.IsAny<ReviewsModerationCountSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        var query = new GetReviewsQuery(
+            Page: 1,
+            PageSize: 20,
+            ProductId: Guid.NewGuid());
+
+        // Act
+        await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        _reviewRepositoryMock.Verify(
+            x => x.ListAsync(It.IsAny<ReviewsModerationListSpec>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WithRatingFilter_ShouldPassToSpecification()
+    {
+        // Arrange
+        _reviewRepositoryMock
+            .Setup(x => x.ListAsync(
+                It.IsAny<ReviewsModerationListSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ProductReview>());
+
+        _reviewRepositoryMock
+            .Setup(x => x.CountAsync(
+                It.IsAny<ReviewsModerationCountSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        var query = new GetReviewsQuery(
+            Page: 1,
+            PageSize: 20,
+            Rating: 5);
+
+        // Act
+        await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        _reviewRepositoryMock.Verify(
+            x => x.ListAsync(It.IsAny<ReviewsModerationListSpec>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WithSearchFilter_ShouldPassToSpecification()
+    {
+        // Arrange
+        _reviewRepositoryMock
+            .Setup(x => x.ListAsync(
+                It.IsAny<ReviewsModerationListSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ProductReview>());
+
+        _reviewRepositoryMock
+            .Setup(x => x.CountAsync(
+                It.IsAny<ReviewsModerationCountSpec>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        var query = new GetReviewsQuery(
+            Page: 1,
+            PageSize: 20,
+            Search: "great product");
+
+        // Act
+        await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        _reviewRepositoryMock.Verify(
+            x => x.ListAsync(It.IsAny<ReviewsModerationListSpec>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region Edge Cases
+
+    [Fact]
+    public async Task Handle_WithCancellationToken_ShouldPassItToRepository()
+    {
+        // Arrange
+        var cts = new CancellationTokenSource();
+        var token = cts.Token;
+
+        _reviewRepositoryMock
+            .Setup(x => x.ListAsync(
+                It.IsAny<ReviewsModerationListSpec>(),
+                token))
+            .ReturnsAsync(new List<ProductReview>());
+
+        _reviewRepositoryMock
+            .Setup(x => x.CountAsync(
+                It.IsAny<ReviewsModerationCountSpec>(),
+                token))
+            .ReturnsAsync(0);
+
+        var query = new GetReviewsQuery(Page: 1, PageSize: 20);
+
+        // Act
+        await _handler.Handle(query, token);
+
+        // Assert
+        _reviewRepositoryMock.Verify(
+            x => x.ListAsync(It.IsAny<ReviewsModerationListSpec>(), token),
+            Times.Once);
+
+        _reviewRepositoryMock.Verify(
+            x => x.CountAsync(It.IsAny<ReviewsModerationCountSpec>(), token),
+            Times.Once);
+    }
+
+    #endregion
+}

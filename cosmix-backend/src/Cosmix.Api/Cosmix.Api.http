@@ -1,0 +1,15 @@
+@host = https://localhost:7240
+@token = REPLACE_WITH_A_VALID_TOKEN_FROM_THE_IMPLEMENTED_AUTH_SERVICE
+
+### Liveness needs no database
+GET {{host}}/health/live
+
+### Readiness needs a configured SQL Server database and applied migration
+GET {{host}}/health/ready
+
+### Development OpenAPI only
+GET {{host}}/openapi/v1.json
+
+### Reference read endpoint; no seed user or token issuer is included
+GET {{host}}/api/v1/hr/departments?page=1&pageSize=20
+Authorization: Bearer {{token}}

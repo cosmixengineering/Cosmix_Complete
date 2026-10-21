@@ -1,0 +1,1917 @@
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { ViewTransitionLink } from '@/components/navigation/ViewTransitionLink'
+import { useTranslation } from 'react-i18next'
+import { useForm, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { type Editor as TiptapEditor } from '@tiptap/react'
+
+import {
+  ArrowLeft,
+  Package,
+  Save,
+  Send,
+  Plus,
+  Trash2,
+  ImagePlus,
+  Star,
+  Pencil,
+  AlertTriangle,
+  Loader2,
+  Truck,
+} from 'lucide-react'
+import { usePageContext } from '@/hooks/usePageContext'
+import { useEntityUpdateSignal } from '@/hooks/useEntityUpdateSignal'
+import { OfflineBanner } from '@/components/OfflineBanner'
+import { EntityConflictDialog } from '@/components/EntityConflictDialog'
+import { EntityDeletedDialog } from '@/components/EntityDeletedDialog'
+import { usePermissions, Permissions } from '@/hooks/usePermissions'
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Credenza,
+  CredenzaBody,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  EmptyState,
+  FormErrorBanner,
+  RichTextEditor,
+  Switch,
+  Textarea,
+} from '@uikit'
+
+import {
+  useProductQuery,
+  useProductCategoriesQuery,
+  useCreateProduct,
+  useUpdateProduct,
+  usePublishProductAction,
+  useAddProductVariant,
+  useDeleteProductVariant,
+  useAddProductImage,
+  useUpdateProductImage,
+  useDeleteProductImage,
+  useSetPrimaryProductImage,
+  useUploadProductImage,
+  useReorderProductImages,
+} from '@/portal-app/products/queries'
+import { useActiveBrandsQuery } from '@/portal-app/brands/queries'
+import { FilePreviewModal } from '@uikit'
+import { ImageUploadZone } from '@/components/products/ImageUploadZone'
+import { SortableImageGallery } from '@/components/products/SortableImageGallery'
+import { ProductAttributesSection } from '@/components/products/ProductAttributesSection'
+import { ProductAttributesSectionCreate } from '@/components/products/ProductAttributesSectionCreate'
+import { EditableVariantsTable } from '@/components/products/EditableVariantsTable'
+import { ProductActivityLog } from '../../components/products/ProductActivityLog'
+import { useBulkUpdateProductAttributesMutation } from '@/portal-app/products/queries'
+import { useStockHistoryQuery } from '@/hooks/useStockHistoryQuery'
+import { StockHistoryTimeline, type StockMovement, type StockMovementType } from '@/components/products/StockHistoryTimeline'
+import type { InventoryMovement, InventoryMovementType } from '@/types/inventory'
+import { uploadMedia } from '@/services/media'
+import { toast } from 'sonner'
+import { getStatusBadgeClasses } from '@/utils/statusBadge'
+import { getRequiredFields, handleFormError } from '@/lib/form'
+
+import type { ProductVariant, ProductImage, CreateProductVariantRequest, CreateProductImageRequest, UpdateProductRequest } from '@/types/product'
+
+// Local types for create mode (before product exists)
+interface LocalVariant {
+  tempId: string
+  name: string
+  price: number
+  sku: string | null
+  compareAtPrice: number | null
+  costPrice: number | null
+  stockQuantity: number
+  sortOrder: number
+}
+
+interface TempImage {
+  tempId: string
+  url: string
+  altText: string | null
+  sortOrder: number
+  isPrimary: boolean
+}
+import { generateSlug } from '@/lib/utils/slug'
+import { formatCurrency } from '@/lib/utils/currency'
+
+/** Convert empty strings to null and ensure numbers are valid for backend decimal/int fields */
+const toNullableString = (v: string | null | undefined): string | null =>
+  v === undefined || v === '' ? null : v
+
+const toSafeNumber = (v: number | null | undefined): number =>
+  v === undefined || v === null || !Number.isFinite(v) ? 0 : v
+
+const toNullableNumber = (v: number | null | undefined): number | null =>
+  v === undefined || v === null || !Number.isFinite(v) ? null : v
+
+/** Build a normalized UpdateProductRequest that matches the backend record exactly */
+const buildUpdateRequest = (data: ProductFormData, editorHtml: string): UpdateProductRequest => ({
+  name: data.name,
+  slug: data.slug,
+  shortDescription: toNullableString(data.shortDescription),
+  description: toNullableString(data.description),
+  descriptionHtml: editorHtml || null,
+  basePrice: toSafeNumber(data.basePrice),
+  currency: 'VND',
+  categoryId: data.categoryId || null,
+  brandId: data.brandId || null,
+  sku: toNullableString(data.sku),
+  barcode: toNullableString(data.barcode),
+  trackInventory: data.trackInventory ?? true,
+  metaTitle: toNullableString(data.metaTitle),
+  metaDescription: toNullableString(data.metaDescription),
+  sortOrder: toSafeNumber(data.sortOrder),
+  weight: toNullableNumber(data.weight),
+  weightUnit: toNullableString(data.weightUnit),
+  length: toNullableNumber(data.length),
+  width: toNullableNumber(data.width),
+  height: toNullableNumber(data.height),
+  dimensionUnit: toNullableString(data.dimensionUnit),
+})
+
+// Form validation schema factory
+const createProductSchema = (t: (key: string, options?: Record<string, unknown>) => string) =>
+  z.object({
+    name: z.string().min(1, t('validation.required')).max(200, t('validation.maxLength', { count: 200 })),
+    slug: z.string().min(1, t('validation.required')).max(200, t('validation.maxLength', { count: 200 }))
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, t('validation.identifierFormat')),
+    shortDescription: z.string().max(300, t('validation.maxLength', { count: 300 })).optional().nullable(),
+    description: z.string().optional().nullable(),
+    descriptionHtml: z.string().optional().nullable(),
+    basePrice: z.coerce.number().min(0, t('validation.minValue', { value: 0 })),
+    // Currency hardcoded to VND for Vietnam market - UI selector intentionally removed
+    currency: z.string().default('VND'),
+    categoryId: z.string().optional().nullable(),
+    brandId: z.string().optional().nullable(),
+    sku: z.string().optional().nullable(),
+    barcode: z.string().optional().nullable(),
+    trackInventory: z.boolean().default(true),
+    metaTitle: z.string().optional().nullable(),
+    metaDescription: z.string().optional().nullable(),
+    sortOrder: z.coerce.number().default(0),
+    weight: z.coerce.number().positive(t('validation.positive')).optional().nullable(),
+    weightUnit: z.enum(['kg', 'g', 'lb', 'oz']).optional().nullable(),
+    length: z.coerce.number().positive(t('validation.positive')).optional().nullable(),
+    width: z.coerce.number().positive(t('validation.positive')).optional().nullable(),
+    height: z.coerce.number().positive(t('validation.positive')).optional().nullable(),
+    dimensionUnit: z.enum(['cm', 'in', 'm']).optional().nullable(),
+  })
+
+type ProductFormData = z.infer<ReturnType<typeof createProductSchema>>
+
+// Variant form schema factory
+const createVariantSchema = (t: (key: string, options?: Record<string, unknown>) => string) =>
+  z.object({
+    name: z.string().min(1, t('validation.required')),
+    price: z.coerce.number().min(0, t('validation.minValue', { value: 0 })),
+    sku: z.string().optional().nullable(),
+    compareAtPrice: z.coerce.number().optional().nullable(),
+    costPrice: z.coerce.number().min(0, t('validation.minValue', { value: 0 })).optional().nullable(),
+    stockQuantity: z.coerce.number().min(0, t('validation.minValue', { value: 0 })).default(0),
+    sortOrder: z.coerce.number().default(0),
+  }).refine(
+    (data) => !data.compareAtPrice || data.compareAtPrice > data.price,
+    { message: t('validation.compareAtPriceHigher'), path: ['compareAtPrice'] },
+  )
+
+type VariantFormData = z.infer<ReturnType<typeof createVariantSchema>>
+
+// Inline edit form for variants
+const EditVariantForm = ({
+  variant,
+  onSave,
+  onCancel,
+}: {
+  variant: ProductVariant
+  onSave: (data: VariantFormData) => void
+  onCancel: () => void
+}) => {
+  const { t } = useTranslation('common')
+  const [formData, setFormData] = useState<VariantFormData>({
+    name: variant.name,
+    price: variant.price,
+    sku: variant.sku || '',
+    compareAtPrice: variant.compareAtPrice || null,
+    costPrice: variant.costPrice || null,
+    stockQuantity: variant.stockQuantity,
+    sortOrder: variant.sortOrder,
+  })
+
+  return (
+    <div className="p-4 border border-primary/30 rounded-lg bg-primary/5 space-y-4">
+      <h4 className="font-medium">{t('products.editVariant')}</h4>
+      <div className="grid grid-cols-2 gap-4">
+        <Input
+          placeholder={t('products.variantName')}
+          aria-label={t('products.variantName')}
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        />
+        <Input
+          type="number"
+          placeholder={t('products.variantPrice')}
+          aria-label={t('products.variantPrice')}
+          value={formData.price}
+          onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+        />
+        <Input
+          placeholder={t('products.variantSku')}
+          aria-label={t('products.variantSku')}
+          value={formData.sku || ''}
+          onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+        />
+        <Input
+          type="number"
+          placeholder={t('products.variantStock')}
+          aria-label={t('products.variantStock')}
+          value={formData.stockQuantity}
+          onChange={(e) => setFormData({ ...formData, stockQuantity: parseInt(e.target.value) || 0 })}
+        />
+        <Input
+          type="number"
+          placeholder={t('products.variantCompareAtPrice')}
+          aria-label={t('products.variantCompareAtPrice')}
+          value={formData.compareAtPrice || ''}
+          onChange={(e) => setFormData({ ...formData, compareAtPrice: e.target.value ? parseFloat(e.target.value) : null })}
+        />
+        <Input
+          type="number"
+          placeholder={t('products.variantCostPrice')}
+          aria-label={t('products.variantCostPrice')}
+          value={formData.costPrice || ''}
+          onChange={(e) => setFormData({ ...formData, costPrice: e.target.value ? parseFloat(e.target.value) : null })}
+        />
+        <Input
+          type="number"
+          placeholder={t('products.variantSortOrder')}
+          aria-label={t('products.variantSortOrder')}
+          value={formData.sortOrder}
+          onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button variant="ghost" size="sm" className="cursor-pointer" onClick={onCancel}>
+          {t('buttons.cancel')}
+        </Button>
+        <Button size="sm" className="cursor-pointer" onClick={() => onSave(formData)}>
+          {t('buttons.save')}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export const ProductFormPage = () => {
+  const { t } = useTranslation('common')
+  const { hasPermission } = usePermissions()
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const isEditing = !!id
+  const isViewMode = isEditing && !location.pathname.endsWith('/edit')
+
+  // Permission checks
+  const canPublishProducts = hasPermission(Permissions.ProductsPublish)
+
+  usePageContext(isViewMode ? 'View Product' : isEditing ? 'Edit Product' : 'New Product')
+
+  const { data: product, isLoading: productLoading, refetch: refreshProduct } = useProductQuery(id)
+  const { data: categories = [] } = useProductCategoriesQuery()
+  const { data: brands = [] } = useActiveBrandsQuery()
+
+  const { conflictSignal, deletedSignal, dismissConflict, reloadAndRestart, isReconnecting } = useEntityUpdateSignal({
+    entityType: 'Product',
+    entityId: id,
+    onAutoReload: refreshProduct,
+    onNavigateAway: () => navigate('/portal/ecommerce/products'),
+  })
+
+  const [isSaving, setIsSaving] = useState(false)
+  const [serverErrors, setServerErrors] = useState<string[]>([])
+  const [isPublishing, setIsPublishing] = useState(false)
+  const [variants, setVariants] = useState<ProductVariant[]>([])
+  const [images, setImages] = useState<ProductImage[]>([])
+  const [newVariant, setNewVariant] = useState<VariantFormData | null>(null)
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null)
+  const [newImageUrl, setNewImageUrl] = useState('')
+  const [variantToDelete, setVariantToDelete] = useState<ProductVariant | null>(null)
+  const [imageToDelete, setImageToDelete] = useState<ProductImage | null>(null)
+  const [isDeletingVariant, setIsDeletingVariant] = useState(false)
+  const [isDeletingImage, setIsDeletingImage] = useState(false)
+  const [descriptionHtml, setDescriptionHtml] = useState('')
+  const editorRef = useRef<TiptapEditor | null>(null)
+  const [pendingAttributeValues, setPendingAttributeValues] = useState<Record<string, unknown>>({})
+
+  // Local state for create mode (before product exists)
+  const [localVariants, setLocalVariants] = useState<LocalVariant[]>([])
+  const [tempImages, setTempImages] = useState<TempImage[]>([])
+  const [localVariantToDelete, setLocalVariantToDelete] = useState<LocalVariant | null>(null)
+  const [tempImageToDelete, setTempImageToDelete] = useState<TempImage | null>(null)
+  const [tempImagePreviewIndex, setTempImagePreviewIndex] = useState<number | null>(null)
+
+  // Mutation hooks
+  const createProductMutation = useCreateProduct()
+  const updateProductMutation = useUpdateProduct()
+  const publishProductMutation = usePublishProductAction()
+  const addVariantMutation = useAddProductVariant()
+  const deleteVariantMutation = useDeleteProductVariant()
+  const addImageMutation = useAddProductImage()
+  const updateImageMutation = useUpdateProductImage()
+  const deleteImageMutation = useDeleteProductImage()
+  const setPrimaryImageMutation = useSetPrimaryProductImage()
+  const uploadImageMutation = useUploadProductImage()
+  const reorderImagesMutation = useReorderProductImages()
+  const bulkUpdateAttributesMutation = useBulkUpdateProductAttributesMutation()
+
+  // Stock history state
+  const [selectedVariantForHistory, setSelectedVariantForHistory] = useState<string | null>(null)
+  const effectiveVariantId = selectedVariantForHistory ?? variants[0]?.id
+  const { data: stockHistory, isLoading: stockHistoryLoading } = useStockHistoryQuery(
+    id,
+    effectiveVariantId
+  )
+
+  // Map backend InventoryMovement to frontend StockMovement type
+  const mapToStockMovements = (movements: InventoryMovement[]): StockMovement[] => {
+    const typeMapping: Record<InventoryMovementType, StockMovementType> = {
+      StockIn: 'restock',
+      StockOut: 'sale',
+      Adjustment: 'adjustment',
+      Return: 'return',
+      Reservation: 'reserved',
+      ReservationRelease: 'released',
+      Damaged: 'adjustment',
+      Expired: 'adjustment',
+    }
+
+    return movements.map((m) => ({
+      id: m.id,
+      type: typeMapping[m.movementType] || 'adjustment',
+      quantity: m.quantityMoved,
+      previousStock: m.quantityBefore,
+      newStock: m.quantityAfter,
+      reason: m.notes ?? undefined,
+      orderId: m.reference ?? undefined,
+      createdAt: m.createdAt,
+      createdBy: m.userId ?? undefined,
+    }))
+  }
+
+  // Handler for attribute value changes
+  const handleAttributesChange = (values: Record<string, unknown>) => {
+    setPendingAttributeValues(values)
+  }
+
+  const productSchema = useMemo(() => createProductSchema(t), [t])
+  const requiredFields = useMemo(() => getRequiredFields(productSchema), [productSchema])
+
+  const form = useForm<ProductFormData>({
+    // TypeScript cannot infer resolver types from dynamic schema factories
+    // Using 'as unknown as Resolver<T>' for type-safe assertion
+    resolver: zodResolver(productSchema) as unknown as Resolver<ProductFormData>,
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+    defaultValues: {
+      name: '',
+      slug: '',
+      shortDescription: '',
+      description: '',
+      descriptionHtml: '',
+      basePrice: 0,
+      currency: 'VND',
+      categoryId: null,
+      brandId: null,
+      sku: '',
+      barcode: '',
+      trackInventory: true,
+      metaTitle: '',
+      metaDescription: '',
+      sortOrder: 0,
+      weight: null,
+      weightUnit: null,
+      length: null,
+      width: null,
+      height: null,
+      dimensionUnit: null,
+    },
+  })
+
+  // Load product data when editing
+  useEffect(() => {
+    if (product) {
+      form.reset({
+        name: product.name,
+        slug: product.slug,
+        shortDescription: product.shortDescription || '',
+        description: product.description || '',
+        descriptionHtml: product.descriptionHtml || '',
+        basePrice: product.basePrice,
+        currency: product.currency,
+        categoryId: product.categoryId || null,
+        brandId: product.brandId || null,
+        sku: product.sku || '',
+        barcode: product.barcode || '',
+        trackInventory: product.trackInventory,
+        metaTitle: product.metaTitle || '',
+        metaDescription: product.metaDescription || '',
+        sortOrder: product.sortOrder,
+        weight: product.weight || null,
+        weightUnit: (product.weightUnit as 'kg' | 'g' | 'lb' | 'oz') || null,
+        length: product.length || null,
+        width: product.width || null,
+        height: product.height || null,
+        dimensionUnit: (product.dimensionUnit as 'cm' | 'in' | 'm') || null,
+      })
+      setVariants(product.variants || [])
+      setImages(product.images || [])
+      setDescriptionHtml(product.descriptionHtml || '')
+    }
+  }, [product, form])
+
+  // Auto-generate slug from name
+  const handleNameChange = (name: string) => {
+    form.setValue('name', name)
+    if (!isEditing || !form.getValues('slug')) {
+      form.setValue('slug', generateSlug(name))
+    }
+  }
+
+  const onSubmit = async (data: ProductFormData) => {
+    setIsSaving(true)
+    try {
+      let productId = id
+
+      if (isEditing && id) {
+        await updateProductMutation.mutateAsync({
+          id,
+          request: buildUpdateRequest(data, descriptionHtml),
+        })
+      } else {
+        // Convert local variants to CreateProductVariantRequest format
+        const variantsToCreate: CreateProductVariantRequest[] = localVariants.map((v) => ({
+          name: v.name,
+          price: v.price,
+          sku: v.sku,
+          compareAtPrice: v.compareAtPrice,
+          costPrice: v.costPrice,
+          stockQuantity: v.stockQuantity,
+          options: null,
+          sortOrder: v.sortOrder,
+        }))
+
+        // Convert temp images to CreateProductImageRequest format
+        const imagesToCreate: CreateProductImageRequest[] = tempImages.map((img) => ({
+          url: img.url,
+          altText: img.altText,
+          sortOrder: img.sortOrder,
+          isPrimary: img.isPrimary,
+        }))
+
+        const newProduct = await createProductMutation.mutateAsync({
+          ...buildUpdateRequest(data, descriptionHtml),
+          variants: variantsToCreate.length > 0 ? variantsToCreate : [],
+          images: imagesToCreate.length > 0 ? imagesToCreate : [],
+        })
+        productId = newProduct.id
+      }
+
+      // Save attribute values if any pending changes
+      if (productId && Object.keys(pendingAttributeValues).length > 0) {
+        const attributeItems = Object.entries(pendingAttributeValues)
+          .filter(([, value]) => value !== undefined)
+          .map(([attributeId, value]) => ({
+            attributeId,
+            value,
+          }))
+
+        if (attributeItems.length > 0) {
+          await bulkUpdateAttributesMutation.mutateAsync({
+            productId,
+            request: {
+              variantId: null,
+              values: attributeItems,
+            },
+          })
+        }
+      }
+
+      toast.success(isEditing ? t('products.messages.productUpdated') : t('products.messages.productCreated'))
+
+      if (!isEditing && productId) {
+        navigate(`/portal/ecommerce/products/${productId}/edit`)
+      }
+    } catch (err) {
+      handleFormError(err, form, setServerErrors, t)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handlePublish = async () => {
+    if (!id) return
+
+    setIsPublishing(true)
+    try {
+      await publishProductMutation.mutateAsync(id)
+      toast.success(t('products.messages.productPublished'))
+      await refreshProduct()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('products.messages.failedToPublishProduct')
+      toast.error(message)
+    } finally {
+      setIsPublishing(false)
+    }
+  }
+
+  // Variant management
+  const handleAddVariant = async () => {
+    if (!newVariant || !id) return
+
+    try {
+      await addVariantMutation.mutateAsync({
+        productId: id,
+        request: {
+          name: newVariant.name,
+          price: newVariant.price,
+          sku: newVariant.sku || null,
+          compareAtPrice: newVariant.compareAtPrice || null,
+          costPrice: newVariant.costPrice || null,
+          stockQuantity: newVariant.stockQuantity,
+          options: null,
+          sortOrder: newVariant.sortOrder,
+        },
+      })
+      toast.success(t('products.messages.variantAdded'))
+      setNewVariant(null)
+      await refreshProduct()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('products.messages.failedToAddVariant')
+      toast.error(message)
+    }
+  }
+
+  const handleConfirmDeleteVariant = async () => {
+    if (!id || !variantToDelete) return
+
+    setIsDeletingVariant(true)
+    try {
+      await deleteVariantMutation.mutateAsync({ productId: id, variantId: variantToDelete.id })
+      toast.success(t('products.messages.variantDeleted', { name: variantToDelete.name }))
+      setVariantToDelete(null)
+      await refreshProduct()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('products.messages.failedToDeleteVariant')
+      toast.error(message)
+    } finally {
+      setIsDeletingVariant(false)
+    }
+  }
+
+  // Local variant management (for create mode)
+  const handleAddLocalVariant = () => {
+    if (!newVariant) return
+
+    const localVariant: LocalVariant = {
+      tempId: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: newVariant.name,
+      price: newVariant.price,
+      sku: newVariant.sku || null,
+      compareAtPrice: newVariant.compareAtPrice || null,
+      costPrice: newVariant.costPrice || null,
+      stockQuantity: newVariant.stockQuantity,
+      sortOrder: newVariant.sortOrder || localVariants.length,
+    }
+
+    setLocalVariants((prev) => [...prev, localVariant])
+    setNewVariant(null)
+    toast.success(t('products.messages.variantAddedLocal'))
+  }
+
+  const handleUpdateLocalVariant = (tempId: string, data: VariantFormData) => {
+    setLocalVariants((prev) =>
+      prev.map((v) =>
+        v.tempId === tempId
+          ? {
+              ...v,
+              name: data.name,
+              price: data.price,
+              sku: data.sku || null,
+              compareAtPrice: data.compareAtPrice || null,
+              costPrice: data.costPrice || null,
+              stockQuantity: data.stockQuantity,
+              sortOrder: data.sortOrder,
+            }
+          : v
+      )
+    )
+    setEditingVariantId(null)
+    toast.success(t('products.messages.variantUpdated'))
+  }
+
+  const handleConfirmDeleteLocalVariant = () => {
+    if (!localVariantToDelete) return
+
+    setLocalVariants((prev) => prev.filter((v) => v.tempId !== localVariantToDelete.tempId))
+    toast.success(t('products.messages.variantRemoved', { name: localVariantToDelete.name }))
+    setLocalVariantToDelete(null)
+  }
+
+  // Temp image management (for create mode)
+  const handleUploadTempImage = async (file: File) => {
+    try {
+      const result = await uploadMedia(file, 'products')
+      const tempImage: TempImage = {
+        tempId: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        url: result.defaultUrl || '',
+        altText: null,
+        sortOrder: tempImages.length,
+        isPrimary: tempImages.length === 0,
+      }
+      setTempImages((prev) => [...prev, tempImage])
+      toast.success(t('messages.uploadSuccess', 'Image uploaded successfully'))
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('products.messages.failedToUploadImage')
+      toast.error(message)
+      throw err
+    }
+  }
+
+  const handleAddTempImageByUrl = () => {
+    if (!newImageUrl) return
+
+    const tempImage: TempImage = {
+      tempId: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      url: newImageUrl,
+      altText: null,
+      sortOrder: tempImages.length,
+      isPrimary: tempImages.length === 0,
+    }
+    setTempImages((prev) => [...prev, tempImage])
+    setNewImageUrl('')
+    toast.success(t('products.messages.imageAddedLocal'))
+  }
+
+  const handleSetPrimaryTempImage = (tempId: string) => {
+    setTempImages((prev) =>
+      prev.map((img) => ({
+        ...img,
+        isPrimary: img.tempId === tempId,
+      }))
+    )
+    toast.success(t('products.messages.primaryImageSet'))
+  }
+
+  const handleConfirmDeleteTempImage = () => {
+    if (!tempImageToDelete) return
+
+    setTempImages((prev) => {
+      const filtered = prev.filter((img) => img.tempId !== tempImageToDelete.tempId)
+      // If we deleted the primary image, make the first remaining image primary
+      if (tempImageToDelete.isPrimary && filtered.length > 0) {
+        filtered[0].isPrimary = true
+      }
+      return filtered
+    })
+    toast.success(t('products.messages.imageRemoved'))
+    setTempImageToDelete(null)
+  }
+
+  // Image management
+  const handleAddImage = async () => {
+    if (!newImageUrl || !id) return
+
+    try {
+      await addImageMutation.mutateAsync({
+        productId: id,
+        request: {
+          url: newImageUrl,
+          altText: null,
+          sortOrder: images.length,
+          isPrimary: images.length === 0,
+        },
+      })
+      toast.success(t('products.messages.imageAdded'))
+      setNewImageUrl('')
+      await refreshProduct()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('products.messages.failedToAddImage')
+      toast.error(message)
+    }
+  }
+
+  const handleConfirmDeleteImage = async () => {
+    if (!id || !imageToDelete) return
+
+    setIsDeletingImage(true)
+    try {
+      await deleteImageMutation.mutateAsync({ productId: id, imageId: imageToDelete.id })
+      toast.success(t('products.messages.imageDeleted'))
+      setImageToDelete(null)
+      await refreshProduct()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('products.messages.failedToDeleteImage')
+      toast.error(message)
+    } finally {
+      setIsDeletingImage(false)
+    }
+  }
+
+  const handleSetPrimaryImage = async (imageId: string) => {
+    if (!id) return
+
+    try {
+      await setPrimaryImageMutation.mutateAsync({ productId: id, imageId })
+      toast.success(t('products.messages.primaryImageSetSuccess'))
+      await refreshProduct()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('products.messages.failedToSetPrimaryImage')
+      toast.error(message)
+    }
+  }
+
+  // New image upload handler
+  const handleUploadImage = async (file: File) => {
+    if (!id) return
+
+    try {
+      await uploadImageMutation.mutateAsync({ productId: id, file, altText: undefined, isPrimary: images.length === 0 })
+      toast.success(t('messages.uploadSuccess', 'Image uploaded successfully'))
+      await refreshProduct()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('products.messages.failedToUploadImage')
+      toast.error(message)
+      throw err // Re-throw to let ImageUploadZone show error state
+    }
+  }
+
+  // Image reorder handler
+  const handleReorderImages = async (reorderedImages: ProductImage[]) => {
+    if (!id) return
+
+    // Optimistically update local state
+    setImages(reorderedImages)
+
+    try {
+      await reorderImagesMutation.mutateAsync({
+        productId: id,
+        items: reorderedImages.map((img, index) => ({
+          imageId: img.id,
+          sortOrder: index,
+        })),
+      })
+      toast.success(t('products.imagesReordered', 'Images reordered successfully'))
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('products.messages.failedToReorderImages')
+      toast.error(message)
+      // Revert on error
+      await refreshProduct()
+    }
+  }
+
+  // Handler for SortableImageGallery's onUpdateAltText
+  const handleGalleryUpdateAltText = async (imageId: string, altText: string) => {
+    if (!id) return
+
+    const image = images.find(img => img.id === imageId)
+    if (!image) return
+
+    try {
+      await updateImageMutation.mutateAsync({
+        productId: id,
+        imageId,
+        request: {
+          url: image.url,
+          altText: altText || null,
+          sortOrder: image.sortOrder,
+        },
+      })
+      toast.success(t('products.messages.altTextUpdated'))
+      await refreshProduct()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('products.messages.failedToUpdateAltText')
+      toast.error(message)
+    }
+  }
+
+  if (productLoading) {
+    return (
+      <div className="flex items-center justify-center h-96 animate-in fade-in-0 duration-300">
+        <div className="flex flex-col items-center gap-4">
+          <div className="p-4 rounded-xl bg-muted/50 border border-border shadow-sm">
+            <Package className="h-8 w-8 text-muted-foreground animate-pulse" />
+          </div>
+          <p className="text-muted-foreground">{t('labels.loading')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="py-6 space-y-6">
+      <OfflineBanner visible={isReconnecting} />
+      <EntityConflictDialog signal={conflictSignal} onContinueEditing={dismissConflict} onReloadAndRestart={reloadAndRestart} />
+      <EntityDeletedDialog signal={deletedSignal} onGoBack={() => navigate('/portal/ecommerce/products')} />
+      {/* Page Header with Glassmorphism */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-4">
+          <ViewTransitionLink to="/portal/ecommerce/products">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="cursor-pointer hover:bg-muted transition-all duration-300 hover:scale-105"
+              aria-label={t('labels.goBackToProducts', 'Go back to products list')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </ViewTransitionLink>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-lg shadow-primary/20 backdrop-blur-sm border border-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:scale-105">
+            <Package className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              {isViewMode ? t('products.viewProduct') : isEditing ? t('products.editProduct') : t('products.newProduct')}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {isViewMode ? product?.name : isEditing ? product?.name : t('products.description')}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {isViewMode ? (
+            <ViewTransitionLink to={`/portal/ecommerce/products/${id}/edit`}>
+              <Button className="cursor-pointer">
+                <Pencil className="h-4 w-4 mr-2" />
+                {t('labels.edit', 'Edit')}
+              </Button>
+            </ViewTransitionLink>
+          ) : (
+            <>
+              {isEditing && product?.status === 'Draft' && canPublishProducts && (
+                <Button variant="outline" onClick={handlePublish} disabled={isPublishing} className="cursor-pointer">
+                  <Send className="h-4 w-4 mr-2" />
+                  {isPublishing ? t('products.publishing') : t('buttons.publish')}
+                </Button>
+              )}
+              <Button onClick={form.handleSubmit(onSubmit)} disabled={isSaving} className="cursor-pointer">
+                <Save className="h-4 w-4 mr-2" />
+                {isSaving ? t('buttons.saving') : t('buttons.save')}
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Form */}
+        <div className="lg:col-span-2 space-y-6">
+          <Form {...form} requiredFields={requiredFields}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormErrorBanner
+                errors={serverErrors}
+                onDismiss={() => setServerErrors([])}
+                title={t('validation.unableToSave', 'Unable to save')}
+              />
+              {/* Basic Information */}
+              <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+                <CardHeader>
+                  <CardTitle>{t('products.basicInfo')}</CardTitle>
+                  <CardDescription>{t('products.basicInfoDescription')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('products.productName')}</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            onChange={(e) => handleNameChange(e.target.value)}
+                            placeholder={t('products.productNamePlaceholder')}
+                            disabled={isViewMode}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="slug"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('products.urlSlug')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder={t('products.urlSlugPlaceholder')} disabled={isViewMode} />
+                        </FormControl>
+                        <FormDescription>
+                          {t('products.urlSlugDescription')}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="shortDescription"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('products.shortDescription')}</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            value={field.value || ''}
+                            placeholder={t('products.shortDescriptionPlaceholder')}
+                            rows={2}
+                            maxLength={300}
+                            disabled={isViewMode}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          {t('products.shortDescriptionHelper', { count: (field.value || '').length })}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div>
+                    <FormLabel className="mb-2 block">{t('products.richDescription')}</FormLabel>
+                    {isViewMode ? (
+                      <div
+                        className="prose prose-sm max-w-none border rounded-md p-4 bg-muted/30"
+                        dangerouslySetInnerHTML={{ __html: descriptionHtml || `<p class="text-muted-foreground">${t('products.noDescription')}</p>` }}
+                      />
+                    ) : (
+                      <RichTextEditor
+                        preset="minimal"
+                        height={400}
+                        value={descriptionHtml}
+                        onChange={(content) => setDescriptionHtml(content)}
+                        onReady={(editor) => { editorRef.current = editor }}
+                        readOnly={isViewMode}
+                      />
+                    )}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {t('products.richDescriptionHelper')}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="sku"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('products.sku')}</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} placeholder={t('products.skuPlaceholder')} disabled={isViewMode} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="barcode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('products.barcode')}</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} placeholder="1234567890123" disabled={isViewMode} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="brandId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('labels.brand', 'Brand')}</FormLabel>
+                        <Select
+                          onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
+                          value={field.value || 'none'}
+                          disabled={isViewMode}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="cursor-pointer" aria-label={t('labels.brand', 'Brand')}>
+                              <SelectValue placeholder={t('products.selectBrand', 'Select brand')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none" className="cursor-pointer">{t('products.noBrand', 'No brand')}</SelectItem>
+                            {brands.map((brand) => (
+                              <SelectItem key={brand.id} value={brand.id} className="cursor-pointer">
+                                {brand.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Pricing */}
+              <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+                <CardHeader>
+                  <CardTitle>{t('products.pricing')}</CardTitle>
+                  <CardDescription>{t('products.pricingDescription')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="basePrice"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('products.basePrice')}</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            min="0"
+                            step="1000"
+                            placeholder="0"
+                            disabled={isViewMode}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          {t('products.priceDescription')}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Inventory */}
+              <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+                <CardHeader>
+                  <CardTitle>{t('products.inventory')}</CardTitle>
+                  <CardDescription>{t('products.inventoryDescription')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="trackInventory"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">{t('products.trackInventory')}</FormLabel>
+                          <FormDescription>
+                            {t('products.trackInventoryDescription')}
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="cursor-pointer"
+                            disabled={isViewMode}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Shipping / Physical Properties */}
+              <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <CardTitle>{t('products.shipping.title')}</CardTitle>
+                      <CardDescription>{t('products.shipping.description')}</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="weight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('products.shipping.weight')}</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                              placeholder="0.00"
+                              disabled={isViewMode}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="weightUnit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('products.shipping.weightUnit')}</FormLabel>
+                          <Select
+                            onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
+                            value={field.value || 'none'}
+                            disabled={isViewMode}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="cursor-pointer" aria-label={t('products.shipping.weightUnit')}>
+                                <SelectValue placeholder={t('products.shipping.selectUnit')} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none" className="cursor-pointer">—</SelectItem>
+                              <SelectItem value="kg" className="cursor-pointer">kg</SelectItem>
+                              <SelectItem value="g" className="cursor-pointer">g</SelectItem>
+                              <SelectItem value="lb" className="cursor-pointer">lb</SelectItem>
+                              <SelectItem value="oz" className="cursor-pointer">oz</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="length"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('products.shipping.length')}</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                              placeholder="0.00"
+                              disabled={isViewMode}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="width"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('products.shipping.width')}</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                              placeholder="0.00"
+                              disabled={isViewMode}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="height"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('products.shipping.height')}</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                              placeholder="0.00"
+                              disabled={isViewMode}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="dimensionUnit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('products.shipping.dimensionUnit')}</FormLabel>
+                        <Select
+                          onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
+                          value={field.value || 'none'}
+                          disabled={isViewMode}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="cursor-pointer" aria-label={t('products.shipping.dimensionUnit')}>
+                              <SelectValue placeholder={t('products.shipping.selectUnit')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none" className="cursor-pointer">—</SelectItem>
+                            <SelectItem value="cm" className="cursor-pointer">cm</SelectItem>
+                            <SelectItem value="in" className="cursor-pointer">in</SelectItem>
+                            <SelectItem value="m" className="cursor-pointer">m</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+            </form>
+          </Form>
+
+          {/* Variants Section - works in both create and edit modes */}
+          <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>{t('products.variantsTitle')}</CardTitle>
+                  <CardDescription>{t('products.variantsDescription')}</CardDescription>
+                </div>
+                {!isViewMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="cursor-pointer"
+                    onClick={() => setNewVariant({ name: '', price: 0, sku: '', compareAtPrice: null, costPrice: null, stockQuantity: 0, sortOrder: 0 })}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('products.addVariant')}
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* New Variant Form */}
+                {newVariant && (
+                  <div className="p-4 border rounded-lg bg-muted/50 space-y-4">
+                    <h4 className="font-medium">{t('products.newVariant')}</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        placeholder={t('products.variantName')}
+                        aria-label={t('products.variantName')}
+                        value={newVariant.name}
+                        onChange={(e) => setNewVariant({ ...newVariant, name: e.target.value })}
+                      />
+                      <Input
+                        type="number"
+                        placeholder={t('products.variantPrice')}
+                        aria-label={t('products.variantPrice')}
+                        value={newVariant.price}
+                        onChange={(e) => setNewVariant({ ...newVariant, price: parseFloat(e.target.value) || 0 })}
+                      />
+                      <Input
+                        placeholder={t('products.variantSku')}
+                        aria-label={t('products.variantSku')}
+                        value={newVariant.sku || ''}
+                        onChange={(e) => setNewVariant({ ...newVariant, sku: e.target.value })}
+                      />
+                      <Input
+                        type="number"
+                        placeholder={t('products.variantStock')}
+                        aria-label={t('products.variantStock')}
+                        value={newVariant.stockQuantity}
+                        onChange={(e) => setNewVariant({ ...newVariant, stockQuantity: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="sm" className="cursor-pointer" onClick={() => setNewVariant(null)}>
+                        {t('buttons.cancel')}
+                      </Button>
+                      <Button size="sm" className="cursor-pointer" onClick={isEditing ? handleAddVariant : handleAddLocalVariant}>
+                        {t('buttons.add')}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Display variants - local in create mode, from API in edit mode */}
+                {isEditing ? (
+                  // Edit mode: show editable variants table
+                  <EditableVariantsTable
+                    productId={id!}
+                    variants={variants}
+                    isReadOnly={isViewMode}
+                    onDelete={setVariantToDelete}
+                    onSaveSuccess={async (updatedVariant) => {
+                      // Update local variants state for immediate UI feedback
+                      setVariants((prev) =>
+                        prev.map((v) => (v.id === updatedVariant.id ? updatedVariant : v))
+                      )
+                      // Refresh product data to ensure full sync (computed fields like lowStock, inStock)
+                      await refreshProduct()
+                    }}
+                  />
+                ) : (
+                  // Create mode: show local variants
+                  localVariants.length === 0 && !newVariant ? (
+                    <EmptyState
+                      icon={Package}
+                      title={t('products.noVariants')}
+                      description={t('products.noVariantsDescription', 'Add variants to define different options for this product.')}
+                      className="border-0 rounded-none px-4 py-12"
+                    />
+                  ) : (
+                    <div className="space-y-2">
+                      {localVariants.map((variant) => (
+                        editingVariantId === variant.tempId ? (
+                          <EditVariantForm
+                            key={variant.tempId}
+                            variant={{
+                              id: variant.tempId,
+                              name: variant.name,
+                              price: variant.price,
+                              sku: variant.sku,
+                              compareAtPrice: variant.compareAtPrice,
+                              costPrice: variant.costPrice,
+                              stockQuantity: variant.stockQuantity,
+                              sortOrder: variant.sortOrder,
+                              inStock: true,
+                              lowStock: false,
+                              onSale: false,
+                            }}
+                            onSave={(data) => handleUpdateLocalVariant(variant.tempId, data)}
+                            onCancel={() => setEditingVariantId(null)}
+                          />
+                        ) : (
+                          <div
+                            key={variant.tempId}
+                            className="flex items-center gap-4 p-4 border rounded-xl bg-background hover:bg-muted/50 hover:shadow-sm transition-all duration-200 group"
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium">{variant.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {variant.sku && `${t('products.variantSku')}: ${variant.sku} • `}
+                                {t('products.variantStock')}: {variant.stockQuantity}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-medium">
+                                {formatCurrency(variant.price)}
+                              </div>
+                            </div>
+                            <Badge variant="outline" className={`${getStatusBadgeClasses('yellow')} text-xs`}>{t('labels.pending', 'Pending')}</Badge>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="cursor-pointer"
+                                onClick={() => setEditingVariantId(variant.tempId)}
+                                aria-label={t('labels.editItem', { name: variant.name, defaultValue: `Edit ${variant.name}` })}
+                              >
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="cursor-pointer"
+                                onClick={() => setLocalVariantToDelete(variant)}
+                                aria-label={t('labels.deleteItem', { name: variant.name, defaultValue: `Delete ${variant.name}` })}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  )
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Status */}
+          {isEditing && product && (
+            <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+              <CardHeader>
+                <CardTitle>{t('products.statusTitle')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Badge
+                  variant="outline"
+                  className={`${getStatusBadgeClasses(product.status === 'Active' ? 'green' : product.status === 'Draft' ? 'gray' : 'yellow')} text-sm`}
+                >
+                  {t(`products.status.${product.status.toLowerCase()}`, product.status)}
+                </Badge>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Category */}
+          <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+            <CardHeader>
+              <CardTitle>{t('products.organization')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <FormField
+                  control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('labels.category')}</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
+                        value={field.value || 'none'}
+                        disabled={isViewMode}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="cursor-pointer" aria-label={t('products.selectCategory', 'Select product category')}>
+                            <SelectValue placeholder={t('categories.selectParent')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none" className="cursor-pointer">{t('products.noCategory')}</SelectItem>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id} className="cursor-pointer">
+                              {cat.parentName ? `${cat.parentName} > ${cat.name}` : cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </Form>
+            </CardContent>
+          </Card>
+
+          {/* Product Attributes - works in both create and edit modes */}
+          {isEditing && id ? (
+            <ProductAttributesSection
+              productId={id}
+              categoryId={form.watch('categoryId') || null}
+              isViewMode={isViewMode}
+              onAttributesChange={handleAttributesChange}
+            />
+          ) : (
+            <ProductAttributesSectionCreate
+              categoryId={form.watch('categoryId') || null}
+              isViewMode={isViewMode}
+              onAttributesChange={handleAttributesChange}
+            />
+          )}
+
+          {/* SEO */}
+          <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+            <CardHeader>
+              <CardTitle>{t('products.seoTitle')}</CardTitle>
+              <CardDescription>{t('products.seoDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Form {...form}>
+                <FormField
+                  control={form.control}
+                  name="metaTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('blog.metaTitle')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value || ''}
+                          placeholder={t('blog.seoTitle')}
+                          maxLength={60}
+                          disabled={isViewMode}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        {t('blog.characters', { count: (field.value || '').length, max: 60 })}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="metaDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('blog.metaDescription')}</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          value={field.value || ''}
+                          placeholder={t('blog.seoDescription')}
+                          maxLength={160}
+                          rows={3}
+                          disabled={isViewMode}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        {t('blog.characters', { count: (field.value || '').length, max: 160 })}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </Form>
+            </CardContent>
+          </Card>
+
+          {/* Images - works in both create and edit modes */}
+          <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+            <CardHeader>
+              <CardTitle>{t('products.imagesTitle')}</CardTitle>
+              <CardDescription>{t('products.imagesDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {isEditing ? (
+                // Edit mode: full sortable gallery with API
+                <>
+                  {/* Drag & Drop Upload Zone */}
+                  {!isViewMode && (
+                    <ImageUploadZone
+                      onUpload={handleUploadImage}
+                      disabled={false}
+                      maxSizeMB={10}
+                    />
+                  )}
+
+                  {/* Sortable Image Gallery */}
+                  <SortableImageGallery
+                    images={images}
+                    productName={form.getValues('name')}
+                    isViewMode={isViewMode}
+                    onReorder={handleReorderImages}
+                    onSetPrimary={handleSetPrimaryImage}
+                    onDelete={(image) => setImageToDelete(image)}
+                    onUpdateAltText={handleGalleryUpdateAltText}
+                  />
+
+                  {/* Fallback: Add Image by URL */}
+                  {!isViewMode && (
+                    <div className="space-y-2 pt-4 border-t">
+                      <p className="text-xs font-medium text-muted-foreground">{t('products.addByUrl')}</p>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder={t('products.imageUrl')}
+                          value={newImageUrl}
+                          onChange={(e) => setNewImageUrl(e.target.value)}
+                          aria-label={t('products.imageUrlAriaLabel', 'Image URL')}
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="cursor-pointer"
+                          onClick={handleAddImage}
+                          disabled={!newImageUrl}
+                          aria-label={t('products.addImageAriaLabel', 'Add image')}
+                        >
+                          <ImagePlus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                // Create mode: upload to temp storage
+                <>
+                  {/* Drag & Drop Upload Zone for temp images */}
+                  <ImageUploadZone
+                    onUpload={handleUploadTempImage}
+                    disabled={false}
+                    maxSizeMB={10}
+                  />
+
+                  {/* Display temp images */}
+                  {tempImages.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3">
+                      {tempImages.map((img) => (
+                        <div
+                          key={img.tempId}
+                          className={`relative group rounded-lg overflow-hidden border-2 ${
+                            img.isPrimary ? 'border-primary' : 'border-border'
+                          }`}
+                        >
+                          <img
+                            src={img.url}
+                            alt={img.altText || t('products.productImage', 'Product image')}
+                            className="w-full aspect-square object-cover cursor-pointer"
+                            onClick={() => setTempImagePreviewIndex(tempImages.indexOf(img))}
+                          />
+                          {img.isPrimary && (
+                            <div className="absolute top-2 left-2">
+                              <Badge className="bg-primary text-primary-foreground text-xs">
+                                <Star className="h-3 w-3 mr-1" />
+                                {t('products.messages.primaryBadge')}
+                              </Badge>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            {!img.isPrimary && (
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                className="cursor-pointer"
+                                onClick={() => handleSetPrimaryTempImage(img.tempId)}
+                              >
+                                <Star className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="cursor-pointer"
+                              onClick={() => setTempImageToDelete(img)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <FilePreviewModal
+                    open={tempImagePreviewIndex !== null}
+                    onOpenChange={(open) => { if (!open) setTempImagePreviewIndex(null) }}
+                    files={tempImages.map((img) => ({ url: img.url, name: img.altText || t('products.productImage', 'Product image') }))}
+                    initialIndex={tempImagePreviewIndex ?? 0}
+                  />
+
+                  {/* Add Image by URL */}
+                  <div className="space-y-2 pt-4 border-t">
+                    <p className="text-xs font-medium text-muted-foreground">{t('products.addByUrl')}</p>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder={t('products.imageUrl')}
+                        value={newImageUrl}
+                        onChange={(e) => setNewImageUrl(e.target.value)}
+                        aria-label={t('products.imageUrlAriaLabel', 'Image URL')}
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="cursor-pointer"
+                        onClick={handleAddTempImageByUrl}
+                        disabled={!newImageUrl}
+                        aria-label={t('products.addImageAriaLabel', 'Add image')}
+                      >
+                        <ImagePlus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Activity Log (only show when editing) */}
+          {isEditing && id && (
+            <ProductActivityLog
+              productId={id}
+              productName={form.getValues('name')}
+            />
+          )}
+
+          {/* Stock History (only show when editing and variants exist) */}
+          {isEditing && id && variants.length > 0 && (
+            <Card className="shadow-sm hover:shadow-lg transition-all duration-300">
+              <CardHeader>
+                <CardTitle>{t('products.stock.history', 'Stock History')}</CardTitle>
+                <CardDescription>
+                  {t('products.stock.historyDescription', 'Movement history for inventory')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Variant selector if multiple variants */}
+                {variants.length > 1 && (
+                  <Select
+                    value={selectedVariantForHistory ?? variants[0]?.id}
+                    onValueChange={setSelectedVariantForHistory}
+                  >
+                    <SelectTrigger className="mb-4 cursor-pointer" aria-label={t('products.selectVariant', 'Select variant')}>
+                      <SelectValue placeholder={t('products.selectVariant', 'Select variant')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {variants.map((v) => (
+                        <SelectItem key={v.id} value={v.id} className="cursor-pointer">
+                          {v.name} ({v.stockQuantity} {t('products.inStock', 'in stock')})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {stockHistoryLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <StockHistoryTimeline
+                    movements={mapToStockMovements(stockHistory?.items ?? [])}
+                    currentStock={
+                      variants.find((v) => v.id === effectiveVariantId)?.stockQuantity ?? 0
+                    }
+                    variantName={
+                      variants.length > 1
+                        ? variants.find((v) => v.id === effectiveVariantId)?.name
+                        : undefined
+                    }
+                    maxHeight="400px"
+                  />
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Delete Variant Confirmation Dialog */}
+      <Credenza open={!!variantToDelete} onOpenChange={(open) => !open && setVariantToDelete(null)}>
+        <CredenzaContent className="border-destructive/30">
+          <CredenzaHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-destructive/10 border border-destructive/20">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <CredenzaTitle>{t('products.deleteVariant')}</CredenzaTitle>
+                <CredenzaDescription>
+                  {t('products.deleteVariantConfirmation', { name: variantToDelete?.name })}
+                </CredenzaDescription>
+              </div>
+            </div>
+          </CredenzaHeader>
+          <CredenzaBody />
+          <CredenzaFooter>
+            <Button variant="outline" onClick={() => setVariantToDelete(null)} disabled={isDeletingVariant} className="cursor-pointer">
+              {t('buttons.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDeleteVariant}
+              disabled={isDeletingVariant}
+              className="cursor-pointer bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+            >
+              {isDeletingVariant && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isDeletingVariant ? t('buttons.saving') : t('buttons.delete')}
+            </Button>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
+
+      {/* Delete Image Confirmation Dialog */}
+      <Credenza open={!!imageToDelete} onOpenChange={(open) => !open && setImageToDelete(null)}>
+        <CredenzaContent className="border-destructive/30">
+          <CredenzaHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-destructive/10 border border-destructive/20">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <CredenzaTitle>{t('products.deleteImageTitle')}</CredenzaTitle>
+                <CredenzaDescription>
+                  {t('products.deleteImageConfirmation')}
+                </CredenzaDescription>
+              </div>
+            </div>
+          </CredenzaHeader>
+          <CredenzaBody />
+          <CredenzaFooter>
+            <Button variant="outline" onClick={() => setImageToDelete(null)} disabled={isDeletingImage} className="cursor-pointer">
+              {t('buttons.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDeleteImage}
+              disabled={isDeletingImage}
+              className="cursor-pointer bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+            >
+              {isDeletingImage && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isDeletingImage ? t('buttons.saving') : t('buttons.delete')}
+            </Button>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
+
+      {/* Delete Local Variant Confirmation Dialog (create mode) */}
+      <Credenza open={!!localVariantToDelete} onOpenChange={(open) => !open && setLocalVariantToDelete(null)}>
+        <CredenzaContent className="border-destructive/30">
+          <CredenzaHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-destructive/10 border border-destructive/20">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <CredenzaTitle>{t('products.removeVariant')}</CredenzaTitle>
+                <CredenzaDescription>
+                  {t('products.removeVariantConfirmation')}
+                </CredenzaDescription>
+              </div>
+            </div>
+          </CredenzaHeader>
+          <CredenzaBody />
+          <CredenzaFooter>
+            <Button variant="outline" onClick={() => setLocalVariantToDelete(null)} className="cursor-pointer">{t('buttons.cancel')}</Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDeleteLocalVariant}
+              className="cursor-pointer bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+            >
+              {t('buttons.delete')}
+            </Button>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
+
+      {/* Delete Temp Image Confirmation Dialog (create mode) */}
+      <Credenza open={!!tempImageToDelete} onOpenChange={(open) => !open && setTempImageToDelete(null)}>
+        <CredenzaContent className="border-destructive/30">
+          <CredenzaHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-destructive/10 border border-destructive/20">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <CredenzaTitle>{t('products.deleteImageTitle')}</CredenzaTitle>
+                <CredenzaDescription>
+                  {t('products.deleteImageConfirmation')}
+                </CredenzaDescription>
+              </div>
+            </div>
+          </CredenzaHeader>
+          <CredenzaBody />
+          <CredenzaFooter>
+            <Button variant="outline" onClick={() => setTempImageToDelete(null)} className="cursor-pointer">{t('buttons.cancel')}</Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDeleteTempImage}
+              className="cursor-pointer bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+            >
+              {t('buttons.delete')}
+            </Button>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
+    </div>
+  )
+}
+
+export default ProductFormPage

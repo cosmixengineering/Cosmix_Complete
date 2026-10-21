@@ -1,0 +1,100 @@
+.capture-policy {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.capture-policy-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+.capture-policy-filter .field {
+  flex: 0 1 340px;
+  width: 100%;
+}
+.capture-policy .capture-policy-group {
+  padding-top: 16px;
+  border-top: 1px solid #dce2e8;
+}
+.capture-policy-group legend {
+  padding: 0 8px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.capture-policy-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.capture-policy-modes label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  min-height: 36px;
+}
+.capture-policy-modes input {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.capture-policy-mapping {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 36px;
+  align-items: end;
+  gap: 12px;
+}
+.capture-policy-mapping .button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+.capture-policy-settings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+}
+.capture-policy-setting {
+  padding: 10px 0;
+  border-bottom: 1px solid #e3e7ec;
+  min-width: 0;
+}
+.capture-policy-setting .attendance-heading {
+  font-size: 12px;
+}
+.capture-policy-setting .attendance-record {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.capture-policy-history {
+  border-bottom: 1px solid #e3e7ec;
+  padding: 8px 0;
+}
+.capture-policy summary {
+  overflow-wrap: anywhere;
+}
+.capture-policy-mappings {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  font-size: 13px;
+}
+.capture-policy-mappings li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 8px 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .capture-policy-settings,
+  .capture-policy-setting .attendance-record {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .capture-policy-mapping {
+    grid-template-columns: minmax(0, 1fr) 36px;
+  }
+  .capture-policy-mapping .field:first-child {
+    grid-column: 1 / -1;
+  }
+}
