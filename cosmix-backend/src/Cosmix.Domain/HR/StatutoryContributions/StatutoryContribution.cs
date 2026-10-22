@@ -60,6 +60,8 @@ public sealed class StatutoryContribution
     {
         if (State != ContributionState.Approved)
             throw new InvalidOperationException("Only approved contributions can be posted to accounting.");
+        if (string.IsNullOrWhiteSpace(PayableAccountCode))
+            throw new InvalidOperationException("Payable account code is required before posting to accounting.");
         PostedByUserId = ModelGuard.Required(actorUserId, 200, nameof(actorUserId));
         PostedAt = ModelGuard.Utc(at);
         State = ContributionState.Posted;

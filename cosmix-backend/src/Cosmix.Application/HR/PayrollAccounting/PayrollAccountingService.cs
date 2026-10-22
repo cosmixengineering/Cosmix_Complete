@@ -84,6 +84,19 @@ public sealed class PayrollAccountingService(IPayrollAccountingRepository reposi
 
         var now = clock.GetUtcNow();
         var disbursalAmount = request.Amount ?? obligation.TotalNetAmount;
+
+        var existingPayments = await repository.GetSalaryPaymentsForObligationAsync(obligation.Id, ct);
+        var activeDisbursed = existingPayments.Where(p => p.State != SalaryPaymentState.Failed).Sum(p => p.Amount);
+        if (activeDisbursed + disbursalAmount > obligation.TotalNetAmount)
+        {
+            throw new InvalidOperationException($"Disbursal amount {disbursalAmount} exceeds remaining net obligation of {obligation.TotalNetAmount - activeDisbursed}.");
+        }
+
+        if (request.EmployeeId.HasValue && existingPayments.Any(p => p.EmployeeId == request.EmployeeId && p.State != SalaryPaymentState.Failed))
+        {
+            throw new InvalidOperationException($"A salary payment for employee {request.EmployeeId.Value} is already recorded.");
+        }
+
         var payment = new SalaryPayment(
             obligation.Id,
             accrualEntry.Id,
@@ -131,6 +144,12 @@ public sealed class PayrollAccountingService(IPayrollAccountingRepository reposi
     {
         var payments = await repository.GetSalaryPaymentsForObligationAsync(obligationId, ct);
         return payments.Select(MapSalaryPayment).ToList();
+    }
+
+    public async Task<IReadOnlyList<JournalEntryResponse>> GetJournalEntriesForObligationAsync(Guid obligationId, CancellationToken ct)
+    {
+        var entries = await repository.GetJournalEntriesForObligationAsync(obligationId, ct);
+        return entries.Select(MapJournalEntry).ToList();
     }
 
     private static ObligationResponse MapObligation(PayrollObligation o) =>

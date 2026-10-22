@@ -73,4 +73,10 @@ public sealed class PayrollAccountingController(
     [ProducesResponseType<IReadOnlyList<SalaryPaymentResponse>>(200)]
     public Task<IReadOnlyList<SalaryPaymentResponse>> GetPayments(Guid obligationId, CancellationToken ct) =>
         service.GetPaymentsForObligationAsync(obligationId, ct);
+
+    [HttpGet("obligations/{obligationId:guid}/journals")]
+    [EndpointSummary("List journal entries posted for a payroll obligation")]
+    [ProducesResponseType<IReadOnlyList<JournalEntryResponse>>(200)]
+    public Task<IReadOnlyList<JournalEntryResponse>> GetJournals(Guid obligationId, CancellationToken ct) =>
+        service.GetJournalEntriesForObligationAsync(obligationId, ct);
 }

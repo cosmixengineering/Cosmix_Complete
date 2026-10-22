@@ -117,6 +117,9 @@ public class ComplianceTests
         payment.Confirm("finance-approver", now);
         Assert.Equal(SalaryPaymentState.Confirmed, payment.State);
         Assert.Equal("finance-approver", payment.ConfirmedByUserId);
+
+        // Double confirmation is strictly prohibited
+        Assert.Throws<InvalidOperationException>(() => payment.Confirm("another-user", now));
     }
 
     [Fact]
@@ -154,6 +157,26 @@ public class ComplianceTests
             employerRegistrationNumber: "BE-12345678");
 
         Assert.Equal("BE-12345678", contribution.EmployerRegistrationNumber);
+    }
+
+    [Fact]
+    public void StatutoryContribution_PostRequiresPayableAccountCode()
+    {
+        var contribution = new StatutoryContribution(
+            StatutoryScheme.PESSI,
+            new DateOnly(2026, 10, 1),
+            employeeContributionAmount: 0m,
+            employerContributionAmount: 1800m,
+            currency: "PKR",
+            createdByUserId: "user-1",
+            createdAt: DateTimeOffset.UtcNow,
+            payableAccountCode: null); // missing account code
+
+        contribution.Approve("user-2", DateTimeOffset.UtcNow);
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            contribution.Post("user-finance", DateTimeOffset.UtcNow));
+        Assert.Contains("Payable account code is required", ex.Message);
     }
 
     [Fact]

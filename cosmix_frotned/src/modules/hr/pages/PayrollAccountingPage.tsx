@@ -74,6 +74,15 @@ export function PayrollAccountingPage() {
       request(`/api/v1/payroll-accounting/obligations/${selectedObligation.id}/payments`)
         .then((res) => setPayments(Array.isArray(res) ? (res as Payment[]) : []))
         .catch(() => setPayments([]));
+
+      request(`/api/v1/payroll-accounting/obligations/${selectedObligation.id}/journals`)
+        .then((res: any) => {
+          if (Array.isArray(res)) {
+            const accrual = res.find((j: any) => j.kind === 'SalaryAccrual');
+            if (accrual) setAccrualJournalId(accrual.id);
+          }
+        })
+        .catch(() => {});
     }
   }, [selectedObligation]);
 
