@@ -57,14 +57,6 @@ export function AttendanceScreen(): React.JSX.Element {
     }).catch(() => {});
   }, [consentService]);
 
-  if (consentPending) {
-    return (
-      <LocationConsentScreen
-        onConsentAccepted={() => setConsentPending(false)}
-        onDeclineOrSkip={() => setConsentPending(false)}
-      />
-    );
-  }
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -148,6 +140,16 @@ export function AttendanceScreen(): React.JSX.Element {
       flight.current = false;
     }
   };
+
+  if (consentPending) {
+    return (
+      <LocationConsentScreen
+        onConsentAccepted={() => setConsentPending(false)}
+        onDeclineOrSkip={() => setConsentPending(false)}
+      />
+    );
+  }
+
   return (
     <Screen>
       <View>

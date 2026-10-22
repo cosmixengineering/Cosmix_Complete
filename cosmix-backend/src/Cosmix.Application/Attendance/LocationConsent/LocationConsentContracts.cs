@@ -6,6 +6,7 @@ public sealed record LocationConsentStatusResponse(
     bool HasActivePolicy,
     int? ActivePolicyVersion,
     string? NoticeText,
+    [property: System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     ConsentStatus Status,
     DateTimeOffset? ConsentedAt);
 

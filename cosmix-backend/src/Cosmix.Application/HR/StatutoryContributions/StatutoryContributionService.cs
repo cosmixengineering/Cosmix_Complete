@@ -8,6 +8,12 @@ public sealed class StatutoryContributionService(IStatutoryContributionRepositor
 {
     public async Task<ContributionResponse> CreateAsync(CreateContributionRequest request, string actorUserId, CancellationToken ct)
     {
+        var existing = await repository.GetBySchemeAndMonthAsync(request.Scheme, request.ContributionMonth, ct);
+        if (existing is not null)
+        {
+            throw new InvalidOperationException($"A contribution record already exists for scheme {request.Scheme} and month {request.ContributionMonth:yyyy-MM}.");
+        }
+
         var now = clock.GetUtcNow();
         var contribution = new StatutoryContribution(
             request.Scheme,

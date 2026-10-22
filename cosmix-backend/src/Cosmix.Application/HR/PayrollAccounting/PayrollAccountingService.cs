@@ -92,6 +92,11 @@ public sealed class PayrollAccountingService(IPayrollAccountingRepository reposi
             throw new InvalidOperationException($"Disbursal amount {disbursalAmount} exceeds remaining net obligation of {obligation.TotalNetAmount - activeDisbursed}.");
         }
 
+        if (existingPayments.Any(p => string.Equals(p.PaymentReference, request.PaymentReference, StringComparison.OrdinalIgnoreCase) && p.State != SalaryPaymentState.Failed))
+        {
+            throw new InvalidOperationException($"A salary payment with reference '{request.PaymentReference}' is already recorded for this obligation.");
+        }
+
         if (request.EmployeeId.HasValue && existingPayments.Any(p => p.EmployeeId == request.EmployeeId && p.State != SalaryPaymentState.Failed))
         {
             throw new InvalidOperationException($"A salary payment for employee {request.EmployeeId.Value} is already recorded.");

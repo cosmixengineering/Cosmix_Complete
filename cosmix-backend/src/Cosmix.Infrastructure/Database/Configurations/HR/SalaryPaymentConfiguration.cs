@@ -11,6 +11,7 @@ public sealed class SalaryPaymentConfiguration : IEntityTypeConfiguration<Salary
         builder.ToTable("SalaryPayments", "hr");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.ObligationId).IsRequired();
+        builder.Property(x => x.EmployeeId);
         builder.Property(x => x.AccrualJournalEntryId).IsRequired();
         builder.Property(x => x.Amount).HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.PaymentReference).HasMaxLength(200).IsRequired();
@@ -34,6 +35,8 @@ public sealed class SalaryPaymentConfiguration : IEntityTypeConfiguration<Salary
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(x => x.ObligationId);
+        builder.HasIndex(x => x.EmployeeId);
         builder.HasIndex(x => x.State);
+        builder.HasIndex(x => new { x.ObligationId, x.PaymentReference }).IsUnique();
     }
 }

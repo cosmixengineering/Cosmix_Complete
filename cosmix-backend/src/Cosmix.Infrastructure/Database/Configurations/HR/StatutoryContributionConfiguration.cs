@@ -24,7 +24,7 @@ public sealed class StatutoryContributionConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.ApprovedByUserId).HasMaxLength(200);
         builder.Property(x => x.PostedByUserId).HasMaxLength(200);
 
-        builder.HasIndex(x => new { x.Scheme, x.ContributionMonth });
+        builder.HasIndex(x => new { x.Scheme, x.ContributionMonth }).IsUnique();
         builder.HasIndex(x => x.State);
     }
 }

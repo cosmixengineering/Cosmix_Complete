@@ -51,6 +51,7 @@ public sealed record RegistrationResponse(
 public interface IStatutoryContributionRepository
 {
     Task<StatutoryContribution?> GetByIdAsync(Guid id, CancellationToken ct);
+    Task<StatutoryContribution?> GetBySchemeAndMonthAsync(StatutoryScheme scheme, DateOnly month, CancellationToken ct);
     Task<IReadOnlyList<StatutoryContribution>> ListAsync(StatutoryScheme? scheme, int? year, int skip, int take, CancellationToken ct);
     Task<int> CountAsync(StatutoryScheme? scheme, int? year, CancellationToken ct);
     Task<EmployeeStatutoryRegistration?> GetRegistrationAsync(Guid employeeId, StatutoryScheme scheme, CancellationToken ct);

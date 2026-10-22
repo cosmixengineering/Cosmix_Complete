@@ -120,6 +120,8 @@ const messages: Record<string, string> = {
   location_mocked:
     'Attendance cannot use a simulated location. Please use your actual device location.',
   location_stale: 'Your location is no longer current. Please try again.',
+  location_consent_required_before_gps_submission:
+    'Please review and accept the company location collection policy before submitting attendance.',
   signout_unconfirmed:
     'Signed out on this device. Server sign-out could not be confirmed.',
 };

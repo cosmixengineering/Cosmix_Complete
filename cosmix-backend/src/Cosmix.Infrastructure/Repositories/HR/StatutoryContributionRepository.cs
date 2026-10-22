@@ -10,6 +10,9 @@ public sealed class StatutoryContributionRepository(CosmixDbContext db) : IStatu
     public Task<StatutoryContribution?> GetByIdAsync(Guid id, CancellationToken ct) =>
         db.StatutoryContributions.FirstOrDefaultAsync(c => c.Id == id, ct);
 
+    public Task<StatutoryContribution?> GetBySchemeAndMonthAsync(StatutoryScheme scheme, DateOnly month, CancellationToken ct) =>
+        db.StatutoryContributions.FirstOrDefaultAsync(c => c.Scheme == scheme && c.ContributionMonth == month, ct);
+
     public async Task<IReadOnlyList<StatutoryContribution>> ListAsync(StatutoryScheme? scheme, int? year, int skip, int take, CancellationToken ct)
     {
         var query = db.StatutoryContributions.AsNoTracking();

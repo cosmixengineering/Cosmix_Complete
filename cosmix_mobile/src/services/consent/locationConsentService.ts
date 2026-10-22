@@ -19,9 +19,21 @@ export class LocationConsentService {
 
   async getConsentStatus(): Promise<LocationConsentStatus> {
     try {
-      return await this.session.request<LocationConsentStatus>('/api/v1/me/location-consent', {
+      const res = await this.session.request<any>('/api/v1/me/location-consent', {
         method: 'GET',
       });
+      const statusMap: Record<number | string, 'NotRequired' | 'PendingConsent' | 'Consented'> = {
+        0: 'NotRequired',
+        1: 'PendingConsent',
+        2: 'Consented',
+        NotRequired: 'NotRequired',
+        PendingConsent: 'PendingConsent',
+        Consented: 'Consented',
+      };
+      return {
+        ...res,
+        status: statusMap[res?.status] ?? 'NotRequired',
+      };
     } catch {
       return {
         hasActivePolicy: false,

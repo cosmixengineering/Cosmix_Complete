@@ -5,6 +5,7 @@ import {
   FileText,
   DollarSign,
   ShieldCheck,
+  Plus,
 } from 'lucide-react';
 import { request } from '@/services/api/http-client';
 import '@/styles/payroll-handoff.css';
@@ -41,8 +42,16 @@ export function PayrollAccountingPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Modal / Action states
+  const [ingestModal, setIngestModal] = useState(false);
   const [accrualModal, setAccrualModal] = useState(false);
   const [paymentModal, setPaymentModal] = useState(false);
+
+  // Ingest form
+  const [ingestBatchId, setIngestBatchId] = useState('');
+  const [ingestGross, setIngestGross] = useState<number>(0);
+  const [ingestNet, setIngestNet] = useState<number>(0);
+  const [ingestCurrency, setIngestCurrency] = useState('PKR');
+
   const [debitAccount, setDebitAccount] = useState('5010-SALARY-EXPENSE');
   const [creditAccount, setCreditAccount] = useState('2010-SALARY-PAYABLE');
   const [bankAccount, setBankAccount] = useState('1010-HBL-OPERATIONAL');
@@ -58,7 +67,6 @@ export function PayrollAccountingPage() {
         setSelectedObligation(res[0]);
       }
     } catch {
-      // Fallback empty list if no obligations yet
       setObligations([]);
     } finally {
       setLoading(false);
@@ -80,11 +88,50 @@ export function PayrollAccountingPage() {
           if (Array.isArray(res)) {
             const accrual = res.find((j: any) => j.kind === 'SalaryAccrual');
             if (accrual) setAccrualJournalId(accrual.id);
+            else setAccrualJournalId('');
+          } else {
+            setAccrualJournalId('');
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          setAccrualJournalId('');
+        });
     }
   }, [selectedObligation]);
+
+  const handleIngestObligation = async () => {
+    if (!ingestBatchId.trim()) {
+      setMessage({ type: 'error', text: 'Batch ID is required.' });
+      return;
+    }
+    if (ingestNet <= 0) {
+      setMessage({ type: 'error', text: 'Net amount must be greater than zero.' });
+      return;
+    }
+    setActionLoading(true);
+    setMessage(null);
+    try {
+      await request('/api/v1/payroll-accounting/obligations', {
+        method: 'POST',
+        body: {
+          batchId: ingestBatchId.trim(),
+          totalGrossAmount: Number(ingestGross),
+          totalNetAmount: Number(ingestNet),
+          currency: ingestCurrency.trim().toUpperCase(),
+        },
+      });
+      setMessage({ type: 'success', text: 'Payroll obligation finalized from batch successfully.' });
+      setIngestModal(false);
+      setIngestBatchId('');
+      setIngestGross(0);
+      setIngestNet(0);
+      await fetchObligations();
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to finalize obligation from batch. Check if batch is locked.' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handlePostAccrual = async () => {
     if (!selectedObligation) return;
@@ -112,6 +159,10 @@ export function PayrollAccountingPage() {
 
   const handleRecordPayment = async () => {
     if (!selectedObligation) return;
+    if (!accrualJournalId) {
+      setMessage({ type: 'error', text: 'Accrual journal must be posted first before recording payments.' });
+      return;
+    }
     if (!paymentRef.trim()) {
       setMessage({ type: 'error', text: 'Payment reference is required.' });
       return;
@@ -123,7 +174,7 @@ export function PayrollAccountingPage() {
         method: 'POST',
         body: {
           obligationId: selectedObligation.id,
-          accrualJournalEntryId: accrualJournalId || selectedObligation.id,
+          accrualJournalEntryId: accrualJournalId,
           paymentReference: paymentRef.trim(),
           debitAccountCode: creditAccount, // Debit Salary Payable
           creditAccountCode: bankAccount, // Credit Bank Account
@@ -175,9 +226,14 @@ export function PayrollAccountingPage() {
             Manage finalized payroll obligations, double-entry accrual journals, and verified salary disbursements.
           </p>
         </div>
-        <button className="payroll-btn payroll-btn-secondary" onClick={fetchObligations} disabled={loading}>
-          <RefreshCw className={loading ? 'animate-spin' : ''} size={16} /> Refresh
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="payroll-btn payroll-btn-primary" onClick={() => setIngestModal(true)}>
+            <Plus size={16} /> Finalize Batch Obligation
+          </button>
+          <button className="payroll-btn payroll-btn-secondary" onClick={fetchObligations} disabled={loading}>
+            <RefreshCw className={loading ? 'animate-spin' : ''} size={16} /> Refresh
+          </button>
+        </div>
       </div>
 
       {message && (
@@ -308,7 +364,8 @@ export function PayrollAccountingPage() {
                 <button
                   className="payroll-btn payroll-btn-primary"
                   onClick={() => setPaymentModal(true)}
-                  disabled={actionLoading}
+                  disabled={actionLoading || !accrualJournalId}
+                  title={!accrualJournalId ? "Post accrual journal first" : undefined}
                 >
                   <DollarSign size={16} /> 2. Record Payment
                 </button>
@@ -363,6 +420,62 @@ export function PayrollAccountingPage() {
           )}
         </div>
       </div>
+
+      {/* Ingest Modal */}
+      {ingestModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: '8px', padding: '24px', width: '480px', maxWidth: '90%' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px' }}>Finalize Batch Obligation</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '4px' }}>Locked Batch ID (GUID)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  value={ingestBatchId}
+                  onChange={(e) => setIngestBatchId(e.target.value)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '4px' }}>Total Gross Amount</label>
+                  <input
+                    type="number"
+                    value={ingestGross}
+                    onChange={(e) => setIngestGross(Number(e.target.value))}
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '4px' }}>Total Net Amount</label>
+                  <input
+                    type="number"
+                    value={ingestNet}
+                    onChange={(e) => setIngestNet(Number(e.target.value))}
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '4px' }}>Currency</label>
+                <input
+                  type="text"
+                  value={ingestCurrency}
+                  onChange={(e) => setIngestCurrency(e.target.value)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button className="payroll-btn payroll-btn-secondary" onClick={() => setIngestModal(false)}>Cancel</button>
+              <button className="payroll-btn payroll-btn-primary" onClick={handleIngestObligation} disabled={actionLoading}>
+                Finalize Obligation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Accrual Modal */}
       {accrualModal && (

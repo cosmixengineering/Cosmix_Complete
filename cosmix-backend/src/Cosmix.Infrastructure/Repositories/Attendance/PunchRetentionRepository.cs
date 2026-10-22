@@ -22,8 +22,20 @@ public sealed class PunchRetentionRepository(CosmixDbContext db) : IPunchRetenti
             .ToListAsync(ct);
     }
 
-    public async Task AddRedactionsAsync(IReadOnlyList<PunchLocationRedaction> redactions, CancellationToken ct) =>
+    public async Task AddRedactionsAsync(IReadOnlyList<PunchLocationRedaction> redactions, CancellationToken ct)
+    {
         await db.PunchLocationRedactions.AddRangeAsync(redactions, ct);
+        if (redactions.Count > 0)
+        {
+            var punchIds = redactions.Select(r => r.PunchEventId).ToList();
+            await db.RawPunchEvents
+                .Where(p => punchIds.Contains(p.Id))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(p => p.Latitude, (decimal?)null)
+                    .SetProperty(p => p.Longitude, (decimal?)null)
+                    .SetProperty(p => p.AccuracyMeters, (decimal?)null), ct);
+        }
+    }
 
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
 }

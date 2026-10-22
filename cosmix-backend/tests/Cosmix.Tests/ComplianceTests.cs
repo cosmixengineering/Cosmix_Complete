@@ -113,7 +113,11 @@ public class ComplianceTests
         Assert.Equal(SalaryPaymentState.Posted, payment.State);
         Assert.Equal(paymentJournalId, payment.PaymentJournalEntryId);
 
-        // Now Finance can confirm
+        // Creator cannot confirm their own payment disbursement (second-person approval rule)
+        var selfApprovalEx = Assert.Throws<InvalidOperationException>(() => payment.Confirm("finance-disburser", now));
+        Assert.Contains("creator cannot confirm", selfApprovalEx.Message, StringComparison.OrdinalIgnoreCase);
+
+        // Now separate Finance approver can confirm
         payment.Confirm("finance-approver", now);
         Assert.Equal(SalaryPaymentState.Confirmed, payment.State);
         Assert.Equal("finance-approver", payment.ConfirmedByUserId);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -201,6 +201,7 @@ namespace Cosmix.Infrastructure.Database.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ObligationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EmployeeId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     AccrualJournalEntryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     State = table.Column<int>(type: "int", nullable: false),
@@ -334,10 +335,24 @@ namespace Cosmix.Infrastructure.Database.Migrations
                 column: "State");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SalaryPayments_EmployeeId",
+                schema: "hr",
+                table: "SalaryPayments",
+                column: "EmployeeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SalaryPayments_ObligationId_PaymentReference",
+                schema: "hr",
+                table: "SalaryPayments",
+                columns: new[] { "ObligationId", "PaymentReference" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_StatutoryContributions_Scheme_ContributionMonth",
                 schema: "hr",
                 table: "StatutoryContributions",
-                columns: new[] { "Scheme", "ContributionMonth" });
+                columns: new[] { "Scheme", "ContributionMonth" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_StatutoryContributions_State",
@@ -383,3 +398,5 @@ namespace Cosmix.Infrastructure.Database.Migrations
         }
     }
 }
+
+

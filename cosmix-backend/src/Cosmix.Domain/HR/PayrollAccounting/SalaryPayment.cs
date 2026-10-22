@@ -49,6 +49,8 @@ public sealed class SalaryPayment
     {
         if (State != SalaryPaymentState.Posted)
             throw new InvalidOperationException("Only posted payments can be confirmed by finance.");
+        if (string.Equals(CreatedByUserId, actorUserId, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("The creator cannot confirm their own payment disbursement.");
         ConfirmedByUserId = ModelGuard.Required(actorUserId, 200, nameof(actorUserId));
         ConfirmedAt = ModelGuard.Utc(at);
         State = SalaryPaymentState.Confirmed;
