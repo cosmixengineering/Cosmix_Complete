@@ -83,12 +83,15 @@ public sealed class PayrollAccountingService(IPayrollAccountingRepository reposi
             throw new InvalidOperationException("Invalid accrual journal entry for this obligation.");
 
         var now = clock.GetUtcNow();
+        var disbursalAmount = request.Amount ?? obligation.TotalNetAmount;
         var payment = new SalaryPayment(
             obligation.Id,
             accrualEntry.Id,
             request.PaymentReference,
+            disbursalAmount,
             actorUserId,
-            now);
+            now,
+            request.EmployeeId);
 
         // Double-entry payment journal: Debit Salary Payable, Credit Bank Account
         var paymentJournal = new PayrollJournalEntry(
@@ -96,7 +99,7 @@ public sealed class PayrollAccountingService(IPayrollAccountingRepository reposi
             JournalEntryKind.SalaryPayment,
             request.DebitAccountCode,
             request.CreditAccountCode,
-            obligation.TotalNetAmount,
+            disbursalAmount,
             obligation.Currency,
             $"Salary disbursement payment ref: {request.PaymentReference}",
             actorUserId,
@@ -137,5 +140,5 @@ public sealed class PayrollAccountingService(IPayrollAccountingRepository reposi
         new(j.Id, j.ObligationId, j.Kind.ToString(), j.DebitAccountCode, j.CreditAccountCode, j.Amount, j.Currency, j.Description, j.PostedAt, j.PostedByUserId);
 
     private static SalaryPaymentResponse MapSalaryPayment(SalaryPayment p) =>
-        new(p.Id, p.ObligationId, p.State.ToString(), p.PaymentReference, p.PaymentJournalEntryId, p.ConfirmedAt, p.ConfirmedByUserId, p.CreatedAt);
+        new(p.Id, p.ObligationId, p.EmployeeId, p.Amount, p.State.ToString(), p.PaymentReference, p.PaymentJournalEntryId, p.ConfirmedAt, p.ConfirmedByUserId, p.CreatedAt);
 }

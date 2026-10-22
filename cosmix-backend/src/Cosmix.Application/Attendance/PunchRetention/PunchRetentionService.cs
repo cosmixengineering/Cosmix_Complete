@@ -15,6 +15,7 @@ public sealed class PunchRetentionService(
         }
 
         var retentionDays = options.RetentionDays.Value;
+
         var now = clock.GetUtcNow();
         var threshold = now.AddDays(-retentionDays);
 

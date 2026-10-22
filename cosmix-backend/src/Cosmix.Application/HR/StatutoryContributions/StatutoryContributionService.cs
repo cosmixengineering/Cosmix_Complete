@@ -18,7 +18,8 @@ public sealed class StatutoryContributionService(IStatutoryContributionRepositor
             actorUserId,
             now,
             request.PayableAccountCode,
-            request.Notes);
+            request.Notes,
+            request.EmployerRegistrationNumber);
 
         await repository.AddContributionAsync(contribution, ct);
         await repository.SaveChangesAsync(ct);
@@ -153,6 +154,6 @@ public sealed class StatutoryContributionService(IStatutoryContributionRepositor
 
     private static ContributionResponse Map(StatutoryContribution c) =>
         new(c.Id, c.Scheme.ToString(), c.ContributionMonth, c.EmployeeContributionAmount, c.EmployerContributionAmount,
-            c.TotalContributionAmount, c.Currency, c.State.ToString(), c.PayableAccountCode, c.Notes,
+            c.TotalContributionAmount, c.Currency, c.State.ToString(), c.PayableAccountCode, c.Notes, c.EmployerRegistrationNumber,
             c.CreatedAt, c.CreatedByUserId, c.ApprovedAt, c.ApprovedByUserId, c.PostedAt, c.PostedByUserId);
 }

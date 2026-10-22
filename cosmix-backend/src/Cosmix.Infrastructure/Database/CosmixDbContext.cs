@@ -205,6 +205,12 @@ public sealed class CosmixDbContext(DbContextOptions<CosmixDbContext> options)
     public DbSet<EmployeeStatutoryRegistration> EmployeeStatutoryRegistrations => Set<EmployeeStatutoryRegistration>();
     public DbSet<StatutoryContribution> StatutoryContributions => Set<StatutoryContribution>();
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+        optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasSequence<long>("EmployeeNumbers", "hr").StartsAt(1).IncrementsBy(1);

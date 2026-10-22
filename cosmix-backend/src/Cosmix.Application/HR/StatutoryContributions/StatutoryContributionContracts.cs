@@ -9,7 +9,8 @@ public sealed record CreateContributionRequest(
     decimal EmployerContributionAmount,
     string Currency,
     string? PayableAccountCode,
-    string? Notes);
+    string? Notes,
+    string? EmployerRegistrationNumber);
 
 public sealed record ContributionResponse(
     Guid Id,
@@ -22,6 +23,7 @@ public sealed record ContributionResponse(
     string State,
     string? PayableAccountCode,
     string? Notes,
+    string? EmployerRegistrationNumber,
     DateTimeOffset CreatedAt,
     string CreatedByUserId,
     DateTimeOffset? ApprovedAt,

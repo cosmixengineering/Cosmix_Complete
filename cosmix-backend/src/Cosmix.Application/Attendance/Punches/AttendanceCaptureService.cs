@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Cosmix.Application.Attendance.Common;
 using Cosmix.Application.Attendance.FaceVerification;
+using Cosmix.Application.Attendance.LocationConsent;
 using Cosmix.Application.Attendance.Offices;
 using Cosmix.Application.Attendance.Punches.CaptureValidation;
 using Cosmix.Application.Attendance.Rosters;
@@ -27,7 +28,8 @@ public sealed class AttendanceCaptureService(AttendanceOperation operation, IAtt
     IAccountAccessReader access, IFaceTemplateStore templates, INotificationOutbox notifications,
     IOfficeAttendanceSourceReader offices, ICaptureValidationEvaluator captureValidation,
     ICaptureValidationPolicyReader capturePolicies, ICaptureValidationEvidenceRepository validationEvidence,
-    IAuthenticationRepository authentication, ISchedulingJournalRepository journal)
+    IAuthenticationRepository authentication, ISchedulingJournalRepository journal,
+    ILocationConsentRepository? locationConsent = null)
 {
     public Task<PunchResponse> SubmitAsync(PunchAction action, SubmitPunchRequest request, string key,
         AuthRequestContext context, CancellationToken ct)
@@ -50,6 +52,18 @@ public sealed class AttendanceCaptureService(AttendanceOperation operation, IAtt
             "Employee submitted mobile attendance evidence", context, async (actor, token) =>
             {
                 var employeeId = actor.Identity.EmployeeId;
+                if (request.Latitude.HasValue && request.Longitude.HasValue && locationConsent is not null)
+                {
+                    var activePolicy = await locationConsent.GetActivePolicyAsync(token);
+                    if (activePolicy is not null && activePolicy.IsActive)
+                    {
+                        var consent = await locationConsent.GetConsentAsync(employeeId, activePolicy.Version, token);
+                        if (consent is null)
+                        {
+                            throw AttendanceOperation.Invalid("location_consent_required_before_gps_submission");
+                        }
+                    }
+                }
                 var fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { actor.DeviceId, payload })));
                 // This unique evidence key outlives the short-lived protected HTTP receipt.
                 var duplicate = await repository.FindPunchAsync(employeeId, key, token);

@@ -9149,6 +9149,10 @@ namespace Cosmix.Infrastructure.Database.Migrations
                     b.Property<Guid>("AccrualJournalEntryId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTimeOffset?>("ConfirmedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -9942,6 +9946,10 @@ namespace Cosmix.Infrastructure.Database.Migrations
                     b.Property<decimal>("EmployerContributionAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("EmployerRegistrationNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(500)

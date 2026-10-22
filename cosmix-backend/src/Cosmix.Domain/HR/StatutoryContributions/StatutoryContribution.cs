@@ -9,7 +9,7 @@ public sealed class StatutoryContribution
     public StatutoryContribution(StatutoryScheme scheme, DateOnly contributionMonth,
         decimal employeeContributionAmount, decimal employerContributionAmount,
         string currency, string createdByUserId, DateTimeOffset createdAt,
-        string? payableAccountCode = null, string? notes = null)
+        string? payableAccountCode = null, string? notes = null, string? employerRegistrationNumber = null)
     {
         Id = Guid.NewGuid();
         Scheme = Enum.IsDefined(scheme) ? scheme : throw new ArgumentOutOfRangeException(nameof(scheme));
@@ -23,11 +23,13 @@ public sealed class StatutoryContribution
         CreatedAt = ModelGuard.Utc(createdAt);
         PayableAccountCode = ModelGuard.Optional(payableAccountCode, 50, nameof(payableAccountCode));
         Notes = ModelGuard.Optional(notes, 500, nameof(notes));
+        EmployerRegistrationNumber = ModelGuard.Optional(employerRegistrationNumber, 100, nameof(employerRegistrationNumber));
         State = ContributionState.Draft;
     }
 
     public Guid Id { get; private set; }
     public StatutoryScheme Scheme { get; private set; }
+    public string? EmployerRegistrationNumber { get; private set; }
     public DateOnly ContributionMonth { get; private set; }
     public decimal EmployeeContributionAmount { get; private set; }
     public decimal EmployerContributionAmount { get; private set; }

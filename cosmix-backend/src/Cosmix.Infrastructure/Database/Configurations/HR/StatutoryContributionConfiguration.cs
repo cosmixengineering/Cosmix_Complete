@@ -19,6 +19,7 @@ public sealed class StatutoryContributionConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.State).IsRequired();
         builder.Property(x => x.PayableAccountCode).HasMaxLength(50);
         builder.Property(x => x.Notes).HasMaxLength(500);
+        builder.Property(x => x.EmployerRegistrationNumber).HasMaxLength(100);
         builder.Property(x => x.CreatedByUserId).HasMaxLength(200).IsRequired();
         builder.Property(x => x.ApprovedByUserId).HasMaxLength(200);
         builder.Property(x => x.PostedByUserId).HasMaxLength(200);

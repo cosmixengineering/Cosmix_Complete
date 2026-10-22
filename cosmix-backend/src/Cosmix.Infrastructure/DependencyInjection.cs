@@ -64,6 +64,7 @@ public static class DependencyInjection
                 sql.MigrationsAssembly(typeof(CosmixDbContext).Assembly.FullName);
                 sql.CommandTimeout(30);
             });
+            options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<CosmixDbContext>());
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();

@@ -7,12 +7,14 @@ public sealed class SalaryPayment
     private SalaryPayment() { }
 
     public SalaryPayment(Guid obligationId, Guid accrualJournalEntryId, string paymentReference,
-        string createdByUserId, DateTimeOffset createdAt)
+        decimal amount, string createdByUserId, DateTimeOffset createdAt, Guid? employeeId = null)
     {
         Id = Guid.NewGuid();
         ObligationId = ModelGuard.Id(obligationId, nameof(obligationId));
         AccrualJournalEntryId = ModelGuard.Id(accrualJournalEntryId, nameof(accrualJournalEntryId));
         PaymentReference = ModelGuard.Required(paymentReference, 200, nameof(paymentReference));
+        Amount = HrModelGuard.Money(amount, nameof(amount));
+        EmployeeId = employeeId.HasValue ? ModelGuard.Id(employeeId.Value, nameof(employeeId)) : null;
         CreatedByUserId = ModelGuard.Required(createdByUserId, 200, nameof(createdByUserId));
         CreatedAt = ModelGuard.Utc(createdAt);
         State = SalaryPaymentState.Pending;
@@ -20,6 +22,8 @@ public sealed class SalaryPayment
 
     public Guid Id { get; private set; }
     public Guid ObligationId { get; private set; }
+    public Guid? EmployeeId { get; private set; }
+    public decimal Amount { get; private set; }
     public PayrollObligation Obligation { get; private set; } = null!;
     public Guid AccrualJournalEntryId { get; private set; }
     public PayrollJournalEntry AccrualJournalEntry { get; private set; } = null!;

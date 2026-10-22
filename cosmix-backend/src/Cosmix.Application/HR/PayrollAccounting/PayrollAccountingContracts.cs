@@ -42,11 +42,15 @@ public sealed record RecordSalaryPaymentRequest(
     Guid AccrualJournalEntryId,
     string PaymentReference,
     string DebitAccountCode,
-    string CreditAccountCode);
+    string CreditAccountCode,
+    decimal? Amount = null,
+    Guid? EmployeeId = null);
 
 public sealed record SalaryPaymentResponse(
     Guid Id,
     Guid ObligationId,
+    Guid? EmployeeId,
+    decimal Amount,
     string State,
     string PaymentReference,
     Guid? PaymentJournalEntryId,

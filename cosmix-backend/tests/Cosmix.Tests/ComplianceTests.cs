@@ -99,6 +99,7 @@ public class ComplianceTests
             obligationId,
             accrualJournalId,
             paymentReference: "FT-202610-001",
+            amount: 135000m,
             createdByUserId: "finance-disburser",
             createdAt: now);
 
@@ -138,7 +139,38 @@ public class ComplianceTests
     }
 
     [Fact]
-    public void PunchRetention_FailsSafelyIfRetentionDaysNotConfigured()
+    public void StatutoryContribution_StoresEmployerRegistrationNumber()
+    {
+        var contribution = new StatutoryContribution(
+            StatutoryScheme.EOBI,
+            new DateOnly(2026, 10, 1),
+            employeeContributionAmount: 500m,
+            employerContributionAmount: 2500m,
+            currency: "PKR",
+            createdByUserId: "user-1",
+            createdAt: DateTimeOffset.UtcNow,
+            payableAccountCode: "2030-EOBI",
+            notes: "October challan",
+            employerRegistrationNumber: "BE-12345678");
+
+        Assert.Equal("BE-12345678", contribution.EmployerRegistrationNumber);
+    }
+
+    [Fact]
+    public void AccessPermissionCatalog_ContainsCompliancePermissions()
+    {
+        var accrue = Cosmix.Application.Authentication.Access.AccessPermissionCatalog.Find("payroll.accounting.accrue");
+        Assert.NotNull(accrue);
+
+        var statutoryManage = Cosmix.Application.Authentication.Access.AccessPermissionCatalog.Find("statutory.contributions.manage");
+        Assert.NotNull(statutoryManage);
+
+        var consentAdmin = Cosmix.Application.Authentication.Access.AccessPermissionCatalog.Find("location.consent.admin");
+        Assert.NotNull(consentAdmin);
+    }
+
+    [Fact]
+    public async Task PunchRetention_FailsSafelyIfRetentionDaysNotConfigured()
     {
         var options = new PunchRetentionOptions
         {
@@ -150,7 +182,7 @@ public class ComplianceTests
             options,
             TimeProvider.System);
 
-        var ex = Assert.ThrowsAsync<InvalidOperationException>(() => service.RunRetentionAsync(CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.RunRetentionAsync(CancellationToken.None));
         Assert.NotNull(ex);
     }
 

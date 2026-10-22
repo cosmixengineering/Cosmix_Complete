@@ -12,6 +12,7 @@ public sealed class SalaryPaymentConfiguration : IEntityTypeConfiguration<Salary
         builder.HasKey(x => x.Id);
         builder.Property(x => x.ObligationId).IsRequired();
         builder.Property(x => x.AccrualJournalEntryId).IsRequired();
+        builder.Property(x => x.Amount).HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.PaymentReference).HasMaxLength(200).IsRequired();
         builder.Property(x => x.CreatedByUserId).HasMaxLength(200).IsRequired();
         builder.Property(x => x.ConfirmedByUserId).HasMaxLength(200);

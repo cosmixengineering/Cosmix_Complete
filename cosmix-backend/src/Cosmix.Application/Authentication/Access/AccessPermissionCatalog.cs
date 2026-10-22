@@ -136,7 +136,13 @@ public static class AccessPermissionCatalog
         new(AccountsRead, "Read account access metadata", true, true, false),
         new(AccountsAssign, "Assign and revoke account roles", true, true, false),
         new(AccountsMobileManage, "Change mobile account access", true, true, false),
-        new(AccountsWebManage, "Change web account access", true, true, false)
+        new(AccountsWebManage, "Change web account access", true, true, false),
+        new("location.consent.admin", "Publish and administer employee location consent policies", true, true, false),
+        new("payroll.accounting.accrue", "Post payroll accrual journals for locked batches", true, true, false),
+        new("payroll.accounting.payment", "Record salary disbursement payments against accruals", true, true, false),
+        new("payroll.accounting.payment.confirm", "Confirm salary disbursement settlement as Finance", true, true, false),
+        new("statutory.contributions.manage", "Manage monthly EOBI and social security contribution records", true, true, false),
+        new("statutory.contributions.approve", "Approve statutory contribution entries under second-person separation", true, true, false)
     ]);
 
     public static AccessPermissionDefinition? Find(string? code) =>
