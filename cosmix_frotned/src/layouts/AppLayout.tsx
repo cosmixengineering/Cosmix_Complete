@@ -154,6 +154,14 @@ export function AppLayout() {
       return pathname === '/hr/payroll-handoff' || pathname.startsWith('/hr/payroll-handoff/');
     }
 
+    if (label === 'Payroll Accounting' || to === '/hr/payroll-accounting') {
+      return pathname === '/hr/payroll-accounting' || pathname.startsWith('/hr/payroll-accounting/');
+    }
+
+    if (label === 'Statutory Schemes' || to === '/hr/statutory-contributions') {
+      return pathname === '/hr/statutory-contributions' || pathname.startsWith('/hr/statutory-contributions/');
+    }
+
     // Reports & Audit:
     if (label === 'Reports & Audit' || to === '/hr/reports/document-expiry') {
       return pathname === '/hr/reports/document-expiry' || pathname === '/hr/reports';
@@ -228,6 +236,16 @@ export function AppLayout() {
       to: '/hr/payroll-handoff',
       label: 'Payroll Handoff',
       icon: Receipt,
+    },
+    {
+      to: '/hr/payroll-accounting',
+      label: 'Payroll Accounting',
+      icon: Banknote,
+    },
+    {
+      to: '/hr/statutory-contributions',
+      label: 'Statutory Schemes',
+      icon: Coins,
     },
     {
       to: '/hr/reports/document-expiry',

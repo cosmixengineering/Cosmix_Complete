@@ -14,6 +14,8 @@ import type {
 import { describeError } from '../utils/errors';
 import { localTime, receiptMessage } from '../utils/presentation';
 import { isAcceptedReceipt } from '../utils/validation';
+import { LocationConsentScreen } from './consent/LocationConsentScreen';
+import { LocationConsentService } from '../services/consent/locationConsentService';
 
 const steps: Record<AttendanceStep, string> = {
   preparing: 'Checking attendance availability…',
@@ -43,6 +45,26 @@ export function AttendanceScreen(): React.JSX.Element {
   const faceAllowed = auth.permissions.some(
     grant => grant.permission === 'attendance.face.self',
   );
+
+  const [consentPending, setConsentPending] = useState(false);
+  const consentService = useRef(new LocationConsentService(auth as any)).current;
+
+  useEffect(() => {
+    consentService.getConsentStatus().then(status => {
+      if (status.hasActivePolicy && status.status === 'PendingConsent') {
+        setConsentPending(true);
+      }
+    }).catch(() => {});
+  }, [consentService]);
+
+  if (consentPending) {
+    return (
+      <LocationConsentScreen
+        onConsentAccepted={() => setConsentPending(false)}
+        onDeclineOrSkip={() => setConsentPending(false)}
+      />
+    );
+  }
   useEffect(() => {
     mounted.current = true;
     return () => {
