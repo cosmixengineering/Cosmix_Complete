@@ -1,31 +1,33 @@
 import { useState } from 'react';
 import { Link, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import {
-  Activity,
   ArrowLeft,
-  Award,
+  ArrowRight,
   Briefcase,
   Building2,
-  CreditCard,
-  DollarSign,
+  ChevronRight,
+  Contact,
   FileText,
+  Fingerprint,
   HeartPulse,
-  KeyRound,
-  Laptop,
+  Home,
+  Landmark,
+  Mail,
+  MapPin,
   Navigation,
   Pencil,
   RefreshCw,
-  ShieldCheck,
-  Smartphone,
   User,
-  Fingerprint,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useHrAccess } from '../hooks/use-hr-access';
 import { useHrQuery } from '../hooks/use-hr-queries';
 import { id } from '../schemas/contracts';
+import { profileResponse } from '../schemas/hiring';
 import { currentUpdateSchema } from '../schemas/updates';
 import { sections, type Section } from '../types/updates';
+import { labelDate } from '../utils/messages';
 import { Denied, QueryState } from '../components/Feedback';
 import { RecordView } from '../components/RecordView';
 import { ChangeForm } from '../components/employee/ChangeForm';
@@ -38,35 +40,6 @@ import { EmployeeSiteAssignments } from '../components/employee/EmployeeSiteAssi
 import { EmployeeMapTracking } from '../components/employee/EmployeeMapTracking';
 import { EmployeeProfileHeader } from '../components/employee/EmployeeProfileHeader';
 import { EmployeeBiometricSection } from '../components/employee/EmployeeBiometricSection';
-import { recordFamilies, recordPermissions } from '../employee-records';
-
-function getSectionIcon(sectionName: string) {
-  switch (sectionName) {
-    case 'basic':
-      return <User size={14} />;
-    case 'identity':
-      return <ShieldCheck size={14} />;
-    case 'employment':
-      return <Briefcase size={14} />;
-    case 'bank':
-      return <CreditCard size={14} />;
-    default:
-      return null;
-  }
-}
-
-function getFamilyIcon(kind: string) {
-  switch (kind) {
-    case 'assets':
-      return <Laptop size={14} />;
-    case 'sims':
-      return <Smartphone size={14} />;
-    case 'certifications':
-      return <Award size={14} />;
-    default:
-      return null;
-  }
-}
 
 export function EmployeeDetailPage() {
   const { employeeId = '' } = useParams();
@@ -76,148 +49,81 @@ export function EmployeeDetailPage() {
     <p role="alert">Invalid employee reference.</p>
   );
 }
+
 function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
   const access = useHrAccess();
   const location = useLocation();
   const basePath = location.pathname.startsWith('/admin') ? '/admin' : '/hr';
   const [params] = useSearchParams();
-  const name = params.get('section') ?? 'basic';
+  const rawName = params.get('section');
+  const name = rawName ?? 'overview';
   const section = sections.find((s) => s.name === name);
+
   if (!access.can('hr.employees.read')) return <Denied />;
+
+  const isOverview = !rawName || rawName === 'overview';
+
   return (
-    <>
-      <Link className="hr-back" to={`${basePath}/employees`}>
+    <div className="emp-page-container">
+      {/* Top Breadcrumb Link */}
+      <Link className="emp-back-link" to={`${basePath}/employees`}>
         <ArrowLeft size={16} />
-        Back to Employees
+        Back to employees
       </Link>
+
+      {/* Main Profile Header Card */}
       <EmployeeProfileHeader employeeId={employeeId} />
-      <nav
-        className="hr-tabs"
-        aria-label="Employee sections"
-        style={{
-          display: 'flex',
-          gap: '6px',
-          overflowX: 'auto',
-          paddingBottom: '2px',
-          borderBottom: '2px solid #e2e8f0',
-          marginBottom: '24px',
-        }}
-      >
+
+      {/* Modern Tabs Bar */}
+      <nav className="emp-nav-tabs" aria-label="Employee navigation">
         <Link
-          className={name === 'tracking' ? 'active' : ''}
-          to="?section=tracking"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: name === 'tracking' ? '#047857' : undefined,
-            fontWeight: name === 'tracking' ? 700 : undefined,
-          }}
+          to="?section=overview"
+          className={`emp-nav-tab ${isOverview ? 'active' : ''}`}
         >
-          <Navigation size={14} />
-          Map tracking
+          <User size={15} />
+          Overview
         </Link>
         <Link
-          className={name === 'biometrics' ? 'active' : ''}
-          to="?section=biometrics"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: name === 'biometrics' ? '#2563eb' : undefined,
-            fontWeight: name === 'biometrics' ? 700 : undefined,
-          }}
+          to="?section=basic"
+          className={`emp-nav-tab ${name === 'basic' || name === 'identity' ? 'active' : ''}`}
         >
-          <Fingerprint size={14} />
-          Biometrics & Face ID
+          <FileText size={15} />
+          Personal details
         </Link>
-        {access.can('hr.sites.read') && (
-          <Link
-            className={name === 'assignments' ? 'active' : ''}
-            to="?section=assignments"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-          >
-            <Building2 size={14} />
-            Site assignments
-          </Link>
-        )}
-        {sections
-          .filter((s) => access.can(...s.read))
-          .map((s) => (
-            <Link
-              key={s.name}
-              className={name === s.name ? 'active' : ''}
-              to={`?section=${s.name}`}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              {getSectionIcon(s.name)}
-              {s.label}
-            </Link>
-          ))}
-        {access.can('hr.employees.documents.read') && (
-          <Link
-            className={name === 'files' ? 'active' : ''}
-            to="?section=files"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-          >
-            <FileText size={14} />
-            Document files
-          </Link>
-        )}
-        {access.can('hr.employees.documents.read', 'hr.employees.medical.read') && (
-          <Link
-            className={name === 'medical-files' ? 'active' : ''}
-            to="?section=medical-files"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-          >
-            <HeartPulse size={14} />
-            Medical files
-          </Link>
-        )}
-        {access.can('hr.employees.compensation.read') && (
-          <Link
-            className={name === 'compensation' ? 'active' : ''}
-            to="?section=compensation"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-          >
-            <DollarSign size={14} />
-            Salary
-          </Link>
-        )}
-        {access.can('hr.employees.lifecycle.read') && (
-          <Link
-            className={name === 'lifecycle' ? 'active' : ''}
-            to="?section=lifecycle"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-          >
-            <Activity size={14} />
-            Employment status
-          </Link>
-        )}
-        {access.can('hr.employees.submissions.review', 'access.accounts.read') && (
-          <Link
-            className={name === 'access' ? 'active' : ''}
-            to="?section=access"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-          >
-            <KeyRound size={14} />
-            Account access
-          </Link>
-        )}
-        {recordFamilies
-          .filter((family) => access.can(...recordPermissions(family.kind)))
-          .map((family) => (
-            <Link
-              key={family.kind}
-              to={`${basePath}/employees/${employeeId}/${family.segment}`}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              {getFamilyIcon(family.kind)}
-              {family.label}
-            </Link>
-          ))}
+        <Link
+          to="?section=employment"
+          className={`emp-nav-tab ${name === 'employment' ? 'active' : ''}`}
+        >
+          <Briefcase size={15} />
+          Employment
+        </Link>
+        <Link
+          to="?section=bank"
+          className={`emp-nav-tab ${name === 'bank' ? 'active' : ''}`}
+        >
+          <Landmark size={15} />
+          Bank details
+        </Link>
+        <Link
+          to="?section=files"
+          className={`emp-nav-tab ${name === 'files' || name === 'medical-files' ? 'active' : ''}`}
+        >
+          <FileText size={15} />
+          Documents
+        </Link>
+        <Link
+          to="?section=assignments"
+          className={`emp-nav-tab ${name === 'assignments' || name === 'tracking' || name === 'biometrics' ? 'active' : ''}`}
+        >
+          <MapPin size={15} />
+          Attendance & sites
+        </Link>
       </nav>
-      {name === 'access' ? (
+
+      {/* Content Area */}
+      {isOverview ? (
+        <EmployeeOverview employeeId={employeeId} />
+      ) : name === 'access' ? (
         access.can('hr.employees.submissions.review', 'access.accounts.read') ? (
           <CurrentAccess key={employeeId} employeeId={employeeId} />
         ) : (
@@ -253,9 +159,250 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
       ) : (
         <p role="alert">Employee section not found.</p>
       )}
-    </>
+    </div>
   );
 }
+
+function EmployeeOverview({ employeeId }: { employeeId: string }) {
+  const profileQuery = useHrQuery(
+    `employees/${employeeId}`,
+    profileResponse,
+    ['hr.employees.read'],
+  );
+
+  const profile = profileQuery.data?.profile;
+
+  const currentAddress = profile?.currentAddress;
+  const currentAddressStr = currentAddress?.line1
+    ? `${currentAddress.line1}${currentAddress.city ? `, ${currentAddress.city}` : ''}${currentAddress.province ? `, ${currentAddress.province}` : ''}`
+    : null;
+
+  const permanentAddress = profile?.permanentAddress;
+  const permanentAddressStr = permanentAddress?.line1
+    ? `${permanentAddress.line1}${permanentAddress.city ? `, ${permanentAddress.city}` : ''}${permanentAddress.province ? `, ${permanentAddress.province}` : ''}`
+    : null;
+
+  const currentDate = labelDate(new Date().toISOString());
+  const effectiveDate = profile?.joinedOn ? labelDate(profile.joinedOn) : '15 Jan 2026';
+
+  return (
+    <div className="emp-overview-container">
+      {/* Timestamp line */}
+      <div className="emp-overview-timestamp">
+        Current as of {currentDate} &middot; Effective from {effectiveDate}
+      </div>
+
+      <div className="emp-overview-grid">
+        {/* Left Column: Personal Information Card */}
+        <div className="emp-overview-left">
+          <div className="emp-card">
+            {/* Header */}
+            <div className="emp-card-header">
+              <div className="emp-card-title">
+                <User size={18} className="emp-card-title-icon" />
+                <span>Personal information</span>
+              </div>
+              <Link to="?section=basic&edit=1" className="emp-card-edit-link">
+                <Pencil size={13} />
+                Edit
+              </Link>
+            </div>
+
+            {/* Section: Addresses */}
+            <div className="emp-section-heading">Addresses</div>
+            <div className="emp-two-col-grid">
+              {/* Current address */}
+              <div className="emp-info-block">
+                <div className="emp-block-title">
+                  <MapPin size={15} className="emp-block-icon" />
+                  <span>Current address</span>
+                </div>
+                <div className="emp-block-value">
+                  {currentAddressStr || 'Address not added'}
+                </div>
+                <Link to="?section=basic&edit=1" className="emp-block-action">
+                  + Add address
+                </Link>
+              </div>
+
+              {/* Permanent address */}
+              <div className="emp-info-block">
+                <div className="emp-block-title">
+                  <Home size={15} className="emp-block-icon" />
+                  <span>Permanent address</span>
+                </div>
+                <div className="emp-block-value">
+                  {permanentAddressStr || 'Address not added'}
+                </div>
+                <Link to="?section=basic&edit=1" className="emp-block-action">
+                  + Add address
+                </Link>
+              </div>
+            </div>
+
+            {/* Section: Contact details */}
+            <div className="emp-section-heading">Contact details</div>
+            <div className="emp-two-col-grid">
+              {/* Personal email */}
+              <div className="emp-info-block">
+                <div className="emp-block-title">
+                  <Mail size={15} className="emp-block-icon" />
+                  <span>Personal email</span>
+                </div>
+                <div className="emp-block-value">
+                  {profile?.personalEmail || 'Not added'}
+                </div>
+                <Link to="?section=basic&edit=1" className="emp-block-action">
+                  + Add email
+                </Link>
+              </div>
+
+              {/* Emergency contact */}
+              <div className="emp-info-block">
+                <div className="emp-block-title">
+                  <Users size={15} className="emp-block-icon" />
+                  <span>Emergency contact</span>
+                </div>
+                <div className="emp-emergency-table">
+                  <div className="emp-emergency-row">
+                    <span className="emp-emergency-label">Name</span>
+                    <span className="emp-emergency-val">
+                      {profile?.emergencyContact?.name || 'Not added'}
+                    </span>
+                  </div>
+                  <div className="emp-emergency-row">
+                    <span className="emp-emergency-label">Relationship</span>
+                    <span className="emp-emergency-val">
+                      {profile?.emergencyContact?.relationship || 'Not added'}
+                    </span>
+                  </div>
+                </div>
+                <Link to="?section=basic&edit=1" className="emp-block-action">
+                  <Pencil size={12} />
+                  Edit contact
+                </Link>
+              </div>
+            </div>
+
+            {/* Section: More personal details */}
+            <div className="emp-more-heading">More personal details</div>
+            <div className="emp-action-cards-grid">
+              <Link to="?section=identity" className="emp-action-card">
+                <div className="emp-action-card-left">
+                  <Contact size={17} className="emp-action-card-icon" />
+                  <span>Identity details</span>
+                </div>
+                <ArrowRight size={15} className="emp-action-card-arrow" />
+              </Link>
+
+              <Link to="?section=medical-files" className="emp-action-card">
+                <div className="emp-action-card-left">
+                  <HeartPulse size={17} className="emp-action-card-icon red" />
+                  <span>Medical information</span>
+                </div>
+                <ArrowRight size={15} className="emp-action-card-arrow" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Work & attendance + Profile records */}
+        <div className="emp-overview-right">
+          {/* Card 1: Work & attendance */}
+          <div className="emp-card">
+            <div className="emp-card-header simple">
+              <div className="emp-card-title">
+                <MapPin size={17} className="emp-card-title-icon" />
+                <span>Work & attendance</span>
+              </div>
+            </div>
+
+            <div className="emp-menu-list">
+              <Link to="?section=assignments" className="emp-menu-item">
+                <div className="emp-menu-item-left">
+                  <Building2 size={18} className="emp-menu-icon" />
+                  <div className="emp-menu-texts">
+                    <div className="emp-menu-title">Site assignments</div>
+                    <div className="emp-menu-subtitle">Assigned work locations</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="emp-menu-chevron" />
+              </Link>
+
+              <Link to="?section=biometrics" className="emp-menu-item">
+                <div className="emp-menu-item-left">
+                  <Fingerprint size={18} className="emp-menu-icon" />
+                  <div className="emp-menu-texts">
+                    <div className="emp-menu-title">Biometrics & Face ID</div>
+                    <div className="emp-menu-subtitle">Enrollment and verification</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="emp-menu-chevron" />
+              </Link>
+
+              <Link to="?section=tracking" className="emp-menu-item">
+                <div className="emp-menu-item-left">
+                  <Navigation size={18} className="emp-menu-icon" />
+                  <div className="emp-menu-texts">
+                    <div className="emp-menu-title">Live map tracking</div>
+                    <div className="emp-menu-subtitle">Employee location</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="emp-menu-chevron" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Card 2: Profile records */}
+          <div className="emp-card" style={{ marginTop: '16px' }}>
+            <div className="emp-card-header simple">
+              <div className="emp-card-title">
+                <FileText size={17} className="emp-card-title-icon" />
+                <span>Profile records</span>
+              </div>
+            </div>
+
+            <div className="emp-menu-list">
+              <Link to="?section=employment" className="emp-menu-item">
+                <div className="emp-menu-item-left">
+                  <Briefcase size={18} className="emp-menu-icon" />
+                  <div className="emp-menu-texts">
+                    <div className="emp-menu-title">Employment</div>
+                    <div className="emp-menu-subtitle">Work and employment details</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="emp-menu-chevron" />
+              </Link>
+
+              <Link to="?section=bank" className="emp-menu-item">
+                <div className="emp-menu-item-left">
+                  <Landmark size={18} className="emp-menu-icon" />
+                  <div className="emp-menu-texts">
+                    <div className="emp-menu-title">Bank details</div>
+                    <div className="emp-menu-subtitle">Employee bank information</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="emp-menu-chevron" />
+              </Link>
+
+              <Link to="?section=files" className="emp-menu-item">
+                <div className="emp-menu-item-left">
+                  <FileText size={18} className="emp-menu-icon" />
+                  <div className="emp-menu-texts">
+                    <div className="emp-menu-title">Documents</div>
+                    <div className="emp-menu-subtitle">Records and uploaded files</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="emp-menu-chevron" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CurrentAccess({ employeeId }: { employeeId: string }) {
   const query = useHrQuery(`employees/${employeeId}/current/basic`, currentUpdateSchema, [
     'hr.employees.read',
@@ -266,6 +413,7 @@ function CurrentAccess({ employeeId }: { employeeId: string }) {
     </QueryState>
   );
 }
+
 function CurrentSection({
   employeeId,
   section,
@@ -279,13 +427,84 @@ function CurrentSection({
   const [revision, setRevision] = useState(0);
   const [historyRevision, setHistoryRevision] = useState(0);
   const [saved, setSaved] = useState(false);
-  const query = useHrQuery(`employees/${employeeId}/current/${section.name}`, currentUpdateSchema, [
-    'hr.employees.read',
-    ...section.read,
-  ]);
+
+  const profileQuery = useHrQuery(
+    `employees/${employeeId}`,
+    profileResponse,
+    ['hr.employees.read'],
+  );
+  const isApproved = (profileQuery.data?.employee?.status ?? 2) === 2;
+
+  const query = useHrQuery(
+    `employees/${employeeId}/current/${section.name}`,
+    currentUpdateSchema,
+    ['hr.employees.read', ...section.read],
+    isApproved,
+  );
   const canWrite = access.can(...section.read, ...section.write);
+
+  if (!isApproved && profileQuery.data?.employee) {
+    const isDraft = profileQuery.data.employee.status === 0;
+    const statusLabel = isDraft ? 'Draft (Incomplete)' : 'Pending Approval';
+    return (
+      <div className="emp-section-wrapper" style={{ marginTop: '16px' }}>
+        <div className="hr-repeat-heading">
+          <h2>{section.label}</h2>
+        </div>
+        <div
+          style={{
+            padding: '16px 20px',
+            background: '#fefce8',
+            border: '1px solid #fef08a',
+            borderRadius: '8px',
+            marginBottom: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 650, fontSize: '14px', color: '#854d0e', marginBottom: '3px' }}>
+              Employee Onboarding in Progress ({statusLabel})
+            </div>
+            <div style={{ fontSize: '12.5px', color: '#a16207' }}>
+              Formal version trees and live change requests become active after the employee onboarding is approved.
+            </div>
+          </div>
+          <Link
+            to={`/hr/hiring?employeeId=${employeeId}`}
+            style={{
+              padding: '7px 16px',
+              borderRadius: '6px',
+              background: '#0b1a3d',
+              color: '#ffffff',
+              fontSize: '12.5px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            Edit / Continue Onboarding
+          </Link>
+        </div>
+        <RecordView
+          value={
+            (section.name === 'basic' || section.name === 'identity') && profileQuery.data?.profile
+              ? profileQuery.data.profile
+              : { status: `Draft record pending onboarding completion (${statusLabel})` }
+          }
+        />
+        <ChangeHistory employeeId={employeeId} section={section} key={historyRevision} />
+      </div>
+    );
+  }
+
   return (
-    <>
+    <div className="emp-section-wrapper" style={{ marginTop: '16px' }}>
       <div className="hr-repeat-heading">
         <h2>{section.label}</h2>
         {!edit && (
@@ -376,14 +595,15 @@ function CurrentSection({
         />
       )}
       {edit && (
-        <Link className="hr-back" to={`?section=${section.name}`}>
+        <Link className="hr-back" to={`?section=${section.name}`} style={{ marginTop: '16px', display: 'inline-flex' }}>
           <ArrowLeft size={16} />
           Back to current details
         </Link>
       )}
-    </>
+    </div>
   );
 }
+
 function CurrentFiles({ employeeId, medical }: { employeeId: string; medical: boolean }) {
   const access = useHrAccess();
   const [saved, setSaved] = useState(false);
@@ -399,27 +619,29 @@ function CurrentFiles({ employeeId, medical }: { employeeId: string; medical: bo
   );
   if (!access.can(...permissions)) return <Denied />;
   return (
-    <QueryState query={query}>
-      {query.data && (
-        <>
-          {saved && (
-            <p role="status" className="hr-message">
-              Document evidence updated.
-            </p>
-          )}
-          <EmployeeDocuments
-            employeeId={employeeId}
-            version={query.data.version}
-            editable={access.can('hr.employees.changes.request')}
-            approved
-            medical={medical}
-            onSaved={() => {
-              setSaved(true);
-              void query.refetch();
-            }}
-          />
-        </>
-      )}
-    </QueryState>
+    <div className="emp-section-wrapper" style={{ marginTop: '16px' }}>
+      <QueryState query={query}>
+        {query.data && (
+          <>
+            {saved && (
+              <p role="status" className="hr-message">
+                Document evidence updated.
+              </p>
+            )}
+            <EmployeeDocuments
+              employeeId={employeeId}
+              version={query.data.version}
+              editable={access.can('hr.employees.changes.request')}
+              approved
+              medical={medical}
+              onSaved={() => {
+                setSaved(true);
+                void query.refetch();
+              }}
+            />
+          </>
+        )}
+      </QueryState>
+    </div>
   );
 }

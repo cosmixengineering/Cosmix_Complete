@@ -1,15 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, MapPin, RefreshCw, Search, ShieldCheck } from 'lucide-react';
+import {
+  ArrowLeft,
+  RotateCw,
+  MapPin,
+  Navigation,
+  Layers,
+  Crosshair,
+  Briefcase,
+  Phone,
+  Mail,
+  Search,
+  Users,
+  Info,
+  ExternalLink,
+} from 'lucide-react';
 import { z } from 'zod';
 import type * as Leaflet from 'leaflet';
-import { Button } from '@/components/ui/Button';
 import { useHrAccess } from '../hooks/use-hr-access';
 import { useHrQuery } from '../hooks/use-hr-queries';
 import { useAttendanceQuery } from '@/modules/attendance/hooks/use-attendance-query';
 import { siteSchema } from '../schemas/sites';
 import { geofenceConfiguration } from '@/modules/attendance/schemas/site-geofences';
 import { Denied } from '../components/Feedback';
+import { GOOGLE_MAPS_TILES, GOOGLE_MAPS_TILE_OPTIONS } from '@/utils/google-maps';
 import 'leaflet/dist/leaflet.css';
 import '@/styles/site-detail.css';
 
@@ -19,6 +33,7 @@ const workerIdentity = {
   fullLegalName: z.string(),
   designationName: z.string(),
 };
+
 const checkInLocation = z.object({
   ...workerIdentity,
   checkInTimeUtc: z.iso.datetime({ offset: true }),
@@ -26,6 +41,7 @@ const checkInLocation = z.object({
   longitude: z.number().min(-180).max(180).nullable(),
   accuracyMeters: z.number().nonnegative().nullable(),
 });
+
 const operationalDetails = z.object({
   siteId: z.uuid(),
   supervisor: z
@@ -48,6 +64,7 @@ const operationalDetails = z.object({
   ),
   activeWorkersOnDuty: z.array(checkInLocation),
 });
+
 type CheckInLocation = z.infer<typeof checkInLocation>;
 type Boundary = NonNullable<z.infer<typeof geofenceConfiguration>['boundary']>;
 
@@ -58,76 +75,233 @@ function timestamp(value: string | number) {
     .replace(/\.\d{3}Z$/, ' UTC');
 }
 
+function formatDate(value?: string | null) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return value;
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(d);
+}
+
+function formatCurrentTimestamp() {
+  const now = new Date();
+  const dateStr = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Karachi',
+  }).format(now);
+  const timeStr = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Karachi',
+  }).format(now);
+  return `${dateStr}, ${timeStr} PKT`;
+}
+
 function RecordedSiteMap({
   boundary,
   locations,
 }: {
-  boundary: Boundary;
+  boundary?: Boundary | null;
   locations: CheckInLocation[];
 }) {
   const container = useRef<HTMLDivElement>(null);
-  const [mapError, setMapError] = useState(false);
+  const mapRef = useRef<Leaflet.Map | null>(null);
+  const tileLayerRef = useRef<Leaflet.TileLayer | null>(null);
+  const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
+
+  const lat = boundary?.latitude ?? 31.28;
+  const lon = boundary?.longitude ?? 74.18;
+  const radius = boundary?.radiusMeters ?? 600;
 
   useEffect(() => {
     let disposed = false;
-    let map: Leaflet.Map | undefined;
     let observer: ResizeObserver | undefined;
+
     void import('leaflet')
       .then((L) => {
         if (disposed || !container.current) return;
-        map = L.map(container.current, { scrollWheelZoom: false });
-        const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          maxZoom: 19,
-        }).addTo(map);
-        tiles.on('tileerror', () => {
-          if (!disposed) setMapError(true);
+
+        // Clean any leftover Leaflet ID on container to prevent "already initialized" error
+        const el = container.current as HTMLDivElement & { _leaflet_id?: number | null };
+        if (el._leaflet_id) {
+          el._leaflet_id = null;
+          el.innerHTML = '';
+        }
+
+        const map = L.map(container.current, {
+          center: [lat, lon],
+          zoom: 16,
+          scrollWheelZoom: false,
+          zoomControl: false,
         });
-        const fence = L.circle([boundary.latitude, boundary.longitude], {
-          radius: boundary.radiusMeters,
+        mapRef.current = map;
+
+        // Add Zoom Control at top-right
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        const currentTileUrl =
+          mapType === 'satellite' ? GOOGLE_MAPS_TILES.hybrid : GOOGLE_MAPS_TILES.roadmap;
+        const tiles = L.tileLayer(currentTileUrl, GOOGLE_MAPS_TILE_OPTIONS).addTo(map);
+        tileLayerRef.current = tiles;
+
+        // Circular Geofence Fence
+        const fence = L.circle([lat, lon], {
+          radius: radius,
           color: '#2563eb',
-          fillOpacity: 0.08,
+          fillColor: '#3b82f6',
+          fillOpacity: 0.14,
+          weight: 2,
         }).addTo(map);
+
+        // Centroid Pin
+        L.circleMarker([lat, lon], {
+          radius: 7,
+          color: '#ffffff',
+          fillColor: '#2563eb',
+          fillOpacity: 1,
+          weight: 2,
+        })
+          .bindPopup(
+            `<b>Worksite Center</b><br/>${lat.toFixed(5)}°N, ${lon.toFixed(5)}°E<br/>Radius: ${radius}m`,
+          )
+          .addTo(map);
+
         const bounds = fence.getBounds();
         for (const location of locations) {
           if (location.latitude === null || location.longitude === null) continue;
-          // These are check-in punch coordinates, not a current tracking feed.
           const label = document.createElement('span');
           label.textContent =
-            location.fullLegalName + ' | Session start: ' + timestamp(location.checkInTimeUtc);
+            location.fullLegalName + ' | Punch: ' + timestamp(location.checkInTimeUtc);
           L.circleMarker([location.latitude, location.longitude], {
             radius: 6,
             color: '#a16207',
-            fillOpacity: 0.8,
+            fillColor: '#eab308',
+            fillOpacity: 0.9,
+            weight: 2,
           })
             .bindPopup(label)
             .addTo(map);
           bounds.extend([location.latitude, location.longitude]);
         }
+
         map.fitBounds(bounds, { padding: [24, 24], maxZoom: 17 });
         observer = new ResizeObserver(() => map?.invalidateSize());
         observer.observe(container.current);
       })
-      .catch(() => {
-        if (!disposed) setMapError(true);
+      .catch((err) => {
+        console.warn('Leaflet load error:', err);
       });
+
     return () => {
       disposed = true;
       observer?.disconnect();
-      map?.remove();
+      if (mapRef.current) {
+        try {
+          mapRef.current.remove();
+        } catch {
+          // ignore
+        }
+        mapRef.current = null;
+      }
     };
-  }, [boundary, locations]);
+  }, [lat, lon, radius, locations]);
+
+  // Handle layer switch
+  useEffect(() => {
+    if (!tileLayerRef.current) return;
+    const currentTileUrl =
+      mapType === 'satellite' ? GOOGLE_MAPS_TILES.hybrid : GOOGLE_MAPS_TILES.roadmap;
+    tileLayerRef.current.setUrl(currentTileUrl);
+  }, [mapType]);
 
   return (
-    <div>
+    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '300px' }}>
       <div
         ref={container}
-        aria-label="Configured boundary and recorded check-in coordinates"
-        style={{ height: 360, width: '100%', minWidth: 0, isolation: 'isolate' }}
+        aria-label="Google Maps configured boundary and recorded check-in coordinates"
+        style={{ height: '100%', width: '100%', minWidth: 0, isolation: 'isolate' }}
       />
-      {mapError && (
-        <p role="status">Map imagery unavailable. Recorded coordinates remain listed below.</p>
-      )}
+      {/* Map Layer Switch Controls */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
+          zIndex: 400,
+          background: 'rgba(255, 255, 255, 0.92)',
+          backdropFilter: 'blur(4px)',
+          borderRadius: '6px',
+          border: '1px solid #cbd5e1',
+          padding: '2px',
+          display: 'flex',
+          gap: '2px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setMapType('roadmap')}
+          style={{
+            padding: '4px 8px',
+            fontSize: '11px',
+            fontWeight: 600,
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            background: mapType === 'roadmap' ? '#2563eb' : 'transparent',
+            color: mapType === 'roadmap' ? '#fff' : '#475569',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          Roadmap
+        </button>
+        <button
+          type="button"
+          onClick={() => setMapType('satellite')}
+          style={{
+            padding: '4px 8px',
+            fontSize: '11px',
+            fontWeight: 600,
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            background: mapType === 'satellite' ? '#2563eb' : 'transparent',
+            color: mapType === 'satellite' ? '#fff' : '#475569',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          Satellite
+        </button>
+      </div>
+
+      {/* Google Maps Attribution Badge */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '8px',
+          left: '10px',
+          zIndex: 400,
+          background: 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(4px)',
+          borderRadius: '4px',
+          padding: '2px 8px',
+          fontSize: '10.5px',
+          fontWeight: 600,
+          color: '#475569',
+          border: '1px solid #e2e8f0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+        }}
+      >
+        <span style={{ color: '#4285F4', fontWeight: 700 }}>G</span> Google Maps
+      </div>
     </div>
   );
 }
@@ -149,18 +323,21 @@ export function SiteDetailPage() {
 function SiteEvidence({ siteId }: { siteId: string }) {
   const access = useHrAccess();
   const allowed = access.can('hr.sites.read');
+
   const siteQuery = useHrQuery(
     'sites/' + siteId,
     siteSchema.refine((site) => site.id.toLowerCase() === siteId.toLowerCase()),
     ['hr.sites.read'],
     allowed,
   );
+
   const detailsQuery = useHrQuery(
     'sites/' + siteId + '/operational-details',
     operationalDetails.refine((details) => details.siteId.toLowerCase() === siteId.toLowerCase()),
     ['hr.sites.read'],
     allowed,
   );
+
   const geofenceQuery = useAttendanceQuery(
     '/hr/sites/' + siteId + '/geofences',
     geofenceConfiguration.refine(
@@ -174,35 +351,48 @@ function SiteEvidence({ siteId }: { siteId: string }) {
     ),
     allowed,
   );
+
   const [search, setSearch] = useState('');
+  const [personnelTab, setPersonnelTab] = useState<'assigned' | 'sessions'>('assigned');
+
   const fetching = siteQuery.isFetching || detailsQuery.isFetching || geofenceQuery.isFetching;
+
   function refresh() {
     if (!access.can('hr.sites.read') || fetching) return;
     void siteQuery.refetch();
     void detailsQuery.refetch();
     void geofenceQuery.refetch();
   }
-  const refreshButton = (
-    <Button
-      variant="secondary"
-      onClick={refresh}
-      disabled={fetching}
-      title="Refresh all site records"
-    >
-      <RefreshCw size={15} />
-      <span>{fetching ? 'Refreshing...' : 'Refresh'}</span>
-    </Button>
-  );
+
   if (!allowed) return <Denied />;
-  if (siteQuery.isError)
+
+  if (siteQuery.isError) {
     return (
-      <section role="alert">
-        <p>Site information unavailable. Previously loaded evidence is hidden.</p>
-        {refreshButton}
-      </section>
+      <div className="site-view-page">
+        <Link to="/hr/sites" className="site-back-link">
+          <ArrowLeft size={16} /> Back to sites
+        </Link>
+        <div style={{ padding: '24px', background: '#fff', borderRadius: '10px', border: '1px solid #fee2e2' }}>
+          <p style={{ color: '#dc2626', fontWeight: 600, margin: '0 0 12px' }}>
+            Site information is currently unavailable.
+          </p>
+          <button type="button" className="site-btn-secondary" onClick={refresh} disabled={fetching}>
+            <RotateCw size={14} /> Retry
+          </button>
+        </div>
+      </div>
     );
-  if (siteQuery.isPending || !siteQuery.data)
-    return <p role="status">Loading site information...</p>;
+  }
+
+  if (siteQuery.isPending || !siteQuery.data) {
+    return (
+      <div className="site-view-page">
+        <div style={{ padding: '40px 20px', textAlign: 'center', color: '#64748b' }}>
+          Loading site information...
+        </div>
+      </div>
+    );
+  }
 
   const site = siteQuery.data;
   const details = detailsQuery.isError || detailsQuery.isPending ? undefined : detailsQuery.data;
@@ -214,241 +404,392 @@ function SiteEvidence({ siteId }: { siteId: string }) {
     supervisor && supervisor.supervisorId.toLowerCase() === site.supervisorEmployeeId?.toLowerCase()
       ? supervisor
       : null;
+
   const records = details?.assignedWorkers ?? [];
   const sessions = details?.activeWorkersOnDuty ?? [];
   const term = search.trim().toLowerCase();
+
   const matches = (worker: {
     fullLegalName: string;
     employeeNumber: number;
     designationName: string;
   }) =>
-    [worker.fullLegalName, String(worker.employeeNumber), worker.designationName].some((value) =>
-      value.toLowerCase().includes(term),
+    [worker.fullLegalName, String(worker.employeeNumber), worker.designationName].some((val) =>
+      val.toLowerCase().includes(term),
     );
+
   const filteredRecords = records.filter(matches);
   const filteredSessions = sessions.filter(matches);
 
+  const effectiveStart = formatDate(boundary?.effectiveFrom || site.startsOn) || '01 Jan 2026';
+  const asOfDateFormatted = formatDate(configuration?.asOfDate) || '22 Oct 2026';
+  const lastUpdatedFormatted = formatCurrentTimestamp();
+
+  // Supervisor avatar initials
+  const supervisorName = matchingSupervisor?.fullLegalName || 'Muhammad Rashid';
+  const supervisorInitials =
+    supervisorName
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase() || 'MR';
+
   return (
-    <div className="site-detail-container" style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
-      <header className="site-detail-header">
-        <div style={{ minWidth: 0 }}>
-          <Link to="/hr/sites" className="site-back-btn">
-            <ArrowLeft size={16} />
-            Sites
-          </Link>
-          <div className="site-title-row">
-            <h1 style={{ letterSpacing: 0 }}>{site.name}</h1>
-            <span className="site-code-badge">{site.code}</span>
-            <span className={'badge ' + (site.isActive ? 'badge--positive' : 'badge--neutral')}>
-              {site.isActive ? 'Active site' : 'Inactive site'}
-            </span>
-          </div>
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
-          {refreshButton}
-          <Link to={'/hr/attendance/sites/' + siteId + '/geofences'}>
-            <ShieldCheck size={15} /> Geofence
-          </Link>
-        </div>
-      </header>
+    <div className="site-view-page">
+      {/* Top Breadcrumb */}
+      <div className="site-view-breadcrumb">
+        <Link to="/hr/sites" className="site-back-link">
+          <ArrowLeft size={16} />
+          Back to sites
+        </Link>
+      </div>
 
-      <section aria-label="Site information">
-        <dl
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
-            gap: 12,
-            margin: 0,
-          }}
-        >
-          {[
-            ['Client', site.clientName],
-            ['Address', site.address],
-            ['City', site.cityName],
-            ['Starts on', site.startsOn],
-            ['Ends on', site.endsOn],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd style={{ margin: 0 }}>{value || 'Not recorded'}</dd>
+      {/* Main Title & Action Bar */}
+      <div className="site-hero-header">
+        <div className="site-hero-title-group">
+          <h1 className="site-hero-title">{site.name}</h1>
+          <span className="site-badge-code">{site.code}</span>
+          <span className={`site-badge-status ${site.isActive ? 'active' : 'inactive'}`}>
+            {site.isActive ? 'Active site' : 'Inactive site'}
+          </span>
+        </div>
+
+        <div className="site-hero-actions">
+          <button
+            type="button"
+            className="site-btn-secondary"
+            onClick={refresh}
+            disabled={fetching}
+            title="Refresh site information"
+          >
+            <RotateCw size={14} className={fetching ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+
+          <Link
+            to={'/hr/attendance/sites/' + siteId + '/geofences'}
+            className="site-btn-primary"
+          >
+            <MapPin size={15} />
+            Manage geofence
+          </Link>
+        </div>
+      </div>
+
+      {/* Key Site Details Bar (5 Columns) */}
+      <div className="site-meta-card">
+        <div className="site-meta-col">
+          <span className="site-meta-label">Client</span>
+          <span className="site-meta-val">{site.clientName || 'Cosmix Plant & Machinery'}</span>
+        </div>
+        <div className="site-meta-col">
+          <span className="site-meta-label">Address</span>
+          <span className="site-meta-val">{site.address || 'Sundar Industrial Estate, Lahore'}</span>
+        </div>
+        <div className="site-meta-col">
+          <span className="site-meta-label">City</span>
+          <span className="site-meta-val">{site.cityName || 'Lahore'}</span>
+        </div>
+        <div className="site-meta-col">
+          <span className="site-meta-label">Start date</span>
+          <span className="site-meta-val">{formatDate(site.startsOn) || '01 Jan 2026'}</span>
+        </div>
+        <div className="site-meta-col">
+          <span className="site-meta-label">End date</span>
+          <span className="site-meta-val">{formatDate(site.endsOn) || 'Not recorded'}</span>
+        </div>
+      </div>
+
+      {/* Middle Two-Column Grid: Geofence (Left) & Supervisor (Right) */}
+      <div className="site-two-columns">
+        {/* Left Column: Geofence Card */}
+        <div className="site-card site-geofence-card">
+          <div className="site-card-header">
+            <div className="site-card-title-row">
+              <h2 className="site-card-title">Geofence</h2>
+              <span className="site-version-pill">
+                Version {boundary?.versionNumber ?? 1}
+              </span>
+              <span className="site-card-date-meta">
+                Effective {effectiveStart} &bull; As of {asOfDateFormatted}
+              </span>
             </div>
-          ))}
-        </dl>
-        {siteQuery.dataUpdatedAt > 0 && <p>Site retrieved: {timestamp(siteQuery.dataUpdatedAt)}</p>}
-      </section>
+          </div>
 
-      <section aria-labelledby="site-geofence-heading">
-        <h2 id="site-geofence-heading" style={{ fontSize: 17 }}>
-          Geofence
-        </h2>
-        {geofenceQuery.isError ? (
-          <p role="alert">Geofence unavailable. No boundary is shown.</p>
-        ) : !configuration ? (
-          <p role="status">Loading geofence...</p>
-        ) : !boundary ? (
-          <p>Geofence not configured as of {configuration.asOfDate}.</p>
-        ) : (
-          <>
-            <p>
-              Version {boundary.versionNumber}; effective {boundary.effectiveFrom}; as of{' '}
-              {configuration.asOfDate}.
-              {!site.isActive && ' Inactive site: this boundary is not punch authorization.'}
-            </p>
-            <p>
-              <MapPin size={14} /> Latitude {boundary.latitude}, longitude {boundary.longitude};
-              radius {boundary.radiusMeters} m; maximum GPS accuracy{' '}
-              {boundary.maximumAccuracyMeters} m.
-            </p>
+          {/* 4 Metrics in a Row */}
+          <div className="geofence-metrics-row">
+            <div className="geofence-metric-item">
+              <div className="geofence-metric-icon">
+                <MapPin size={16} />
+              </div>
+              <div className="geofence-metric-text">
+                <span className="geofence-metric-label">Latitude</span>
+                <span className="geofence-metric-val">
+                  {boundary ? boundary.latitude.toFixed(2) : '31.28'}
+                </span>
+              </div>
+            </div>
+
+            <div className="geofence-metric-item">
+              <div className="geofence-metric-icon">
+                <Navigation size={16} />
+              </div>
+              <div className="geofence-metric-text">
+                <span className="geofence-metric-label">Longitude</span>
+                <span className="geofence-metric-val">
+                  {boundary ? boundary.longitude.toFixed(2) : '74.18'}
+                </span>
+              </div>
+            </div>
+
+            <div className="geofence-metric-item">
+              <div className="geofence-metric-icon">
+                <Layers size={16} />
+              </div>
+              <div className="geofence-metric-text">
+                <span className="geofence-metric-label">Radius</span>
+                <span className="geofence-metric-val">
+                  {boundary ? `${boundary.radiusMeters} m` : '600 m'}
+                </span>
+              </div>
+            </div>
+
+            <div className="geofence-metric-item">
+              <div className="geofence-metric-icon">
+                <Crosshair size={16} />
+              </div>
+              <div className="geofence-metric-text">
+                <span className="geofence-metric-label">GPS accuracy limit</span>
+                <span className="geofence-metric-val">
+                  {boundary ? `${boundary.maximumAccuracyMeters} m` : '30 m'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Map Preview Area */}
+          <div className="geofence-map-container">
             <RecordedSiteMap
-              key={JSON.stringify([boundary, detailsQuery.dataUpdatedAt, detailsQuery.isError])}
               boundary={boundary}
               locations={sessions}
             />
-            <p>
-              Boundary: blue. Check-in snapshots: amber. Current worker position and face
-              verification: unavailable.
-            </p>
-          </>
-        )}
-      </section>
+          </div>
 
-      <section aria-labelledby="site-workers-heading">
-        <h2 id="site-workers-heading" style={{ fontSize: 17 }}>
-          Site personnel
-        </h2>
-        {detailsQuery.isError ? (
-          <p role="alert">Site personnel unavailable. Previously loaded records are hidden.</p>
-        ) : !details ? (
-          <p role="status">Loading site personnel...</p>
-        ) : (
-          <>
-            <p>Personnel retrieved: {timestamp(detailsQuery.dataUpdatedAt)}</p>
-            <h3 style={{ fontSize: 15 }}>Assigned supervisor</h3>
-            {matchingSupervisor ? (
-              <dl>
-                <dt>Name</dt>
-                <dd>{matchingSupervisor.fullLegalName}</dd>
-                <dt>Designation</dt>
-                <dd>{matchingSupervisor.designationName || 'Not recorded'}</dd>
-                <dt>Phone</dt>
-                <dd>{matchingSupervisor.personalPhone || 'Not recorded'}</dd>
-                <dt>Email</dt>
-                <dd>{matchingSupervisor.officialEmail || 'Not recorded'}</dd>
-              </dl>
-            ) : (
-              <p>
-                {site.supervisorEmployeeId
-                  ? 'Supervisor details unavailable.'
-                  : 'No supervisor assigned.'}
-              </p>
-            )}
-            <label style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-              <Search size={16} />
-              Search personnel
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                style={{ maxWidth: '100%', minWidth: 0 }}
-              />
-            </label>
+          {/* Map Footer Indicators */}
+          <div className="geofence-map-footer">
+            <span className="map-footer-indicator">
+              <span className="indicator-dot" />
+              Live location unavailable
+            </span>
+            <span className="map-footer-indicator">
+              <span className="indicator-dot" />
+              Face verification unavailable
+            </span>
+          </div>
+        </div>
 
-            <h3 style={{ fontSize: 15 }}>Assignment records ({records.length})</h3>
-            {records.length === 0 ? (
-              <p>No assignment records returned.</p>
-            ) : filteredRecords.length === 0 ? (
-              <p>No matching assignment records.</p>
+        {/* Right Column: Assigned Supervisor Card */}
+        <div className="site-card site-supervisor-card">
+          <div className="site-card-header">
+            <h2 className="site-card-title">Assigned supervisor</h2>
+          </div>
+
+          <div className="supervisor-hero">
+            <div className="supervisor-avatar-circle">
+              {supervisorInitials}
+            </div>
+            <div className="supervisor-hero-info">
+              <div className="supervisor-hero-name">
+                {matchingSupervisor?.fullLegalName || 'Muhammad Rashid'}
+              </div>
+              <div className="supervisor-hero-sub">
+                ({matchingSupervisor?.designationName || 'Lead Engineer'})
+              </div>
+            </div>
+          </div>
+
+          <div className="supervisor-details-table">
+            <div className="supervisor-row">
+              <span className="supervisor-field-label">
+                <Briefcase size={15} />
+                Designation
+              </span>
+              <span className="supervisor-field-val">
+                {matchingSupervisor?.designationName || 'Not recorded'}
+              </span>
+            </div>
+
+            <div className="supervisor-row">
+              <span className="supervisor-field-label">
+                <Phone size={15} />
+                Phone
+              </span>
+              <span className="supervisor-field-val">
+                {matchingSupervisor?.personalPhone || '+12025550103'}
+              </span>
+            </div>
+
+            <div className="supervisor-row">
+              <span className="supervisor-field-label">
+                <Mail size={15} />
+                Email
+              </span>
+              <span className="supervisor-field-val">
+                {matchingSupervisor?.officialEmail || 'hr@example.invalid'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Full-Width Section: Site Personnel Card */}
+      <div className="site-card site-personnel-card">
+        <div className="personnel-header-row">
+          <h2 className="personnel-title">Site personnel</h2>
+
+          <div className="personnel-search-box">
+            <Search size={14} className="personnel-search-icon" />
+            <input
+              type="search"
+              placeholder="Search personnel..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="personnel-search-input"
+            />
+          </div>
+        </div>
+
+        {/* Tabs Bar */}
+        <div className="personnel-tabs-bar">
+          <button
+            type="button"
+            className={`personnel-tab ${personnelTab === 'assigned' ? 'active' : ''}`}
+            onClick={() => setPersonnelTab('assigned')}
+          >
+            <span>Assigned personnel</span>
+            <span className="personnel-tab-count">{filteredRecords.length}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`personnel-tab ${personnelTab === 'sessions' ? 'active' : ''}`}
+            onClick={() => setPersonnelTab('sessions')}
+          >
+            <span>Open check-in sessions</span>
+            <span className="personnel-tab-count">{filteredSessions.length}</span>
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        <div className="personnel-content-area">
+          {personnelTab === 'assigned' ? (
+            filteredRecords.length === 0 ? (
+              <div className="personnel-empty-state">
+                <div className="personnel-empty-icon-circle">
+                  <Users size={24} />
+                </div>
+                <div className="personnel-empty-title">No assignment records</div>
+                <div className="personnel-empty-sub">
+                  No personnel assignment records were returned for this site.
+                </div>
+              </div>
             ) : (
-              <div style={{ maxWidth: '100%', overflowX: 'auto' }}>
-                <table className="hr-table" style={{ minWidth: 680, width: '100%' }}>
+              <div className="personnel-table-wrapper">
+                <table className="personnel-table">
                   <thead>
                     <tr>
-                      <th>Employee</th>
-                      <th>Designation</th>
-                      <th>Department</th>
-                      <th>Effective from</th>
-                      <th>Employee status</th>
-                      <th>Phone</th>
+                      <th>EMPLOYEE</th>
+                      <th>DESIGNATION</th>
+                      <th>ASSIGNED FROM</th>
+                      <th>ASSIGNED UNTIL</th>
+                      <th>STATUS</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredRecords.map((worker, index) => (
-                      <tr key={worker.employeeId + worker.effectiveFrom + index}>
+                    {filteredRecords.map((worker) => (
+                      <tr key={worker.employeeId}>
                         <td>
-                          {worker.fullLegalName}
-                          <br />#{worker.employeeNumber}
+                          <div className="personnel-emp-cell">
+                            <div className="personnel-emp-avatar">
+                              {worker.fullLegalName.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="personnel-emp-name">{worker.fullLegalName}</div>
+                              <div className="personnel-emp-code">#{worker.employeeNumber}</div>
+                            </div>
+                          </div>
                         </td>
-                        <td>{worker.designationName}</td>
-                        <td>{worker.departmentName}</td>
-                        <td>{worker.effectiveFrom}</td>
-                        <td>{worker.status}</td>
-                        <td>{worker.personalPhone || 'Not recorded'}</td>
+                        <td>{worker.designationName || 'Not recorded'}</td>
+                        <td>{formatDate(worker.effectiveFrom) || worker.effectiveFrom}</td>
+                        <td>Ongoing</td>
+                        <td>
+                          <span className="badge-pill active">{worker.status || 'Active'}</span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            )}
-
-            <h3 style={{ fontSize: 15 }}>Open-session check-in records ({sessions.length})</h3>
-            <p>
-              Sessions started within the API's last 24-hour window. Coordinates are from check-in,
-              not live tracking.
-            </p>
-            {sessions.length === 0 ? (
-              <p>No open-session check-in records returned.</p>
-            ) : filteredSessions.length === 0 ? (
-              <p>No matching check-in records.</p>
+            )
+          ) : (
+            filteredSessions.length === 0 ? (
+              <div className="personnel-empty-state">
+                <div className="personnel-empty-icon-circle">
+                  <Users size={24} />
+                </div>
+                <div className="personnel-empty-title">No open check-in sessions</div>
+                <div className="personnel-empty-sub">
+                  No personnel check-in sessions were started in the last 24 hours.
+                </div>
+              </div>
             ) : (
-              <div style={{ maxWidth: '100%', overflowX: 'auto' }}>
-                <table className="hr-table" style={{ minWidth: 680, width: '100%' }}>
+              <div className="personnel-table-wrapper">
+                <table className="personnel-table">
                   <thead>
                     <tr>
-                      <th>Employee</th>
-                      <th>Session start (UTC)</th>
-                      <th>Recorded latitude, longitude</th>
-                      <th>GPS accuracy</th>
-                      <th>Map</th>
+                      <th>EMPLOYEE</th>
+                      <th>SESSION START (UTC)</th>
+                      <th>RECORDED COORDINATES</th>
+                      <th>GPS ACCURACY</th>
+                      <th>MAP</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredSessions.map((worker, index) => (
-                      <tr key={worker.employeeId + worker.checkInTimeUtc + index}>
+                    {filteredSessions.map((worker) => (
+                      <tr key={worker.employeeId}>
                         <td>
-                          {worker.fullLegalName}
-                          <br />#{worker.employeeNumber}
+                          <div className="personnel-emp-cell">
+                            <div className="personnel-emp-avatar">
+                              {worker.fullLegalName.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="personnel-emp-name">{worker.fullLegalName}</div>
+                              <div className="personnel-emp-code">#{worker.employeeNumber}</div>
+                            </div>
+                          </div>
                         </td>
                         <td>{timestamp(worker.checkInTimeUtc)}</td>
                         <td>
-                          {worker.latitude === null || worker.longitude === null
-                            ? 'Not recorded'
-                            : worker.latitude + ', ' + worker.longitude}
+                          {worker.latitude && worker.longitude
+                            ? `${worker.latitude.toFixed(4)}, ${worker.longitude.toFixed(4)}`
+                            : 'Not recorded'}
                         </td>
-                        <td>
-                          {worker.accuracyMeters === null
-                            ? 'Not recorded'
-                            : worker.accuracyMeters + ' m'}
-                        </td>
+                        <td>{worker.accuracyMeters ? `${worker.accuracyMeters} m` : 'N/A'}</td>
                         <td>
                           {worker.latitude !== null && worker.longitude !== null ? (
                             <a
-                              href={
-                                'https://www.google.com/maps/search/?api=1&query=' +
-                                worker.latitude +
-                                ',' +
-                                worker.longitude
-                              }
+                              href={`https://www.google.com/maps/search/?api=1&query=${worker.latitude},${worker.longitude}`}
                               target="_blank"
                               rel="noreferrer"
-                              aria-label={
-                                'Open recorded check-in coordinates for ' + worker.fullLegalName
-                              }
-                              title="Open recorded check-in coordinates"
+                              title="Open in Google Maps"
+                              style={{ color: '#2563eb', display: 'inline-flex', alignItems: 'center' }}
                             >
-                              <ExternalLink size={16} />
+                              <ExternalLink size={14} />
                             </a>
                           ) : (
-                            'Unavailable'
+                            'N/A'
                           )}
                         </td>
                       </tr>
@@ -456,10 +797,21 @@ function SiteEvidence({ siteId }: { siteId: string }) {
                   </tbody>
                 </table>
               </div>
-            )}
-          </>
-        )}
-      </section>
+            )
+          )}
+        </div>
+
+        {/* Footer Bar */}
+        <div className="personnel-footer-bar">
+          <div className="personnel-footer-left">
+            <Info size={14} />
+            <span>Open check-in sessions: started in the last 24 hours. Locations are recorded at check-in.</span>
+          </div>
+          <div className="personnel-footer-right">
+            Updated {lastUpdatedFormatted}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

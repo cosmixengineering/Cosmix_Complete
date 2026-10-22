@@ -3,10 +3,14 @@ import { AllowancesPage } from './AllowancesPage';
 import { AdvancesLoansPage } from './AdvancesLoansPage';
 import { VehiclesPage } from './VehiclesPage';
 import { PayrollHandoffPage } from './PayrollHandoffPage';
+import { PayrollAccountingPage } from './PayrollAccountingPage';
+import { StatutoryContributionsPage } from './StatutoryContributionsPage';
 
 export const financeRoutes: RouteObject[] = [
   { path: '/hr/allowances', element: <AllowancesPage /> },
   { path: '/hr/advances-loans', element: <AdvancesLoansPage /> },
   { path: '/hr/vehicles', element: <VehiclesPage /> },
   { path: '/hr/payroll-handoff', element: <PayrollHandoffPage /> },
+  { path: '/hr/payroll-accounting', element: <PayrollAccountingPage /> },
+  { path: '/hr/statutory-contributions', element: <StatutoryContributionsPage /> },
 ];

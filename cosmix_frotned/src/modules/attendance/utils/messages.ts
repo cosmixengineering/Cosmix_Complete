@@ -51,6 +51,16 @@ const leaveWorkflowErrors: Readonly<Record<string, string>> = {
     'This claim has already been decided. Reload its retained decision.',
   leave_recovery_work_source_changed:
     'The work evidence changed. Reload the claim and review the current evidence before deciding.',
+  attendance_report_identity_conflict:
+    'One or more selected staff do not have an active shift assignment or duty roster assigned. Please verify staff selection.',
+  attendance_report_rows_conflict:
+    'The attendance records changed or have evidence conflict. Reload and try again.',
+  attendance_report_range_limit:
+    'Attendance query is limited to 1–25 employees and at most 31 days.',
+  employee_not_approved:
+    'This employee is currently in Draft or Pending approval status.',
+  employee_document_unavailable:
+    'The requested document is not currently available or is being processed.',
 };
 
 export function attendanceError(error: unknown) {

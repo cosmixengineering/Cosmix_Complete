@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { GOOGLE_MAPS_TILES } from '@/utils/google-maps';
 import {
   Compass,
   ExternalLink,
@@ -90,14 +91,15 @@ export function SiteLeafletMap({
         attributionControl: false,
       });
 
-      // Default OpenStreetMap tiles
+      // Official Google Maps tiles (Roadmap & Hybrid Satellite)
       const tileUrl =
         mapType === 'satellite'
-          ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-          : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+          ? GOOGLE_MAPS_TILES.hybrid
+          : GOOGLE_MAPS_TILES.roadmap;
 
       const tile = L.tileLayer(tileUrl, {
-        maxZoom: 19,
+        maxZoom: 20,
+        attribution: '&copy; Google Maps',
       }).addTo(map);
 
       tileLayerRef.current = tile;
@@ -124,8 +126,8 @@ export function SiteLeafletMap({
 
     const tileUrl =
       mapType === 'satellite'
-        ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-        : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        ? GOOGLE_MAPS_TILES.hybrid
+        : GOOGLE_MAPS_TILES.roadmap;
 
     tileLayerRef.current.setUrl(tileUrl);
   }, [mapType]);

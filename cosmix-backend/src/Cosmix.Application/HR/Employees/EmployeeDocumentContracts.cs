@@ -63,8 +63,8 @@ public sealed record EmployeeDocumentCompletenessResponse(Guid EmployeeId, DateO
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record EmployeeDocumentCompletenessBatchRequest(
-    [property: JsonRequired, Required, MinLength(1), MaxLength(25)] Guid[] EmployeeIds,
-    [property: JsonRequired, JsonNumberHandling(JsonNumberHandling.Strict), Range(1, 365)] int ExpiringWithinDays);
+    [property: JsonRequired] [Required, MinLength(1), MaxLength(25)] Guid[] EmployeeIds,
+    [property: JsonRequired, JsonNumberHandling(JsonNumberHandling.Strict)] [Range(1, 365)] int ExpiringWithinDays);
 public sealed record EmployeeDocumentCompletenessBatchMetadata(DateTimeOffset GeneratedAtUtc, string TimeZone,
     DateOnly AsOf, DateOnly ReminderThrough, EmployeeDocumentCompletenessBatchRequest Filters,
     string Coverage = "explicit_selected_employees_only",

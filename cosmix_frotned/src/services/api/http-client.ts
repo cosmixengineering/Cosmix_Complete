@@ -27,6 +27,7 @@ export function allowSessionRefresh() {
   }
 }
 export function blockSessionRefresh() {
+  if (import.meta.env.DEV) return;
   refreshBlocked = true;
   // A non-sensitive stop flag, never a token or proof of authentication. It prevents
   // another tab/reload replaying an uncertain refresh; only fresh sign-in clears it.
@@ -37,6 +38,7 @@ export function blockSessionRefresh() {
   }
 }
 function isRefreshBlocked() {
+  if (import.meta.env.DEV) return false;
   try {
     return refreshBlocked || localStorage.getItem(refreshBlockKey) === '1';
   } catch {
@@ -164,7 +166,7 @@ export async function request(path: string, options: RequestOptions = {}): Promi
         // Cancellation belongs to the obsolete caller, not the current authentication state.
         options.signal?.throwIfAborted();
         if (!(refreshError instanceof ApiError && refreshError.status === 401)) {
-          window.dispatchEvent(new Event(SESSION_UNAVAILABLE_EVENT));
+          if (!import.meta.env.DEV) window.dispatchEvent(new Event(SESSION_UNAVAILABLE_EVENT));
           throw refreshError;
         }
       }

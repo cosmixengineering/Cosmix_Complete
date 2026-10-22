@@ -60,8 +60,8 @@ public sealed record PayrollHandoffBankAdvice(string BatchReference, DateTimeOff
     string FileName, string CsvContent);
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
-public sealed record PreparePayrollHandoffRequest([property: JsonRequired, Range(1, 9998)] int Year,
-    [property: JsonRequired, Range(1, 12)] int Month,
+public sealed record PreparePayrollHandoffRequest([property: JsonRequired] [Range(1, 9998)] int Year,
+    [property: JsonRequired] [Range(1, 12)] int Month,
     [Required, StringLength(64, MinimumLength = 64)] string ExpectedPreviewFingerprint,
     [Required, StringLength(1000)] string Reason);
 

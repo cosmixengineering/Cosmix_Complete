@@ -28,6 +28,11 @@ using Cosmix.Application.Attendance.Audit;
 using Cosmix.Application.Attendance.Reports;
 using Cosmix.Infrastructure.Database;
 using Cosmix.Application.Authentication;
+using Cosmix.Application.Attendance.LocationConsent;
+using Cosmix.Application.Attendance.PunchRetention;
+using Cosmix.Application.HR.PayrollAccounting;
+using Cosmix.Application.HR.StatutoryContributions;
+using Cosmix.Infrastructure.Workers;
 using Cosmix.Infrastructure.Authentication;
 using Cosmix.Infrastructure.Authentication.Providers;
 using Cosmix.Infrastructure.Authentication.Access;
@@ -158,6 +163,18 @@ public static class DependencyInjection
         if (!webOptions.IsValid() || (webOptions.Enabled && !mobileOptions.Enabled))
             throw new InvalidOperationException("WebAuthentication requires valid password settings and shared SMS authentication configuration.");
         services.AddSingleton(webOptions);
+
+        services.AddScoped<ILocationConsentRepository, LocationConsentRepository>();
+        services.AddScoped<LocationConsentService>();
+        services.AddSingleton(configuration.GetSection(PunchRetentionOptions.SectionName).Get<PunchRetentionOptions>() ?? new());
+        services.AddScoped<IPunchRetentionRepository, PunchRetentionRepository>();
+        services.AddScoped<PunchRetentionService>();
+        services.AddHostedService<PunchRetentionWorker>();
+        services.AddScoped<IPayrollAccountingRepository, PayrollAccountingRepository>();
+        services.AddScoped<PayrollAccountingService>();
+        services.AddScoped<IStatutoryContributionRepository, StatutoryContributionRepository>();
+        services.AddScoped<StatutoryContributionService>();
+
         return services;
     }
 }

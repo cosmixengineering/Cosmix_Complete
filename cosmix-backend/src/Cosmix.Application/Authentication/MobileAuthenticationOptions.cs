@@ -30,7 +30,7 @@ public sealed class MobileAuthenticationOptions
             RequestsGlobal >= RequestsPerIp && VerificationAttemptsPerPhone >= MaximumOtpAttempts &&
             VerificationAttemptsPerIp >= VerificationAttemptsPerPhone &&
             VerificationAttemptsGlobal >= VerificationAttemptsPerIp &&
-            AccessTokenLifetimeSeconds is >= 60 and <= 900 &&
+            AccessTokenLifetimeSeconds is >= 60 and <= 86400 &&
             RefreshTokenLifetimeSeconds >= AccessTokenLifetimeSeconds &&
             SessionLifetimeSeconds >= RefreshTokenLifetimeSeconds && SessionLifetimeSeconds <= 2592000 &&
             MinimumRequestDurationMilliseconds is >= 100 and <= 3000 && ValidTimeZone();

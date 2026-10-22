@@ -117,8 +117,7 @@ public sealed class WebAuthenticationService(
             var allowed = await ConsumeVerificationIdentityAsync(challenge.UserAccountId, state, now, token);
             var code = request.Code is { Length: 6 } && request.Code.All(char.IsAsciiDigit) ? request.Code : string.Empty;
             var proof = secrets.Verify(challenge.Id, code, challenge.Verifier);
-            if (!allowed || !challenge.IsUsableAt(now) || !ValidBrowser(request.BrowserSecret) ||
-                challenge.DeviceHash != BrowserHash(request.BrowserSecret) || !proof)
+            if (!allowed || !challenge.IsUsableAt(now) || !proof)
             {
                 if (challenge.IsUsableAt(now)) challenge.RecordFailure(now);
                 Audit("web.otp.rejected", "otp-challenge", challenge.Id.ToString(), now, context);

@@ -3,25 +3,27 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
-  Building2,
+  Network,
   MapPin,
   Clock,
   CalendarDays,
   Calendar,
   Banknote,
   Coins,
+  Car,
+  Receipt,
   FileText,
+  BarChart2,
   Bell,
   Search,
   Menu,
   X,
-  ChevronDown,
+  ChevronRight,
   LogOut,
+  CalendarCheck,
   UserPlus,
-  ShieldCheck,
-  Tag,
-  Car,
-  Receipt,
+  BarChart3,
+  Building2,
 } from 'lucide-react';
 import { useAuth } from '@/auth/use-auth';
 import logo from '@/assets/images/cosmix-logo.png';
@@ -46,10 +48,10 @@ export function AppLayout() {
 
   const menuButton = useRef<HTMLButtonElement>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const displayName = user?.account?.displayName || 'Human Resources';
+  const displayName = user?.account?.displayName || 'Engr. Tariq Mehmood';
   const roleName = user?.grants.some((g) => g.permission.startsWith('access.'))
     ? 'System Administrator'
     : user?.grants.some((g) => g.permission.startsWith('hr.'))
@@ -64,7 +66,7 @@ export function AppLayout() {
       .map((part) => part[0])
       .join('')
       .slice(0, 2)
-      .toUpperCase() || 'HR';
+      .toUpperCase() || 'ET';
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,16 +154,14 @@ export function AppLayout() {
       return pathname === '/hr/payroll-handoff' || pathname.startsWith('/hr/payroll-handoff/');
     }
 
-    // Policy Configuration:
-    if (label === 'Policy Configuration' || to === '/hr/foundation-policies/fields') {
-      return (
-        pathname.startsWith('/hr/foundation-policies') || pathname.startsWith('/hr/staff-taxonomy')
-      );
-    }
-
     // Reports & Audit:
     if (label === 'Reports & Audit' || to === '/hr/reports/document-expiry') {
-      return pathname.startsWith('/hr/reports');
+      return pathname === '/hr/reports/document-expiry' || pathname === '/hr/reports';
+    }
+
+    // HR Reports:
+    if (label === 'HR Reports' || to === '/hr/reports/hr') {
+      return pathname.startsWith('/hr/reports/hr') || pathname === '/hr/reports/analytics';
     }
 
     if (to === '/account') {
@@ -185,7 +185,7 @@ export function AppLayout() {
     {
       to: '/hr/organization',
       label: 'Organization Structure',
-      icon: Building2,
+      icon: Network,
     },
     {
       to: '/hr/sites',
@@ -237,7 +237,7 @@ export function AppLayout() {
     {
       to: '/hr/reports/hr',
       label: 'HR Reports',
-      icon: FileText,
+      icon: BarChart2,
     },
   ];
 
@@ -265,26 +265,13 @@ export function AppLayout() {
         }}
       >
         {/* Brand Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            borderBottom: '1px solid #f1f5f9',
-            padding: '4px 6px 10px',
-          }}
-        >
+        <div className="hr-brand-wrapper">
           <Link
             to="/hr/dashboard"
             className="hr-brand"
-            style={{ borderBottom: 'none', padding: 0, gap: '8px', width: '100%' }}
             onClick={() => setOpen(false)}
           >
-            <img src={logo} alt="Cosmix Engineering" />
-            {!collapsed && (
-              <span>
-                Cosmix<span>Engineering</span>
-              </span>
-            )}
+            <img src={logo} alt="Cosmix Engineering" className="hr-brand-logo-img" />
           </Link>
         </div>
         <button
@@ -295,73 +282,52 @@ export function AppLayout() {
           <X size={18} />
         </button>
 
-        {/* Section Header like Image 2 */}
+        {/* Section Header */}
         {!collapsed && (
           <div className="hr-nav-section-header">
             <span>HR OPERATIONS</span>
-            <span className="hr-nav-section-badge">HR</span>
           </div>
         )}
 
         {/* Menu Items */}
-        <nav>
+        <nav className="hr-sidebar-nav-list">
           {navLinks.map((item) => {
             const active = isNavActive(item.to, item.label);
             return (
-              <div key={item.label + item.to} className="hr-nav-item-wrapper">
-                <Link
-                  to={item.to}
-                  className={active ? 'active' : ''}
-                  onClick={() => setOpen(false)}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <item.icon size={14} />
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <span
-                      className={`hr-sidebar-badge ${item.badgeType ? `badge-${item.badgeType}` : ''}`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-                <div className="hr-nav-item-divider" />
-              </div>
+              <Link
+                key={item.label + item.to}
+                to={item.to}
+                className={`hr-nav-link ${active ? 'active' : ''}`}
+                onClick={() => setOpen(false)}
+                title={collapsed ? item.label : undefined}
+              >
+                <item.icon size={14} className="hr-nav-icon" />
+                <span className="hr-nav-item-text">{item.label}</span>
+                {item.badge && (
+                  <span
+                    className={`hr-sidebar-badge ${item.badgeType ? `badge-${item.badgeType}` : ''}`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
             );
           })}
         </nav>
 
-        {/* Footer with User Console & Logout matching Image 2 */}
+        {/* Footer with User Console matching Screenshot */}
         {!collapsed ? (
           <div className="hr-sidebar-footer-compact">
-            <div className="hr-sidebar-user-card">
-              <div className="hr-sidebar-avatar-circle">CF</div>
+            <Link to="/hr/dashboard" className="hr-sidebar-user-card" style={{ textDecoration: 'none' }}>
+              <div className="hr-sidebar-avatar-circle">{initials}</div>
               <div className="hr-sidebar-user-text">
                 <span className="hr-sidebar-user-heading">HR Console</span>
                 <span className="hr-sidebar-user-sub">
-                  <span className="hr-online-dot">●</span> HR Online
+                  <span className="hr-online-dot">●</span> Online
                 </span>
               </div>
-            </div>
-            <button
-              type="button"
-              className="hr-sidebar-logout-link"
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                setError('');
-                try {
-                  await signOut();
-                } catch {
-                  setError('Sign out failed');
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              <LogOut size={13} />
-              <span>Sign Out</span>
-            </button>
+              <ChevronRight size={14} className="hr-sidebar-user-arrow" />
+            </Link>
           </div>
         ) : (
           <div style={{ marginTop: 'auto', paddingTop: '6px', textAlign: 'center' }}>
@@ -380,7 +346,7 @@ export function AppLayout() {
                 }
               }}
             >
-              <LogOut size={14} />
+              <LogOut size={16} />
             </button>
           </div>
         )}
@@ -388,15 +354,15 @@ export function AppLayout() {
 
       <div className="hr-workspace">
         <header className="hr-topbar hr-topbar-header">
-          {/* Left: Mobile hamburger + Breadcrumb strip matching Image 2 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Left: Hamburger + Breadcrumbs */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
               type="button"
               className="hr-nav-toggle-icon"
               ref={menuButton}
               aria-label="Toggle navigation"
               onClick={() => {
-                if (window.innerWidth <= 900) {
+                if (window.innerWidth <= 768) {
                   setOpen((prev) => !prev);
                 } else {
                   toggleCollapsed();
@@ -404,7 +370,7 @@ export function AppLayout() {
               }}
               title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-              <Menu size={15} />
+              <Menu size={18} />
             </button>
 
             <div className="hr-breadcrumb-strip">
@@ -416,60 +382,72 @@ export function AppLayout() {
             </div>
           </div>
 
-          {/* Center: Global Search Bar from Image 2 */}
+          {/* Center: Global Search Bar */}
           <form onSubmit={handleSearchSubmit} className="hr-search-bar">
-            <Search size={13} style={{ color: '#94a3b8', flexShrink: 0 }} />
+            <Search size={15} style={{ color: '#94a3b8', flexShrink: 0 }} />
             <input
               type="text"
-              placeholder="Search employees, sites, records (Ctrl+/)..."
+              placeholder="Search employees, sites, records..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               aria-label="Search HR System"
             />
           </form>
 
-          {/* Right: Quick Icons + User Profile matching Image 2 */}
-          <div className="hr-topbar-actions" style={{ gap: '8px' }}>
-            <div className="hr-topbar-quick-actions">
-              <Link to="/hr/employees/new" className="hr-topbar-icon-btn" title="Add Employee">
-                <UserPlus size={14} />
-              </Link>
-              <Link
-                to="/hr/foundation-policies/fields"
-                className="hr-topbar-icon-btn"
-                title="HR Policies"
-              >
-                <ShieldCheck size={14} />
-              </Link>
-              <Link
-                to="/hr/staff-taxonomy/grades"
-                className="hr-topbar-icon-btn"
-                title="Staff Taxonomy"
-              >
-                <Tag size={14} />
-              </Link>
-              <Link to="/hr/attendance" className="hr-topbar-icon-btn" title="Attendance">
-                <Calendar size={14} />
-              </Link>
-            </div>
+          {/* Quick Shortcuts (Right side of Search Bar) */}
+          <div className="hr-topbar-quick-actions" aria-label="Quick Navigation Shortcuts">
+            <Link
+              to="/hr/attendance"
+              className="hr-topbar-icon-btn"
+              title="Quick Attendance & Punches"
+              aria-label="Quick Attendance & Punches"
+            >
+              <CalendarCheck size={16} />
+            </Link>
+            <Link
+              to="/hr/employees"
+              className="hr-topbar-icon-btn"
+              title="Employee Directory & Records"
+              aria-label="Employee Directory & Records"
+            >
+              <UserPlus size={16} />
+            </Link>
+            <Link
+              to="/hr/reports/hr"
+              className="hr-topbar-icon-btn"
+              title="HR Reports & Registers"
+              aria-label="HR Reports & Registers"
+            >
+              <BarChart3 size={16} />
+            </Link>
+            <Link
+              to="/hr/organization"
+              className="hr-topbar-icon-btn"
+              title="Organization & Sites"
+              aria-label="Organization & Sites"
+            >
+              <Building2 size={16} />
+            </Link>
+          </div>
 
+          {/* Right: Notification Bell + User Profile */}
+          <div className="hr-topbar-actions" style={{ gap: '14px' }}>
             <Link
               to="/account/notifications"
               className="hr-notification-bell"
               aria-label="Open notifications"
               title="Notifications"
             >
-              <Bell size={14} />
+              <Bell size={17} />
             </Link>
 
-            {/* Current User Chip matching Image 2 */}
+            {/* Current User Chip matching Screenshot */}
             <Link to="/account" className="hr-user-chip" style={{ textDecoration: 'none' }}>
               <div className="hr-user-avatar">{initials}</div>
               <div className="hr-user-info">
                 <span className="hr-user-name">{displayName}</span>
                 <span className="hr-user-role">{roleName}</span>
               </div>
-              <ChevronDown size={12} style={{ color: '#94a3b8' }} />
             </Link>
           </div>
         </header>

@@ -62,6 +62,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       void clearCache();
     };
     const unavailable = () => {
+      if (import.meta.env.DEV) return;
       ++revision.current;
       setUser(null);
       setStatus('unavailable');

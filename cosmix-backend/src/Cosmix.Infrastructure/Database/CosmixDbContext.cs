@@ -31,6 +31,9 @@ using Cosmix.Domain.HR.PayrollHandoff;
 using Cosmix.Domain.HR.Policies;
 using Cosmix.Domain.HR.PolicyEffects;
 using Cosmix.Domain.HR.VehicleFuel;
+using Cosmix.Domain.Attendance.LocationConsent;
+using Cosmix.Domain.HR.PayrollAccounting;
+using Cosmix.Domain.HR.StatutoryContributions;
 using Cosmix.Application.Common.Interfaces;
 using Cosmix.Domain.Common;
 using Cosmix.Domain.HR.Onboarding;
@@ -192,6 +195,15 @@ public sealed class CosmixDbContext(DbContextOptions<CosmixDbContext> options)
     public DbSet<VehicleMileageEntry> VehicleMileageEntries => Set<VehicleMileageEntry>();
     public DbSet<VehicleServiceRecord> VehicleServiceRecords => Set<VehicleServiceRecord>();
     public DbSet<VehicleTrip> VehicleTrips => Set<VehicleTrip>();
+
+    public DbSet<LocationNoticePolicy> LocationNoticePolicies => Set<LocationNoticePolicy>();
+    public DbSet<EmployeeLocationConsent> EmployeeLocationConsents => Set<EmployeeLocationConsent>();
+    public DbSet<PunchLocationRedaction> PunchLocationRedactions => Set<PunchLocationRedaction>();
+    public DbSet<PayrollObligation> PayrollObligations => Set<PayrollObligation>();
+    public DbSet<PayrollJournalEntry> PayrollJournalEntries => Set<PayrollJournalEntry>();
+    public DbSet<SalaryPayment> SalaryPayments => Set<SalaryPayment>();
+    public DbSet<EmployeeStatutoryRegistration> EmployeeStatutoryRegistrations => Set<EmployeeStatutoryRegistration>();
+    public DbSet<StatutoryContribution> StatutoryContributions => Set<StatutoryContribution>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

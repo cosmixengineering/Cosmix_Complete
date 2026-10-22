@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, LoaderCircle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, LoaderCircle, ShieldCheck, Zap } from 'lucide-react';
+import { z } from 'zod';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/forms/TextInput';
@@ -11,7 +12,29 @@ import { authErrorMessage } from '@/auth/messages';
 import { useChallengeTime } from '@/auth/ChallengeStatus';
 import { type OtpChallenge, isSystemAdmin } from '@/auth/contracts';
 import { LocalTestOtp } from '@/auth/LocalTestOtp';
+import { request } from '@/services/api/http-client';
 import logo from '@/assets/images/cosmix-logo.png';
+
+const DEV_ACCOUNTS = [
+  {
+    role: '🛠️ Admin',
+    email: 'admin@example.invalid',
+    password: 'NLYHRfEtjUognTNLlURukM/Epgu0495W',
+    badge: 'Operations & Fleet Admin',
+  },
+  {
+    role: '👤 HR Lead',
+    email: 'hr@example.invalid',
+    password: 'zgHnMw/CY810kKKCBbhMkJUnZlP4h75J',
+    badge: 'Human Resources Lead',
+  },
+  {
+    role: '👑 SuperAdmin',
+    email: 'superadmin@example.invalid',
+    password: 'C2zMGSQj1CMIBpt7o5qe9Cpbxg6Q4Oei',
+    badge: 'Full SuperAdmin Authority',
+  },
+] as const;
 
 export function SignInPage() {
   const { user, status, sessionError, completeSignIn, retrySession } = useAuth();
@@ -63,6 +86,38 @@ export function SignInPage() {
         .forEach((input) => {
           input.value = '';
         });
+      pending.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function devQuickSignIn(acc: (typeof DEV_ACCOUNTS)[number]) {
+    if (pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    setError(null);
+    try {
+      setEmail(acc.email);
+      // 1. Send Login
+      const chal = await authAdapter.login(acc.email, acc.password);
+      setChallenge(chal);
+
+      // 2. Fetch OTP from local testing inbox
+      const result = await request('/auth/web/local-testing/otp', {
+        method: 'POST',
+        anonymous: true,
+        body: { challengeId: chal.challengeId },
+      });
+      const parsed = z.object({ code: z.string().regex(/^\d{6}$/) }).parse(result);
+
+      // 3. Verify OTP immediately
+      await authAdapter.verify(chal.challengeId, parsed.code);
+      setVerified(true);
+      setChallenge(null);
+      await completeSignIn();
+    } catch (failure) {
+      setError(authErrorMessage(failure));
+    } finally {
       pending.current = false;
       setBusy(false);
     }
@@ -153,6 +208,59 @@ export function SignInPage() {
                       Forgot password?
                     </Link>
                   </div>
+
+                  {import.meta.env.DEV && (
+                    <div
+                      style={{
+                        marginTop: '0.875rem',
+                        padding: '0.625rem 0.75rem',
+                        background: '#f8fafc',
+                        borderRadius: '8px',
+                        border: '1px dashed #cbd5e1',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            color: '#1e293b',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                          }}
+                        >
+                          <Zap size={14} color="#f59e0b" fill="#f59e0b" />
+                          1-Click Instant Sign In (Dev Testing):
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        {DEV_ACCOUNTS.map((acc) => (
+                          <button
+                            key={acc.email}
+                            type="button"
+                            className="btn btn--outline"
+                            title={`Instant 1-click sign in as ${acc.email}`}
+                            disabled={busy || loading}
+                            style={{
+                              fontSize: '0.75rem',
+                              padding: '0.3rem 0.6rem',
+                              cursor: 'pointer',
+                              background: '#fff',
+                              borderColor: '#94a3b8',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                            }}
+                            onClick={() => void devQuickSignIn(acc)}
+                          >
+                            <span>{acc.role}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : resending ? (
                 <>
@@ -185,10 +293,39 @@ export function SignInPage() {
                       This code has expired. Request a new code.
                     </p>
                   )}
-                  {import.meta.env.DEV && !time.expired && (
+                  {import.meta.env.DEV && (
                     <LocalTestOtp
                       key={`local-otp:${challenge.challengeId}`}
                       challengeId={challenge.challengeId}
+                      onAutoVerify={async (otpCode) => {
+                        if (pending.current) return;
+                        pending.current = true;
+                        setBusy(true);
+                        setError(null);
+                        try {
+                          await authAdapter.verify(challenge.challengeId, otpCode);
+                          setVerified(true);
+                          setChallenge(null);
+                          await completeSignIn();
+                        } catch (failure) {
+                          setError(authErrorMessage(failure));
+                        } finally {
+                          pending.current = false;
+                          setBusy(false);
+                        }
+                      }}
+                      onReset={() => {
+                        const matching = DEV_ACCOUNTS.find(
+                          (a) => a.email.toLowerCase() === email.toLowerCase(),
+                        );
+                        if (matching) {
+                          void devQuickSignIn(matching);
+                        } else {
+                          setChallenge(null);
+                          setResending(false);
+                          setError(null);
+                        }
+                      }}
                     />
                   )}
                 </>

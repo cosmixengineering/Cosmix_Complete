@@ -841,6 +841,119 @@ namespace Cosmix.Infrastructure.Database.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Cosmix.Domain.Attendance.LocationConsent.EmployeeLocationConsent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AcceptedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DeviceMetadata")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<Guid>("NoticePolicyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("NoticePolicyVersion")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NoticePolicyId");
+
+                    b.HasIndex("EmployeeId", "NoticePolicyVersion")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeLocationConsents", "attendance");
+                });
+
+            modelBuilder.Entity("Cosmix.Domain.Attendance.LocationConsent.LocationNoticePolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NoticeText")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PublishedByUserId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Version")
+                        .IsUnique();
+
+                    b.ToTable("LocationNoticePolicies", "attendance");
+                });
+
+            modelBuilder.Entity("Cosmix.Domain.Attendance.LocationConsent.PunchLocationRedaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActorUserId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("PunchEventId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("RedactedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("RetentionPolicyDays")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PunchEventId")
+                        .IsUnique();
+
+                    b.HasIndex("RedactedAtUtc");
+
+                    b.ToTable("PunchLocationRedactions", "attendance");
+                });
+
             modelBuilder.Entity("Cosmix.Domain.Attendance.MonthLocks.AttendancePeriodLock", b =>
                 {
                     b.Property<Guid>("Id")
@@ -8921,6 +9034,164 @@ namespace Cosmix.Infrastructure.Database.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Cosmix.Domain.HR.PayrollAccounting.PayrollJournalEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CreditAccountCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<string>("DebitAccountCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ObligationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("PostedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PostedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind");
+
+                    b.HasIndex("ObligationId");
+
+                    b.ToTable("PayrollJournalEntries", "hr");
+                });
+
+            modelBuilder.Entity("Cosmix.Domain.HR.PayrollAccounting.PayrollObligation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<DateTimeOffset?>("FinalizedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("FinalizedByUserId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("State")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalGrossAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalNetAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId")
+                        .IsUnique();
+
+                    b.HasIndex("State");
+
+                    b.ToTable("PayrollObligations", "hr");
+                });
+
+            modelBuilder.Entity("Cosmix.Domain.HR.PayrollAccounting.SalaryPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccrualJournalEntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ConfirmedByUserId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("ObligationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PaymentJournalEntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PaymentReference")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("State")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccrualJournalEntryId");
+
+                    b.HasIndex("ObligationId");
+
+                    b.HasIndex("PaymentJournalEntryId");
+
+                    b.HasIndex("State");
+
+                    b.ToTable("SalaryPayments", "hr");
+                });
+
             modelBuilder.Entity("Cosmix.Domain.HR.PayrollHandoff.PayrollHandoffBatch", b =>
                 {
                     b.Property<Guid>("Id")
@@ -9594,6 +9865,109 @@ namespace Cosmix.Infrastructure.Database.Migrations
                         .IsUnique();
 
                     b.ToTable("StaffCategories", "hr");
+                });
+
+            modelBuilder.Entity("Cosmix.Domain.HR.StatutoryContributions.EmployeeStatutoryRegistration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("RecordedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateOnly>("RegisteredAt")
+                        .HasColumnType("date");
+
+                    b.Property<string>("RegistrationNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Scheme")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "Scheme")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeStatutoryRegistrations", "hr");
+                });
+
+            modelBuilder.Entity("Cosmix.Domain.HR.StatutoryContributions.StatutoryContribution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ApprovedByUserId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateOnly>("ContributionMonth")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<decimal>("EmployeeContributionAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("EmployerContributionAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PayableAccountCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTimeOffset?>("PostedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PostedByUserId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Scheme")
+                        .HasColumnType("int");
+
+                    b.Property<int>("State")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("State");
+
+                    b.HasIndex("Scheme", "ContributionMonth");
+
+                    b.ToTable("StatutoryContributions", "hr");
                 });
 
             modelBuilder.Entity("Cosmix.Domain.HR.VehicleFuel.EmployeeCommuteDistance", b =>
@@ -10438,6 +10812,36 @@ namespace Cosmix.Infrastructure.Database.Migrations
                         .HasForeignKey("SourcePolicyVersionId", "PolicySha256", "BindingSha256", "SupersedesId")
                         .HasPrincipalKey("SourcePolicyVersionId", "PolicySha256", "BindingSha256", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Cosmix.Domain.Attendance.LocationConsent.EmployeeLocationConsent", b =>
+                {
+                    b.HasOne("Cosmix.Domain.HR.Employees.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Cosmix.Domain.Attendance.LocationConsent.LocationNoticePolicy", "NoticePolicy")
+                        .WithMany()
+                        .HasForeignKey("NoticePolicyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("NoticePolicy");
+                });
+
+            modelBuilder.Entity("Cosmix.Domain.Attendance.LocationConsent.PunchLocationRedaction", b =>
+                {
+                    b.HasOne("Cosmix.Domain.Attendance.Punches.RawPunchEvent", "PunchEvent")
+                        .WithMany()
+                        .HasForeignKey("PunchEventId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PunchEvent");
                 });
 
             modelBuilder.Entity("Cosmix.Domain.Attendance.MonthLocks.AttendancePeriodLockEvent", b =>
@@ -12777,6 +13181,54 @@ namespace Cosmix.Infrastructure.Database.Migrations
                     b.Navigation("AuditEvent");
                 });
 
+            modelBuilder.Entity("Cosmix.Domain.HR.PayrollAccounting.PayrollJournalEntry", b =>
+                {
+                    b.HasOne("Cosmix.Domain.HR.PayrollAccounting.PayrollObligation", "Obligation")
+                        .WithMany()
+                        .HasForeignKey("ObligationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Obligation");
+                });
+
+            modelBuilder.Entity("Cosmix.Domain.HR.PayrollAccounting.PayrollObligation", b =>
+                {
+                    b.HasOne("Cosmix.Domain.HR.PayrollHandoff.PayrollHandoffBatch", "Batch")
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+                });
+
+            modelBuilder.Entity("Cosmix.Domain.HR.PayrollAccounting.SalaryPayment", b =>
+                {
+                    b.HasOne("Cosmix.Domain.HR.PayrollAccounting.PayrollJournalEntry", "AccrualJournalEntry")
+                        .WithMany()
+                        .HasForeignKey("AccrualJournalEntryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Cosmix.Domain.HR.PayrollAccounting.PayrollObligation", "Obligation")
+                        .WithMany()
+                        .HasForeignKey("ObligationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Cosmix.Domain.HR.PayrollAccounting.PayrollJournalEntry", "PaymentJournalEntry")
+                        .WithMany()
+                        .HasForeignKey("PaymentJournalEntryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AccrualJournalEntry");
+
+                    b.Navigation("Obligation");
+
+                    b.Navigation("PaymentJournalEntry");
+                });
+
             modelBuilder.Entity("Cosmix.Domain.HR.PayrollHandoff.PayrollHandoffBatch", b =>
                 {
                     b.HasOne("Cosmix.Domain.Common.Approvals.ApprovalRequest", "ApprovalRequest")
@@ -13023,6 +13475,17 @@ namespace Cosmix.Infrastructure.Database.Migrations
                     b.Navigation("PolicyVersion");
 
                     b.Navigation("Site");
+                });
+
+            modelBuilder.Entity("Cosmix.Domain.HR.StatutoryContributions.EmployeeStatutoryRegistration", b =>
+                {
+                    b.HasOne("Cosmix.Domain.HR.Employees.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("Cosmix.Domain.HR.VehicleFuel.EmployeeCommuteDistance", b =>

@@ -21,7 +21,7 @@ public static class AttendancePayrollInputPermissions
 [JsonNumberHandling(JsonNumberHandling.Strict)]
 public sealed record SaveAttendancePayrollInputsRequest(
     [Required, StringLength(64, MinimumLength = 64)] string ExpectedPreviewFingerprint,
-    [property: JsonRequired, Range(0, int.MaxValue)] int ExpectedRevision,
+    [property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedRevision,
     [Required, StringLength(1000)] string Reason);
 
 /// <summary>Explicit financial permission is required. Never embed in employee daily attendance.</summary>

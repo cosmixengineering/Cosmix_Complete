@@ -30,6 +30,10 @@ public sealed class AttendanceSummaryRepository(CosmixDbContext db, IRosterRepos
         if (unmatchedSources.Length > AttendanceScopeEvaluation.MaximumScopes) throw AttendanceOperation.Conflict("attendance_scope_limit");
         scopes.AddRange(unmatchedSources.Select(source =>
             new AttendanceResourceScope([new AccessResource(EmployeeId: employeeId, SiteId: source.SiteId)])));
+        if (scopes.Count == 0)
+        {
+            scopes.Add(new AttendanceResourceScope([new AccessResource(EmployeeId: employeeId)]));
+        }
         if (!AttendanceScopeEvaluation.IsValid(scopes) || scopes.Any(scope => scope.Alternatives.Any(x => x.EmployeeId != employeeId)))
             throw AttendanceOperation.Conflict("attendance_scope_limit");
         return scopes;

@@ -3,6 +3,7 @@ import { Pagination } from '@/components/data-display/Pagination';
 import { Dialog } from '@/components/ui/Dialog';
 import { useHrQuery } from '../../hooks/use-hr-queries';
 import { pageOf } from '../../schemas/contracts';
+import { profileResponse } from '../../schemas/hiring';
 import { changeHistorySchema, changeSummarySchema } from '../../schemas/updates';
 import type { Section } from '../../types/updates';
 import { labelDate } from '../../utils/messages';
@@ -12,17 +13,36 @@ import { RecordView } from '../RecordView';
 export function ChangeHistory({ employeeId, section }: { employeeId: string; section: Section }) {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string | null>(null);
+
+  const profileQuery = useHrQuery(
+    `employees/${employeeId}`,
+    profileResponse,
+    ['hr.employees.read'],
+  );
+  const isApproved = (profileQuery.data?.employee?.status ?? 2) === 2;
+
   const path = `employees/${employeeId}/changes/${section.name}/history`;
-  const query = useHrQuery(`${path}?page=${page}&pageSize=10`, pageOf(changeSummarySchema), [
-    'hr.employees.read',
-    ...section.read,
-  ]);
+  const query = useHrQuery(
+    `${path}?page=${page}&pageSize=10`,
+    pageOf(changeSummarySchema),
+    ['hr.employees.read', ...section.read],
+    isApproved,
+  );
   const detail = useHrQuery(
     `${path}/${selected}`,
     changeHistorySchema,
     ['hr.employees.read', ...section.read],
-    !!selected,
+    !!selected && isApproved,
   );
+
+  if (!isApproved) {
+    return (
+      <section className="hr-form-section">
+        <h2>Change history</h2>
+        <p className="muted">Change history is activated once the employee onboarding has been approved.</p>
+      </section>
+    );
+  }
   return (
     <section className="hr-form-section">
       <h2>Change history</h2>
