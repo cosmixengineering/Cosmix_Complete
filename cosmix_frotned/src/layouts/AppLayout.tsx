@@ -24,13 +24,17 @@ import {
   UserPlus,
   BarChart3,
   Building2,
+  Settings,
+  type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/auth/use-auth';
+import { hrConfigurationNavigation } from '@/modules/hr/policy-navigation';
 import logo from '@/assets/images/cosmix-logo.png';
 import '@/styles/hr-dashboard.css';
 
 export function AppLayout() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, status } = useAuth();
+  const configurationLinks = hrConfigurationNavigation(user, status).filter((link) => link.allowed);
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -78,6 +82,10 @@ export function AppLayout() {
   // Dedicated single-active checker to prevent multiple simultaneous active links
   const isNavActive = (to: string, label: string): boolean => {
     const pathname = location.pathname;
+    const activeConfiguration = configurationLinks.find(
+      (link) => pathname === link.to || pathname.startsWith(`${link.to}/`),
+    );
+    if (activeConfiguration) return activeConfiguration.to === to;
     const isLeaveWorkspace = [
       '/hr/leaves',
       '/hr/leave-management',
@@ -155,11 +163,16 @@ export function AppLayout() {
     }
 
     if (label === 'Payroll Accounting' || to === '/hr/payroll-accounting') {
-      return pathname === '/hr/payroll-accounting' || pathname.startsWith('/hr/payroll-accounting/');
+      return (
+        pathname === '/hr/payroll-accounting' || pathname.startsWith('/hr/payroll-accounting/')
+      );
     }
 
     if (label === 'Statutory Schemes' || to === '/hr/statutory-contributions') {
-      return pathname === '/hr/statutory-contributions' || pathname.startsWith('/hr/statutory-contributions/');
+      return (
+        pathname === '/hr/statutory-contributions' ||
+        pathname.startsWith('/hr/statutory-contributions/')
+      );
     }
 
     // Reports & Audit:
@@ -179,7 +192,13 @@ export function AppLayout() {
     return pathname === to;
   };
 
-  const navLinks = [
+  const navLinks: {
+    to: string;
+    label: string;
+    icon: LucideIcon;
+    badge?: string;
+    badgeType?: string;
+  }[] = [
     {
       to: '/hr/dashboard',
       label: 'Dashboard',
@@ -257,6 +276,7 @@ export function AppLayout() {
       label: 'HR Reports',
       icon: BarChart2,
     },
+    ...configurationLinks.map((link) => ({ ...link, icon: Settings })),
   ];
 
   return (
@@ -284,11 +304,7 @@ export function AppLayout() {
       >
         {/* Brand Header */}
         <div className="hr-brand-wrapper">
-          <Link
-            to="/hr/dashboard"
-            className="hr-brand"
-            onClick={() => setOpen(false)}
-          >
+          <Link to="/hr/dashboard" className="hr-brand" onClick={() => setOpen(false)}>
             <img src={logo} alt="Cosmix Engineering" className="hr-brand-logo-img" />
           </Link>
         </div>
@@ -336,7 +352,11 @@ export function AppLayout() {
         {/* Footer with User Console matching Screenshot */}
         {!collapsed ? (
           <div className="hr-sidebar-footer-compact">
-            <Link to="/hr/dashboard" className="hr-sidebar-user-card" style={{ textDecoration: 'none' }}>
+            <Link
+              to="/hr/dashboard"
+              className="hr-sidebar-user-card"
+              style={{ textDecoration: 'none' }}
+            >
               <div className="hr-sidebar-avatar-circle">{initials}</div>
               <div className="hr-sidebar-user-text">
                 <span className="hr-sidebar-user-heading">HR Console</span>

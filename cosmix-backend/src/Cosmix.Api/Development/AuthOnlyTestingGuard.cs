@@ -13,11 +13,20 @@ namespace Cosmix.Api.Development;
 internal static class AuthOnlyTestingGuard
 {
     internal const string Profile = "HumaHrAcceptance20261019C02";
-    internal const string PrivateRoot = @"C:\Users\Huma.Khan\AppData\Local\Cosmix\HrAcceptance\Huma20261019C02";
-    internal const string SettingsPath = PrivateRoot + @"\config\host.json";
-    internal const string DataProtectionDirectory = PrivateRoot + @"\keys\data-protection";
+    internal const string October26Profile = "HumaHrAcceptance20261026Auth01";
+    internal const string October26ReadsProfile = "HumaHrAcceptance20261026Read01";
+    internal static bool BusinessReads => Environment.GetEnvironmentVariable("COSMIX_EXISTING_TESTING_HOST") == October26ReadsProfile;
+    private static bool October26 => BusinessReads || Environment.GetEnvironmentVariable("COSMIX_EXISTING_TESTING_HOST") == October26Profile;
+    internal static string SelectedProfile => BusinessReads ? October26ReadsProfile : October26 ? October26Profile : Profile;
+    internal static string PrivateRoot => BusinessReads
+        ? @"C:\Users\Huma.Khan\AppData\Local\Cosmix\HrAcceptance\Huma20261026Read01"
+        : October26
+        ? @"C:\Users\Huma.Khan\AppData\Local\Cosmix\HrAcceptance\Huma20261026Auth01"
+        : @"C:\Users\Huma.Khan\AppData\Local\Cosmix\HrAcceptance\Huma20261019C02";
+    internal static string SettingsPath => PrivateRoot + @"\config\host.json";
+    internal static string DataProtectionDirectory => PrivateRoot + @"\keys\data-protection";
     internal const string Owner = @"COSMIXRND\Huma.Khan";
-    internal const string Pipe = @"np:\\.\pipe\LOCALDB#F9CAED57\tsql\query";
+    internal static string Pipe => October26 ? @"np:\\.\pipe\LOCALDB#48AA6F9F\tsql\query" : @"np:\\.\pipe\LOCALDB#F9CAED57\tsql\query";
     internal const string Url = "https://localhost:7481";
     internal const string DataFile = @"C:\Users\Huma.Khan\Cosmix_Testing.mdf";
     internal const string LogFile = @"C:\Users\Huma.Khan\Cosmix_Testing_log.ldf";
@@ -30,7 +39,7 @@ internal static class AuthOnlyTestingGuard
 
     internal static void ValidateConfiguration(IConfiguration config, string? settingsPath)
     {
-        if (!Same(settingsPath, SettingsPath) || config["LocalTesting:ExistingAcceptanceProfile"] != Profile ||
+        if (!Same(settingsPath, SettingsPath) || config["LocalTesting:ExistingAcceptanceProfile"] != SelectedProfile ||
             !bool.TryParse(config["LocalTesting:Enabled"], out var enabled) || !enabled ||
             !Same(config["LocalTesting:PrivateDirectory"], PrivateRoot) || config["Urls"] != Url ||
             config["AllowedHosts"] != "localhost" ||
@@ -100,8 +109,8 @@ internal static class AuthOnlyTestingGuard
     internal static void ValidateIdentity(string server, string database, string owner, string operatorName,
         Guid family, int processId, bool readOnly, int synonyms, int externalDependencies, IReadOnlyList<string>? files)
     {
-        if (!Same(server, @"Software-PC1\LOCALDB#F9CAED57") || database != "Cosmix_Testing" ||
-            !Same(owner, Owner) || !Same(operatorName, Owner) || processId != 29836 ||
+        if (!Same(server, October26 ? @"Software-PC1\LOCALDB#48AA6F9F" : @"Software-PC1\LOCALDB#F9CAED57") || database != "Cosmix_Testing" ||
+            !Same(owner, Owner) || !Same(operatorName, Owner) || processId != (October26 ? 26564 : 29836) ||
             family != new Guid("D9C34627-18A2-41CF-A804-821E39516303") || readOnly || synonyms != 0 || externalDependencies != 0 ||
             files is null || files.Count != 2 ||
             !(Same(files[0], DataFile) && Same(files[1], LogFile) || Same(files[0], LogFile) && Same(files[1], DataFile))) throw Refuse();
@@ -116,7 +125,9 @@ internal static class AuthOnlyTestingGuard
 
     internal static void ValidateSchema(string[] expected, string[] applied)
     {
-        if (expected.Length != 25 || expected[^1] != FinalMigration || !expected.SequenceEqual(applied)) throw Refuse();
+        if (expected.Length != (October26 ? 26 : 25) ||
+            expected[^1] != (October26 ? "20261022133924_AddComplianceWorkstreams" : FinalMigration) ||
+            !expected.SequenceEqual(applied)) throw Refuse();
     }
 
     private static HashSet<string> CreateAllowedKeys()

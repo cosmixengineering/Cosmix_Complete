@@ -280,11 +280,11 @@ public sealed partial class OvertimeService(AttendanceOperation operation, IOver
     private static bool ValidFinancial(OvertimeDecisionSnapshot decision, OvertimeSourceSnapshot inputs)
     {
         var value = decision.FinancialEvidence;
-        return decision.FinancialState == "calculated_pending_payroll" && value is not null && value.FormulaVersion == OvertimeFormula.Version &&
+        return decision.FinancialState == "calculated_pending_payroll" && value is not null && value.FormulaVersion == inputs.Source.DurationPolicy.RateRuleCode &&
             value.CompensationRecordId == inputs.CompensationRecordId && value.SourceBusinessDate == inputs.Source.BusinessDate &&
-            value.SalaryCalculationDays == DateTime.DaysInMonth(value.SourceBusinessDate.Year, value.SourceBusinessDate.Month) &&
+            value.SalaryCalculationDays == ConfiguredOvertimeFormula.RetainedDivisorDays(inputs.Source) &&
             value.ApprovedTicks == decision.ApprovedTicks && value.Currency == "PKR" && value.MonthlyBaseSalary >= 0 &&
-            value.Amount == OvertimeFormula.WholeRupees(value.MonthlyBaseSalary, value.SourceBusinessDate, value.ApprovedTicks);
+            value.Amount == ConfiguredOvertimeFormula.RetainedAmount(inputs.Source, value.MonthlyBaseSalary, value.ApprovedTicks);
     }
     private static void RequireTarget(Guid? employeeId, bool self)
     { if (employeeId == Guid.Empty || self == employeeId.HasValue) throw AttendanceOperation.Invalid(); }

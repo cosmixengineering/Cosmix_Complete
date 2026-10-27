@@ -3,8 +3,9 @@ import type { PolicyRules } from './contracts';
 import { rounding, salaryDivisor } from './contracts';
 import { Choice } from './Ui';
 import { human } from './inputs';
+import { OvertimePolicyFields } from './OvertimePolicyFields';
 
-type Group = Exclude<keyof PolicyRules, 'schemaVersion'>;
+type Group = Exclude<keyof PolicyRules, 'schemaVersion' | 'overtime'>;
 type Field = { key: string; options?: readonly string[]; boolean?: boolean; integer?: boolean };
 const groups: { group: Group; title: string; fields: Field[] }[] = [
   {
@@ -172,6 +173,15 @@ export function PolicyRulesFields({
           </div>
         </section>
       ))}
+      <OvertimePolicyFields
+        value={rules.overtime}
+        onChange={(overtime) => {
+          const next = { ...rules };
+          if (overtime === undefined) delete next.overtime;
+          else next.overtime = overtime;
+          onChange(next);
+        }}
+      />
     </>
   );
 }

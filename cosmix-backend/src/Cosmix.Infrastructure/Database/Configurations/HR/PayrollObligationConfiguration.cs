@@ -16,6 +16,10 @@ public sealed class PayrollObligationConfiguration : IEntityTypeConfiguration<Pa
         builder.Property(x => x.Currency).HasMaxLength(3).IsRequired();
         builder.Property(x => x.CreatedByUserId).HasMaxLength(200).IsRequired();
         builder.Property(x => x.FinalizedByUserId).HasMaxLength(200);
+        builder.Property(x => x.SourceFingerprint).HasMaxLength(64);
+        builder.Property(x => x.PeriodStart);
+        builder.Property(x => x.PeriodEndExclusive);
+        builder.Property(x => x.EmployeeEntitlementsJson);
 
         builder.HasOne(x => x.Batch)
             .WithMany()
@@ -24,5 +28,6 @@ public sealed class PayrollObligationConfiguration : IEntityTypeConfiguration<Pa
 
         builder.HasIndex(x => x.BatchId).IsUnique();
         builder.HasIndex(x => x.State);
+        builder.HasIndex(x => x.SourceFingerprint);
     }
 }

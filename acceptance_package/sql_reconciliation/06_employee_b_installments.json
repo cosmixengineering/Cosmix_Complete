@@ -1,0 +1,28 @@
+{
+  "Installment1": {
+    "Id": "9c04f8a0-c2b1-4ecf-ae61-8346a37a2a8c",
+    "ObligationId": "182742f9-439c-46fd-9e13-517b699aedb9",
+    "EmployeeId": "cc8c747d-92b6-4925-bd46-79faaf6ce3e8",
+    "Amount": 40000.00,
+    "State": "Posted",
+    "PaymentReference": "PAY-B-202610-PART1",
+    "PaymentJournalEntryId": "c87e59a3-4cfb-4b98-a98b-dfd87652f9ad",
+    "ConfirmedAt": null,
+    "ConfirmedByUserId": null,
+    "CreatedAt": "2026-10-27T09:33:30.9796388+00:00"
+  },
+  "Installment2": {
+    "Id": "cacb39c1-d005-4f95-a97a-24ca30cc2ac9",
+    "ObligationId": "182742f9-439c-46fd-9e13-517b699aedb9",
+    "EmployeeId": "cc8c747d-92b6-4925-bd46-79faaf6ce3e8",
+    "Amount": 37300.10,
+    "State": "Posted",
+    "PaymentReference": "PAY-B-202610-PART2",
+    "PaymentJournalEntryId": "dda605d2-4f15-459d-ae30-8324d5a7acc2",
+    "ConfirmedAt": null,
+    "ConfirmedByUserId": null,
+    "CreatedAt": "2026-10-27T09:33:31.0100955+00:00"
+  },
+  "TotalDisbursedB": 77300.10,
+  "OverpaymentRejection": "The net salary of 77300.10 for employee cc8c747d-92b6-4925-bd46-79faaf6ce3e8 has already been fully disbursed under this obligation."
+}

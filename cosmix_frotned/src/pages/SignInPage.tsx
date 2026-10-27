@@ -219,7 +219,14 @@ export function SignInPage() {
                         border: '1px dashed #cbd5e1',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: '0.4rem',
+                        }}
+                      >
                         <span
                           style={{
                             fontSize: '0.75rem',

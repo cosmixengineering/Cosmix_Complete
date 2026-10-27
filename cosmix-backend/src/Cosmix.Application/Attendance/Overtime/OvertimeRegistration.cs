@@ -12,7 +12,7 @@ public static class OvertimeRegistration
             provider => provider.GetRequiredService<OvertimeService>());
         services.AddScoped<OvertimeEligibilityService>();
         services.TryAddScoped<IOvertimeEligibilityReader>(provider => provider.GetRequiredService<OvertimeEligibilityService>());
-        services.TryAddScoped<IOvertimeDurationPolicy, ConfirmedOvertimeDurationPolicy>();
+        services.TryAddScoped<IOvertimeDurationPolicy, ConfiguredOvertimeDurationPolicy>();
         return services;
     }
 }

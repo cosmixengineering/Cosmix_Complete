@@ -1,0 +1,12 @@
+{
+  "FixtureMonth": "2026-10",
+  "GrossSalary": 180000.40,
+  "NetSalaryLiability": 173800.10,
+  "TotalEobiLiability": 10800.50,
+  "TotalSocialSecurityLiability": 6300.40,
+  "StaffLoanRecoverable": 3500.00,
+  "TotalDebits": 194401.00,
+  "TotalCredits": 194401.00,
+  "Variance": 0.00,
+  "AccrualsReconciledSeparatelyFromPayments": true
+}

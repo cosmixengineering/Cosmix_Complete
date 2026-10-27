@@ -298,11 +298,7 @@ export function MasterEditor({
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="org-btn-submit"
-                  disabled={action.pending}
-                >
+                <button type="submit" className="org-btn-submit" disabled={action.pending}>
                   {!record && !statusOnly && <Plus size={15} strokeWidth={2.5} />}
                   {action.pending
                     ? 'Saving...'

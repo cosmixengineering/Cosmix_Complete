@@ -513,6 +513,86 @@ foreach (var mode in new[] { "usage", "authority", "policy", "storage", "receipt
             mode == "policy" ? "leave_benefit_waiver_not_configured" : "access_denied", mode is "usage" or "policy" ? 409 : 403);
         unchanged();
     });
+await Scenario("mixed consumption released before Admin resolution", async () => {
+    var f = new WorkflowFixture(cash: true); var award = await f.Award();
+    var leave = f.Consumption(LeaveLedgerEntryType.Utilization, false, 120);
+    var cash = f.Consumption(LeaveLedgerEntryType.Encashment, false, 60);
+    var correctionRequest = await f.CorrectionRequest(award, [new(leave.Id, 120), new(cash.Id, 60)]);
+    var corrected = await f.Correct(award, correctionRequest);
+    Check(corrected.Correction is { RemovedUnusedMinutes: 60, ConsumedMinutes: 180, ProtectedConsumedMinutes: 180 },
+        "Mixed consumption retains only its exact allocated total");
+    f.Release(leave);
+    var impact = await f.Service.CorrectionImpactAsync(f.Employee, award.Id, f.Context, default);
+    Check(impact.Resolution is { ConsumedMinutes: 180, ProtectedConsumedMinutes: 60, Status: "pending_admin_review" },
+        "Release before review removes only the leave offset, preserving the original obligation");
+    f.EnableWaiver(); var request = await f.ResolutionRequest(award);
+    var rows = f.Rows.ToArray(); var uses = f.Uses.ToArray();
+    var resolved = await f.Resolve(award, request);
+    Check(resolved.Correction is { RemovedUnusedMinutes: 60, ConsumedMinutes: 180, ProtectedConsumedMinutes: 60,
+        Status: "waived", Waiver.WaivedMinutes: 180 }, "Admin resolves the historical obligation after partial cancellation");
+    var credits = await f.Evidence.ReadAsync(f.Employee, award.LeaveYearFrom, award.LeaveYearToExclusive, award.AvailableFrom, default);
+    Check(credits.Single() is { Minutes: 60, ConsumptionOffset: true, Encashable: false },
+        "Only the unreleased encashment remains protected after waiver");
+    Check(f.Rows.SequenceEqual(rows) && f.Uses.SequenceEqual(uses), "Mixed resolution leaves the original financial history intact");
+    var audits = f.Audits.ToArray(); var receipts = f.Receipts.ToArray(); var notifications = f.Notifications.ToArray();
+    Check(await f.Award() == award, "Award retry after correction and waiver returns its original receipt");
+    Check(JsonSerializer.Serialize(await f.Correct(award, correctionRequest)) == JsonSerializer.Serialize(corrected),
+        "Correction retry after release and waiver returns its original receipt");
+    Check(JsonSerializer.Serialize(await f.Resolve(award, request)) == JsonSerializer.Serialize(resolved),
+        "Resolution retry after mixed-source cancellation returns its original receipt");
+    Check(f.Rows.SequenceEqual(rows) && f.Uses.SequenceEqual(uses), "Historical retries preserve the financial history");
+    Check(f.Receipts.SequenceEqual(receipts), "Historical retries preserve original receipts");
+    Check(f.Notifications.SequenceEqual(notifications), "Historical retries do not repeat notifications");
+    Check(f.Audits.Take(audits.Length).SequenceEqual(audits) && f.Audits.Skip(audits.Length).Select(x => x.EventType).SequenceEqual(new[] {
+        "attendance.leave.benefit.award.replay", "attendance.leave.benefit.correct.replay", "attendance.leave.benefit.correction.resolve.replay" }),
+        "Historical retries append only the three expected replay audit events");
+    Check((await f.Service.ListAsync(f.Employee, award.LeaveYearFrom, false, f.Context, default)).Single().Correction is
+        { Status: "waived", ProtectedConsumedMinutes: 60 }, "Receipt replay cannot regress current history to an earlier lifecycle state");
+});
+await Scenario("fully released obligation still requires explicit Admin resolution", async () => {
+    var f = new WorkflowFixture(); var award = await f.Award();
+    var use = f.Consumption(LeaveLedgerEntryType.Utilization, false, 240);
+    await f.Correct(award, await f.CorrectionRequest(award, [new(use.Id, 240)]));
+    f.Release(use); f.EnableWaiver();
+    var request = await f.ResolutionRequest(award); var result = await f.Resolve(award, request);
+    Check(result.Correction is { ConsumedMinutes: 240, ProtectedConsumedMinutes: 0, Status: "waived", Waiver.WaivedMinutes: 240 },
+        "Fully cancelled consumption can still resolve the retained Admin obligation");
+    Check((await f.Evidence.ReadAsync(f.Employee, award.LeaveYearFrom, award.LeaveYearToExclusive, award.AvailableFrom, default)).Count == 0,
+        "Waiving a fully released obligation cannot restore spendable credit");
+    var unchanged = ExpectUnchangedEffects(f, "resolved reversal guards");
+    await Reject("Revoke corrected and resolved award", () => f.Revoke(award), "leave_benefit_already_revoked");
+    await Reject("Reaward resolved source", () => f.Award("resolved-source-again"), "leave_benefit_source_already_awarded");
+    unchanged();
+});
+await Scenario("pending encashment completes before correction and waiver", async () => {
+    var f = new WorkflowFixture(cash: true); var award = await f.Award();
+    var reservation = f.Consumption(LeaveLedgerEntryType.Reservation, false, 120);
+    var stale = await f.CorrectionRequest(award, []);
+    var unchanged = ExpectUnchangedEffects(f, "reserved award correction");
+    await Reject("Pending reservation", () => f.Correct(award, stale), "leave_benefit_pending_reservation"); unchanged();
+    f.Release(reservation); var cash = f.Consumption(LeaveLedgerEntryType.Encashment, false, 120);
+    await Reject("Reservation completion invalidates old impact", () => f.Correct(award, stale), "leave_benefit_usage_changed");
+    var corrected = await f.Correct(award, await f.CorrectionRequest(award, [new(cash.Id, 120)]));
+    Check(corrected.Correction is { RemovedUnusedMinutes: 120, ConsumedMinutes: 120, ProtectedConsumedMinutes: 120 },
+        "Completed encashment is attributed once without counting its released reservation");
+    f.EnableWaiver(); await f.Resolve(award, await f.ResolutionRequest(award));
+    Check(f.Uses.Count == 3 && f.Rows.Count == 2 && f.Receipts.Count == 3 && f.Notifications.Count == 3,
+        "Reservation completion lifecycle has exactly one award, correction and resolution effect");
+});
+foreach (var mode in new[] { "missing", "changed" })
+    await Scenario("resolved consumption remains immutable " + mode, async () => {
+        var f = new WorkflowFixture(); var award = await f.Award();
+        var use = f.Consumption(LeaveLedgerEntryType.Utilization, false, 120);
+        await f.Correct(award, await f.CorrectionRequest(award, [new(use.Id, 120)]));
+        f.EnableWaiver(); var request = await f.ResolutionRequest(award); await f.Resolve(award, request);
+        if (mode == "missing") f.Uses.Remove(use);
+        else typeof(LeaveLedgerEntry).GetProperty(nameof(LeaveLedgerEntry.MinutesDelta))!.SetValue(use, -121);
+        var unchanged = ExpectUnchangedEffects(f, "altered resolved source " + mode);
+        await Reject("Resolved history rejects " + mode, () => f.Service.ListAsync(f.Employee, award.LeaveYearFrom, false, f.Context, default),
+            "leave_benefit_correction_source_changed");
+        await Reject("Resolved replay rejects " + mode, () => f.Resolve(award, request), "leave_benefit_correction_source_changed");
+        unchanged();
+    });
 await Scenario("waiver replay requires its durable resolution fact", async () => {
     var f = new WorkflowFixture(); var award = await f.Award(); var use = f.Consumption(LeaveLedgerEntryType.Utilization, false, 120);
     await f.Correct(award, await f.CorrectionRequest(award, [new(use.Id, 120)]));

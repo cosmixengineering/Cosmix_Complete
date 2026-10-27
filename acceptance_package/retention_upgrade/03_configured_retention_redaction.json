@@ -1,0 +1,18 @@
+{
+  "TestRetentionDays": 180,
+  "RunResult": {
+    "RecordsRedacted": 1,
+    "AuditPayloadsProcessed": 0,
+    "RunAt": "2026-10-27T09:33:21.260711+00:00",
+    "Message": "Redacted 1 GPS punch coordinates and processed 0 legacy punch audit payloads older than 180 days."
+  },
+  "OldPunchRedaction": {
+    "Id": "a3df4402-ce3d-4442-a4f1-7c735baff656",
+    "PunchEventId": "ac2fe78f-7b44-499c-acce-4aadc6e9161f",
+    "RedactedAtUtc": "2026-10-27T09:33:21.260711+00:00",
+    "ActorUserId": "system",
+    "RetentionPolicyDays": 180,
+    "Reason": "Automated retention cleanup older than 180 days"
+  },
+  "RecentPunchRedactionsCount": 0
+}

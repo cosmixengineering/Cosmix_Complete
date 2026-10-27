@@ -9,14 +9,16 @@ public sealed class StatutoryContribution
     public StatutoryContribution(StatutoryScheme scheme, DateOnly contributionMonth,
         decimal employeeContributionAmount, decimal employerContributionAmount,
         string currency, string createdByUserId, DateTimeOffset createdAt,
-        string? payableAccountCode = null, string? notes = null, string? employerRegistrationNumber = null)
+        string? payableAccountCode = null, string? notes = null, string? employerRegistrationNumber = null,
+        string? employeeItemsJson = null, bool hasEmployeeEntries = false)
     {
         Id = Guid.NewGuid();
         Scheme = Enum.IsDefined(scheme) ? scheme : throw new ArgumentOutOfRangeException(nameof(scheme));
         ContributionMonth = new DateOnly(contributionMonth.Year, contributionMonth.Month, 1);
         EmployeeContributionAmount = HrModelGuard.Money(employeeContributionAmount, nameof(employeeContributionAmount));
         EmployerContributionAmount = HrModelGuard.Money(employerContributionAmount, nameof(employerContributionAmount));
-        if (EmployeeContributionAmount == 0 && EmployerContributionAmount == 0)
+        HasEmployeeEntries = hasEmployeeEntries || !string.IsNullOrWhiteSpace(employeeItemsJson);
+        if (!HasEmployeeEntries && EmployeeContributionAmount == 0 && EmployerContributionAmount == 0)
             throw new ArgumentException("At least one contribution amount must be greater than zero.");
         Currency = HrModelGuard.Currency(currency);
         CreatedByUserId = ModelGuard.Required(createdByUserId, 200, nameof(createdByUserId));
@@ -24,6 +26,7 @@ public sealed class StatutoryContribution
         PayableAccountCode = ModelGuard.Optional(payableAccountCode, 50, nameof(payableAccountCode));
         Notes = ModelGuard.Optional(notes, 500, nameof(notes));
         EmployerRegistrationNumber = ModelGuard.Optional(employerRegistrationNumber, 100, nameof(employerRegistrationNumber));
+        EmployeeItemsJson = employeeItemsJson;
         State = ContributionState.Draft;
     }
 
@@ -44,6 +47,32 @@ public sealed class StatutoryContribution
     public string? ApprovedByUserId { get; private set; }
     public DateTimeOffset? PostedAt { get; private set; }
     public string? PostedByUserId { get; private set; }
+    public Guid? JournalEntryId { get; private set; }
+    public string? EmployeeItemsJson { get; private set; }
+    public bool HasEmployeeEntries { get; private set; }
+    public ICollection<StatutoryContributionEntry> Entries { get; private set; } = new List<StatutoryContributionEntry>();
+    public Guid? ObligationId { get; private set; }
+    public byte[] RowVersion { get; private set; } = [];
+
+    public void SetEmployeeItemsJson(string json)
+    {
+        if (State != ContributionState.Draft || HasEmployeeEntries) throw new InvalidOperationException("Approved contribution evidence is immutable.");
+        EmployeeItemsJson = json;
+        HasEmployeeEntries = !string.IsNullOrWhiteSpace(json);
+    }
+
+    public void RecordPosting(Guid obligationId, Guid? journalId, string payableAccountCode, string actor, DateTimeOffset at)
+    {
+        if (!HasEmployeeEntries || Entries.Count == 0) throw new InvalidOperationException("Explicit employee entries required.");
+        ObligationId = ModelGuard.Id(obligationId, nameof(obligationId));
+        PayableAccountCode = ModelGuard.Required(payableAccountCode, 50, nameof(payableAccountCode));
+        Post(actor, at, journalId);
+    }
+
+    public void BindObligation(Guid obligationId)
+    {
+        ObligationId = ModelGuard.Id(obligationId, nameof(obligationId));
+    }
 
     public void Approve(string actorUserId, DateTimeOffset at)
     {
@@ -56,14 +85,17 @@ public sealed class StatutoryContribution
         State = ContributionState.Approved;
     }
 
-    public void Post(string actorUserId, DateTimeOffset at)
+    public void Post(string actorUserId, DateTimeOffset at, Guid? journalEntryId = null)
     {
+        if (State == ContributionState.Posted)
+            throw new InvalidOperationException("Statutory contribution has already been posted to accounting.");
         if (State != ContributionState.Approved)
             throw new InvalidOperationException("Only approved contributions can be posted to accounting.");
         if (string.IsNullOrWhiteSpace(PayableAccountCode))
             throw new InvalidOperationException("Payable account code is required before posting to accounting.");
         PostedByUserId = ModelGuard.Required(actorUserId, 200, nameof(actorUserId));
         PostedAt = ModelGuard.Utc(at);
+        JournalEntryId = journalEntryId;
         State = ContributionState.Posted;
     }
 }

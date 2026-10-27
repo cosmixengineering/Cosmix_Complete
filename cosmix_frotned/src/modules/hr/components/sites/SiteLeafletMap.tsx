@@ -93,9 +93,7 @@ export function SiteLeafletMap({
 
       // Official Google Maps tiles (Roadmap & Hybrid Satellite)
       const tileUrl =
-        mapType === 'satellite'
-          ? GOOGLE_MAPS_TILES.hybrid
-          : GOOGLE_MAPS_TILES.roadmap;
+        mapType === 'satellite' ? GOOGLE_MAPS_TILES.hybrid : GOOGLE_MAPS_TILES.roadmap;
 
       const tile = L.tileLayer(tileUrl, {
         maxZoom: 20,
@@ -124,10 +122,7 @@ export function SiteLeafletMap({
   useEffect(() => {
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
 
-    const tileUrl =
-      mapType === 'satellite'
-        ? GOOGLE_MAPS_TILES.hybrid
-        : GOOGLE_MAPS_TILES.roadmap;
+    const tileUrl = mapType === 'satellite' ? GOOGLE_MAPS_TILES.hybrid : GOOGLE_MAPS_TILES.roadmap;
 
     tileLayerRef.current.setUrl(tileUrl);
   }, [mapType]);

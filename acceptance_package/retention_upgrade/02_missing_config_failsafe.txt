@@ -1,0 +1,3 @@
+Missing Configuration Test: Successfully threw expected fail-safe exception.
+Message: PunchRetention:RetentionDays must be configured and explicitly approved by company management (PunchRetention:IsPolicyApproved = true). Automatic destructive retention cleanup halted.
+Unapproved Policy Message: PunchRetention:RetentionDays must be configured and explicitly approved by company management (PunchRetention:IsPolicyApproved = true). Automatic destructive retention cleanup halted.

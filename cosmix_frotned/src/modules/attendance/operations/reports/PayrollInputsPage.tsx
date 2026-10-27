@@ -16,6 +16,7 @@ import {
 import { id, reason } from '../../schemas/common';
 import { businessToday } from '../../utils/messages';
 import { hasReportGrant } from './access';
+import { PayrollActivation } from './PayrollActivation';
 import {
   attestationHistoryFor,
   payrollDetailFor,
@@ -215,11 +216,13 @@ function Revision({
   revisionId,
   employee,
   period,
+  onEditing,
 }: {
   path: string;
   revisionId: string;
   employee: string;
   period: string;
+  onEditing: (value: boolean) => void;
 }) {
   const access = useAttendanceAccess();
   const query = useAttendanceQuery(
@@ -252,6 +255,11 @@ function Revision({
             <dd>{query.data.revision.supersedesRevisionId ?? 'Initial revision'}</dd>
           </dl>
           <Inputs value={query.data.inputs} />
+          <PayrollActivation
+            path={path + '/revisions/' + revisionId + '/activation'}
+            source={query.data.revision}
+            onEditing={onEditing}
+          />
         </>
       )}
       {hasReportGrant(access.user, 'attendance.payroll-attestations.read') && (
@@ -314,6 +322,8 @@ function PayrollRecord({
   );
   const [selected, setSelected] = useState('');
   const [editing, setEditing] = useState(false);
+  const [revisionEditing, setRevisionEditing] = useState(false);
+  const busy = editing || revisionEditing;
   const [notice, setNotice] = useState('');
   function close() {
     setEditing(false);
@@ -330,7 +340,7 @@ function PayrollRecord({
         <Command
           icon={RefreshCw}
           variant="secondary"
-          disabled={editing || query.isFetching || history.isFetching}
+          disabled={busy || query.isFetching || history.isFetching}
           onClick={() => {
             void query.refetch();
             void history.refetch();
@@ -344,7 +354,7 @@ function PayrollRecord({
       {query.data && !query.isError && (
         <>
           <Inputs value={query.data} />
-          {!editing && hasReportGrant(access.user, 'attendance.payroll-inputs.calculate') && (
+          {!busy && hasReportGrant(access.user, 'attendance.payroll-inputs.calculate') && (
             <Command
               icon={Save}
               disabled={!query.data.canSave || query.isFetching}
@@ -395,7 +405,7 @@ function PayrollRecord({
                       <td>{row.createdAtUtc}</td>
                       <td>{row.state}</td>
                       <td>
-                        <Command icon={Eye} disabled={editing} onClick={() => setSelected(row.id)}>
+                        <Command icon={Eye} disabled={busy} onClick={() => setSelected(row.id)}>
                           Open revision
                         </Command>
                       </td>
@@ -409,7 +419,7 @@ function PayrollRecord({
               pageSize={20}
               total={history.data.totalCount}
               onChange={setPage}
-              disabled={history.isFetching || editing}
+              disabled={history.isFetching || busy}
             />
           </>
         )}
@@ -421,6 +431,10 @@ function PayrollRecord({
           revisionId={selected}
           employee={employee}
           period={period}
+          onEditing={(value) => {
+            setRevisionEditing(value);
+            onEditing(value);
+          }}
         />
       )}
     </>

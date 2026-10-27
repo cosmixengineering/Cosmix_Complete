@@ -22,7 +22,7 @@ public static class ApprovalPermissions
         Enumerable.Range(1, 20).Any(stage => permission == StageReview(stage));
     public static IReadOnlyList<AccessPermissionDefinition> Definitions { get; } =
     Array.AsReadOnly<AccessPermissionDefinition>([new(Read, "Read configured claim/benefit approval routes", true, true, false),
-     new(Manage, "Publish immutable claim/benefit approval routes; fixed SuperAdmin required", true, true, false),
+     new(Manage, "Publish immutable claim/benefit approval routes with current web MFA and All-scope manage and selected stage-review authority", true, true, false),
      new(Delegate, "Grant or revoke time-bound approval authority that the delegator currently holds", true, true, false),
      .. Enumerable.Range(1, 20).Select(stage => new AccessPermissionDefinition(StageReview(stage),
          $"Review stage {stage} of routed claims/benefits within an explicitly assigned scope", true, true, false))]);

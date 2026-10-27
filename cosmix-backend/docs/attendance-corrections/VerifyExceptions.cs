@@ -7,6 +7,7 @@ using System.Text.Json;
 using Cosmix.Application.Attendance.Common;
 using Cosmix.Application.Attendance.Corrections;
 using Cosmix.Application.Attendance.DailySummaries;
+using Cosmix.Application.Attendance.Rosters;
 using Cosmix.Application.Attendance.Shifts;
 using Cosmix.Application.Authentication;
 using Cosmix.Application.Authentication.Access;
@@ -149,6 +150,49 @@ foreach (var request in new[] {
     await Fails(() => invalid.Queue(request), "invalid_attendance_exception_queue");
 Check(f.BusinessWrites == 0 && management.BusinessWrites == 0 && paging.BusinessWrites == 0,
     "read-only service never calls business/private-file write collaborators");
+var overdue = new ExceptionFixture(); overdue.Web(AccessScopeKind.Site, overdue.Site);
+var opening = overdue.Punch(overdue.Employee, overdue.Date, overdue.Site);
+var shift = Guid.NewGuid();
+var openSession = new WorkSession(Guid.NewGuid(), 1, overdue.Employee, overdue.Date, opening.ReceivedAtUtc,
+    null, shift, null, overdue.Clock.Now, opening, siteId: overdue.Site);
+overdue.OpenSessions.Add(openSession);
+overdue.Roster = new(overdue.Employee, overdue.Date, "scheduled", RosterSchedule.TimeZoneId,
+    overdue.Site, ShiftVersionId: shift, StartsAt: opening.ReceivedAtUtc,
+    EndsAt: opening.ReceivedAtUtc.AddHours(8));
+var missingQueue = await overdue.Service.MissingCheckoutsAsync(overdue.Request with
+    { Scope = CorrectionQueueScope.Site, TargetId = overdue.Site }, overdue.Context, default);
+Check(missingQueue.Items.Single().SessionRevisionId == openSession.Id &&
+    missingQueue.Items.Single().State == "missing_checkout_hr_review_required", "scoped HR sees overdue open duty for correction review");
+var opening2 = overdue.Punch(overdue.Employee, overdue.Date, overdue.Site);
+var openSession2 = new WorkSession(Guid.NewGuid(), 1, overdue.Employee, overdue.Date, opening2.ReceivedAtUtc,
+    null, shift, null, overdue.Clock.Now, opening2, siteId: overdue.Site);
+overdue.OpenSessions.Add(openSession2);
+var missingPage = await overdue.Service.MissingCheckoutsAsync(overdue.Request with
+    { Scope = CorrectionQueueScope.Site, TargetId = overdue.Site, PageSize = 1 }, overdue.Context, default);
+Check(missingPage.Items.Count == 1 && missingPage.NextCursor is not null && overdue.LastCandidateLimit == 201,
+    "missing-checkout review uses bounded keyset pagination");
+var missingNext = await overdue.Service.MissingCheckoutsAsync(overdue.Request with
+    { Scope = CorrectionQueueScope.Site, TargetId = overdue.Site, PageSize = 1, Cursor = missingPage.NextCursor }, overdue.Context, default);
+Check(missingNext.Items.Count == 1 && missingNext.Items[0].SessionRevisionId != missingPage.Items[0].SessionRevisionId,
+    "missing-checkout continuation does not repeat an open revision");
+overdue.OpenSessions.Add(new WorkSession(openSession.SessionKey, 2, overdue.Employee, overdue.Date,
+    openSession.StartsAtUtc, openSession.StartsAtUtc.AddHours(8), shift, null, overdue.Clock.Now,
+    null, correctionId: Guid.NewGuid(), siteId: overdue.Site));
+Check((await overdue.Service.MissingCheckoutsAsync(overdue.Request with
+    { Scope = CorrectionQueueScope.Site, TargetId = overdue.Site }, overdue.Context, default)).Items.All(x => x.SessionRevisionId != openSession.Id),
+    "closed successor suppresses the old open revision");
+overdue.Web(AccessScopeKind.Site, Guid.NewGuid());
+await Fails(() => overdue.Service.MissingCheckoutsAsync(overdue.Request with
+    { Scope = CorrectionQueueScope.Site, TargetId = overdue.Site }, overdue.Context, default), "access_denied");
+overdue.Web(AccessScopeKind.Site, overdue.Site); overdue.Actor = overdue.Actor with { MfaSatisfied = false };
+await Fails(() => overdue.Service.MissingCheckoutsAsync(overdue.Request with
+    { Scope = CorrectionQueueScope.Site, TargetId = overdue.Site }, overdue.Context, default), "access_denied");
+overdue.Actor = overdue.Actor with { MfaSatisfied = true }; overdue.Current = false;
+await Fails(() => overdue.Service.MissingCheckoutsAsync(overdue.Request with
+    { Scope = CorrectionQueueScope.Site, TargetId = overdue.Site }, overdue.Context, default), "invalid_authentication");
+overdue.Current = true; overdue.Grants.Clear();
+await Fails(() => overdue.Service.MissingCheckoutsAsync(overdue.Request with
+    { Scope = CorrectionQueueScope.Site, TargetId = overdue.Site }, overdue.Context, default), "access_denied");
 Console.WriteLine($"PASS: {checks} exception service checks. Synthetic collaborators only; no SQL, HTTP or private files.");
 
 public sealed class ExceptionClock : TimeProvider
@@ -168,6 +212,8 @@ public sealed class ExceptionFixture
     public bool Current = true, TargetExists = true; public int LastCandidateLimit, SourceReads, BusinessWrites;
     public AuthenticationFailure? HistoryFailure;
     public List<PermissionGrant> Grants = []; public List<AttendanceException> Rows = []; public List<AuditEvent> Audits = [];
+    public List<WorkSession> OpenSessions = [];
+    public EffectiveRosterResponse? Roster;
     public Dictionary<Guid, AttendanceExceptionSources> Sources = [];
     public Dictionary<DateOnly, IReadOnlyList<AttendanceResourceScope>> History = [];
     public List<DateOnly> HistoricalDates = [];
@@ -199,11 +245,15 @@ public sealed class ExceptionFixture
             "SourcesAsync" => ReadSources((AttendanceException)a[0]!),
             "ScopeExistsAsync" => Task.FromResult(TargetExists),
             "CandidatesAsync" => Candidates((AttendanceExceptionQueueRequest)a[0]!, (AttendanceCursorPosition?)a[1], (int)a[2]!),
+            "OpenSessionCandidatesAsync" => OpenCandidates((AttendanceExceptionQueueRequest)a[0]!, (AttendanceCursorPosition?)a[1], (int)a[2]!),
             _ => WriteForbidden(m.Name)
         });
         var summaries = ExceptionProxy.Make<IAttendanceSummaryRepository>((m, a) => m.Name == "ResourceScopesAsync"
             ? Scopes((Guid)a[0]!, (DateOnly)a[1]!, (DateOnly)a[2]!) : WriteForbidden(m.Name));
-        Service = new(operation, repository, summaries, access, new SyntheticCursors());
+        var rosters = ExceptionProxy.Make<IIndividualRosterResolver>((m, a) => m.Name == "ResolveAsync"
+            ? Task.FromResult(Roster ?? new EffectiveRosterResponse((Guid)a[0]!, (DateOnly)a[1]!, "unassigned", RosterSchedule.TimeZoneId))
+            : WriteForbidden(m.Name));
+        Service = new(operation, repository, summaries, access, new SyntheticCursors(), rosters, Clock);
     }
     object? AddAudit(AuditEvent value) { Audits.Add(value); return null; }
     object? WriteForbidden(string method) { BusinessWrites++; throw new Exception("Unexpected IO " + method); }
@@ -239,6 +289,16 @@ public sealed class ExceptionFixture
             .Where(x => request.Scope != CorrectionQueueScope.Employee || x.EmployeeId == request.TargetId)
             .Where(x => after is null || x.DetectedAtUtc > after.CreatedAtUtc || x.DetectedAtUtc == after.CreatedAtUtc && x.Id.CompareTo(after.Id) > 0)
             .OrderBy(x => x.DetectedAtUtc).ThenBy(x => x.Id).Take(limit).ToArray());
+    }
+    Task<IReadOnlyList<WorkSession>> OpenCandidates(AttendanceExceptionQueueRequest request, AttendanceCursorPosition? after, int limit)
+    {
+        LastCandidateLimit = limit;
+        return Task.FromResult<IReadOnlyList<WorkSession>>(OpenSessions.Where(x => x.AttendanceDate >= request.From && x.AttendanceDate < request.To &&
+            x.EndsAtUtc is null && !OpenSessions.Any(newer => newer.SessionKey == x.SessionKey && newer.Revision > x.Revision) &&
+            (request.Scope != CorrectionQueueScope.Employee || x.EmployeeId == request.TargetId) &&
+            (request.Scope != CorrectionQueueScope.Site || x.SiteId == request.TargetId) &&
+            (after is null || x.StartsAtUtc > after.CreatedAtUtc || x.StartsAtUtc == after.CreatedAtUtc && x.Id.CompareTo(after.Id) > 0))
+            .OrderBy(x => x.StartsAtUtc).ThenBy(x => x.Id).Take(limit).ToArray());
     }
 }
 public sealed class SyntheticCursors : IAttendanceCursorProtector

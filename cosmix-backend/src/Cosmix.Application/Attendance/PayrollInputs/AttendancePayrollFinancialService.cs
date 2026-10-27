@@ -14,8 +14,8 @@ namespace Cosmix.Application.Attendance.PayrollInputs;
 public sealed class AttendancePayrollFinancialService(AttendanceOperation operation,
     IAttendancePayrollFinancialSourceReader sources, IAttendancePayrollFinancialRepository repository,
     IAttendancePayrollInputLedger ledger, IAttendancePayrollInputProducer producer, IPrivateFileStore files,
-    IAccountAccessReader access, ICurrentAuthentication current, ISchedulingJournalRepository journal,
-    TimeProvider clock, IAttendancePayrollFinancialTargetLockReader? targetLocks = null)
+    ICurrentAuthentication current, ISchedulingJournalRepository journal,
+    IAttendancePayrollFinancialTargetLockReader? targetLocks = null)
     : IAttendancePayrollFinancialMonthReader
 {
     public Task<AttendancePayrollFinancialPreview> PreviewAsync(Guid employeeId, DateOnly sourceMonth,
@@ -301,10 +301,9 @@ public sealed class AttendancePayrollFinancialService(AttendanceOperation operat
             .Concat(await producer.ResourceScopesAsync(source.Source.EmployeeId, source.Target.PeriodStart, ct)).ToArray();
         if (!AttendanceScopeEvaluation.IsValid(scopes) || scopes.SelectMany(x => x.Alternatives).Any(x => x.EmployeeId != source.Source.EmployeeId))
             throw AttendanceOperation.Conflict("financial_carry_forward_scope_invalid");
-        var grants = await access.GetGrantsAsync(actor.Identity.AccountId, clock.GetUtcNow(), ct);
         foreach (var permission in writing ? new[] { AttendancePayrollInputPermissions.Read, AttendancePayrollAttestationPermissions.Read,
                      AttendancePayrollAttestationPermissions.Attest } : new[] { AttendancePayrollInputPermissions.Read, AttendancePayrollAttestationPermissions.Read })
-            if (!AttendanceScopeEvaluation.Allows(actor.Identity, grants, permission, scopes)) throw AttendanceOperation.Denied();
+            await operation.RequireScopedPermissionAsync(actor, permission, scopes, ct);
     }
 
     private static AttendancePayrollFinancialPreview Preview(AttendancePayrollFinancialSources source, IReadOnlyList<Retained> history)

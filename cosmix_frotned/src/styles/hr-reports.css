@@ -393,10 +393,22 @@
   font-weight: 600;
 }
 
-.reports-cell-badge.positive { background: #ecfdf5; color: #047857; }
-.reports-cell-badge.warning { background: #fffbeb; color: #b45309; }
-.reports-cell-badge.danger { background: #fff1f2; color: #be123c; }
-.reports-cell-badge.neutral { background: #f1f5f9; color: #475569; }
+.reports-cell-badge.positive {
+  background: #ecfdf5;
+  color: #047857;
+}
+.reports-cell-badge.warning {
+  background: #fffbeb;
+  color: #b45309;
+}
+.reports-cell-badge.danger {
+  background: #fff1f2;
+  color: #be123c;
+}
+.reports-cell-badge.neutral {
+  background: #f1f5f9;
+  color: #475569;
+}
 
 /* Export Bar */
 .reports-export-box {

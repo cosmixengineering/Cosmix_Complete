@@ -34,6 +34,7 @@ export function useHrAction() {
   const files = useRef(new WeakMap<Blob, string>());
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   async function run<T>(
@@ -41,7 +42,7 @@ export function useHrAction() {
     body: unknown,
     method: 'POST' | 'PUT',
     schema: z.ZodType<T>,
-    onRejected?: () => void,
+    onRejected?: (error?: unknown) => void,
   ): Promise<T | undefined> {
     const signal = lifetime();
     if (active.current || signal.aborted) return;
@@ -69,6 +70,7 @@ export function useHrAction() {
     active.current = true;
     setPending(true);
     setError(null);
+    setErrorCode(null);
     setErrorStatus(null);
     setSuccess(null);
     try {
@@ -85,7 +87,10 @@ export function useHrAction() {
         previous.current.uncertain = !(failure instanceof ApiError) || failure.status >= 500;
       if (failure instanceof ApiError) {
         setErrorStatus(failure.status);
-        if (failure.status >= 400 && failure.status < 500) onRejected?.();
+        setErrorCode(failure.code ?? null);
+        if (failure.status >= 400 && failure.status < 500) onRejected?.(failure);
+      } else {
+        setErrorCode(null);
       }
       setError(errorMessage(failure));
     } finally {
@@ -93,5 +98,5 @@ export function useHrAction() {
       if (!signal.aborted) setPending(false);
     }
   }
-  return { run, pending, error, errorStatus, success };
+  return { run, pending, error, errorCode, errorStatus, success };
 }

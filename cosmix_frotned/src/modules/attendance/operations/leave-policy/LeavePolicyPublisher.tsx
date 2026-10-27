@@ -11,6 +11,7 @@ import {
   capabilityNumbers,
   inputFromDraft,
   policyDraft,
+  publishBaseIntent,
   publishV4Intent,
   type Capability,
   type NumberField,
@@ -38,11 +39,13 @@ const fulfilmentChoices = [
 
 export function LeavePolicyPublisher({
   source,
+  baseOnly = false,
   publicationBlock,
   onSaved,
   onCancel,
 }: {
   source?: PublishedLeavePolicy;
+  baseOnly?: boolean;
   publicationBlock: string;
   onSaved: (result: unknown) => void;
   onCancel: () => void;
@@ -83,7 +86,7 @@ export function LeavePolicyPublisher({
     return <Denied>Leave policy publication requires All-scoped configure access.</Denied>;
   return (
     <MutationForm
-      title="Publish v4 leave settings"
+      title={baseOnly ? 'Publish base leave settings' : 'Publish v4 leave settings'}
       submitLabel="Publish directly"
       disabled={Boolean(block)}
       onSaved={onSaved}
@@ -91,7 +94,8 @@ export function LeavePolicyPublisher({
       build={() => {
         if (!allowed) throw new Error('Leave configure access is required.');
         if (block) throw new Error(block);
-        return publishV4Intent(inputFromDraft(draft));
+        const input = inputFromDraft(draft, baseOnly);
+        return baseOnly ? publishBaseIntent(input) : publishV4Intent(input);
       }}
     >
       {block && <p role="alert">{block}</p>}
@@ -181,127 +185,128 @@ export function LeavePolicyPublisher({
             Confirm paid-kind selection, including an empty selection
           </label>
         </section>
-        {capabilities.map((capability) => (
-          <section className="attendance-section" key={capability}>
-            <h3>{labels[capability]}</h3>
-            <Choice
-              label={`${labels[capability]} configuration`}
-              value={draft.capabilities[capability]}
-              options={[
-                { value: 'enabled', label: 'Enabled' },
-                { value: 'unconfigured', label: 'Unconfigured' },
-              ]}
-              onChange={(value) =>
-                setDraft((current) => ({
-                  ...current,
-                  capabilities: {
-                    ...current.capabilities,
-                    [capability]: value === 'enabled' || value === 'unconfigured' ? value : '',
-                  },
-                }))
-              }
-            />
-            {draft.capabilities[capability] === 'enabled' && (
-              <>
-                {numbers(capabilityNumbers[capability], `${capability}.`)}
-                {(capability === 'encashment' || capability === 'recovery') && (
-                  <MultiChoice
-                    label={`${labels[capability]} eligible kinds`}
-                    options={eligibleKindOptions}
-                    value={draft.selections[`${capability}.eligibleKinds`] ?? []}
-                    onChange={(values) => selection(`${capability}.eligibleKinds`, values)}
-                  />
-                )}
-                {capability === 'encashment' && (
-                  <>
-                    <Choice
-                      label="Amount rounding"
-                      value={draft.fields['encashment.rounding'] ?? ''}
-                      options={[
-                        { value: '0', label: 'To even' },
-                        { value: '1', label: 'Away from zero' },
-                      ]}
-                      onChange={(value) => update('encashment.rounding', value)}
+        {!baseOnly &&
+          capabilities.map((capability) => (
+            <section className="attendance-section" key={capability}>
+              <h3>{labels[capability]}</h3>
+              <Choice
+                label={`${labels[capability]} configuration`}
+                value={draft.capabilities[capability]}
+                options={[
+                  { value: 'enabled', label: 'Enabled' },
+                  { value: 'unconfigured', label: 'Unconfigured' },
+                ]}
+                onChange={(value) =>
+                  setDraft((current) => ({
+                    ...current,
+                    capabilities: {
+                      ...current.capabilities,
+                      [capability]: value === 'enabled' || value === 'unconfigured' ? value : '',
+                    },
+                  }))
+                }
+              />
+              {draft.capabilities[capability] === 'enabled' && (
+                <>
+                  {numbers(capabilityNumbers[capability], `${capability}.`)}
+                  {(capability === 'encashment' || capability === 'recovery') && (
+                    <MultiChoice
+                      label={`${labels[capability]} eligible kinds`}
+                      options={eligibleKindOptions}
+                      value={draft.selections[`${capability}.eligibleKinds`] ?? []}
+                      onChange={(values) => selection(`${capability}.eligibleKinds`, values)}
                     />
-                    <TextInput
-                      label="Currency"
-                      required
-                      maxLength={3}
-                      pattern="[A-Z]{3}"
-                      value={draft.fields['encashment.currency'] ?? ''}
-                      onChange={(event) => update('encashment.currency', event.target.value)}
-                    />
-                    <Choice
-                      label="Valuation date"
-                      value={draft.fields['encashment.valuationDate'] ?? ''}
-                      options={[{ value: '1', label: 'Last day of leave year' }]}
-                      onChange={(value) => update('encashment.valuationDate', value)}
-                    />
-                  </>
-                )}
-                {capability === 'recovery' && (
-                  <MultiChoice
-                    label="Recovery eligible treatments"
-                    options={[1, 2].map((value) => ({ value, label: treatmentNames[value]! }))}
-                    value={draft.selections['recovery.eligibleTreatments'] ?? []}
-                    onChange={(values) => selection('recovery.eligibleTreatments', values)}
-                  />
-                )}
-                {capability === 'benefits' && (
-                  <>
-                    <Choice
-                      label="Benefit eligible kind"
-                      value={draft.fields['benefits.eligibleKind'] ?? ''}
-                      options={eligibleKindOptions.map((option) => ({
-                        ...option,
-                        value: String(option.value),
-                      }))}
-                      onChange={(value) => update('benefits.eligibleKind', value)}
-                    />
-                    <Choice
-                      label="Benefit encashment eligible"
-                      value={draft.fields['benefits.encashmentEligible'] ?? ''}
-                      options={yesNo}
-                      onChange={(value) => update('benefits.encashmentEligible', value)}
-                    />
-                  </>
-                )}
-                {capability === 'recoveryFulfilment' && (
-                  <>
-                    {fulfilmentChoices.map(([key, label, configured]) => (
+                  )}
+                  {capability === 'encashment' && (
+                    <>
                       <Choice
-                        key={key}
-                        label={label}
-                        value={draft.fields[`recoveryFulfilment.${key}`] ?? ''}
+                        label="Amount rounding"
+                        value={draft.fields['encashment.rounding'] ?? ''}
                         options={[
-                          { value: '0', label: 'Pending configuration' },
-                          { value: '1', label: configured },
+                          { value: '0', label: 'To even' },
+                          { value: '1', label: 'Away from zero' },
                         ]}
-                        onChange={(value) => update(`recoveryFulfilment.${key}`, value)}
+                        onChange={(value) => update('encashment.rounding', value)}
                       />
-                    ))}
-                    {fulfilmentChoices.some(
-                      ([key]) => draft.fields[`recoveryFulfilment.${key}`] === '0',
-                    ) && (
-                      <p role="status">
-                        Recovery fulfilment remains pending while any governing choice is Pending
-                        configuration.
-                      </p>
-                    )}
-                    <Choice
-                      label="Allow partial fulfilment"
-                      value={draft.fields['recoveryFulfilment.allowPartialFulfilment'] ?? ''}
-                      options={yesNo}
-                      onChange={(value) =>
-                        update('recoveryFulfilment.allowPartialFulfilment', value)
-                      }
+                      <TextInput
+                        label="Currency"
+                        required
+                        maxLength={3}
+                        pattern="[A-Z]{3}"
+                        value={draft.fields['encashment.currency'] ?? ''}
+                        onChange={(event) => update('encashment.currency', event.target.value)}
+                      />
+                      <Choice
+                        label="Valuation date"
+                        value={draft.fields['encashment.valuationDate'] ?? ''}
+                        options={[{ value: '1', label: 'Last day of leave year' }]}
+                        onChange={(value) => update('encashment.valuationDate', value)}
+                      />
+                    </>
+                  )}
+                  {capability === 'recovery' && (
+                    <MultiChoice
+                      label="Recovery eligible treatments"
+                      options={[1, 2].map((value) => ({ value, label: treatmentNames[value]! }))}
+                      value={draft.selections['recovery.eligibleTreatments'] ?? []}
+                      onChange={(values) => selection('recovery.eligibleTreatments', values)}
                     />
-                  </>
-                )}
-              </>
-            )}
-          </section>
-        ))}
+                  )}
+                  {capability === 'benefits' && (
+                    <>
+                      <Choice
+                        label="Benefit eligible kind"
+                        value={draft.fields['benefits.eligibleKind'] ?? ''}
+                        options={eligibleKindOptions.map((option) => ({
+                          ...option,
+                          value: String(option.value),
+                        }))}
+                        onChange={(value) => update('benefits.eligibleKind', value)}
+                      />
+                      <Choice
+                        label="Benefit encashment eligible"
+                        value={draft.fields['benefits.encashmentEligible'] ?? ''}
+                        options={yesNo}
+                        onChange={(value) => update('benefits.encashmentEligible', value)}
+                      />
+                    </>
+                  )}
+                  {capability === 'recoveryFulfilment' && (
+                    <>
+                      {fulfilmentChoices.map(([key, label, configured]) => (
+                        <Choice
+                          key={key}
+                          label={label}
+                          value={draft.fields[`recoveryFulfilment.${key}`] ?? ''}
+                          options={[
+                            { value: '0', label: 'Pending configuration' },
+                            { value: '1', label: configured },
+                          ]}
+                          onChange={(value) => update(`recoveryFulfilment.${key}`, value)}
+                        />
+                      ))}
+                      {fulfilmentChoices.some(
+                        ([key]) => draft.fields[`recoveryFulfilment.${key}`] === '0',
+                      ) && (
+                        <p role="status">
+                          Recovery fulfilment remains pending while any governing choice is Pending
+                          configuration.
+                        </p>
+                      )}
+                      <Choice
+                        label="Allow partial fulfilment"
+                        value={draft.fields['recoveryFulfilment.allowPartialFulfilment'] ?? ''}
+                        options={yesNo}
+                        onChange={(value) =>
+                          update('recoveryFulfilment.allowPartialFulfilment', value)
+                        }
+                      />
+                    </>
+                  )}
+                </>
+              )}
+            </section>
+          ))}
         <TextInput
           label="Publication reason"
           required

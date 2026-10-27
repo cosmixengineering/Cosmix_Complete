@@ -5,6 +5,11 @@
 *.rar
 *.7z
 
+# Sensitive artifacts
+cookies.txt
+*.cookie
+*.cookies
+
 # Dependencies
 node_modules/
 **/node_modules/

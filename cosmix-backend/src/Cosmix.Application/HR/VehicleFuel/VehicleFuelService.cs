@@ -977,7 +977,7 @@ public sealed partial class VehicleFuelService(
                 var current = await ServiceEligibilityAsync(record.EmployeeId, new(record.VehicleId, record.ServiceKind,
                     record.ServiceDate, record.OdometerKm, retained.ClaimedOutstationKm, record.AuthorizedWorkshopReference,
                     record.EvidencePrivateReference, record.ClaimedAmount, record.Currency), vehicle.VehicleType, token, record.PolicyVersionId);
-                if (JsonSerializer.Serialize(retained) != JsonSerializer.Serialize(current))
+                if (!SameServiceEligibility(retained, current))
                     throw AttendanceOperation.Conflict("vehicle_service_eligibility_changed");
 
                 var decision = record.ApprovalRequest.Decide(

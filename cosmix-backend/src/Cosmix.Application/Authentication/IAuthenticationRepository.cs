@@ -28,6 +28,7 @@ public interface IAuthenticationRepository
     Task<IReadOnlyList<UserSession>> GetActiveSessionsPageAsync(Guid accountId, DateTimeOffset now,
         int page, int pageSize, CancellationToken cancellationToken);
     Task<IReadOnlyList<RegisteredDevice>> GetDevicesAsync(Guid accountId, int page, int pageSize, CancellationToken cancellationToken);
+    Task<IReadOnlyList<RegisteredDevice>> GetNonRevokedDevicesAsync(Guid accountId, CancellationToken cancellationToken);
     void AddChallenge(MobileOtpChallenge challenge, OtpDelivery delivery);
     void AddRateBucket(AuthRateBucket bucket);
     void AddDevice(RegisteredDevice device);

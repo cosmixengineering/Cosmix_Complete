@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Cosmix.Application.Authentication.Access;
 using Cosmix.Domain.Common.Approvals;
+using Cosmix.Application.HR.PayrollSalary;
 
 namespace Cosmix.Application.HR.PayrollHandoff;
 
@@ -11,11 +12,13 @@ public static class PayrollHandoffPermissions
     public const string Prepare = "attendance.payroll-handoff.prepare";
     public const string Lock = "attendance.payroll-handoff.lock";
     public const string Process = "attendance.payroll-handoff.process";
+    public const string HrReview = "attendance.payroll-handoff.hr-review";
     public static IReadOnlyList<AccessPermissionDefinition> Definitions { get; } = [
         new(Read, "Read payroll handoff previews and prepared batch history", true, true, false),
         new(Prepare, "Prepare a payroll handoff batch from locked attendance evidence", true, true, false),
         new(Lock, "Approve and freeze a prepared payroll handoff batch", true, true, false),
-        new(Process, "Record external Accounts processing evidence for a locked payroll handoff", true, true, false)
+        new(Process, "Record external Accounts processing evidence for a locked payroll handoff", true, true, false),
+        new(HrReview,"Independently review prepared full salary payroll before Management approval",true,true,false)
     ];
 }
 
@@ -33,7 +36,12 @@ public sealed record PayrollHandoffTotals(decimal OvertimeTotal, decimal Allowan
 public sealed record PayrollHandoffPreview(DateOnly PeriodStart, DateOnly PeriodEndExclusive,
     Guid AttendancePeriodLockEventId, DateTimeOffset LockedAtUtc, int EmployeeCount,
     IReadOnlyList<PayrollHandoffPreviewLine> Lines, IReadOnlyList<PayrollHandoffSkippedSource> Skipped,
-    PayrollHandoffTotals Totals, string Currency, string PreviewFingerprint);
+    PayrollHandoffTotals Totals, string Currency, string PreviewFingerprint)
+{
+    public string CalculationVersion { get; init; } = "adjustments-v1";
+    public bool SalaryComplete { get; init; }
+    public IReadOnlyList<PayrollSalaryEmployeeTotal> EmployeeTotals { get; init; } = [];
+}
 
 public sealed record PayrollHandoffLineResponse(Guid Id, Guid EmployeeId, string Component, string SourceType,
     Guid SourceId, int SourceVersion, Guid AttendancePeriodLockEventId, decimal Amount, string Currency,
@@ -45,7 +53,17 @@ public sealed record PayrollHandoffProcessingRecordResponse(Guid Id, string Exte
 public sealed record PayrollHandoffBatchResponse(Guid Id, string BatchReference, DateOnly PeriodStart,
     DateOnly PeriodEndExclusive, string Currency, string State, int LinesRevision, string Version,
     DateTimeOffset PreparedAt, string PreparedByUserId, DateTimeOffset? LockedAt, string? LockedByUserId,
-    Guid? ApprovalRequestId, PayrollHandoffTotals Totals, int LineCount);
+    Guid? ApprovalRequestId, PayrollHandoffTotals Totals, int LineCount)
+{
+    public string CalculationVersion { get; init; } = "adjustments-v1";
+    public bool SalaryComplete { get; init; }
+    public string? PreviewFingerprint { get; init; }
+    public string? FrozenFingerprint { get; init; }
+    public Guid? HrApprovalRequestId { get; init; }
+    public string? HrApprovedByUserId { get; init; }
+    public DateTimeOffset? HrApprovedAt { get; init; }
+    public IReadOnlyList<PayrollSalaryEmployeeTotal> EmployeeTotals { get; init; } = [];
+}
 
 public sealed record PayrollHandoffBatchDetail(PayrollHandoffBatchResponse Batch,
     IReadOnlyList<PayrollHandoffLineResponse> Lines,
@@ -95,6 +113,8 @@ public sealed record PayrollHandoffFuelClaimSource(Guid ClaimId, Guid EmployeeId
 
 public interface IPayrollHandoffRepository
 {
+    Task<ApprovalRequest?> ApprovalAsync(Guid id,CancellationToken ct) => Task.FromResult<ApprovalRequest?>(null);
+    Task<IReadOnlyList<ApprovalDecision>> DecisionRecordsAsync(Guid id,CancellationToken ct) => Task.FromResult<IReadOnlyList<ApprovalDecision>>([]);
     Task<Cosmix.Domain.Common.Audit.AuditEvent?> LoanPostingAuditAsync(Guid ledgerEntryId, CancellationToken ct);
     Task<IReadOnlyList<PayrollHandoffOvertimeSource>> OvertimeAsync(IReadOnlyList<Guid> employeeIds,
         DateTimeOffset fromUtc, DateTimeOffset toUtcExclusive, CancellationToken ct);

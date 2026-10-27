@@ -14,8 +14,7 @@ import type {
 import { describeError } from '../utils/errors';
 import { localTime, receiptMessage } from '../utils/presentation';
 import { isAcceptedReceipt } from '../utils/validation';
-import { LocationConsentScreen } from './consent/LocationConsentScreen';
-import { LocationConsentService } from '../services/consent/locationConsentService';
+import { useLocationConsentCheck } from './consent/LocationConsentGate';
 
 const steps: Record<AttendanceStep, string> = {
   preparing: 'Checking attendance availability…',
@@ -46,16 +45,7 @@ export function AttendanceScreen(): React.JSX.Element {
     grant => grant.permission === 'attendance.face.self',
   );
 
-  const [consentPending, setConsentPending] = useState(false);
-  const consentService = useRef(new LocationConsentService(auth as any)).current;
-
-  useEffect(() => {
-    consentService.getConsentStatus().then(status => {
-      if (status.hasActivePolicy && status.status === 'PendingConsent') {
-        setConsentPending(true);
-      }
-    }).catch(() => {});
-  }, [consentService]);
+  const checkLocationConsent = useLocationConsentCheck();
 
   useEffect(() => {
     mounted.current = true;
@@ -110,6 +100,7 @@ export function AttendanceScreen(): React.JSX.Element {
       }
     };
     try {
+      if (!(await checkLocationConsent())) return;
       const result =
         action === 'retry'
           ? await attendance.retryPending(progress)
@@ -140,15 +131,6 @@ export function AttendanceScreen(): React.JSX.Element {
       flight.current = false;
     }
   };
-
-  if (consentPending) {
-    return (
-      <LocationConsentScreen
-        onConsentAccepted={() => setConsentPending(false)}
-        onDeclineOrSkip={() => setConsentPending(false)}
-      />
-    );
-  }
 
   return (
     <Screen>
@@ -229,8 +211,10 @@ export function AttendanceScreen(): React.JSX.Element {
         <Text style={layout.heading}>Check In</Text>
         <Text style={layout.body}>
           Use good lighting, remove anything covering your face, and keep one
-          face in view. We will verify your face and liveness, then confirm your
-          location.
+          face in view. We first check your current location against your
+          assigned work boundary. When it is allowed, we open the camera and
+          verify your face and liveness, then confirm fresh location before
+          recording attendance.
         </Text>
         <Text style={layout.muted}>
           Camera and precise location access are required. Your face must

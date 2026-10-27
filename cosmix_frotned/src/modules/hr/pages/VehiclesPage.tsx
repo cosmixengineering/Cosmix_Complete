@@ -18,9 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { Denied, QueryState, ActionMessage } from '../components/Feedback';
-import {
-  FinanceStatus,
-} from '../components/finance/FinanceChrome';
+import { FinanceStatus } from '../components/finance/FinanceChrome';
 import {
   approvalStateOptions,
   journeyPurposeOptions,
@@ -113,7 +111,9 @@ function VehiclesManagementWorkspace() {
     ...(canTrips ? [{ id: 'trips', label: 'Trips', icon: Car }] : []),
     ...(canFuel || canCommute ? [{ id: 'fuel', label: 'Fuel Claims', icon: Fuel }] : []),
     ...(canMaintenance ? [{ id: 'maintenance', label: 'Maintenance', icon: Wrench }] : []),
-    ...(canCustody || canManage ? [{ id: 'custody', label: 'Custody & Fleet', icon: KeyRound }] : []),
+    ...(canCustody || canManage
+      ? [{ id: 'custody', label: 'Custody & Fleet', icon: KeyRound }]
+      : []),
     ...(canIncident ? [{ id: 'incidents', label: 'Incidents', icon: ShieldAlert }] : []),
     ...(canFuel ? [{ id: 'monthly', label: 'Monthly Adjustments', icon: Calendar }] : []),
     ...(canPolicy ? [{ id: 'policies', label: 'Policies', icon: FileText }] : []),
@@ -149,7 +149,8 @@ function VehiclesManagementWorkspace() {
             <h1 className="veh-main-title">Vehicles & Fleet Management</h1>
           </div>
           <p className="veh-subtitle">
-            Audit trip intake, approve fuel reimbursement claims, monitor vehicle custody, and track maintenance.
+            Audit trip intake, approve fuel reimbursement claims, monitor vehicle custody, and track
+            maintenance.
           </p>
         </div>
 
@@ -308,11 +309,13 @@ function VehicleTrips({ canManage, canVehicles }: { canManage: boolean; canVehic
             <span>Vehicle Trip Logs & Audit Queue</span>
           </h2>
           <p className="veh-card-desc">
-            Review official and inter-site journeys, verify GPS map distance vs odometer logs, and authorize trips.
+            Review official and inter-site journeys, verify GPS map distance vs odometer logs, and
+            authorize trips.
           </p>
           {!canVehicles && (
             <p className="muted" style={{ fontSize: '11px', color: '#dc2626', marginTop: 4 }}>
-              Vehicle registration and custody administration need the vehicle management permission.
+              Vehicle registration and custody administration need the vehicle management
+              permission.
             </p>
           )}
         </div>
@@ -504,7 +507,8 @@ function VehicleTrips({ canManage, canVehicles }: { canManage: boolean; canVehic
             </div>
             <h4 className="veh-empty-title">No vehicle trips match this filter</h4>
             <p className="veh-empty-desc">
-              There are currently no logged trips matching the selected criteria. When employees record journeys via the mobile app or terminal, they will be queued here.
+              There are currently no logged trips matching the selected criteria. When employees
+              record journeys via the mobile app or terminal, they will be queued here.
             </p>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
@@ -533,7 +537,14 @@ function VehicleTrips({ canManage, canVehicles }: { canManage: boolean; canVehic
               return (
                 <article className="veh-item-card" key={trip.id}>
                   <div className="veh-item-top">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        flexWrap: 'wrap',
+                      }}
+                    >
                       <span className="veh-reg-pill">
                         <Car size={13} />
                         <span>{trip.registrationNumber}</span>
@@ -559,9 +570,7 @@ function VehicleTrips({ canManage, canVehicles }: { canManage: boolean; canVehic
                         style={{ height: '28px', padding: '0 10px', fontSize: '11.5px' }}
                         disabled={navigation.pending}
                         onClick={() => {
-                          navigation.navigate(() =>
-                            setSelectedTripId(isSelected ? '' : trip.id),
-                          );
+                          navigation.navigate(() => setSelectedTripId(isSelected ? '' : trip.id));
                         }}
                       >
                         {isSelected ? 'Close Details' : 'Attribution & History'}
@@ -581,13 +590,29 @@ function VehicleTrips({ canManage, canVehicles }: { canManage: boolean; canVehic
                   </div>
 
                   {/* Route & Driver Row */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: '8px',
+                    }}
+                  >
                     <div className="veh-route-display">
                       <span>{trip.originLabel}</span>
                       <span className="veh-route-arrow">➔</span>
                       <span>{trip.destinationLabel}</span>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#475569', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        color: '#475569',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                      }}
+                    >
                       <Users size={13} color="#64748b" />
                       <span style={{ fontWeight: 600 }}>{trip.employeeName}</span>
                     </div>
@@ -625,11 +650,14 @@ function VehicleTrips({ canManage, canVehicles }: { canManage: boolean; canVehic
 
                   {/* Selected Trip Attribution Drawer */}
                   {isSelected && (
-                    <div style={{ marginTop: '8px', borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
-                      <VehicleTripAttribution
-                        trip={trip}
-                        onChanged={() => void trips.refetch()}
-                      />
+                    <div
+                      style={{
+                        marginTop: '8px',
+                        borderTop: '1px solid #e2e8f0',
+                        paddingTop: '12px',
+                      }}
+                    >
+                      <VehicleTripAttribution trip={trip} onChanged={() => void trips.refetch()} />
                     </div>
                   )}
                 </article>
@@ -646,9 +674,7 @@ function VehicleTrips({ canManage, canVehicles }: { canManage: boolean; canVehic
                     className="btn-veh-secondary"
                     style={{ height: '28px', padding: '0 10px', fontSize: '11.5px' }}
                     disabled={trips.isFetching || navigation.pending || page <= 1}
-                    onClick={() =>
-                      navigation.navigate(() => setPage((v) => Math.max(1, v - 1)))
-                    }
+                    onClick={() => navigation.navigate(() => setPage((v) => Math.max(1, v - 1)))}
                   >
                     <ChevronLeft size={14} />
                     Previous
@@ -797,7 +823,9 @@ function VehicleFuel({
                       required
                       placeholder="Employee UUID..."
                       value={commuteForm.employeeId}
-                      onChange={(e) => setCommuteForm({ ...commuteForm, employeeId: e.target.value })}
+                      onChange={(e) =>
+                        setCommuteForm({ ...commuteForm, employeeId: e.target.value })
+                      }
                     />
                   </div>
 
@@ -808,7 +836,9 @@ function VehicleFuel({
                       className="veh-input"
                       required
                       value={commuteForm.effectiveFrom}
-                      onChange={(e) => setCommuteForm({ ...commuteForm, effectiveFrom: e.target.value })}
+                      onChange={(e) =>
+                        setCommuteForm({ ...commuteForm, effectiveFrom: e.target.value })
+                      }
                     />
                   </div>
 
@@ -818,7 +848,9 @@ function VehicleFuel({
                       type="date"
                       className="veh-input"
                       value={commuteForm.effectiveTo}
-                      onChange={(e) => setCommuteForm({ ...commuteForm, effectiveTo: e.target.value })}
+                      onChange={(e) =>
+                        setCommuteForm({ ...commuteForm, effectiveTo: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -850,7 +882,9 @@ function VehicleFuel({
                       placeholder="e.g. 31.0"
                       required
                       value={commuteForm.dailyRoundTripKm}
-                      onChange={(e) => setCommuteForm({ ...commuteForm, dailyRoundTripKm: e.target.value })}
+                      onChange={(e) =>
+                        setCommuteForm({ ...commuteForm, dailyRoundTripKm: e.target.value })
+                      }
                     />
                   </div>
 
@@ -862,12 +896,21 @@ function VehicleFuel({
                       placeholder="Home to main worksite route..."
                       required
                       value={commuteForm.routeReference}
-                      onChange={(e) => setCommuteForm({ ...commuteForm, routeReference: e.target.value })}
+                      onChange={(e) =>
+                        setCommuteForm({ ...commuteForm, routeReference: e.target.value })
+                      }
                     />
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: '8px',
+                    marginTop: '12px',
+                  }}
+                >
                   <button
                     type="button"
                     className="btn-veh-secondary"
@@ -907,7 +950,8 @@ function VehicleFuel({
                 <span>Fuel Reimbursement Claims Queue</span>
               </h2>
               <p className="veh-card-desc">
-                Review submitted fuel claims, audit eligible mileage against commute deductions, and approve for payroll settlement.
+                Review submitted fuel claims, audit eligible mileage against commute deductions, and
+                approve for payroll settlement.
               </p>
             </div>
           </div>
@@ -988,7 +1032,14 @@ function VehicleFuel({
                 {claims.data?.items.map((claim) => (
                   <article className="veh-item-card" key={claim.id}>
                     <div className="veh-item-top">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
                         <span className="veh-reg-pill">
                           <Users size={12} />
                           <span>{claim.employeeName}</span>
@@ -1081,7 +1132,16 @@ function VehicleFuel({
       )}
 
       {vehicles.data && !vehicles.data.length && (
-        <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', color: '#64748b' }}>
+        <div
+          style={{
+            padding: '12px 14px',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: '6px',
+            fontSize: '12px',
+            color: '#64748b',
+          }}
+        >
           No company vehicles are registered yet. Register your fleet under the Custody & Fleet tab.
         </div>
       )}
@@ -1135,7 +1195,8 @@ function VehicleMaintenance({
             <span>Vehicle Maintenance & Service Queue</span>
           </h2>
           <p className="veh-card-desc">
-            Audit periodic servicing, oil change vouchers, workshop receipts, and emergency repair claims.
+            Audit periodic servicing, oil change vouchers, workshop receipts, and emergency repair
+            claims.
           </p>
           {canVehicles && (
             <p className="muted" style={{ fontSize: '11px', color: '#64748b', marginTop: 4 }}>
@@ -1209,12 +1270,20 @@ function VehicleMaintenance({
           <div className="veh-items-list">
             {records.data?.items.map((record) => {
               const serviceLabel =
-                serviceKindOptions[record.serviceKind - 1]?.label ?? `Service #${record.serviceKind}`;
+                serviceKindOptions[record.serviceKind - 1]?.label ??
+                `Service #${record.serviceKind}`;
 
               return (
                 <article className="veh-item-card" key={record.id}>
                   <div className="veh-item-top">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        flexWrap: 'wrap',
+                      }}
+                    >
                       <span className="veh-reg-pill">
                         <Wrench size={13} />
                         <span>{record.registrationNumber}</span>
@@ -1463,7 +1532,9 @@ function VehicleCustodyPanel({
                     required
                     maxLength={40}
                     value={createForm.registrationNumber}
-                    onChange={(e) => setCreateForm({ ...createForm, registrationNumber: e.target.value })}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, registrationNumber: e.target.value })
+                    }
                   />
                 </div>
                 <div className="veh-form-group">
@@ -1502,7 +1573,14 @@ function VehicleCustodyPanel({
                   onChange={(e) => setCreateForm({ ...createForm, assetReference: e.target.value })}
                 />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '8px',
+                  marginTop: '12px',
+                }}
+              >
                 <button
                   type="button"
                   className="btn-veh-secondary"
@@ -1587,7 +1665,9 @@ function VehicleCustodyPanel({
                     placeholder="e.g. 12450.0"
                     required
                     value={issueForm.issueOdometerKm}
-                    onChange={(e) => setIssueForm({ ...issueForm, issueOdometerKm: e.target.value })}
+                    onChange={(e) =>
+                      setIssueForm({ ...issueForm, issueOdometerKm: e.target.value })
+                    }
                   />
                 </div>
                 <div className="veh-form-group" style={{ gridColumn: 'span 2' }}>
@@ -1598,11 +1678,20 @@ function VehicleCustodyPanel({
                     placeholder="e.g. Clean interior, scratch on rear bumper, spare tire verified"
                     required
                     value={issueForm.issueConditionReference}
-                    onChange={(e) => setIssueForm({ ...issueForm, issueConditionReference: e.target.value })}
+                    onChange={(e) =>
+                      setIssueForm({ ...issueForm, issueConditionReference: e.target.value })
+                    }
                   />
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '8px',
+                  marginTop: '12px',
+                }}
+              >
                 <button
                   type="button"
                   className="btn-veh-secondary"
@@ -1639,7 +1728,8 @@ function VehicleCustodyPanel({
                 <span>Vehicle Custody & Assignment History</span>
               </h2>
               <p className="veh-card-desc">
-                Track active employee vehicle custody, odometer handovers, and return condition records.
+                Track active employee vehicle custody, odometer handovers, and return condition
+                records.
               </p>
             </div>
           </div>
@@ -1683,7 +1773,14 @@ function VehicleCustodyPanel({
                 {history.data?.map((item) => (
                   <article className="veh-item-card" key={item.id}>
                     <div className="veh-item-top">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
                         <span className="veh-reg-pill">
                           <Car size={13} />
                           <span>{item.registrationNumber}</span>
@@ -1729,7 +1826,9 @@ function VehicleCustodyPanel({
                       </div>
                       <div className="veh-metric-item">
                         <dt>Returned Date</dt>
-                        <dd>{item.returnedAt ? labelDate(item.returnedAt) : 'Currently In Custody'}</dd>
+                        <dd>
+                          {item.returnedAt ? labelDate(item.returnedAt) : 'Currently In Custody'}
+                        </dd>
                       </div>
                       <div className="veh-metric-item">
                         <dt>Return Odometer</dt>
@@ -1740,10 +1839,23 @@ function VehicleCustodyPanel({
                     {/* Inline Record Return Form */}
                     {returning?.id === item.id && (
                       <form
-                        style={{ marginTop: '10px', background: '#f8fafc', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '12px' }}
+                        style={{
+                          marginTop: '10px',
+                          background: '#f8fafc',
+                          border: '1px solid #bfdbfe',
+                          borderRadius: '6px',
+                          padding: '12px',
+                        }}
                         onSubmit={(e) => void recordReturn(e)}
                       >
-                        <h4 style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 700, color: '#1e40af' }}>
+                        <h4
+                          style={{
+                            margin: '0 0 8px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            color: '#1e40af',
+                          }}
+                        >
                           Record Vehicle Return for {item.registrationNumber}
                         </h4>
                         <div className="veh-grid-3">
@@ -1754,7 +1866,9 @@ function VehicleCustodyPanel({
                               className="veh-input"
                               required
                               value={returnForm.returnedAt}
-                              onChange={(e) => setReturnForm({ ...returnForm, returnedAt: e.target.value })}
+                              onChange={(e) =>
+                                setReturnForm({ ...returnForm, returnedAt: e.target.value })
+                              }
                             />
                           </div>
                           <div className="veh-form-group">
@@ -1766,7 +1880,9 @@ function VehicleCustodyPanel({
                               className="veh-input"
                               required
                               value={returnForm.returnOdometerKm}
-                              onChange={(e) => setReturnForm({ ...returnForm, returnOdometerKm: e.target.value })}
+                              onChange={(e) =>
+                                setReturnForm({ ...returnForm, returnOdometerKm: e.target.value })
+                              }
                             />
                           </div>
                           <div className="veh-form-group">
@@ -1777,11 +1893,23 @@ function VehicleCustodyPanel({
                               required
                               placeholder="Notes on vehicle condition upon return..."
                               value={returnForm.returnConditionReference}
-                              onChange={(e) => setReturnForm({ ...returnForm, returnConditionReference: e.target.value })}
+                              onChange={(e) =>
+                                setReturnForm({
+                                  ...returnForm,
+                                  returnConditionReference: e.target.value,
+                                })
+                              }
                             />
                           </div>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '10px' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            gap: '6px',
+                            marginTop: '10px',
+                          }}
+                        >
                           <button
                             type="button"
                             className="btn-veh-secondary"
@@ -1839,7 +1967,8 @@ function VehicleIncidents({ canManage }: { canManage: boolean }) {
             <span>Vehicle Incidents & Accident Reports</span>
           </h2>
           <p className="veh-card-desc">
-            Review accident reports, police reports, third-party liability assessments, and insurance claims.
+            Review accident reports, police reports, third-party liability assessments, and
+            insurance claims.
           </p>
         </div>
       </div>
@@ -1893,7 +2022,8 @@ function VehicleIncidents({ canManage }: { canManage: boolean }) {
             </div>
             <h4 className="veh-empty-title">No incident reports match this filter</h4>
             <p className="veh-empty-desc">
-              There are no reported traffic accidents or damage claims logged under the selected criteria.
+              There are no reported traffic accidents or damage claims logged under the selected
+              criteria.
             </p>
           </div>
         ) : (
@@ -1904,7 +2034,14 @@ function VehicleIncidents({ canManage }: { canManage: boolean }) {
               return (
                 <article className="veh-item-card" key={incident.id}>
                   <div className="veh-item-top">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        flexWrap: 'wrap',
+                      }}
+                    >
                       <span className="veh-reg-pill">
                         <ShieldAlert size={13} color="#dc2626" />
                         <span>Custody #{incident.vehicleCustodyId.slice(0, 8)}...</span>
@@ -1948,12 +2085,20 @@ function VehicleIncidents({ canManage }: { canManage: boolean }) {
                     </div>
                     <div className="veh-metric-item">
                       <dt>Proposed Liability</dt>
-                      <dd>{incident.proposedEmployeeLiability} {incident.currency}</dd>
+                      <dd>
+                        {incident.proposedEmployeeLiability} {incident.currency}
+                      </dd>
                     </div>
                   </div>
 
                   {isSelected && (
-                    <div style={{ marginTop: '8px', borderTop: '1px solid #e2e8f0', paddingTop: '10px' }}>
+                    <div
+                      style={{
+                        marginTop: '8px',
+                        borderTop: '1px solid #e2e8f0',
+                        paddingTop: '10px',
+                      }}
+                    >
                       <VehicleIncidentManagement
                         incident={incident}
                         onChanged={() => void incidents.refetch()}
@@ -1973,9 +2118,7 @@ function VehicleIncidents({ canManage }: { canManage: boolean }) {
                     className="btn-veh-secondary"
                     style={{ height: '28px', padding: '0 10px', fontSize: '11.5px' }}
                     disabled={incidents.isFetching || navigation.pending || page <= 1}
-                    onClick={() =>
-                      navigation.navigate(() => setPage((v) => Math.max(1, v - 1)))
-                    }
+                    onClick={() => navigation.navigate(() => setPage((v) => Math.max(1, v - 1)))}
                   >
                     <ChevronLeft size={14} />
                     Previous

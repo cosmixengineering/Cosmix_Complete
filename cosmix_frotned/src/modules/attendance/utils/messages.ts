@@ -57,8 +57,7 @@ const leaveWorkflowErrors: Readonly<Record<string, string>> = {
     'The attendance records changed or have evidence conflict. Reload and try again.',
   attendance_report_range_limit:
     'Attendance query is limited to 1–25 employees and at most 31 days.',
-  employee_not_approved:
-    'This employee is currently in Draft or Pending approval status.',
+  employee_not_approved: 'This employee is currently in Draft or Pending approval status.',
   employee_document_unavailable:
     'The requested document is not currently available or is being processed.',
 };

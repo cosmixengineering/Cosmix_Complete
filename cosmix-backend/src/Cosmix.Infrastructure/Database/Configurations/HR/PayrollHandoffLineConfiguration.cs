@@ -10,7 +10,7 @@ public sealed class PayrollHandoffLineConfiguration : IEntityTypeConfiguration<P
     {
         builder.ToTable("PayrollHandoffLines", "hr", table =>
         {
-            table.HasCheckConstraint("CK_PayrollHandoffLines_1", "[Component] BETWEEN 1 AND 8");
+            table.HasCheckConstraint("CK_PayrollHandoffLines_1", "[Component] BETWEEN 1 AND 12");
             table.HasCheckConstraint("CK_PayrollHandoffLines_2", "[SourceVersion] > 0");
             table.HasCheckConstraint("CK_PayrollHandoffLines_3", "[Currency] IS NULL OR (LEN([Currency]) = 3 AND [Currency] COLLATE Latin1_General_100_BIN2 NOT LIKE '%[^A-Z]%')");
         });

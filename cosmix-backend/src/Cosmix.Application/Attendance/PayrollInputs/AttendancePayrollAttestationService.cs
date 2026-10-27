@@ -119,12 +119,12 @@ public sealed class AttendancePayrollAttestationService(AttendanceOperation oper
         // Revalidate the authoritative protected source while holding the write/read transaction.
         if (evidence.SchemaVersion != 1 || evidence.EmployeeId != row.EmployeeId || evidence.MonthStart != row.PeriodStart ||
             evidence.Revision != row.Revision || evidence.ActorUserId != row.ActorUserId || evidence.CreatedAtUtc != row.CreatedAtUtc ||
-            row.CalculationVersion != AttendancePayrollInputRules.Version || evidence.PreviewFingerprint != row.InputFingerprint ||
+            !AttendancePayrollInputRules.IsSupportedVersion(row.CalculationVersion) || row.CalculationVersion!=evidence.Calculation.SourceManifest.CalculationVersion || evidence.PreviewFingerprint != row.InputFingerprint ||
             Hash(JsonSerializer.SerializeToUtf8Bytes(new { Calculation = evidence.Calculation, Jurisdictions = evidence.Jurisdictions })) != row.InputFingerprint ||
             evidence.Calculation.EmployeeId != row.EmployeeId || evidence.Calculation.MonthStart != row.PeriodStart ||
             evidence.Calculation.MonthEndExclusive != row.PeriodStart.AddMonths(1) ||
             evidence.Calculation.SourceManifest.EmployeeId != row.EmployeeId || evidence.Calculation.SourceManifest.MonthStart != row.PeriodStart ||
-            evidence.Calculation.SourceManifest.CalculationVersion != AttendancePayrollInputRules.Version ||
+            evidence.Calculation.SourceManifest.CalculationVersion != AttendancePayrollInputRules.VersionFor(evidence.Calculation.SourceManifest.Days.Select(x=>x.Compensation)) ||
             !AttendanceScopeEvaluation.IsValid(evidence.OriginalScopes) ||
             evidence.OriginalScopes.SelectMany(x => x.Alternatives).Any(x => x.EmployeeId != row.EmployeeId) ||
             JsonSerializer.Serialize(evidence.OriginalScopes) != JsonSerializer.Serialize(evidence.Calculation.SourceManifest.OriginalScopes))
@@ -149,13 +149,9 @@ public sealed class AttendancePayrollAttestationService(AttendanceOperation oper
         await RequireScope(actor, AttendancePayrollInputPermissions.Read, current, ct);
         return source.Evidence.OriginalScopes.Concat(current).ToArray();
     }
-    private async Task RequireScope(AttendanceActor actor, string permission,
-        IReadOnlyList<AttendanceResourceScope> scopes, CancellationToken ct)
-    {
-        if (!AttendanceScopeEvaluation.Allows(actor.Identity,
-            await access.GetGrantsAsync(actor.Identity.AccountId, actor.Now, ct), permission, scopes))
-            throw AttendanceOperation.Denied();
-    }
+    private Task RequireScope(AttendanceActor actor, string permission,
+        IReadOnlyList<AttendanceResourceScope> scopes, CancellationToken ct) =>
+        operation.RequireScopedPermissionAsync(actor, permission, scopes, ct);
 
     private Task<IReadOnlyList<Retained>> ReadHistory(BoundSource source, AttendanceActor actor, string permission, CancellationToken ct) =>
         ReadHistoryCore(source, actor, permission, operation, repository, access, ct);
@@ -168,8 +164,7 @@ public sealed class AttendancePayrollAttestationService(AttendanceOperation oper
             throw AttendanceOperation.Conflict("payroll_attestation_source_unavailable");
         var lines = evidence.Calculation.Lines.Select(x => new AttendancePayrollAttestationLine(x.Key, x.Amount, x.Currency))
             .OrderBy(x => x.Key, StringComparer.Ordinal).ToArray();
-        if (!AttendanceScopeEvaluation.Allows(actor.Identity, await access.GetGrantsAsync(actor.Identity.AccountId, actor.Now, ct),
-                AttendancePayrollAttestationPermissions.Read, evidence.OriginalScopes)) throw AttendanceOperation.Denied();
+        await operation.RequireScopedPermissionAsync(actor, AttendancePayrollAttestationPermissions.Read, evidence.OriginalScopes, ct);
         return (await ReadHistoryCore(new(row, evidence, lines), actor, AttendancePayrollAttestationPermissions.Read,
             operation, repository, access, ct)).Select(x => x.Response).ToArray();
     }
@@ -215,8 +210,7 @@ public sealed class AttendancePayrollAttestationService(AttendanceOperation oper
                     row.Status, row.OccurredAtUtc, row.PostedAtUtc, row.ExternalReceiptKey);
             }
             catch (ArgumentException) { throw AttendanceOperation.Conflict("payroll_attestation_evidence_invalid"); }
-            if (!AttendanceScopeEvaluation.Allows(actor.Identity, await access.GetGrantsAsync(actor.Identity.AccountId, actor.Now, ct),
-                    permission, evidence.OriginalScopes)) throw AttendanceOperation.Denied();
+            await operation.RequireScopedPermissionAsync(actor, permission, evidence.OriginalScopes, ct);
             result.Add(new(row, Map(row, evidence))); previous = row;
         }
         return result;

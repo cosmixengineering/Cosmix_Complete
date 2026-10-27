@@ -7,6 +7,7 @@ using Cosmix.Domain.Attendance.Overtime;
 using Cosmix.Domain.Attendance.Punches;
 using Cosmix.Domain.Attendance.WorkSessions;
 using Cosmix.Domain.Common.Approvals;
+using Cosmix.Domain.HR.Policies;
 using Cosmix.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -69,10 +70,12 @@ public sealed class OvertimeRepository(CosmixDbContext db) : IOvertimeRepository
         }).ToArray();
     }
     public Task<bool> ApprovedPolicyAsync(Guid id, DateOnly date, CancellationToken ct) => db.PolicyVersions.AsNoTracking().AnyAsync(version =>
-        version.Id == id && version.EffectiveFrom <= date && (version.EffectiveTo == null || date < version.EffectiveTo) &&
-        db.ApprovalRequests.Any(approval => approval.Id == version.ApprovalRequestId && approval.State == ApprovalState.Approved &&
+        version.Id == id && version.Policy.Category == PolicyCategory.Attendance &&
+        version.EffectiveFrom <= date && (version.EffectiveTo == null || date < version.EffectiveTo) &&
+        ((version.Authority == PolicyAuthority.DirectHr && version.ApprovalRequestId == null) ||
+        (version.Authority == PolicyAuthority.ApprovedWorkflow && db.ApprovalRequests.Any(approval => approval.Id == version.ApprovalRequestId && approval.State == ApprovalState.Approved &&
             approval.ClosedAt <= version.PublishedAt && db.ApprovalDecisions.Any(decision => decision.ApprovalRequestId == approval.Id &&
-                decision.Decision == ApprovalState.Approved && decision.DecidedAt == approval.ClosedAt && decision.ActorUserId != approval.RequesterUserId)), ct);
+                decision.Decision == ApprovalState.Approved && decision.DecidedAt == approval.ClosedAt && decision.ActorUserId != approval.RequesterUserId)))), ct);
 
     internal IQueryable<OvertimeRecord> Records(bool tracked) =>
         from request in tracked ? db.OvertimeRequests : db.OvertimeRequests.AsNoTracking()

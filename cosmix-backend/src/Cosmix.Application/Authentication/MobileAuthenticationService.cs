@@ -110,6 +110,15 @@ public sealed class MobileAuthenticationService(
                 Audit("otp.verify.revoked_device", state.Account.Id.ToString(), "device", device.Id.ToString(), now, context);
                 return Failure("device_recovery_required", 403);
             }
+            var activeDevices = await repository.GetNonRevokedDevicesAsync(state.Account.Id, token);
+            if (!SingleDeviceRules.CanSignIn(activeDevices, device))
+            {
+                // A distinct purpose is persisted only after valid OTP, current account and self-service checks.
+                // Recovery can use this server-derived device hash; the denied login creates no session.
+                challenge.MarkReplacementProof(now);
+                Audit("otp.verify.device_recovery_required", state.Account.Id.ToString(), "otp-challenge", challenge.Id.ToString(), now, context);
+                return Failure("device_recovery_required", 403);
+            }
             // Only administrative recovery persists an unverified replacement; its proof must follow that approval.
             var completesRecovery = device is { VerifiedAt: null };
             if (completesRecovery && (device!.RegisteredAt > challenge.IssuedAt || device.Platform != challenge.Platform ||
@@ -227,7 +236,14 @@ public sealed class MobileAuthenticationService(
         state.Account.Status == AccountStatus.Active && session.SecurityVersion == state.Account.SecurityVersion &&
         session.RegisteredDevice is { RevokedAt: null, VerifiedAt: not null } &&
         session.MfaChallengeId is null && session.SmsOtpChallengeId is null &&
-        state.Phone?.VerifiedAt is not null && Eligible(state, now) && await HasSelfServiceAccessAsync(state, now, ct);
+        state.Phone?.VerifiedAt is not null && Eligible(state, now) && await HasSelfServiceAccessAsync(state, now, ct) &&
+        await IsSoleActiveDeviceAsync(state.Account.Id, session.RegisteredDeviceId, ct);
+
+    private async Task<bool> IsSoleActiveDeviceAsync(Guid accountId, Guid? deviceId, CancellationToken ct)
+    {
+        var devices = await repository.GetNonRevokedDevicesAsync(accountId, ct);
+        return SingleDeviceRules.CanUseSession(devices, deviceId);
+    }
 
     private async Task<bool> HasSelfServiceAccessAsync(AuthenticationAccount state, DateTimeOffset now, CancellationToken ct)
     {

@@ -1,8 +1,7 @@
 // Central Google Maps configuration & utilities for enterprise geolocation and tracking
 
 export const GOOGLE_MAPS_API_KEY: string =
-  (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) ||
-  'AIzaSyDVpMf1g9wbSUTF1I_jzRkMNrE-FbVMLF0';
+  (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) || '';
 
 // Official Google Maps Tile endpoints with 4 subdomains
 export const GOOGLE_MAPS_TILES = {
@@ -26,9 +25,10 @@ export function getGoogleTileUrl(
   type: 'roadmap' | 'satellite' | 'hybrid' | 'terrain',
   x: number,
   y: number,
-  z: number
+  z: number,
 ): string {
-  const lyrs = type === 'satellite' ? 's' : type === 'hybrid' ? 'y' : type === 'terrain' ? 'p' : 'm';
+  const lyrs =
+    type === 'satellite' ? 's' : type === 'hybrid' ? 'y' : type === 'terrain' ? 'p' : 'm';
   return `https://mt1.google.com/vt/lyrs=${lyrs}&x=${x}&y=${y}&z=${z}&key=${GOOGLE_MAPS_API_KEY}`;
 }
 

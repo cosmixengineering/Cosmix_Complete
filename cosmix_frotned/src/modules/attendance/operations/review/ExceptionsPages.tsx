@@ -6,6 +6,7 @@ import { Command, Denied, PrivateWorkspace, QueryState } from '../../components/
 import { queryString } from '../../api/attendance-api';
 import { canScope, canSelf, queueScopes, type Scope } from './access';
 import { cursorPage, exceptionDetail, exceptionItem, exceptionNotice, pageOf } from './contracts';
+import { MissingCheckoutReview } from './MissingCheckoutReview';
 import {
   CursorControls,
   NumberedControls,
@@ -64,10 +65,14 @@ function ExceptionsSelection({ self }: { self: boolean }) {
               ].map((label, i) => ({ value: String(i + 1), label }))
         }
       />
-      <p>
-        Exception resolution and review-comment writes have no delivered endpoint. Retained evidence
-        can be reviewed through correction requests; a detection notice is not approval.
-      </p>
+      <p>Review attendance evidence and resolve changes through the correction approval process.</p>
+      {!self && scope && range && (!range.kind || range.kind === 1) && (
+        <MissingCheckoutReview
+          key={`missing:${JSON.stringify(scope)}:${JSON.stringify(range)}`}
+          scope={scope}
+          range={range}
+        />
+      )}
       {range && (self || scope) && (
         <ExceptionsHistory
           key={`${JSON.stringify(scope)}:${JSON.stringify(range)}`}

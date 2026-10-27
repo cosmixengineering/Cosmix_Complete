@@ -1170,6 +1170,169 @@ await Test("ordinary ancestor chronology rejects " + defect + " during " + actio
             (action.EndsWith("replay") ? ApprovalState.Approved : ApprovalState.Pending)),
         "Impossible retained submission chronology cannot authorize success or receipt replay");
 });
+void SqlServiceScales(VehicleServiceRecord record, string field = "all")
+{
+    foreach (var name in new[] { nameof(VehicleServiceRecord.OdometerKm), nameof(VehicleServiceRecord.ApprovedOutstationKm), nameof(VehicleServiceRecord.ClaimedAmount) })
+    {
+        if (field != "all" && field != name) continue;
+        var property = typeof(VehicleServiceRecord).GetProperty(name)!;
+        var before = (decimal)property.GetValue(record)!;
+        var scale = name == nameof(VehicleServiceRecord.ClaimedAmount) ? 2 : 3;
+        var after = decimal.Parse(before.ToString("F" + scale, System.Globalization.CultureInfo.InvariantCulture), System.Globalization.CultureInfo.InvariantCulture);
+        Check(before == after && (decimal.GetBits(after)[3] >> 16 & 255) == scale,
+            "SQL materialization changes representation without changing the exact numeric value");
+        property.SetValue(record, after);
+    }
+}
+foreach (var field in new[] { nameof(VehicleServiceRecord.OdometerKm), nameof(VehicleServiceRecord.ApprovedOutstationKm), nameof(VehicleServiceRecord.ClaimedAmount), "all" })
+await Test("maintenance approval accepts SQL decimal scale " + field, async () => {
+    var f = new DatedFixture();
+    var request = new SubmitServiceRecordRequest(f.Vehicle.Id, VehicleServiceKind.Tuning, new(2026, 10, 9), 1200, 999,
+        "workshop-proof", "sql-scale-proof", 50, "PKR");
+    var submitted = await f.Service.SubmitServiceRecordAsync(request, "sql-scale-submit", f.Context, default);
+    var record = f.Records.Single(); var reference = record.EligibilityCalculationPrivateReference;
+    var storageKey = JsonSerializer.Deserialize<PrivateFileReference>(reference)!.StorageKey;
+    var retained = f.Files[storageKey].Bytes.ToArray();
+    SqlServiceScales(record, field);
+    f.Reviewer();
+    var approved = await f.Service.ApproveServiceRecordAsync(submitted.Id, "sql-scale-approve", f.Context, default);
+    Check(approved.ApprovalState == "Approved" && f.Decisions.Count == 1, "Exactly one independent approval survives SQL scales");
+    var receipts = f.Receipts.Count;
+    Check(await f.Service.ApproveServiceRecordAsync(submitted.Id, "sql-scale-approve", f.Context, default) == approved,
+        "Approval receipt remains replayable after SQL materialization");
+    f.Owner();
+    Check(await f.Service.SubmitServiceRecordAsync(request, "sql-scale-submit", f.Context, default) == submitted,
+        "Submission receipt retains its original result");
+    Check(f.Decisions.Count == 1 && f.Receipts.Count == receipts && record.EligibilityCalculationPrivateReference == reference &&
+        f.Files[storageKey].Bytes.SequenceEqual(retained), "Retries neither duplicate decisions nor rewrite historical evidence bytes/references");
+});
+foreach (var field in new[] { nameof(VehicleServiceRecord.OdometerKm), nameof(VehicleServiceRecord.ApprovedOutstationKm), nameof(VehicleServiceRecord.ClaimedAmount) })
+await Test("maintenance approval rejects genuine persisted change " + field, async () => {
+    var f = new DatedFixture(); var submitted = await f.SubmitService("sql-real-change");
+    var record = f.Records.Single(); SqlServiceScales(record);
+    var property = typeof(VehicleServiceRecord).GetProperty(field)!;
+    property.SetValue(record, (decimal)property.GetValue(record)! + (field == nameof(VehicleServiceRecord.ClaimedAmount) ? 0.01m : 0.001m));
+    f.Reviewer(); var receipts = f.Receipts.Count; var decisions = f.Decisions.Count;
+    await Fails("vehicle_service_cycle_evidence_unavailable", () => f.Service.ApproveServiceRecordAsync(submitted.Id, "sql-change-review", f.Context, default));
+    Check(record.ApprovalRequest!.State == ApprovalState.Pending && f.Decisions.Count == decisions && f.Receipts.Count == receipts,
+        "Genuine numeric change cannot commit an approval or receipt");
+});
+foreach (var action in new[] { "approve", "submit-replay", "approve-replay" })
+await Test("consumed maintenance accepts SQL decimal scale during " + action, async () => {
+    var (f, _) = await EquivalentConsumedMaintenance(); var next = await NextEquivalentService(f);
+    if (action == "approve-replay") { f.Reviewer(); await f.Service.ApproveServiceRecordAsync(next.Id, "sql-equivalence-review", f.Context, default); }
+    var record = f.Records.Single(r => r.Id == next.Id);
+    var retained = ServiceEvidence(f, next.Id).ToJsonString(); SqlServiceScales(record);
+    var receipts = f.Receipts.Count; var decisions = f.Decisions.Count;
+    if (action == "submit-replay") { f.Owner(); Check(await NextEquivalentService(f) == next, "Consumed submission replays after SQL materialization"); }
+    else { if (action == "approve") f.Reviewer(); await f.Service.ApproveServiceRecordAsync(next.Id, "sql-equivalence-review", f.Context, default); }
+    var added = action == "approve" ? 1 : 0;
+    Check(f.Receipts.Count == receipts + added && f.Decisions.Count == decisions + added &&
+        ServiceEvidence(f, next.Id).ToJsonString() == retained, "Consumed approval/retry preserves immutable proof and exact effect counts");
+});
+await Test("consumed ancestor reconstruction accepts SQL decimal scale", async () => {
+    var (f, _, second) = await RetainedChain();
+    var record = f.Records.Single(r => r.Id == second); var retained = ServiceEvidence(f, second).ToJsonString();
+    SqlServiceScales(record);
+    var next = await ChainService(f, 3); f.Reviewer();
+    await f.Service.ApproveServiceRecordAsync(next.Id, "sql-ancestor-review", f.Context, default);
+    Check(ServiceEvidence(f, second).ToJsonString() == retained && f.Records.Single(r => r.Id == next.Id).ApprovalRequest!.State == ApprovalState.Approved,
+        "Reconstructing a SQL-materialized ancestor preserves the original proof while accepting its successor");
+});
+foreach (var kind in new[] { VehicleServiceKind.Tuning, VehicleServiceKind.EngineOverhaul })
+await Test("V2 SQL-scaled mileage before proof, September 17-20 chain and successor replay " + kind, async () => {
+    var f = new DatedFixture(); var tripId = await f.V2ScaleLegacyTrip();
+    var frozen = f.Files.ToDictionary(x => x.Key, x => (x.Value.Purpose, Bytes: x.Value.Bytes.ToArray()));
+    void PreserveEvidence()
+    {
+        Check(frozen.All(x => f.Files.TryGetValue(x.Key, out var current) && current.Purpose == x.Value.Purpose &&
+            current.Bytes.SequenceEqual(x.Value.Bytes)), "SQL scale simulation or later requests changed retained JSON bytes");
+        foreach (var file in f.Files) frozen.TryAdd(file.Key, (file.Value.Purpose, file.Value.Bytes.ToArray()));
+    }
+    // The live seed is committed before the first service request. Its mileage is already decimal(12,3).
+    foreach (var row in new object[] { f.Trips.Single(), f.Mileage.Single() })
+    {
+        var names = row is VehicleTrip
+            ? new[] { "OdometerStartKm", "OdometerEndKm", "MapDistanceKm" }
+            : new[] { "ApprovedBusinessKm", "ExcludedCommuteKm", "OutstationKm", "MonthlyAdjustmentKm" };
+        foreach (var name in names)
+        {
+            var property = row.GetType().GetProperty(name)!; var value = (decimal)property.GetValue(row)!;
+            var scaled = decimal.Parse(value.ToString("F3", System.Globalization.CultureInfo.InvariantCulture), System.Globalization.CultureInfo.InvariantCulture);
+            Check(value == scaled && (decimal.GetBits(scaled)[3] >> 16 & 255) == 3, "Mileage/trip SQL scale preserves exact values");
+            property.SetValue(row, scaled);
+        }
+    }
+    PreserveEvidence();
+    var originalSource = f.LegacyIdentity(tripId);
+    f.Reviewer(); var reviewer = f.Actor;
+    var submissions = new List<(SubmitServiceRecordRequest Request, string Key, VehicleServiceRecordResponse Submitted, VehicleServiceRecordResponse Approved)>();
+    async Task ServiceDay(int day)
+    {
+        foreach (var existing in f.Records) SqlServiceScales(existing);
+        f.Clock.Now = f.Clock.Now.AddSeconds(1); f.Owner();
+        var key = $"v2-scale-{kind}-{day}";
+        var request = new SubmitServiceRecordRequest(f.Vehicle.Id, kind, new(2026, 9, day), 1200, 200,
+            "workshop-proof", key + "-evidence", kind == VehicleServiceKind.Tuning ? 50 : 75, "PKR");
+        var submitted = await f.Service.SubmitServiceRecordAsync(request, key, f.Context, default);
+        PreserveEvidence();
+        var record = f.Records.Single(x => x.Id == submitted.Id);
+        var snapshot = ServiceEvidence(f, submitted.Id);
+        Check(snapshot["ConsumedBeforeKm"]!.GetValue<decimal>() == (day - 17) * 50 &&
+            snapshot["ConsumedThroughKm"]!.GetValue<decimal>() == (day - 16) * 50 && submitted.ApprovedOutstationKm == 200,
+            "Each September service consumes exactly one 50-km milestone from the same 200-km source");
+        if (day <= 18) Check(snapshot["ConsumedCorrectionEquivalence"] is null, "Original services retain no retroactive proof");
+        else
+        {
+            var proof = snapshot["ConsumedCorrectionEquivalence"]!;
+            var member = proof["Members"]!.AsArray().Single()!;
+            Check(proof["ServiceRecordId"]!.GetValue<Guid>() == submissions.Last().Submitted.Id &&
+                member["TripId"]!.GetValue<Guid>() == tripId &&
+                member["OriginalThroughServiceKm"]!.ToJsonString() == "200.000" &&
+                member["CorrectedThroughServiceKm"]!.ToJsonString() == "200",
+                "Proof retains SQL-scaled original distance and original correction-JSON scale independently");
+        }
+        SqlServiceScales(record); PreserveEvidence();
+        f.Clock.Now = f.Clock.Now.AddSeconds(1); f.Actor = reviewer;
+        var approved = await f.Service.ApproveServiceRecordAsync(submitted.Id, key + "-approve", f.Context, default);
+        Check(approved.ApprovalState == "Approved", "Independent review approves the SQL-materialized service");
+        SqlServiceScales(record); PreserveEvidence();
+        submissions.Add((request, key, submitted, approved));
+    }
+    await ServiceDay(17); await ServiceDay(18);
+    f.Clock.Now = f.Clock.Now.AddSeconds(1); f.Actor = reviewer;
+    var context = await f.Service.TripAttributionCorrectionContextAsync(tripId, f.Context, default);
+    var proposal = await f.Service.SubmitTripAttributionCorrectionAsync(tripId,
+        new(context.TripVersion, context.LatestRequestId, context.SourceFingerprint,
+            [new(new(2026, 9, 15), new(2026, 9, 15, 18, 0, 0, TimeSpan.Zero), new(2026, 9, 15, 19, 0, 0, TimeSpan.Zero),
+                1000, 1100, 100, f.Policies[0].Id, null, "v2-scale-segment-1"),
+             new(new(2026, 9, 16), new(2026, 9, 15, 19, 0, 0, TimeSpan.Zero), new(2026, 9, 16, 1, 0, 0, TimeSpan.Zero),
+                1100, 1200, 100, f.Policies[1].Id, null, "v2-scale-segment-2")], "v2-scale-correction", "Synthetic daily split"),
+        "v2-scale-correction-submit", f.Context, default);
+    PreserveEvidence();
+    f.Clock.Now = f.Clock.Now.AddSeconds(1); f.Reviewer();
+    await f.Service.ReviewTripAttributionCorrectionAsync(tripId, proposal.RequestId,
+        new(proposal.Version, ApprovalState.Approved, "v2-scale-independent-review", "Independent split review"),
+        "v2-scale-correction-review", f.Context, default);
+    PreserveEvidence();
+    await ServiceDay(19); await ServiceDay(20);
+    var references = f.Records.ToDictionary(x => x.Id, x => x.EligibilityCalculationPrivateReference);
+    var counts = (f.Records.Count, f.Decisions.Count, f.Receipts.Count, f.Files.Count);
+    foreach (var item in submissions)
+    {
+        foreach (var record in f.Records) SqlServiceScales(record);
+        f.Owner();
+        Check(await f.Service.SubmitServiceRecordAsync(item.Request, item.Key, f.Context, default) == item.Submitted,
+            "Original typed submission replays its retained Pending response after the September 20 successor");
+        f.Actor = reviewer;
+        Check(await f.Service.ApproveServiceRecordAsync(item.Submitted.Id, item.Key + "-approve", f.Context, default) == item.Approved,
+            "Approval replay proves historical chain membership after the September 20 successor");
+        PreserveEvidence();
+    }
+    Check(counts == (f.Records.Count, f.Decisions.Count, f.Receipts.Count, f.Files.Count) && f.Records.Count == 4 &&
+        f.Records.All(x => x.ApprovalRequest!.State == ApprovalState.Approved && x.EligibilityCalculationPrivateReference == references[x.Id]) &&
+        originalSource == f.LegacyIdentity(tripId), "Replay preserves source identity, references, allocations, decisions and receipt/file counts");
+});
 Console.WriteLine($"Vehicle dated attribution: {passed}/{passed + failures.Count} scenarios; synthetic IO only.");
 if(failures.Count != 0) Environment.ExitCode = 1;
 
@@ -1505,6 +1668,42 @@ public sealed class DatedFixture
     public Task<JsonNode> ReviewAllocation(Guid trip, JsonNode row, ApprovalState decision = ApprovalState.Approved, string key = "attribution-review-1") =>
         Call("ReviewTripAttributionAsync", trip, IdOf(row), Review(row, decision), key);
     private static Guid IdOf(JsonNode row) => row["RequestId"]!.GetValue<Guid>();
+    public async Task<Guid> V2ScaleLegacyTrip()
+    {
+        Clock.Now = new(2026, 10, 26, 8, 0, 0, TimeSpan.Zero);
+        ConfigureDated();
+        Policies.Add(new(Guid.NewGuid(), 1, new(2026, 10, 15), new(2027, 1, 1), "synthetic-current",
+            Policies[1].RulesJson, null, null, "publisher", Clock.Now.AddDays(-4), PolicyAuthority.DirectHr));
+        foreach (var policy in Policies)
+        {
+            var rules = JsonNode.Parse(policy.RulesJson)!;
+            rules["OverhaulKm"] = 50m;
+            rules["Workflow"]!["Workshops"]![0]!["ServiceKinds"] = JsonSerializer.SerializeToNode(new[] { VehicleServiceKind.Tuning, VehicleServiceKind.EngineOverhaul });
+            rules["Workflow"]!["Maintenance"]!.AsArray().Add(JsonSerializer.SerializeToNode(
+                new VehicleMaintenanceRule(VehicleServiceKind.EngineOverhaul, "EveryThreshold", "Fixed", 75, "PKR", ["Motorcycle"])));
+            typeof(PolicyVersion).GetProperty("RulesJson")!.SetValue(policy, rules.ToJsonString());
+        }
+        Custody.Clear();
+        var custody = new VehicleCustody(Vehicle.Id, Employee, new(2026, 9, 14, 0, 0, 0, TimeSpan.Zero), 1000, "issue-proof", "custodian");
+        custody.RecordReturn(new(2026, 9, 21, 18, 0, 0, TimeSpan.Zero), 1200, "return-proof", "custodian"); Custody.Add(custody);
+        Owner();
+        var response = await Service.SubmitTripAsync(new(Vehicle.Id, VehicleJourneyPurpose.SiteToSite,
+            new(2026, 9, 15, 18, 0, 0, TimeSpan.Zero), new(2026, 9, 16, 1, 0, 0, TimeSpan.Zero), "origin", "destination",
+            1000, 1200, 200, "v2-scale-route", "v2-scale-work"), "v2-scale-legacy-trip", Context, default);
+        var trip = Trips.Single(); var header = trip.ApprovalRequest!; var reviewer = Guid.NewGuid();
+        var reference = AttendanceOperation.Reference(await Store(JsonSerializer.SerializeToUtf8Bytes(new {
+            SchemaVersion = 3, TripId = trip.Id, VehicleId = Vehicle.Id, EmployeeId = Employee, trip.Purpose,
+            BusinessDate = new DateOnly(2026, 9, 15), trip.OdometerStartKm, trip.OdometerEndKm,
+            ApprovedBusinessKm = 200m, ExcludedCommuteKm = 0m, OutstationKm = 200m, AccumulatedOutstationKmBefore = 0m,
+            PolicyVersionId = Policies[0].Id, ApprovalRequestId = header.Id, ActorAccountId = reviewer, RecordedAt = Clock.Now,
+            trip.MapDistanceKm, RouteEvidenceReference = trip.RouteEvidencePrivateReference, CommuteDistanceId = (Guid?)null,
+            DistanceBasis = "ApprovedMapDistance", StaffEligibility = new VehicleStaffEligibilityRule(Employee,
+                new(2026, 1, 1), new(2027, 1, 1), ["FieldVisits"], "staff-proof") }), $"vehicle:mileage:{trip.Id:N}"));
+        Decisions.Add(header.Decide(ApprovalState.Approved, reviewer.ToString(), Role, "Synthetic legacy approval", Clock.Now, reference));
+        Mileage.Add(new(Vehicle.Id, Employee, trip.Id, new(2026, 9, 15), 200, 0, 200, 0, reference, Policies[0].Id,
+            header.Id, "v2-scale-legacy-mileage", reviewer.ToString(), Clock.Now));
+        await Save(); return response.Id;
+    }
     public async Task<Guid> LegacyTrip(bool singleDay = false, bool crossMonth = false)
     {
         ConfigureDated();

@@ -29,7 +29,8 @@ public sealed class AttendancePayrollInputRepository(CosmixDbContext db) : IAtte
                     a.RequestType == EmployeeLifecycleService.RequestType && a.Stage == 1 && a.State == ApprovalState.Approved &&
                     a.ClosedAt == x.RecordedAt && db.ApprovalDecisions.Any(d => d.ApprovalRequestId == a.Id &&
                         d.Decision == ApprovalState.Approved && d.DecidedAt == x.RecordedAt &&
-                        d.ActorUserId == x.ChangedByUserId && d.ActorUserId != a.RequesterUserId))))
+                        d.ActorUserId == x.ChangedByUserId && d.ActorUserId != a.RequesterUserId)))
+                { LifecyclePolicyVersion = x.LifecyclePolicyVersion })
             .Take(2049).ToArrayAsync(ct);
         if (statuses.Length > 2048) throw AttendanceOperation.Conflict("payroll_lifecycle_limit");
         var dates = await EvidenceDateQuery(employeeId, from, endExclusive).ToArrayAsync(ct);

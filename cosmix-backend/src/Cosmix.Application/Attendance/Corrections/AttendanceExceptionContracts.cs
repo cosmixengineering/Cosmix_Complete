@@ -21,6 +21,10 @@ public sealed record AttendanceExceptionListItem(Guid Id, Guid EmployeeId, DateO
     DateTimeOffset DetectedAtUtc, Guid? PunchId, Guid? SessionRevisionId, Guid? SummaryId);
 public sealed record AttendanceExceptionQueueResponse(IReadOnlyList<AttendanceExceptionListItem> Items, string? NextCursor);
 public sealed record AttendanceExceptionDetail(AttendanceExceptionListItem Exception, string DetectionReason);
+public sealed record MissingCheckoutReviewItem(Guid EmployeeId, DateOnly BusinessDate, Guid SessionRevisionId,
+    Guid SessionKey, DateTimeOffset CheckInAtUtc, DateTimeOffset? ScheduledEndAtUtc, string State,
+    string NextAction = "submit_or_review_correction");
+public sealed record MissingCheckoutReviewQueue(IReadOnlyList<MissingCheckoutReviewItem> Items, string? NextCursor);
 
 // Internal evidence only. These entities must never be returned from an API.
 public sealed record AttendanceExceptionSources(RawPunchEvent? Punch, WorkSession? Session, DailyAttendanceSummary? Summary);
@@ -29,6 +33,8 @@ public interface IAttendanceExceptionRepository
     Task<AttendanceException?> FindAsync(Guid employeeId, Guid id, CancellationToken ct);
     Task<AttendanceExceptionSources> SourcesAsync(AttendanceException exception, CancellationToken ct);
     Task<IReadOnlyList<AttendanceException>> CandidatesAsync(AttendanceExceptionQueueRequest request,
+        AttendanceCursorPosition? after, int limit, CancellationToken ct);
+    Task<IReadOnlyList<WorkSession>> OpenSessionCandidatesAsync(AttendanceExceptionQueueRequest request,
         AttendanceCursorPosition? after, int limit, CancellationToken ct);
     Task<bool> ScopeExistsAsync(CorrectionQueueScope scope, Guid id, CancellationToken ct);
 }

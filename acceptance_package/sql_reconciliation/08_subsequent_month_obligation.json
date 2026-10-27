@@ -1,0 +1,17 @@
+{
+  "SubsequentBatch": "SYNTH-BATCH-NEXT-c879e67acab049e5b6a69623b76e1717",
+  "SubsequentObligationId": "a25c3ffd-5962-4088-8eee-a2d85e60d284",
+  "EmployeeAPayment": {
+    "Id": "7b8c26d2-892c-41ed-924f-01db1d8d1057",
+    "ObligationId": "a25c3ffd-5962-4088-8eee-a2d85e60d284",
+    "EmployeeId": "75cb9f21-883f-4811-807d-0f15c0dd4c91",
+    "Amount": 96500.00,
+    "State": "Posted",
+    "PaymentReference": "PAY-A-202611-01",
+    "PaymentJournalEntryId": "744b9a7f-b8e7-4ff6-b3ee-015c0bf5366d",
+    "ConfirmedAt": null,
+    "ConfirmedByUserId": null,
+    "CreatedAt": "2026-10-27T09:33:31.2650328+00:00"
+  },
+  "Verdict": "SUBSEQUENT_MONTH_SUCCESSFUL_NO_COLLISION"
+}

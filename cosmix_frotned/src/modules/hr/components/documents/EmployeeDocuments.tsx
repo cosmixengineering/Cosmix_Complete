@@ -1,7 +1,8 @@
-import { useId, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Download, FileCheck, RefreshCw, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { FileUploadDropzone } from '@/components/forms/FileUploadDropzone';
 import { useHrAction, useHrQuery } from '../../hooks/use-hr-queries';
 import { useHrAccess } from '../../hooks/use-hr-access';
 import { useDirtyForm } from '../../hooks/use-dirty-form';
@@ -73,7 +74,6 @@ export function EmployeeDocuments({
   const [error, setError] = useState<string | null>(null);
   const [downloadPending, setDownloadPending] = useState(false);
   const [reason, setReason] = useState<string | null>(null);
-  const inputId = useId();
   const input = useRef<HTMLInputElement>(null);
   useDirtyForm(!!file || !!reason?.trim());
   if (!access.can(...read)) return <Denied />;
@@ -156,42 +156,45 @@ export function EmployeeDocuments({
           }}
         >
           <fieldset disabled={action.pending}>
-            <div className="hr-form-grid">
+            <div className="hr-form-grid modern-form-grid-3">
               <EnumField
                 label="Document type"
                 required
                 options={documentTypes}
                 value={type}
                 onChange={setType}
+                dataField="documentType"
               />
-              <div className="field">
-                <label htmlFor={inputId}>Document file</label>
-                <input
-                  ref={input}
-                  id={inputId}
-                  type="file"
-                  required
-                  accept="application/pdf,image/png,image/jpeg"
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                />
-              </div>
               <Field
                 label="Document issued on"
                 type="date"
                 value={issuedOn}
                 onChange={setIssuedOn}
+                dataField="documentIssuedOn"
               />
               <Field
                 label="Document expires on"
                 type="date"
                 value={expiresOn}
                 onChange={setExpiresOn}
+                dataField="documentExpiresOn"
               />
+              <div className="col-span-full" style={{ gridColumn: '1 / -1' }}>
+                <FileUploadDropzone
+                  label="Upload your Document File"
+                  required
+                  value={file}
+                  onChange={setFile}
+                  error={error ?? undefined}
+                  dataField="documentFile"
+                  hint="Supports PDF, PNG, JPG (Max 10 MB). For photos, use PNG or JPG."
+                />
+              </div>
             </div>
-            <div className="hr-actions">
-              <Button type="submit">
+            <div className="hr-actions" style={{ marginTop: '16px' }}>
+              <Button type="submit" variant="primary" disabled={!file || !type || action.pending}>
                 <Upload size={16} />
-                Upload document
+                {action.pending ? 'Uploading document...' : 'Upload document'}
               </Button>
             </div>
           </fieldset>

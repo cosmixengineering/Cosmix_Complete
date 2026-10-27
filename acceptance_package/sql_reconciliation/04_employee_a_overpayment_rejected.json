@@ -1,0 +1,8 @@
+{
+  "AttemptedAmount": 100000.00,
+  "NetEntitlement": 96500.00,
+  "ErrorMessage": "Disbursal amount 100000.00 exceeds remaining employee net salary of 96500.00 (total net salary: 96500.00, already disbursed: 0).",
+  "PersistedPaymentsBefore": 0,
+  "PersistedPaymentsAfter": 0,
+  "ZeroMutationsConfirmed": true
+}

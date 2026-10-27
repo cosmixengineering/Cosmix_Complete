@@ -208,7 +208,8 @@ public sealed class LeaveFixture
         Policy = new(p.Id, 1, new(2026, 7, 1), new(2027, 7, 1), LeavePolicySettings.SchemaVersion, JsonSerializer.Serialize(Rules), null, null,
             Guid.NewGuid().ToString(), new LeaveClock().GetUtcNow(), PolicyAuthority.DirectHr);
         typeof(PolicyVersion).GetProperty(nameof(PolicyVersion.Policy))!.SetValue(Policy, p);
-        foreach (var permission in LeavePermissions.Definitions) Grants.Add(new(permission.Code, permission.Sensitive, Guid.NewGuid(), AccessScopeKind.All, null));
+        foreach (var permission in LeavePermissions.Definitions) Grants.Add(new(permission.Code, permission.Sensitive, Guid.NewGuid(), AccessScopeKind.All, null)
+            { AuthorityTimingKnown = true, ValidFromUtc = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero), ValidUntilUtc = new(2027, 1, 1, 0, 0, 0, TimeSpan.Zero) });
         var current = LeaveProxy.Make<ICurrentAuthentication>((_, _) => Actor);
         var access = LeaveProxy.Make<IAccountAccessReader>((_, _) => Task.FromResult<IReadOnlyList<PermissionGrant>>(Grants.ToArray()));
         var authorization = LeaveProxy.Make<IAccessManagementRepository>((m, a) => m.Name switch {

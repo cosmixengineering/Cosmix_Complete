@@ -561,7 +561,9 @@ export function SubmissionReview({
   const totalMissingCount = missingList.length + (unavailableDocCount > 0 ? 1 : 0);
 
   const handleSubmit = async () => {
-    if (!window.confirm('Submit this completed employee profile to Admin for final authorization?')) {
+    if (
+      !window.confirm('Submit this completed employee profile to Admin for final authorization?')
+    ) {
       return;
     }
     setSubmitting(true);
@@ -599,7 +601,8 @@ export function SubmissionReview({
                       </>
                     ) : (
                       <>
-                        <AlertTriangle size={12} /> Action Required • {totalMissingCount} Items Missing
+                        <AlertTriangle size={12} /> Action Required • {totalMissingCount} Items
+                        Missing
                       </>
                     )}
                   </span>
@@ -665,7 +668,9 @@ export function SubmissionReview({
             <div className="readiness-kpi-card">
               <div
                 className={`readiness-kpi-icon ${
-                  !categoriesArray.some((c) => c.title.includes('Workplace')) ? 'success' : 'warning'
+                  !categoriesArray.some((c) => c.title.includes('Workplace'))
+                    ? 'success'
+                    : 'warning'
                 }`}
               >
                 <Building2 size={20} />
@@ -683,7 +688,9 @@ export function SubmissionReview({
             <div className="readiness-kpi-card">
               <div
                 className={`readiness-kpi-icon ${
-                  !categoriesArray.some((c) => c.title.includes('Addresses')) ? 'success' : 'warning'
+                  !categoriesArray.some((c) => c.title.includes('Addresses'))
+                    ? 'success'
+                    : 'warning'
                 }`}
               >
                 <MapPin size={20} />
@@ -792,9 +799,7 @@ export function SubmissionReview({
                     </span>
                   </div>
                   <span
-                    className={`submission-doc-status ${
-                      isAvailable ? 'available' : 'pending'
-                    }`}
+                    className={`submission-doc-status ${isAvailable ? 'available' : 'pending'}`}
                   >
                     {isAvailable ? 'Verified ✓' : 'Processing'}
                   </span>

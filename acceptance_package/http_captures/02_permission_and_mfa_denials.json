@@ -1,0 +1,23 @@
+[
+  {
+    "Method": "POST",
+    "Path": "/api/v1/admin/location-consent/policy",
+    "Actor": "Ordinary Employee (Mobile, No Admin Grants, No Web MFA)",
+    "StatusCode": 403,
+    "StatusText": "Forbidden"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/payroll-accounting/obligations",
+    "Actor": "Ordinary Employee (Mobile, No Admin Grants, No Web MFA)",
+    "StatusCode": 403,
+    "StatusText": "Forbidden"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/statutory-contributions",
+    "Actor": "Ordinary Employee (Mobile, No Admin Grants, No Web MFA)",
+    "StatusCode": 403,
+    "StatusText": "Forbidden"
+  }
+]

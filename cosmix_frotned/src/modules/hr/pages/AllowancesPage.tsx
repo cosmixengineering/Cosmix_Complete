@@ -21,14 +21,13 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '@/auth/use-auth';
+import { SelectInput } from '@/components/forms/SelectInput';
 import { OutstationWorkspace } from '../outstation/OutstationWorkspace';
 import { canDeployment } from '../outstation/contracts';
 import { Denied, ActionMessage } from '../components/Feedback';
 import { FinanceQueryState as QueryState } from '../components/finance/FinanceQueryState';
 import '../components/finance/allowances.css';
-import {
-  FinanceStatus,
-} from '../components/finance/FinanceChrome';
+import { FinanceStatus } from '../components/finance/FinanceChrome';
 import {
   allowanceKindOptions,
   approvalStateOptions,
@@ -74,8 +73,12 @@ function AllowancesContent() {
   const access = useFinanceAccess();
 
   const tabs = [
-    ...(access.can(permissions.review) ? [{ id: 'review', label: 'Review Queue', icon: Receipt }] : []),
-    ...(access.can(permissions.policy) ? [{ id: 'policies', label: 'Allowance Policies', icon: ShieldCheck }] : []),
+    ...(access.can(permissions.review)
+      ? [{ id: 'review', label: 'Review Queue', icon: Receipt }]
+      : []),
+    ...(access.can(permissions.policy)
+      ? [{ id: 'policies', label: 'Allowance Policies', icon: ShieldCheck }]
+      : []),
     ...(canDeployment(access.user, 'read')
       ? [{ id: 'outstation', label: 'Outstation Management', icon: Briefcase }]
       : []),
@@ -120,7 +123,8 @@ function AllowancesContent() {
             <h1 className="allowance-main-title">Overtime & Allowances</h1>
           </div>
           <p className="allowance-subtitle">
-            Audit allowance intake claims, configure compensation policies, and process settlement disbursements.
+            Audit allowance intake claims, configure compensation policies, and process settlement
+            disbursements.
           </p>
         </div>
 
@@ -208,7 +212,7 @@ function AllowancesContent() {
                 className={`allowance-tab-btn ${isActive ? 'active' : ''}`}
                 onClick={() => setTab(t.id)}
               >
-                <Icon size={14} />
+                <Icon size={13} />
                 <span>{t.label}</span>
                 {t.id === 'review' && (pendingReviewQuery.data?.items.length ?? 0) > 0 && (
                   <span className="allowance-tab-badge">
@@ -340,7 +344,9 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
       {/* Preset Chips & Input Bar */}
       <div className="allowance-filter-wrap">
         <div className="allowance-presets-bar">
-          <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Quick Windows:</span>
+          <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+            Quick Windows:
+          </span>
           <button
             type="button"
             className={`preset-chip-btn ${activePreset === '7' ? 'active' : ''}`}
@@ -414,22 +420,15 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
           </div>
 
           <div className="allowance-form-group">
-            <label className="allowance-form-label">Approval State</label>
-            <select
-              className="allowance-select"
+            <SelectInput
+              label="Approval State"
               value={state}
+              options={approvalStateOptions}
               onChange={(e) => {
                 setState(e.target.value);
                 setPage(1);
               }}
-            >
-              <option value="">All States</option>
-              {approvalStateOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="allowance-form-group">
@@ -480,7 +479,16 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
       </div>
 
       {!dayRangeValid(from, to) && (
-        <div style={{ padding: '8px 12px', background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '6px', color: '#b91c1c', fontSize: '12px' }}>
+        <div
+          style={{
+            padding: '8px 12px',
+            background: '#fef2f2',
+            border: '1px solid #fee2e2',
+            borderRadius: '6px',
+            color: '#b91c1c',
+            fontSize: '12px',
+          }}
+        >
           Choose a valid date window (end date after start date, max 366 days).
         </div>
       )}
@@ -495,7 +503,8 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
               </div>
               <h4 className="allowance-empty-title">No allowance claims match this filter</h4>
               <p className="allowance-empty-desc">
-                There are no claims recorded between {from} and {to} for the selected state. Try expanding the date window or clearing the filters.
+                There are no claims recorded between {from} and {to} for the selected state. Try
+                expanding the date window or clearing the filters.
               </p>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
@@ -531,7 +540,14 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
                     key={claim.id}
                   >
                     <div className="claim-card-top">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
                         <span className="claim-emp-badge" title={`Employee: ${claim.employeeId}`}>
                           <Users size={12} color="#475569" />
                           <span>{claim.employeeId.slice(0, 8)}...</span>
@@ -599,9 +615,7 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
                             <FileCheck size={15} />
                             <span>Audit & Evaluation Verification Detail</span>
                           </span>
-                          <span style={{ fontSize: '11px', color: '#64748b' }}>
-                            ID: {claim.id}
-                          </span>
+                          <span style={{ fontSize: '11px', color: '#64748b' }}>ID: {claim.id}</span>
                         </div>
 
                         <QueryState query={detail}>
@@ -624,13 +638,25 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
                                 </div>
                                 <div className="eligibility-item">
                                   <dt>Server Rationale</dt>
-                                  <dd>{detail.data.reason || 'Verified via scheduled shift window.'}</dd>
+                                  <dd>
+                                    {detail.data.reason || 'Verified via scheduled shift window.'}
+                                  </dd>
                                 </div>
                               </div>
 
                               {detail.data.claim.kind === 5 && (
-                                <div style={{ padding: '8px 12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', fontSize: '11.5px', color: '#1e40af' }}>
-                                  Outstation claims require retained deployment evidence. Independent deployment review must be completed.
+                                <div
+                                  style={{
+                                    padding: '8px 12px',
+                                    background: '#eff6ff',
+                                    border: '1px solid #bfdbfe',
+                                    borderRadius: '6px',
+                                    fontSize: '11.5px',
+                                    color: '#1e40af',
+                                  }}
+                                >
+                                  Outstation claims require retained deployment evidence.
+                                  Independent deployment review must be completed.
                                 </div>
                               )}
 
@@ -638,27 +664,26 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
                                 <div className="review-actions-split">
                                   {/* Decision Form */}
                                   {canDecide && (
-                                    <form className="review-action-card" onSubmit={(e) => void decide(e)}>
+                                    <form
+                                      className="review-action-card"
+                                      onSubmit={(e) => void decide(e)}
+                                    >
                                       <span className="review-action-title">
                                         <BadgeCheck size={14} color="#2563eb" />
                                         <span>HR Approval Decision</span>
                                       </span>
                                       <div className="allowance-form-group">
-                                        <label className="allowance-form-label">Decision Outcome</label>
-                                        <select
-                                          className="allowance-select"
+                                        <SelectInput
+                                          label="Decision Outcome"
                                           value={decision}
+                                          options={decisionOptions}
                                           onChange={(e) => setDecision(e.target.value)}
-                                        >
-                                          {decisionOptions.map((opt) => (
-                                            <option key={opt.value} value={opt.value}>
-                                              {opt.label}
-                                            </option>
-                                          ))}
-                                        </select>
+                                        />
                                       </div>
                                       <div className="allowance-form-group">
-                                        <label className="allowance-form-label">Decision Note / Reason</label>
+                                        <label className="allowance-form-label">
+                                          Decision Note / Reason
+                                        </label>
                                         <textarea
                                           className="allowance-textarea"
                                           rows={2}
@@ -668,7 +693,13 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
                                           required
                                         />
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                                      <div
+                                        style={{
+                                          display: 'flex',
+                                          justifyContent: 'flex-end',
+                                          marginTop: '4px',
+                                        }}
+                                      >
                                         <button
                                           type="submit"
                                           className="btn-alw-primary"
@@ -682,13 +713,18 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
 
                                   {/* Settlement Form */}
                                   {canSettle && (
-                                    <form className="review-action-card" onSubmit={(e) => void settle(e)}>
+                                    <form
+                                      className="review-action-card"
+                                      onSubmit={(e) => void settle(e)}
+                                    >
                                       <span className="review-action-title">
                                         <Coins size={14} color="#059669" />
                                         <span>Settlement & Payment Reference</span>
                                       </span>
                                       <div className="allowance-form-group">
-                                        <label className="allowance-form-label">External Payment Voucher Ref</label>
+                                        <label className="allowance-form-label">
+                                          External Payment Voucher Ref
+                                        </label>
                                         <input
                                           type="text"
                                           className="allowance-input"
@@ -699,7 +735,9 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
                                         />
                                       </div>
                                       <div className="allowance-form-group">
-                                        <label className="allowance-form-label">Settlement Reason</label>
+                                        <label className="allowance-form-label">
+                                          Settlement Reason
+                                        </label>
                                         <textarea
                                           className="allowance-textarea"
                                           rows={2}
@@ -709,7 +747,13 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
                                           required
                                         />
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                                      <div
+                                        style={{
+                                          display: 'flex',
+                                          justifyContent: 'flex-end',
+                                          marginTop: '4px',
+                                        }}
+                                      >
                                         <button
                                           type="submit"
                                           className="btn-alw-primary"
@@ -1044,7 +1088,14 @@ function AllowancePolicies() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '8px',
+                  marginTop: '12px',
+                }}
+              >
                 <button
                   type="button"
                   className="btn-alw-secondary"
@@ -1075,7 +1126,8 @@ function AllowancePolicies() {
               <span>Registered Allowance Policies</span>
             </h2>
             <p className="allowance-card-desc">
-              Manage version rules, rate definitions, and employee/department population assignments.
+              Manage version rules, rate definitions, and employee/department population
+              assignments.
             </p>
           </div>
 
@@ -1099,7 +1151,12 @@ function AllowancePolicies() {
               <Search
                 size={13}
                 color="#94a3b8"
-                style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)' }}
+                style={{
+                  position: 'absolute',
+                  left: '9px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                }}
               />
             </div>
             <button
@@ -1123,7 +1180,8 @@ function AllowancePolicies() {
               </div>
               <h4 className="allowance-empty-title">No allowance policies found</h4>
               <p className="allowance-empty-desc">
-                No policy definitions match your criteria. Click "+ New Definition" above to register your first policy.
+                No policy definitions match your criteria. Click "+ New Definition" above to
+                register your first policy.
               </p>
             </div>
           ) : (
@@ -1142,7 +1200,10 @@ function AllowancePolicies() {
                   {list.data?.items.map((policy) => {
                     const isSelected = selected?.id === policy.id;
                     return (
-                      <tr key={policy.id} style={{ background: isSelected ? '#f8fafc' : undefined }}>
+                      <tr
+                        key={policy.id}
+                        style={{ background: isSelected ? '#f8fafc' : undefined }}
+                      >
                         <td>
                           <span className="policy-code-pill">{policy.code}</span>
                         </td>
@@ -1152,7 +1213,13 @@ function AllowancePolicies() {
                             Ver #{policy.version} &middot; Rev #{policy.revision}
                           </span>
                         </td>
-                        <td style={{ fontFamily: 'ui-monospace, monospace', fontSize: '11px', color: '#64748b' }}>
+                        <td
+                          style={{
+                            fontFamily: 'ui-monospace, monospace',
+                            fontSize: '11px',
+                            color: '#64748b',
+                          }}
+                        >
                           {policy.id.slice(0, 12)}...
                         </td>
                         <td style={{ textAlign: 'right' }}>
@@ -1190,7 +1257,15 @@ function AllowancePolicies() {
                 gap: '16px',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  borderBottom: '1px solid #e2e8f0',
+                  paddingBottom: '10px',
+                }}
+              >
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span className="policy-code-pill">{selected.code}</span>
@@ -1199,7 +1274,8 @@ function AllowancePolicies() {
                     </h3>
                   </div>
                   <span style={{ fontSize: '11px', color: '#64748b' }}>
-                    ID: {selected.id} &middot; Version #{selected.version} &middot; Revision #{selected.revision}
+                    ID: {selected.id} &middot; Version #{selected.version} &middot; Revision #
+                    {selected.revision}
                   </span>
                 </div>
                 <button
@@ -1214,13 +1290,30 @@ function AllowancePolicies() {
 
               {/* Published Versions History */}
               <div>
-                <h4 style={{ margin: '0 0 8px', fontSize: '12.5px', fontWeight: 700, color: '#334155' }}>
+                <h4
+                  style={{
+                    margin: '0 0 8px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: '#334155',
+                  }}
+                >
                   1. Published Versions History
                 </h4>
                 <QueryState query={versions}>
                   {!versions.data?.items.length ? (
-                    <div style={{ padding: '10px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', color: '#64748b' }}>
-                      No version has been published yet. Complete the rules configuration below to publish Version #1.
+                    <div
+                      style={{
+                        padding: '10px 12px',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        color: '#64748b',
+                      }}
+                    >
+                      No version has been published yet. Complete the rules configuration below to
+                      publish Version #1.
                     </div>
                   ) : (
                     <div className="policies-table-container">
@@ -1239,11 +1332,18 @@ function AllowancePolicies() {
                             <tr key={ver.id}>
                               <td style={{ fontWeight: 700, color: '#2563eb' }}>v{ver.number}</td>
                               <td>
-                                {ver.effectiveFrom} {ver.effectiveTo ? `to ${ver.effectiveTo}` : '(Ongoing)'}
+                                {ver.effectiveFrom}{' '}
+                                {ver.effectiveTo ? `to ${ver.effectiveTo}` : '(Ongoing)'}
                               </td>
                               <td>{labelDate(ver.publishedAt)}</td>
                               <td>{ver.authority || 'System'}</td>
-                              <td style={{ fontFamily: 'ui-monospace, monospace', fontSize: '10.5px', color: '#64748b' }}>
+                              <td
+                                style={{
+                                  fontFamily: 'ui-monospace, monospace',
+                                  fontSize: '10.5px',
+                                  color: '#64748b',
+                                }}
+                              >
                                 {ver.configurationSha256.slice(0, 16)}...
                               </td>
                             </tr>
@@ -1257,12 +1357,28 @@ function AllowancePolicies() {
 
               {/* Population Assignments */}
               <div>
-                <h4 style={{ margin: '0 0 8px', fontSize: '12.5px', fontWeight: 700, color: '#334155' }}>
+                <h4
+                  style={{
+                    margin: '0 0 8px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: '#334155',
+                  }}
+                >
                   2. Population Assignments
                 </h4>
                 <QueryState query={assignments}>
                   {!assignments.data?.items.length ? (
-                    <div style={{ padding: '10px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', color: '#64748b' }}>
+                    <div
+                      style={{
+                        padding: '10px 12px',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        color: '#64748b',
+                      }}
+                    >
                       No population target assigned yet. Use the population assignment form below.
                     </div>
                   ) : (
@@ -1282,14 +1398,18 @@ function AllowancePolicies() {
                             <tr key={asg.id}>
                               <td>
                                 <span className="claim-kind-pill">
-                                  {policyTargetOptions[asg.target - 1]?.label ?? `Target #${asg.target}`}
+                                  {policyTargetOptions[asg.target - 1]?.label ??
+                                    `Target #${asg.target}`}
                                 </span>
                               </td>
-                              <td style={{ fontFamily: 'ui-monospace, monospace', fontSize: '11px' }}>
+                              <td
+                                style={{ fontFamily: 'ui-monospace, monospace', fontSize: '11px' }}
+                              >
                                 {asg.targetId}
                               </td>
                               <td>
-                                {asg.effectiveFrom} {asg.effectiveTo ? `to ${asg.effectiveTo}` : '(Open-ended)'}
+                                {asg.effectiveFrom}{' '}
+                                {asg.effectiveTo ? `to ${asg.effectiveTo}` : '(Open-ended)'}
                               </td>
                               <td>{asg.reason}</td>
                               <td>{labelDate(asg.recordedAt)}</td>
@@ -1303,8 +1423,22 @@ function AllowancePolicies() {
               </div>
 
               {/* Publish a Rules Version */}
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px' }}>
-                <h4 style={{ margin: '0 0 10px', fontSize: '12.5px', fontWeight: 700, color: '#1e3a8a' }}>
+              <div
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  padding: '14px',
+                }}
+              >
+                <h4
+                  style={{
+                    margin: '0 0 10px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: '#1e3a8a',
+                  }}
+                >
                   3. Configure & Publish New Rate Version
                 </h4>
 
@@ -1330,7 +1464,9 @@ function AllowancePolicies() {
                           className="allowance-input"
                           placeholder="17:00"
                           value={rules.officeDutyStartLocalTime}
-                          onChange={(e) => setRules({ ...rules, officeDutyStartLocalTime: e.target.value })}
+                          onChange={(e) =>
+                            setRules({ ...rules, officeDutyStartLocalTime: e.target.value })
+                          }
                         />
                       </div>
                     </div>
@@ -1342,7 +1478,9 @@ function AllowancePolicies() {
                         min={0}
                         max={180}
                         value={rules.continuityGapToleranceMinutes}
-                        onChange={(e) => setRules({ ...rules, continuityGapToleranceMinutes: e.target.value })}
+                        onChange={(e) =>
+                          setRules({ ...rules, continuityGapToleranceMinutes: e.target.value })
+                        }
                       />
                     </div>
                     <div className="rules-card-inputs">
@@ -1422,7 +1560,9 @@ function AllowancePolicies() {
                           type="number"
                           className="allowance-input"
                           value={rules.siteBreakfastHours}
-                          onChange={(e) => setRules({ ...rules, siteBreakfastHours: e.target.value })}
+                          onChange={(e) =>
+                            setRules({ ...rules, siteBreakfastHours: e.target.value })
+                          }
                         />
                       </div>
                       <div className="allowance-form-group">
@@ -1433,7 +1573,9 @@ function AllowancePolicies() {
                           className="allowance-input"
                           placeholder="Amount"
                           value={rules.siteBreakfastAmount}
-                          onChange={(e) => setRules({ ...rules, siteBreakfastAmount: e.target.value })}
+                          onChange={(e) =>
+                            setRules({ ...rules, siteBreakfastAmount: e.target.value })
+                          }
                         />
                       </div>
                     </div>
@@ -1450,7 +1592,9 @@ function AllowancePolicies() {
                         className="allowance-input"
                         placeholder="e.g. 2500.00"
                         value={rules.outstationDailyAmount}
-                        onChange={(e) => setRules({ ...rules, outstationDailyAmount: e.target.value })}
+                        onChange={(e) =>
+                          setRules({ ...rules, outstationDailyAmount: e.target.value })
+                        }
                       />
                     </div>
                     <div className="allowance-form-group">
@@ -1467,7 +1611,14 @@ function AllowancePolicies() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: '8px',
+                    marginTop: '12px',
+                  }}
+                >
                   <button
                     type="button"
                     className="btn-alw-primary"
@@ -1481,8 +1632,20 @@ function AllowancePolicies() {
                 <ActionMessage action={publish} />
 
                 {preview && !preview.canPublish && (
-                  <div style={{ padding: '10px 12px', background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '6px', color: '#b91c1c', fontSize: '12px', marginTop: '10px' }}>
-                    <p style={{ fontWeight: 600, margin: '0 0 4px' }}>Validation requirements remaining:</p>
+                  <div
+                    style={{
+                      padding: '10px 12px',
+                      background: '#fef2f2',
+                      border: '1px solid #fee2e2',
+                      borderRadius: '6px',
+                      color: '#b91c1c',
+                      fontSize: '12px',
+                      marginTop: '10px',
+                    }}
+                  >
+                    <p style={{ fontWeight: 600, margin: '0 0 4px' }}>
+                      Validation requirements remaining:
+                    </p>
                     <ul style={{ margin: 0, paddingLeft: '18px' }}>
                       {preview.errors.map((err) => (
                         <li key={err.path + err.code}>
@@ -1495,10 +1658,26 @@ function AllowancePolicies() {
 
                 {preview?.canPublish && (
                   <form
-                    style={{ marginTop: '12px', background: '#ecfdf5', border: '1px solid #d1fae5', borderRadius: '6px', padding: '12px' }}
+                    style={{
+                      marginTop: '12px',
+                      background: '#ecfdf5',
+                      border: '1px solid #d1fae5',
+                      borderRadius: '6px',
+                      padding: '12px',
+                    }}
                     onSubmit={(e) => void publishRules(e)}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#047857', fontWeight: 600, fontSize: '12.5px', marginBottom: '8px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        color: '#047857',
+                        fontWeight: 600,
+                        fontSize: '12.5px',
+                        marginBottom: '8px',
+                      }}
+                    >
                       <CheckCircle2 size={16} />
                       <span>Validation passed! Ready to publish revision #{preview.revision}.</span>
                     </div>
@@ -1528,42 +1707,51 @@ function AllowancePolicies() {
               </div>
 
               {/* Assign to a Population */}
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px' }}>
-                <h4 style={{ margin: '0 0 10px', fontSize: '12.5px', fontWeight: 700, color: '#1e3a8a' }}>
+              <div
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  padding: '14px',
+                }}
+              >
+                <h4
+                  style={{
+                    margin: '0 0 10px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: '#1e3a8a',
+                  }}
+                >
                   4. Assign Published Version to Population
                 </h4>
                 <form onSubmit={(e) => void assignVersion(e)}>
                   <div className="policy-create-grid">
                     <div className="allowance-form-group">
-                      <label className="allowance-form-label">Published Version *</label>
-                      <select
-                        className="allowance-select"
+                      <SelectInput
+                        label="Published Version"
                         required
                         value={assignForm.policyVersionId}
-                        onChange={(e) => setAssignForm({ ...assignForm, policyVersionId: e.target.value })}
-                      >
-                        <option value="">Choose published version</option>
-                        {(versions.data?.items ?? []).map((ver) => (
-                          <option key={ver.id} value={ver.id}>
-                            Version {ver.number} ({ver.effectiveFrom})
-                          </option>
-                        ))}
-                      </select>
+                        options={[
+                          { value: '', label: 'Choose published version' },
+                          ...(versions.data?.items ?? []).map((ver) => ({
+                            value: ver.id,
+                            label: `Version ${ver.number} (${ver.effectiveFrom})`,
+                          })),
+                        ]}
+                        onChange={(e) =>
+                          setAssignForm({ ...assignForm, policyVersionId: e.target.value })
+                        }
+                      />
                     </div>
 
                     <div className="allowance-form-group">
-                      <label className="allowance-form-label">Target Population Scope</label>
-                      <select
-                        className="allowance-select"
+                      <SelectInput
+                        label="Target Population Scope"
                         value={assignForm.target}
+                        options={policyTargetOptions}
                         onChange={(e) => setAssignForm({ ...assignForm, target: e.target.value })}
-                      >
-                        {policyTargetOptions.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
 
                     <div className="allowance-form-group">
@@ -1587,7 +1775,9 @@ function AllowancePolicies() {
                         className="allowance-input"
                         required
                         value={assignForm.effectiveFrom}
-                        onChange={(e) => setAssignForm({ ...assignForm, effectiveFrom: e.target.value })}
+                        onChange={(e) =>
+                          setAssignForm({ ...assignForm, effectiveFrom: e.target.value })
+                        }
                       />
                     </div>
 
@@ -1597,7 +1787,9 @@ function AllowancePolicies() {
                         type="date"
                         className="allowance-input"
                         value={assignForm.effectiveTo}
-                        onChange={(e) => setAssignForm({ ...assignForm, effectiveTo: e.target.value })}
+                        onChange={(e) =>
+                          setAssignForm({ ...assignForm, effectiveTo: e.target.value })
+                        }
                       />
                     </div>
 

@@ -6,7 +6,8 @@ import { AppError } from '../../utils/errors';
 import { validateCaptureBase64 } from '../../utils/validation';
 
 export class CameraCapture {
-  async capture(): Promise<string> {
+  async capture(ensureCurrent: () => void): Promise<string> {
+    ensureCurrent();
     if (
       Platform.OS === 'android' &&
       (await PermissionsAndroid.request(
@@ -15,6 +16,7 @@ export class CameraCapture {
     ) {
       throw new AppError('camera_permission');
     }
+    ensureCurrent();
     const temporary = new Set<string>();
     try {
       const result = await launchCamera({
@@ -42,6 +44,7 @@ export class CameraCapture {
         throw new AppError('invalid_face_image');
       }
       temporary.add(asset.uri);
+      ensureCurrent();
       // Rotation is normalized and metadata is deliberately not copied. The
       // backend rejects EXIF-bearing or oversized images independently.
       let prepared = await ImageResizer.createResizedImage(
@@ -56,6 +59,7 @@ export class CameraCapture {
         { mode: 'contain', onlyScaleDown: true },
       );
       temporary.add(prepared.uri);
+      ensureCurrent();
       if (prepared.size > 512 * 1024) {
         prepared = await ImageResizer.createResizedImage(
           prepared.uri,
@@ -69,6 +73,7 @@ export class CameraCapture {
           { mode: 'contain', onlyScaleDown: true },
         );
         temporary.add(prepared.uri);
+        ensureCurrent();
       }
       if (prepared.size > 512 * 1024) {
         throw new AppError('invalid_face_image');
@@ -77,6 +82,7 @@ export class CameraCapture {
         this.privatePath(prepared.uri),
         'base64',
       );
+      ensureCurrent();
       validateCaptureBase64(image);
       return image;
     } catch (error) {

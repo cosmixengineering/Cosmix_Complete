@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -6,116 +6,73 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useSession } from '../../app/AppProvider';
 import { Button, Notice, Screen } from '../../components/Controls';
-import { LocationConsentService, type LocationConsentStatus } from '../../services/consent/locationConsentService';
+import type {
+  LocationConsentService,
+  LocationConsentStatus,
+} from '../../services/consent/locationConsentService';
 import { colors, layout } from '../../theme/theme';
 
 interface Props {
-  onConsentAccepted: () => void;
-  onDeclineOrSkip?: () => void;
+  status: LocationConsentStatus;
+  service: LocationConsentService;
+  onConsentAccepted: () => Promise<boolean>;
+  onPolicyChanged: () => Promise<boolean>;
+  onSignOut: () => void;
 }
 
 export function LocationConsentScreen({
+  status,
+  service,
   onConsentAccepted,
-  onDeclineOrSkip,
+  onPolicyChanged,
+  onSignOut,
 }: Props): React.JSX.Element {
-  const session = useSession();
-  const [consentService] = useState(() => new LocationConsentService(session as any));
-  const [status, setStatus] = useState<LocationConsentStatus | null>(null);
-  const [loading, setLoading] = useState(true);
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    let mounted = true;
-    consentService.getConsentStatus()
-      .then((res) => {
-        if (!mounted) return;
-        setStatus(res);
-        if (res.status === 'Consented') {
-          onConsentAccepted();
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setStatus({ hasActivePolicy: false, status: 'NotRequired' });
-        }
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [consentService, onConsentAccepted]);
-
+  const flight = useRef(false);
   const handleAccept = async () => {
-    if (!agreed) return;
+    if (!agreed || flight.current || status.activePolicyVersion === undefined)
+      return;
+    flight.current = true;
     setSubmitting(true);
     setError('');
     try {
-      await consentService.acceptConsent();
-      onConsentAccepted();
+      await service.acceptConsent(status.activePolicyVersion);
+      setAgreed(false);
+      await onConsentAccepted();
     } catch {
-      setError('Failed to record location consent. Please check network connection.');
+      setAgreed(false);
+      setError(
+        'Acceptance was not confirmed. Check the current policy again and review it before retrying.',
+      );
+      await onPolicyChanged();
     } finally {
+      flight.current = false;
       setSubmitting(false);
     }
   };
-
-  if (loading) {
-    return (
-      <Screen>
-        <View style={styles.center}>
-          <Text style={styles.loadingText}>Checking location tracking policy…</Text>
-        </View>
-      </Screen>
-    );
-  }
-
-  if (!status?.hasActivePolicy || status.status === 'NotRequired') {
-    return (
-      <Screen>
-        <View style={layout.card}>
-          <Text style={layout.title}>Location Notice</Text>
-          <Notice
-            tone="info"
-            message="No specific location tracking policy is currently active for your organization."
-          />
-          <View style={styles.spacer} />
-          <Button
-            title="Continue"
-            onPress={onConsentAccepted}
-            disabled={false}
-          />
-        </View>
-      </Screen>
-    );
-  }
-
   return (
     <Screen>
       <View style={layout.card}>
         <Text style={layout.title}>Location Collection Notice</Text>
         <Text style={styles.subheading}>
-          Policy Version {status.activePolicyVersion ?? 1}
+          Policy Version {status.activePolicyVersion}
         </Text>
-
-        <ScrollView style={styles.noticeBox} contentContainerStyle={styles.noticeContent}>
-          <Text style={styles.noticeText}>
-            {status.noticeText ||
-              'Location coordinates are collected strictly for verified attendance check-ins, departures, and approved zone operations. Your coordinates are never tracked outside active duty sessions.'}
-          </Text>
+        <ScrollView
+          style={styles.noticeBox}
+          contentContainerStyle={styles.noticeContent}
+        >
+          <Text style={styles.noticeText}>{status.noticeText}</Text>
         </ScrollView>
-
         {error ? <Notice tone="error" message={error} /> : null}
-
         <TouchableOpacity
           style={styles.checkboxRow}
           onPress={() => setAgreed(!agreed)}
+          disabled={submitting}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: agreed, disabled: submitting }}
           activeOpacity={0.8}
         >
           <View style={[styles.checkbox, agreed && styles.checkboxActive]}>
@@ -125,7 +82,6 @@ export function LocationConsentScreen({
             I have read and accept the company location collection policy
           </Text>
         </TouchableOpacity>
-
         <View style={styles.buttonGroup}>
           <Button
             title={submitting ? 'Recording acceptance…' : 'Accept and Continue'}
@@ -133,16 +89,21 @@ export function LocationConsentScreen({
             disabled={!agreed || submitting}
             busy={submitting}
           />
-
-          {onDeclineOrSkip && (
-            <TouchableOpacity
-              style={styles.skipBtn}
-              onPress={onDeclineOrSkip}
-              disabled={submitting}
-            >
-              <Text style={styles.skipText}>Decline (use other features)</Text>
-            </TouchableOpacity>
-          )}
+          <Button
+            title="Refresh policy"
+            secondary
+            onPress={() => {
+              setAgreed(false);
+              onPolicyChanged();
+            }}
+            disabled={submitting}
+          />
+          <Button
+            title="Decline and sign out"
+            secondary
+            onPress={onSignOut}
+            disabled={submitting}
+          />
         </View>
       </View>
     </Screen>
@@ -214,16 +175,5 @@ const styles = StyleSheet.create({
   },
   buttonGroup: {
     gap: 8,
-  },
-  skipBtn: {
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  skipText: {
-    fontSize: 13,
-    color: colors.muted,
-  },
-  spacer: {
-    height: 12,
   },
 });

@@ -14,11 +14,9 @@ export function ChangeHistory({ employeeId, section }: { employeeId: string; sec
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string | null>(null);
 
-  const profileQuery = useHrQuery(
-    `employees/${employeeId}`,
-    profileResponse,
-    ['hr.employees.read'],
-  );
+  const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
+    'hr.employees.read',
+  ]);
   const isApproved = (profileQuery.data?.employee?.status ?? 2) === 2;
 
   const path = `employees/${employeeId}/changes/${section.name}/history`;
@@ -39,7 +37,9 @@ export function ChangeHistory({ employeeId, section }: { employeeId: string; sec
     return (
       <section className="hr-form-section">
         <h2>Change history</h2>
-        <p className="muted">Change history is activated once the employee onboarding has been approved.</p>
+        <p className="muted">
+          Change history is activated once the employee onboarding has been approved.
+        </p>
       </section>
     );
   }

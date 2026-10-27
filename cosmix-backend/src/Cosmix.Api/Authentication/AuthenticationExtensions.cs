@@ -2,6 +2,7 @@ using System.Text;
 using Cosmix.Application.Common.Interfaces;
 using Cosmix.Application.Common.Security;
 using Cosmix.Application.Authentication;
+using Cosmix.Application.Authentication.Access;
 using Cosmix.Application.Authentication.Web;
 using Cosmix.Domain.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -102,8 +103,12 @@ public static class AuthenticationExtensions
         services.AddAuthorization(options =>
         {
             options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
-            options.AddPolicy(Permissions.OrganizationRead, policy => policy
-                .RequireAuthenticatedUser().AddRequirements(new CurrentPermissionRequirement(Permissions.OrganizationRead)));
+            foreach (var permission in AccessPermissionCatalog.All)
+            {
+                options.AddPolicy(permission.Code, policy => policy
+                    .RequireAuthenticatedUser()
+                    .AddRequirements(new CurrentPermissionRequirement(permission.Code)));
+            }
         });
         return services;
     }

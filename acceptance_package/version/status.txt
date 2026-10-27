@@ -1,0 +1,319 @@
+﻿ M .gitignore
+ D cookies.txt
+ M cosmix-backend/docs/Approval-Routing.md
+ M cosmix-backend/docs/SRS-Module-Map.md
+ M cosmix-backend/docs/attendance-completion/VerifyLeaves.cs
+ M cosmix-backend/docs/attendance-completion/VerifyMonthLocks.cs
+ M cosmix-backend/docs/attendance-corrections/VerifyExceptionQueries.cs
+ M cosmix-backend/docs/attendance-corrections/VerifyExceptions.cs
+ M cosmix-backend/docs/hr-srs-remediation/HR-Benefits-Recovery-Client-Contract.md
+ M cosmix-backend/docs/hr-srs-remediation/VerifyFinancialCarryForward.cs
+ M cosmix-backend/docs/hr-srs-remediation/VerifyLeaveBenefitWorkflow.cs
+ M cosmix-backend/docs/hr-srs-remediation/VerifyRecoveryFulfilment.cs
+ M cosmix-backend/docs/hr-srs-remediation/VerifyRecoveryWorkClaims.cs
+ M cosmix-backend/docs/hr-srs-remediation/VerifyVehicleDatedAttribution.cs
+ M cosmix-backend/src/Cosmix.Api/Authentication/AuthenticationExtensions.cs
+ M cosmix-backend/src/Cosmix.Api/Controllers/Approvals/README.md
+ M cosmix-backend/src/Cosmix.Api/Controllers/Attendance/AttendanceExceptionsControllers.cs
+ M cosmix-backend/src/Cosmix.Api/Controllers/Attendance/LocationConsentController.cs
+ M cosmix-backend/src/Cosmix.Api/Controllers/Attendance/MyAttendanceController.cs
+ M cosmix-backend/src/Cosmix.Api/Controllers/HR/PayrollAccountingController.cs
+ M cosmix-backend/src/Cosmix.Api/Controllers/HR/StatutoryContributionsController.cs
+ M cosmix-backend/src/Cosmix.Api/Development/AuthOnlyTestingBoundary.cs
+ M cosmix-backend/src/Cosmix.Api/Development/AuthOnlyTestingGuard.cs
+ M cosmix-backend/src/Cosmix.Api/Development/AuthOnlyTestingHost.cs
+ M cosmix-backend/src/Cosmix.Api/Development/LocalTesting.cs
+ M cosmix-backend/src/Cosmix.Api/Program.cs
+ M cosmix-backend/src/Cosmix.Api/appsettings.Development.json
+ M cosmix-backend/src/Cosmix.Api/appsettings.json
+ M cosmix-backend/src/Cosmix.Application/Attendance/Common/AttendanceOperation.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Corrections/AttendanceExceptionContracts.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Corrections/AttendanceExceptionService.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/LocationConsent/LocationConsentContracts.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/LocationConsent/LocationConsentService.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/MonthLocks/MonthLockContracts.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/MonthLocks/MonthLockCoverage.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Overtime/OvertimeContracts.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Overtime/OvertimeFinancialAwards.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Overtime/OvertimeFormula.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Overtime/OvertimeMonthLockReader.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Overtime/OvertimeRegistration.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Overtime/OvertimeRules.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Overtime/OvertimeService.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Overtime/OvertimeSources.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendanceMonthLockFinancialReader.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendancePayrollAttestationService.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendancePayrollFinancialService.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendancePayrollFinancialSourceReader.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendancePayrollInputProducer.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendancePayrollInputService.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/PunchRetention/PunchRetentionContracts.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/PunchRetention/PunchRetentionOptions.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/PunchRetention/PunchRetentionService.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Punches/AttendanceCaptureContracts.cs
+ M cosmix-backend/src/Cosmix.Application/Attendance/Punches/AttendanceCaptureService.cs
+ M cosmix-backend/src/Cosmix.Application/Authentication/Access/AccessPermissionCatalog.cs
+ M cosmix-backend/src/Cosmix.Application/Authentication/DeviceRecoveryService.cs
+ M cosmix-backend/src/Cosmix.Application/Authentication/IAuthenticationRepository.cs
+ M cosmix-backend/src/Cosmix.Application/Authentication/MobileAuthenticationService.cs
+ M cosmix-backend/src/Cosmix.Application/Common/Approvals/ApprovalRoutingContracts.cs
+ M cosmix-backend/src/Cosmix.Application/Common/Approvals/ApprovalRoutingService.cs
+ M cosmix-backend/src/Cosmix.Application/DependencyInjection.cs
+ M cosmix-backend/src/Cosmix.Application/HR/Compensation/EmployeeCompensationService.cs
+ M cosmix-backend/src/Cosmix.Application/HR/EmployeeSelfService/EmployeeSelfService.cs
+ M cosmix-backend/src/Cosmix.Application/HR/Leaves/LeaveRecoveryWorkEvidence.cs
+ M cosmix-backend/src/Cosmix.Application/HR/PayrollAccounting/PayrollAccountingContracts.cs
+ M cosmix-backend/src/Cosmix.Application/HR/PayrollAccounting/PayrollAccountingService.cs
+ M cosmix-backend/src/Cosmix.Application/HR/PayrollHandoff/PayrollHandoffContracts.cs
+ M cosmix-backend/src/Cosmix.Application/HR/Policies/AttendancePolicyService.cs
+ M cosmix-backend/src/Cosmix.Application/HR/Policies/AttendancePolicySettingsService.cs
+ M cosmix-backend/src/Cosmix.Application/HR/Reports/HrReportPdfExporter.cs
+ M cosmix-backend/src/Cosmix.Application/HR/StatutoryContributions/StatutoryContributionContracts.cs
+ M cosmix-backend/src/Cosmix.Application/HR/StatutoryContributions/StatutoryContributionService.cs
+ M cosmix-backend/src/Cosmix.Application/HR/VehicleFuel/VehicleConsumedMaintenance.cs
+ M cosmix-backend/src/Cosmix.Application/HR/VehicleFuel/VehicleFuelService.cs
+ M cosmix-backend/src/Cosmix.Domain/Attendance/PayrollInputs/AttendancePayrollInputRules.cs
+ M cosmix-backend/src/Cosmix.Domain/Authentication/Mobile/MobileOtpChallenge.cs
+ M cosmix-backend/src/Cosmix.Domain/HR/PayrollAccounting/PayrollJournalEntry.cs
+ M cosmix-backend/src/Cosmix.Domain/HR/PayrollAccounting/PayrollObligation.cs
+ M cosmix-backend/src/Cosmix.Domain/HR/PayrollHandoff/PayrollHandoffBatch.cs
+ M cosmix-backend/src/Cosmix.Domain/HR/PayrollHandoff/Types.cs
+ M cosmix-backend/src/Cosmix.Domain/HR/Policies/AttendancePolicyRules.cs
+ M cosmix-backend/src/Cosmix.Domain/HR/StatutoryContributions/StatutoryContribution.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Authentication/AuthenticationRepository.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Database/Configurations/HR/PayrollHandoffBatchConfiguration.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Database/Configurations/HR/PayrollHandoffLineConfiguration.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Database/Configurations/HR/PayrollJournalEntryConfiguration.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Database/Configurations/HR/PayrollObligationConfiguration.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Database/Configurations/HR/StatutoryContributionConfiguration.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Database/CosmixDbContext.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/CosmixDbContextModelSnapshot.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/DependencyInjection.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Files/EncryptedPrivateFileStore.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/AttendanceExceptionRepository.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/AttendancePayrollFinancialRepository.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/AttendancePayrollInputRepository.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/CorrectionHistoricalEligibility.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/MonthLockRepository.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/OvertimeRepository.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/PunchRetentionRepository.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Repositories/HR/PayrollAccountingRepository.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Repositories/HR/PayrollHandoffRepository.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Repositories/HR/StatutoryContributionRepository.cs
+ M cosmix-backend/src/Cosmix.Infrastructure/Workers/PunchRetentionWorker.cs
+ M cosmix-backend/tests/Cosmix.Tests/ComplianceTests.cs
+ M cosmix-backend/tests/Cosmix.Tests/Cosmix.Tests.csproj
+ M cosmix-backend/tests/Cosmix.Tests/packages.lock.json
+ M cosmix_frotned/.env.example
+ M cosmix_frotned/src/app/router/AppRoutes.tsx
+ M cosmix_frotned/src/auth/LocalTestOtp.tsx
+ M cosmix_frotned/src/components/forms/SelectInput.tsx
+ M cosmix_frotned/src/layouts/AdminLayout.tsx
+ M cosmix_frotned/src/layouts/AppLayout.tsx
+ M cosmix_frotned/src/modules/approvals/README.md
+ M cosmix_frotned/src/modules/approvals/api/approval-messages.ts
+ M cosmix_frotned/src/modules/approvals/hooks/use-approval-access.ts
+ M cosmix_frotned/src/modules/approvals/pages/ApprovalRoutingPage.tsx
+ M cosmix_frotned/src/modules/attendance/README.md
+ M cosmix_frotned/src/modules/attendance/components/geofences/InteractiveGeofenceMap.tsx
+ M cosmix_frotned/src/modules/attendance/components/shifts/ShiftList.tsx
+ M cosmix_frotned/src/modules/attendance/components/shifts/ShiftMetadataForm.tsx
+ M cosmix_frotned/src/modules/attendance/operations/leave-policy/LeavePolicyPublisher.tsx
+ M cosmix_frotned/src/modules/attendance/operations/leave-policy/LeaveSettingsPage.tsx
+ M cosmix_frotned/src/modules/attendance/operations/leave-policy/PolicyRulesFields.tsx
+ M cosmix_frotned/src/modules/attendance/operations/leave-policy/contracts.ts
+ M cosmix_frotned/src/modules/attendance/operations/leave-policy/extended-policy.ts
+ M cosmix_frotned/src/modules/attendance/operations/leave-policy/inputs.ts
+ M cosmix_frotned/src/modules/attendance/operations/reports/MonthClosurePage.tsx
+ M cosmix_frotned/src/modules/attendance/operations/reports/PayrollInputsPage.tsx
+ M cosmix_frotned/src/modules/attendance/operations/review/ExceptionsPages.tsx
+ M cosmix_frotned/src/modules/attendance/pages/AttendanceProcessingPage.tsx
+ M cosmix_frotned/src/modules/attendance/pages/LeaveManagementPage.tsx
+ M cosmix_frotned/src/modules/attendance/utils/messages.ts
+ M cosmix_frotned/src/modules/hr/components/ReferenceField.tsx
+ M cosmix_frotned/src/modules/hr/components/documents/EmployeeDocuments.tsx
+ M cosmix_frotned/src/modules/hr/components/employee/ChangeHistory.tsx
+ M cosmix_frotned/src/modules/hr/components/employee/EmployeeProfileHeader.tsx
+ M cosmix_frotned/src/modules/hr/components/finance/advances-loans.css
+ M cosmix_frotned/src/modules/hr/components/finance/allowances.css
+ M cosmix_frotned/src/modules/hr/components/hiring/FormFields.tsx
+ M cosmix_frotned/src/modules/hr/components/hiring/ProfileForm.tsx
+ M cosmix_frotned/src/modules/hr/components/hiring/SubmissionReview.tsx
+ M cosmix_frotned/src/modules/hr/components/organization/MasterEditor.tsx
+ M cosmix_frotned/src/modules/hr/components/sites/SiteLeafletMap.tsx
+ M cosmix_frotned/src/modules/hr/components/vehicle-management/LiveFuelRatesWidget.tsx
+ M cosmix_frotned/src/modules/hr/hooks/use-hr-queries.ts
+ M cosmix_frotned/src/modules/hr/pages/AdvancesLoansPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/AllowancesPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/EmployeeDetailPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/EmployeeHiringPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/EmployeesPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/HiringApprovalsPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/HrDashboardPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/OrganizationPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/PayrollAccountingPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/PayrollHandoffPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/SiteDetailPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/StatutoryContributionsPage.tsx
+ M cosmix_frotned/src/modules/hr/pages/VehiclesPage.tsx
+ M cosmix_frotned/src/modules/hr/policy-navigation.ts
+ M cosmix_frotned/src/modules/hr/schemas/finance.ts
+ M cosmix_frotned/src/modules/hr/utils/messages.ts
+ M cosmix_frotned/src/modules/reports/pages/HrReportsPage.tsx
+ M cosmix_frotned/src/pages/AdminApprovalsPage.tsx
+ M cosmix_frotned/src/pages/SignInPage.tsx
+ M cosmix_frotned/src/styles/admin-dashboard.css
+ M cosmix_frotned/src/styles/attendance-processing.css
+ M cosmix_frotned/src/styles/components.css
+ M cosmix_frotned/src/styles/hr-dashboard.css
+ M cosmix_frotned/src/styles/hr-reports.css
+ M cosmix_frotned/src/styles/hr.css
+ M cosmix_frotned/src/styles/leave-management.css
+ M cosmix_frotned/src/styles/onboarding-stepper.css
+ M cosmix_frotned/src/styles/payroll-handoff.css
+ M cosmix_frotned/src/styles/shift-management.css
+ M cosmix_frotned/src/styles/site-detail.css
+ M cosmix_frotned/src/styles/vehicle-management.css
+ M cosmix_frotned/src/utils/google-maps.ts
+ M cosmix_mobile/README.md
+ M cosmix_mobile/docs/Employee-Attendance-Implementation.md
+ M cosmix_mobile/docs/Product-Direction.md
+ M cosmix_mobile/src/app/AppProvider.tsx
+ M cosmix_mobile/src/navigation/RootNavigator.tsx
+ M cosmix_mobile/src/screens/AttendanceScreen.tsx
+ M cosmix_mobile/src/screens/HistoryScreen.tsx
+ M cosmix_mobile/src/screens/consent/LocationConsentScreen.tsx
+ M cosmix_mobile/src/services/attendance/AttendanceWorkflow.ts
+ M cosmix_mobile/src/services/camera/CameraCapture.ts
+ M cosmix_mobile/src/services/consent/locationConsentService.ts
+ M cosmix_mobile/src/services/location/CurrentLocation.ts
+?? acceptance_package/
+?? cosmix-backend/docs/HR-Payroll-First11-Verification-20261026.md
+?? cosmix-backend/docs/HR-Payroll-Shared-Contract.md
+?? cosmix-backend/docs/Location-Notice-Draft.md
+?? cosmix-backend/docs/hr-srs-remediation/Benefit-Recovery-Fixture-Manifest-20261026.md
+?? cosmix-backend/docs/hr-srs-remediation/Business-SQL-Manifest-20261026.md
+?? cosmix-backend/docs/hr-srs-remediation/HR-Backend-Verification-20261026.md
+?? cosmix-backend/docs/hr-srs-remediation/HR-Live-API-Checks-20261026.md
+?? cosmix-backend/docs/hr-srs-remediation/HR-VEHICLE-V2-CONTINUE01.md
+?? cosmix-backend/docs/hr-srs-remediation/HR-Vehicle-V2-Live-20261026.md
+?? cosmix-backend/docs/hr-srs-remediation/InspectVehicleV2Continuation.cs
+?? cosmix-backend/docs/hr-srs-remediation/InspectVehicleV2ReadOnly.cs
+?? cosmix-backend/docs/hr-srs-remediation/Invoke-HrAuthOnly20261026.ps1
+?? cosmix-backend/docs/hr-srs-remediation/Invoke-HrBusinessRead20261026.ps1
+?? cosmix-backend/docs/hr-srs-remediation/Invoke-HrVehicleV2.ps1
+?? cosmix-backend/docs/hr-srs-remediation/Invoke-HrVehicleV2Continue01.ps1
+?? cosmix-backend/docs/hr-srs-remediation/Reconcile-HrVehicleV2ReadOnly.ps1
+?? cosmix-backend/docs/hr-srs-remediation/Vehicle-V2-Continuation-Draft-20261026.md
+?? cosmix-backend/docs/hr-srs-remediation/Vehicle-V2-Continue01-Execution.md
+?? cosmix-backend/docs/hr-srs-remediation/VerifyAuthOnlyComposition20261026.cs
+?? cosmix-backend/docs/hr-srs-remediation/VerifyAuthOnlyProfile20261026.cs
+?? cosmix-backend/docs/hr-srs-remediation/VerifyAuthOnlyRunner20261026.ps1
+?? cosmix-backend/docs/hr-srs-remediation/VerifyBusinessReadBoundary20261026.cs
+?? cosmix-backend/docs/hr-srs-remediation/VerifyBusinessReadComposition20261026.cs
+?? cosmix-backend/docs/hr-srs-remediation/VerifyBusinessReadProfile20261026.cs
+?? cosmix-backend/docs/hr-srs-remediation/VerifyBusinessReadRunner20261026.ps1
+?? cosmix-backend/docs/hr-srs-remediation/VerifyHrVehicleRunnerV2.ps1
+?? cosmix-backend/docs/hr-srs-remediation/VerifyHrVehicleRunnerV2Continue01.ps1
+?? cosmix-backend/docs/hr-srs-remediation/VerifyHrVehicleV2Boundary.cs
+?? cosmix-backend/docs/hr-srs-remediation/VerifyHrVehicleV2Continuation.cs
+?? cosmix-backend/docs/hr-srs-remediation/VerifyHrVehicleV2ContinuationFiles.cs
+?? cosmix-backend/docs/hr-srs-remediation/VerifyVehicleV2Fixture.cs
+?? cosmix-backend/docs/superpowers/plans/2026-10-26-payroll-activation.md
+?? cosmix-backend/docs/superpowers/plans/2026-10-26-payroll-salary-finance.md
+?? cosmix-backend/src/Cosmix.Api/Controllers/Attendance/AttendancePayrollActivationController.cs
+?? cosmix-backend/src/Cosmix.Api/Controllers/EmployeeSelfService/MyPayslipsController.cs
+?? cosmix-backend/src/Cosmix.Api/Controllers/HR/PayrollImportsController.cs
+?? cosmix-backend/src/Cosmix.Api/Controllers/HR/PayrollPayslipsController.cs
+?? cosmix-backend/src/Cosmix.Api/Controllers/HR/PayrollSalaryController.cs
+?? cosmix-backend/src/Cosmix.Api/Development/HrVehicleV2Boundary.cs
+?? cosmix-backend/src/Cosmix.Api/Development/HrVehicleV2ContinuationAuthority.cs
+?? cosmix-backend/src/Cosmix.Api/Development/HrVehicleV2ContinuationDatabase.cs
+?? cosmix-backend/src/Cosmix.Api/Development/HrVehicleV2ContinuationFiles.cs
+?? cosmix-backend/src/Cosmix.Api/Development/HrVehicleV2ContinuationGuard.cs
+?? cosmix-backend/src/Cosmix.Api/Development/HrVehicleV2Database.cs
+?? cosmix-backend/src/Cosmix.Api/Development/HrVehicleV2Fixture.cs
+?? cosmix-backend/src/Cosmix.Api/Development/HrVehicleV2Guard.cs
+?? cosmix-backend/src/Cosmix.Api/Development/HrVehicleV2Host.cs
+?? cosmix-backend/src/Cosmix.Application/Attendance/Corrections/MissingCheckoutReviewRules.cs
+?? cosmix-backend/src/Cosmix.Application/Attendance/Overtime/ConfiguredOvertimeDurationPolicy.cs
+?? cosmix-backend/src/Cosmix.Application/Attendance/Overtime/ConfiguredOvertimeFormula.cs
+?? cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendancePayrollActivationContracts.cs
+?? cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendancePayrollActivationProof.cs
+?? cosmix-backend/src/Cosmix.Application/Attendance/PayrollInputs/AttendancePayrollActivationService.cs
+?? cosmix-backend/src/Cosmix.Application/Attendance/PunchRetention/PunchAuditSanitizer.cs
+?? cosmix-backend/src/Cosmix.Application/Attendance/Punches/AttendanceCheckInPreflight.cs
+?? cosmix-backend/src/Cosmix.Application/Authentication/DeviceRecoveryRevocations.cs
+?? cosmix-backend/src/Cosmix.Application/Authentication/SingleDeviceRules.cs
+?? cosmix-backend/src/Cosmix.Application/Common/Security/SensitiveComplianceOperation.cs
+?? cosmix-backend/src/Cosmix.Application/HR/Compensation/EmployeeCompensationImport.cs
+?? cosmix-backend/src/Cosmix.Application/HR/EmployeeSelfService/EmployeePayslips.cs
+?? cosmix-backend/src/Cosmix.Application/HR/PayrollAccounting/PayrollFinanceContracts.cs
+?? cosmix-backend/src/Cosmix.Application/HR/PayrollAccounting/PayrollFinanceOperation.cs
+?? cosmix-backend/src/Cosmix.Application/HR/PayrollAccounting/PayrollFinanceSetupService.cs
+?? cosmix-backend/src/Cosmix.Application/HR/PayrollImports/
+?? cosmix-backend/src/Cosmix.Application/HR/PayrollSalary/
+?? cosmix-backend/src/Cosmix.Application/HR/Payslips/
+?? cosmix-backend/src/Cosmix.Application/Properties/
+?? cosmix-backend/src/Cosmix.Domain/HR/Employees/EmployeeLifecycleHistoryRules.cs
+?? cosmix-backend/src/Cosmix.Domain/HR/PayrollAccounting/PayrollFinanceSetup.cs
+?? cosmix-backend/src/Cosmix.Domain/HR/PayrollImports/
+?? cosmix-backend/src/Cosmix.Domain/HR/PayrollSalary/
+?? cosmix-backend/src/Cosmix.Domain/HR/Policies/AttendanceOvertimeRules.cs
+?? cosmix-backend/src/Cosmix.Domain/HR/StatutoryContributions/StatutoryContributionEntry.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Configurations/HR/EmployeeStatutoryCoverageConfiguration.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Configurations/HR/PayrollAccountingPeriodConfiguration.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Configurations/HR/PayrollLedgerAccountConfiguration.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Configurations/HR/PayrollPostingProfileConfiguration.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Configurations/HR/PayrollSalaryConfiguration.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Configurations/HR/PayrollSalaryImportConfiguration.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/20261026193000_PersistStatutoryEmployeeItemsAndJournalLinks.Designer.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/20261026193000_PersistStatutoryEmployeeItemsAndJournalLinks.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/20261027120000_PersistFinancialPostingMetadataAndEntitlements.Designer.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/20261027120000_PersistFinancialPostingMetadataAndEntitlements.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/20261027133000_PersistPayrollFinanceSetupTables.Designer.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Database/Migrations/20261027133000_PersistPayrollFinanceSetupTables.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/AttendancePayrollActivationRepository.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Repositories/Attendance/PunchRetentionRepository.Audit.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Repositories/HR/PayrollFinanceRepository.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Repositories/HR/PayrollImportRepository.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Repositories/HR/PayrollSalaryRepository.cs
+?? cosmix-backend/src/Cosmix.Infrastructure/Repositories/HR/PayslipRepository.cs
+?? cosmix-backend/tests/Cosmix.Tests/AcceptanceExecutionSuite.cs
+?? cosmix-backend/tests/Cosmix.Tests/ApprovalRoutingPolicyTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/AttendanceAuthorityExpiryTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/ComplianceAuthorityExpiryTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/CorrectionLifecycleCoverageTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/DeviceRecoveryExpiryTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/DynamicOvertimeTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/LocationConsentTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/MissingCheckoutReviewTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/MonthLockLifecycleCoverageTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/PayrollActivationAuthorityExpiryTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/PayrollActivationTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/PayrollFinancialSqlTranslationTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/PayrollSupplementalAuthorityExpiryTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/PermissionsTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/PreflightTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/PunchAuditPrivacyTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/PunchRetentionPrivateFilesTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/PunchRetentionTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/RemediationAcceptanceTests.cs
+?? cosmix-backend/tests/Cosmix.Tests/SingleDeviceTests.cs
+?? cosmix_frotned/src/components/forms/FileUploadDropzone.tsx
+?? cosmix_frotned/src/modules/attendance/operations/leave-policy/OvertimePolicyFields.tsx
+?? cosmix_frotned/src/modules/attendance/operations/reports/PayrollActivation.tsx
+?? cosmix_frotned/src/modules/attendance/operations/reports/payroll-activation-schemas.ts
+?? cosmix_frotned/src/modules/attendance/operations/review/MissingCheckoutReview.tsx
+?? cosmix_frotned/src/modules/hr/components/finance/PayrollAccountingSetup.tsx
+?? cosmix_frotned/src/modules/hr/components/finance/PayrollFields.tsx
+?? cosmix_frotned/src/modules/hr/components/finance/SalaryImport.tsx
+?? cosmix_frotned/src/modules/hr/components/finance/SalaryPayslips.tsx
+?? cosmix_frotned/src/modules/hr/components/finance/SalarySources.tsx
+?? cosmix_frotned/src/modules/hr/schemas/payroll-accounting.ts
+?? cosmix_frotned/src/modules/hr/schemas/payroll-salary.ts
+?? cosmix_mobile/src/components/PayslipHistory.tsx
+?? cosmix_mobile/src/screens/consent/LocationConsentGate.tsx
+?? cosmix_mobile/src/services/documents/PayslipFiles.ts
+?? cosmix_mobile/src/utils/payslipFile.ts
+?? docs/superpowers/plans/2026-10-26-hr-payroll-completion-master-checklist.md

@@ -156,7 +156,7 @@ export function AppRoutes() {
           <Route path="departments" element={<AdminModulePage moduleKey="departments" />} />
           <Route path="settings" element={<AdminModulePage moduleKey="settings" />} />
           <Route path="attendance" element={<Navigate to="/hr/attendance" replace />} />
-          <Route path="leaves" element={<Navigate to="/hr/leaves" replace />} />
+          <Route path="leaves" element={<Navigate to="/admin/approvals?type=leave" replace />} />
           <Route path="shifts" element={<Navigate to="/hr/attendance/shifts" replace />} />
           <Route path="help" element={<AdminModulePage moduleKey="help" />} />
           <Route path="account" element={<AccountPage />} />

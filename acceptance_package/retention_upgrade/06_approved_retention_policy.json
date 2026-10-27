@@ -1,0 +1,10 @@
+{
+  "PolicyTitle": "Corporate GPS Punch Coordinate Retention Policy",
+  "RetentionDays": 180,
+  "ExecutionScheduleHours": 24,
+  "ApprovalStatus": "TEST_ASSUMPTION_PENDING_CONFIRMATION",
+  "ApprovalNote": "180-day retention period is an unconfirmed test assumption pending formal executive/legal policy confirmation. System requires configured value before purging coordinates.",
+  "DataSubjectRights": "All raw punch coordinates older than configured retention days are irreversibly redacted; duty attendance and wage-entitlement facts are preserved.",
+  "FailSafeMechanism": "Any missing retention configuration throws InvalidOperationException to halt unapproved data purge.",
+  "DatabaseLock": "sys.sp_getapplock exclusive transaction lock on Cosmix.PunchLocationRetention prevents replica concurrency."
+}

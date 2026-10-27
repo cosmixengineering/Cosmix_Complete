@@ -18,11 +18,7 @@ import { TextInput } from '@/components/forms/TextInput';
 import { SelectInput } from '@/components/forms/SelectInput';
 import { Denied, QueryState, ActionMessage } from '../components/Feedback';
 import { RecordView } from '../components/RecordView';
-import {
-  FinanceStatus,
-  HasMorePager,
-  TextAreaField,
-} from '../components/finance/FinanceChrome';
+import { FinanceStatus, HasMorePager, TextAreaField } from '../components/finance/FinanceChrome';
 import { advanceKindOptions, approvalStateOptions, money } from '../components/finance/labels';
 import { useFinanceAccess } from '../hooks/use-finance-access';
 import { useFinanceAction, useFinanceQuery } from '../hooks/use-finance-queries';
@@ -88,7 +84,8 @@ export function AdvancesLoansPage() {
             </span>
           </div>
           <p className="adv-subtitle">
-            Manage employee salary advance requests, approve installment plans, and track loan agreements with monthly deduction ledgers.
+            Manage employee salary advance requests, approve installment plans, and track loan
+            agreements with monthly deduction ledgers.
           </p>
         </div>
       </div>
@@ -102,7 +99,8 @@ export function AdvancesLoansPage() {
           <div className="adv-kpi-content">
             <span className="adv-kpi-label">Pending Requests</span>
             <span className="adv-kpi-value">
-              {pendingRequestsQuery.data?.totalCount ?? (pendingRequestsQuery.isFetching ? '...' : 0)}
+              {pendingRequestsQuery.data?.totalCount ??
+                (pendingRequestsQuery.isFetching ? '...' : 0)}
             </span>
             <span className="adv-kpi-sub">Awaiting HR Approval</span>
           </div>
@@ -115,7 +113,8 @@ export function AdvancesLoansPage() {
           <div className="adv-kpi-content">
             <span className="adv-kpi-label">Active Agreements</span>
             <span className="adv-kpi-value">
-              {activeAgreementsQuery.data?.totalCount ?? (activeAgreementsQuery.isFetching ? '...' : 0)}
+              {activeAgreementsQuery.data?.totalCount ??
+                (activeAgreementsQuery.isFetching ? '...' : 0)}
             </span>
             <span className="adv-kpi-sub">Ongoing Repayments</span>
           </div>
@@ -158,7 +157,7 @@ export function AdvancesLoansPage() {
               className={`adv-tab-btn ${isActive ? 'active' : ''}`}
               onClick={() => setTab(item.id)}
             >
-              <Icon size={16} />
+              <Icon size={13} />
               <span>{item.label}</span>
             </button>
           );
@@ -215,7 +214,9 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
       effectiveOn: new Date().toISOString().slice(0, 10),
       approvedTerms: 'Standard monthly salary deduction plan approved by HR.',
       numberOfInstallments: '1',
-      firstDueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().slice(0, 10),
+      firstDueDate: new Date(new Date().setDate(new Date().getDate() + 30))
+        .toISOString()
+        .slice(0, 10),
     });
   }
 
@@ -273,7 +274,8 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
             Advance & Loan Request Queue
           </h2>
           <p className="adv-card-desc">
-            Staff applications for salary advances, emergency funds, and installment loans awaiting departmental authorization.
+            Staff applications for salary advances, emergency funds, and installment loans awaiting
+            departmental authorization.
           </p>
         </div>
         <Button
@@ -281,7 +283,14 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
           onClick={() => void requests.refetch()}
           title="Refresh requests"
           disabled={requests.isFetching}
-          style={{ height: '32px', padding: '0 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}
+          style={{
+            height: '32px',
+            padding: '0 10px',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+          }}
         >
           <RefreshCw size={14} className={requests.isFetching ? 'animate-spin' : ''} />
           Refresh
@@ -291,7 +300,16 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
       {/* Filter Bar with Quick Chips */}
       <div className="adv-filter-box">
         <div className="adv-chips-row">
-          <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Quick Filter:</span>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              color: '#64748b',
+              textTransform: 'uppercase',
+            }}
+          >
+            Quick Filter:
+          </span>
           {[
             { label: 'Pending Only', value: '0' },
             { label: 'All Statuses', value: '' },
@@ -354,8 +372,9 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
             </div>
             <h3 className="adv-empty-title">No Requests Found</h3>
             <p className="adv-empty-desc">
-              There are currently no employee salary advance or loan applications matching the selected filter criteria.
-              When employees apply through the Employee Self-Service (ESS) mobile app or portal, their requests will appear here for HR review.
+              There are currently no employee salary advance or loan applications matching the
+              selected filter criteria. When employees apply through the Employee Self-Service (ESS)
+              mobile app or portal, their requests will appear here for HR review.
             </p>
           </div>
         )}
@@ -363,7 +382,8 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {requests.data?.items.map((request) => {
             const isSelected = selected?.id === request.id;
-            const kindLabel = advanceKindOptions[request.kind - 1]?.label ?? `Kind #${request.kind}`;
+            const kindLabel =
+              advanceKindOptions[request.kind - 1]?.label ?? `Kind #${request.kind}`;
 
             return (
               <article className="adv-item-card" key={request.id}>
@@ -373,9 +393,12 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
                       {request.employeeName ? request.employeeName.charAt(0).toUpperCase() : 'E'}
                     </div>
                     <div>
-                      <div className="adv-emp-name">{request.employeeName || request.employeeCode}</div>
+                      <div className="adv-emp-name">
+                        {request.employeeName || request.employeeCode}
+                      </div>
                       <div className="adv-emp-meta">
-                        Code: <strong>{request.employeeCode}</strong> &bull; Kind: <span style={{ color: '#0369a1', fontWeight: 600 }}>{kindLabel}</span>
+                        Code: <strong>{request.employeeCode}</strong> &bull; Kind:{' '}
+                        <span style={{ color: '#0369a1', fontWeight: 600 }}>{kindLabel}</span>
                       </div>
                     </div>
                   </div>
@@ -422,12 +445,33 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
                 {/* Approve Form Drawer */}
                 {canApprove && isSelected && actionType === 'approve' && (
                   <div className="adv-form-drawer">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: 700, color: '#047857', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      <h4
+                        style={{
+                          margin: 0,
+                          fontSize: '13.5px',
+                          fontWeight: 700,
+                          color: '#047857',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
                         <CheckCircle2 size={16} />
                         Approve Advance & Create Repayment Agreement
                       </h4>
-                      <Button variant="ghost" onClick={() => setSelected(null)} style={{ fontSize: '12px' }}>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setSelected(null)}
+                        style={{ fontSize: '12px' }}
+                      >
                         Cancel
                       </Button>
                     </div>
@@ -471,7 +515,10 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
                         max={60}
                         value={approveForm.numberOfInstallments}
                         onChange={(event) =>
-                          setApproveForm({ ...approveForm, numberOfInstallments: event.target.value })
+                          setApproveForm({
+                            ...approveForm,
+                            numberOfInstallments: event.target.value,
+                          })
                         }
                       />
                       <TextInput
@@ -487,7 +534,9 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
                         label="Approved Terms & Conditions"
                         required
                         value={approveForm.approvedTerms}
-                        onChange={(value) => setApproveForm({ ...approveForm, approvedTerms: value })}
+                        onChange={(value) =>
+                          setApproveForm({ ...approveForm, approvedTerms: value })
+                        }
                         disabled={action.pending}
                       />
                       <div className="hr-actions wide" style={{ marginTop: '12px' }}>
@@ -511,13 +560,37 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
 
                 {/* Reject Form Drawer */}
                 {canReview && isSelected && actionType === 'reject' && (
-                  <div className="adv-form-drawer" style={{ borderColor: '#fca5a5', background: '#fef2f2' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: 700, color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div
+                    className="adv-form-drawer"
+                    style={{ borderColor: '#fca5a5', background: '#fef2f2' }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      <h4
+                        style={{
+                          margin: 0,
+                          fontSize: '13.5px',
+                          fontWeight: 700,
+                          color: '#b91c1c',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
                         <AlertCircle size={16} />
                         Reject Request Reason
                       </h4>
-                      <Button variant="ghost" onClick={() => setSelected(null)} style={{ fontSize: '12px' }}>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setSelected(null)}
+                        style={{ fontSize: '12px' }}
+                      >
                         Cancel
                       </Button>
                     </div>
@@ -673,7 +746,8 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
             Active Loan Agreements & Recovery Ledgers
           </h2>
           <p className="adv-card-desc">
-            Legally approved advance contracts with installment breakdown, remaining principal balance, and repayment transactions.
+            Legally approved advance contracts with installment breakdown, remaining principal
+            balance, and repayment transactions.
           </p>
         </div>
         <Button
@@ -681,7 +755,14 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
           onClick={() => void agreements.refetch()}
           title="Refresh agreements"
           disabled={agreements.isFetching}
-          style={{ height: '32px', padding: '0 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}
+          style={{
+            height: '32px',
+            padding: '0 10px',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+          }}
         >
           <RefreshCw size={14} className={agreements.isFetching ? 'animate-spin' : ''} />
           Refresh
@@ -691,7 +772,16 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
       {/* Filter Box */}
       <div className="adv-filter-box">
         <div className="adv-chips-row">
-          <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Filter Agreements:</span>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              color: '#64748b',
+              textTransform: 'uppercase',
+            }}
+          >
+            Filter Agreements:
+          </span>
           {[
             { label: 'Active Agreements Only', value: 'true' },
             { label: 'All Agreements (Including Settled)', value: 'false' },
@@ -756,7 +846,8 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
             <h3 className="adv-empty-title">No Loan Agreements Found</h3>
             <p className="adv-empty-desc">
               There are currently no active or historical advance agreements matching this filter.
-              Once an advance request is approved from the &quot;Requests Queue&quot;, its binding contract and schedule will appear here.
+              Once an advance request is approved from the &quot;Requests Queue&quot;, its binding
+              contract and schedule will appear here.
             </p>
           </div>
         )}
@@ -764,10 +855,15 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {agreements.data?.items.map((agreement) => {
             const isSelected = selectedId === agreement.id;
-            const kindLabel = advanceKindOptions[agreement.kind - 1]?.label ?? `Kind #${agreement.kind}`;
-            const percentRepaid = agreement.approvedPrincipal > 0
-              ? Math.min(100, Math.round((agreement.totalRepaid / agreement.approvedPrincipal) * 100))
-              : 0;
+            const kindLabel =
+              advanceKindOptions[agreement.kind - 1]?.label ?? `Kind #${agreement.kind}`;
+            const percentRepaid =
+              agreement.approvedPrincipal > 0
+                ? Math.min(
+                    100,
+                    Math.round((agreement.totalRepaid / agreement.approvedPrincipal) * 100),
+                  )
+                : 0;
 
             return (
               <article className="adv-item-card" key={agreement.id}>
@@ -777,17 +873,29 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
                       <HandCoins size={18} />
                     </div>
                     <div>
-                      <div className="adv-emp-name">{agreement.employeeName || agreement.employeeCode}</div>
+                      <div className="adv-emp-name">
+                        {agreement.employeeName || agreement.employeeCode}
+                      </div>
                       <div className="adv-emp-meta">
-                        Code: <strong>{agreement.employeeCode}</strong> &bull; Plan: <strong>{kindLabel}</strong> &bull; Effective: <strong>{agreement.effectiveOn}</strong>
+                        Code: <strong>{agreement.employeeCode}</strong> &bull; Plan:{' '}
+                        <strong>{kindLabel}</strong> &bull; Effective:{' '}
+                        <strong>{agreement.effectiveOn}</strong>
                       </div>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>OUTSTANDING</div>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: agreement.outstandingBalance > 0 ? '#b91c1c' : '#059669' }}>
+                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                        OUTSTANDING
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: 800,
+                          color: agreement.outstandingBalance > 0 ? '#b91c1c' : '#059669',
+                        }}
+                      >
                         {money(agreement.outstandingBalance, agreement.currency)}
                       </div>
                     </div>
@@ -795,7 +903,14 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
                     <Button
                       variant={isSelected ? 'primary' : 'secondary'}
                       onClick={() => setSelectedId(isSelected ? null : agreement.id)}
-                      style={{ height: '32px', fontSize: '12px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      style={{
+                        height: '32px',
+                        fontSize: '12px',
+                        padding: '0 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
                     >
                       {isSelected ? 'Hide Details' : 'View Schedule & Ledger'}
                       {isSelected ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -805,9 +920,21 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
 
                 {/* Repayment Progress Bar */}
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 600, color: '#64748b', marginBottom: '3px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: '#64748b',
+                      marginBottom: '3px',
+                    }}
+                  >
                     <span>Repayment Progress: {percentRepaid}%</span>
-                    <span>Repaid {money(agreement.totalRepaid, agreement.currency)} of {money(agreement.approvedPrincipal, agreement.currency)}</span>
+                    <span>
+                      Repaid {money(agreement.totalRepaid, agreement.currency)} of{' '}
+                      {money(agreement.approvedPrincipal, agreement.currency)}
+                    </span>
                   </div>
                   <div className="adv-progress-wrap">
                     <div className="adv-progress-bar" style={{ width: `${percentRepaid}%` }} />
@@ -830,17 +957,43 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
                 {isSelected && (
                   <QueryState query={detail}>
                     {selected && (
-                      <div className="adv-form-drawer" style={{ background: '#ffffff', borderColor: '#bae6fd' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px', marginBottom: '14px' }}>
+                      <div
+                        className="adv-form-drawer"
+                        style={{ background: '#ffffff', borderColor: '#bae6fd' }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            borderBottom: '1px solid #e2e8f0',
+                            paddingBottom: '10px',
+                            marginBottom: '14px',
+                          }}
+                        >
                           <Layers size={18} style={{ color: '#0284c7' }} />
-                          <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+                          <h4
+                            style={{
+                              margin: 0,
+                              fontSize: '14px',
+                              fontWeight: 700,
+                              color: '#0f172a',
+                            }}
+                          >
                             Repayment Schedule & Payment Ledger Breakdown
                           </h4>
                         </div>
 
                         {/* Schedule Table */}
                         <div style={{ marginBottom: '18px' }}>
-                          <h5 style={{ margin: '0 0 8px', fontSize: '12.5px', fontWeight: 700, color: '#334155' }}>
+                          <h5
+                            style={{
+                              margin: '0 0 8px',
+                              fontSize: '12.5px',
+                              fontWeight: 700,
+                              color: '#334155',
+                            }}
+                          >
                             Monthly Deduction Installments ({selected.schedule.length} installments)
                           </h5>
                           <div className="hr-table-scroll">
@@ -859,12 +1012,21 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
                               <tbody>
                                 {selected.schedule.map((entry) => (
                                   <tr key={entry.id}>
-                                    <td><strong>#{entry.sequence}</strong></td>
+                                    <td>
+                                      <strong>#{entry.sequence}</strong>
+                                    </td>
                                     <td>{entry.dueDate}</td>
                                     <td>{money(entry.principalAmount, entry.currency)}</td>
                                     <td>{money(entry.otherApprovedAmount, entry.currency)}</td>
-                                    <td style={{ fontWeight: 700 }}>{money(entry.totalDue, entry.currency)}</td>
-                                    <td style={{ color: entry.paidAmount > 0 ? '#059669' : '#64748b', fontWeight: 600 }}>
+                                    <td style={{ fontWeight: 700 }}>
+                                      {money(entry.totalDue, entry.currency)}
+                                    </td>
+                                    <td
+                                      style={{
+                                        color: entry.paidAmount > 0 ? '#059669' : '#64748b',
+                                        fontWeight: 600,
+                                      }}
+                                    >
                                       {money(entry.paidAmount, entry.currency)}
                                     </td>
                                     <td>
@@ -879,11 +1041,25 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
 
                         {/* Payment Ledger */}
                         <div style={{ marginBottom: '18px' }}>
-                          <h5 style={{ margin: '0 0 8px', fontSize: '12.5px', fontWeight: 700, color: '#334155' }}>
+                          <h5
+                            style={{
+                              margin: '0 0 8px',
+                              fontSize: '12.5px',
+                              fontWeight: 700,
+                              color: '#334155',
+                            }}
+                          >
                             Payment & Deduction Ledger History
                           </h5>
                           {!selected.ledger.length && (
-                            <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0', fontStyle: 'italic' }}>
+                            <p
+                              style={{
+                                fontSize: '12px',
+                                color: '#64748b',
+                                margin: '4px 0',
+                                fontStyle: 'italic',
+                              }}
+                            >
                               No repayments recorded in ledger yet.
                             </p>
                           )}
@@ -913,13 +1089,31 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
                         </div>
 
                         {canRepay && (
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                          <div
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                              gap: '16px',
+                              borderTop: '1px solid #e2e8f0',
+                              paddingTop: '16px',
+                            }}
+                          >
                             {/* Record Repayment Form */}
                             <div className="adv-filter-box" style={{ background: '#f8fafc' }}>
-                              <h5 style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 700, color: '#047857' }}>
+                              <h5
+                                style={{
+                                  margin: '0 0 8px',
+                                  fontSize: '13px',
+                                  fontWeight: 700,
+                                  color: '#047857',
+                                }}
+                              >
                                 Record a Manual Payment / Deduction
                               </h5>
-                              <form className="hr-form-grid" onSubmit={(event) => void recordRepayment(event)}>
+                              <form
+                                className="hr-form-grid"
+                                onSubmit={(event) => void recordRepayment(event)}
+                              >
                                 <SelectInput
                                   label="Target Installment Entry"
                                   value={repayment.repaymentScheduleEntryId}
@@ -1010,11 +1204,24 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
                             </div>
 
                             {/* Reverse Entry Form */}
-                            <div className="adv-filter-box" style={{ background: '#fef2f2', borderColor: '#fecaca' }}>
-                              <h5 style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 700, color: '#b91c1c' }}>
+                            <div
+                              className="adv-filter-box"
+                              style={{ background: '#fef2f2', borderColor: '#fecaca' }}
+                            >
+                              <h5
+                                style={{
+                                  margin: '0 0 8px',
+                                  fontSize: '13px',
+                                  fontWeight: 700,
+                                  color: '#b91c1c',
+                                }}
+                              >
                                 Reverse an Incorrect Ledger Entry
                               </h5>
-                              <form className="hr-form-grid" onSubmit={(event) => void recordReversal(event)}>
+                              <form
+                                className="hr-form-grid"
+                                onSubmit={(event) => void recordReversal(event)}
+                              >
                                 <SelectInput
                                   label="Select Ledger Entry to Reverse"
                                   required
@@ -1029,7 +1236,10 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
                                       })),
                                   ]}
                                   onChange={(event) =>
-                                    setReversal({ ...reversal, reversesEntryId: event.target.value })
+                                    setReversal({
+                                      ...reversal,
+                                      reversesEntryId: event.target.value,
+                                    })
                                   }
                                 />
                                 <TextInput
@@ -1048,7 +1258,10 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
                                   value={reversal.sourceReference}
                                   placeholder="e.g. REV-REF-01"
                                   onChange={(event) =>
-                                    setReversal({ ...reversal, sourceReference: event.target.value })
+                                    setReversal({
+                                      ...reversal,
+                                      sourceReference: event.target.value,
+                                    })
                                   }
                                 />
                                 <TextAreaField

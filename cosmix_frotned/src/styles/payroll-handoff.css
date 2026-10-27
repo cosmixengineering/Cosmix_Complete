@@ -142,11 +142,26 @@
   flex-shrink: 0;
 }
 
-.payroll-kpi-icon.net { background: #eff6ff; color: #2563eb; }
-.payroll-kpi-icon.ot { background: #ecfdf5; color: #059669; }
-.payroll-kpi-icon.alw { background: #f0fdf4; color: #16a34a; }
-.payroll-kpi-icon.ded { background: #fff1f2; color: #e11d48; }
-.payroll-kpi-icon.emp { background: #f5f3ff; color: #7c3aed; }
+.payroll-kpi-icon.net {
+  background: #eff6ff;
+  color: #2563eb;
+}
+.payroll-kpi-icon.ot {
+  background: #ecfdf5;
+  color: #059669;
+}
+.payroll-kpi-icon.alw {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+.payroll-kpi-icon.ded {
+  background: #fff1f2;
+  color: #e11d48;
+}
+.payroll-kpi-icon.emp {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
 
 .payroll-kpi-info {
   display: flex;

@@ -7,6 +7,7 @@ using System.Reflection;
 using Cosmix.Application.Attendance.Common;
 using Cosmix.Application.Attendance.Corrections;
 using Cosmix.Domain.Attendance.Corrections;
+using Cosmix.Domain.Attendance.WorkSessions;
 using Cosmix.Infrastructure.Database;
 using Cosmix.Infrastructure.Repositories.Attendance;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,18 @@ foreach (var scope in Enum.GetValues<CorrectionQueueScope>())
     if (scope is CorrectionQueueScope.Team or CorrectionQueueScope.Project)
         Check(sql.Contains("[TerminatedEffectiveTo] IS NULL") && sql.Contains("[TerminatedEffectiveTo]"), "ended population memberships stay excluded " + scope);
     Check(!sql.Contains("COUNT("), "candidate query contains no hidden total " + scope);
+}
+foreach (var scope in Enum.GetValues<CorrectionQueueScope>())
+{
+    var request = new AttendanceExceptionQueueRequest(from, to, scope, scope == CorrectionQueueScope.All ? null : employee);
+    var open = (IQueryable<WorkSession>)typeof(AttendanceExceptionRepository).GetMethod("OpenSessionCandidateQuery",
+        BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(repository,
+        [request, new AttendanceCursorPosition(DateTimeOffset.UtcNow, id), 201])!;
+    var sql = open.ToQueryString();
+    Check(sql.Contains("WorkSessions") && sql.Contains("[EndsAtUtc] IS NULL") && sql.Contains("[Revision] >") &&
+        sql.Contains("TOP(") && sql.Contains("ORDER BY"), "latest open session query is bounded and excludes closed successors " + scope);
+    Check(sql.Contains("[AttendanceDate] >=") && sql.Contains("[AttendanceDate] <") &&
+        sql.Contains("[StartsAtUtc] >") && sql.Contains("[Id] >"), "open-session date and cursor predicates translate " + scope);
 }
 Check(db.ChangeTracker.Entries().Count() == 0 && guard.Attempts == 0, "translation attaches nothing and attempts no database connection");
 Console.WriteLine($"PASS: {checks} exception SQL translation checks. No connection or SQL executed.");

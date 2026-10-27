@@ -5,6 +5,7 @@ import { Screen } from '../components/Controls';
 import { AccessRecovery } from '../components/AccessRecovery';
 import { NavigationIcon } from '../components/NavigationIcon';
 import { ServiceRecords } from '../components/ServiceRecords';
+import { PayslipHistory } from '../components/PayslipHistory';
 import {
   canOpenService,
   historyCategories,
@@ -58,6 +59,7 @@ export function HistoryScreen({
             </Pressable>
           ))}
       </View>
+      {selected === 'payroll' ? <PayslipHistory /> : null}
     </View>
   );
   if (!selected)

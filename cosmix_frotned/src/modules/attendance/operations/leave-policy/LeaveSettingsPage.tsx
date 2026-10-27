@@ -38,7 +38,7 @@ function LeaveSettings() {
   useEffect(() => {
     if (policies.isError) {
       setSource(undefined);
-      setForm((current) => (current === 'policy' ? '' : current));
+      setForm((current) => (current.startsWith('policy') ? '' : current));
     }
   }, [policies.isError]);
   const publicationBlock = policies.isError
@@ -73,10 +73,11 @@ function LeaveSettings() {
       )}
       {form === 'type' ? (
         <LeaveTypeForm key={epoch} onSaved={reload} onCancel={reload} />
-      ) : form === 'policy' && !policies.isError ? (
+      ) : form.startsWith('policy') && !policies.isError ? (
         <LeavePolicyPublisher
           key={epoch}
           source={source}
+          baseOnly={form === 'policy-base'}
           publicationBlock={publicationBlock}
           onSaved={reload}
           onCancel={reload}
@@ -85,6 +86,19 @@ function LeaveSettings() {
         <div className="attendance-commands">
           <Command icon={Plus} onClick={() => setForm('type')}>
             Create leave type
+          </Command>
+          <Command
+            icon={Plus}
+            disabled={Boolean(publicationBlock)}
+            aria-describedby={publicationBlock ? 'leave-policy-publication-status' : undefined}
+            onClick={() => {
+              if (!publicationBlock) {
+                setSource(undefined);
+                setForm('policy-base');
+              }
+            }}
+          >
+            Publish base leave settings
           </Command>
           <Command
             icon={Plus}
@@ -133,7 +147,7 @@ function LeaveSettings() {
                 onClick={() => {
                   if (!form && !publicationBlock) {
                     setSource(structuredClone(row));
-                    setForm('policy');
+                    setForm((row.settings.settingsVersion ?? 1) <= 2 ? 'policy-base' : 'policy');
                   }
                 }}
               >

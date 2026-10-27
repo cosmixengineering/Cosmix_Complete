@@ -1,0 +1,28 @@
+{
+  "Eobi": {
+    "Id": "c6e92c29-00f3-4076-8e1c-7bcf464b4854",
+    "Scheme": "EOBI",
+    "EmployeeContributionAmount": 1800.20,
+    "EmployerContributionAmount": 9000.30,
+    "Total": 10800.50,
+    "PayableAccountCode": "2020",
+    "State": "Posted",
+    "GlJournalId": "cd5e9402-69bd-4a27-9315-18f1f4c9ac4e",
+    "GlDebitAccount": "5020",
+    "GlCreditAccount": "2020",
+    "GlAmount": 9000.30
+  },
+  "SocialSecurity": {
+    "Id": "893303f3-42fd-4f8c-954f-a819cac673fe",
+    "Scheme": "PESSI",
+    "EmployeeContributionAmount": 900.10,
+    "EmployerContributionAmount": 5400.30,
+    "Total": 6300.40,
+    "PayableAccountCode": "2030",
+    "State": "Posted",
+    "GlJournalId": "f9864bd3-7b29-4790-9efa-e607afbbb52c",
+    "GlDebitAccount": "5030",
+    "GlCreditAccount": "2030",
+    "GlAmount": 5400.30
+  }
+}

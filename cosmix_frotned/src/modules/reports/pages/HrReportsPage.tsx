@@ -211,15 +211,15 @@ export function HrReportsPage() {
 function hasReportPermission(user: SessionUser | null, permission: string) {
   return Boolean(
     user?.account &&
-      user.grants.some(
-        (grant) =>
-          grant.permission === permission &&
-          ((grant.scopeKind === 7 && grant.targetId === null) ||
-            (grant.targetId !== null &&
-              grant.targetId !== '00000000-0000-0000-0000-000000000000' &&
-              ((grant.scopeKind === 1 && grant.targetId === user.account?.employeeId) ||
-                [2, 3, 4, 5, 6].includes(grant.scopeKind)))),
-      ),
+    user.grants.some(
+      (grant) =>
+        grant.permission === permission &&
+        ((grant.scopeKind === 7 && grant.targetId === null) ||
+          (grant.targetId !== null &&
+            grant.targetId !== '00000000-0000-0000-0000-000000000000' &&
+            ((grant.scopeKind === 1 && grant.targetId === user.account?.employeeId) ||
+              [2, 3, 4, 5, 6].includes(grant.scopeKind)))),
+    ),
   );
 }
 
@@ -266,11 +266,9 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
   const exportInFlight = useRef(false);
 
   // Load real active sites for dropdown
-  const sitesQuery = useHrQuery(
-    'sites?page=1&pageSize=100&isActive=true',
-    pageOf(siteSchema),
-    ['hr.sites.read'],
-  );
+  const sitesQuery = useHrQuery('sites?page=1&pageSize=100&isActive=true', pageOf(siteSchema), [
+    'hr.sites.read',
+  ]);
   const sitesList = sitesQuery.data?.items ?? [];
 
   useEffect(() => {
@@ -321,7 +319,13 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
     } else if (preset === 'thisMonth') {
       const from = now.toISOString().slice(0, 8) + '01';
       const to = now.toISOString().slice(0, 10);
-      setFilter((prev) => ({ ...prev, from, to, year: String(now.getFullYear()), month: String(now.getMonth() + 1) }));
+      setFilter((prev) => ({
+        ...prev,
+        from,
+        to,
+        year: String(now.getFullYear()),
+        month: String(now.getMonth() + 1),
+      }));
     } else if (preset === 'last30Days') {
       const from = new Date(now.getTime() - 30 * 86400000).toISOString().slice(0, 10);
       const to = now.toISOString().slice(0, 10);
@@ -452,7 +456,8 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
               Reports & Executive Analytics
             </h1>
             <p>
-              Inspect, preview, and export 14 audited operational reports across attendance, workforce, assets, and payroll.
+              Inspect, preview, and export 14 audited operational reports across attendance,
+              workforce, assets, and payroll.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -516,7 +521,17 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
         </nav>
 
         {typesError && (
-          <div style={{ marginTop: '12px', padding: '10px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', color: '#92400e', fontSize: '12px' }}>
+          <div
+            style={{
+              marginTop: '12px',
+              padding: '10px 14px',
+              background: '#fffbeb',
+              border: '1px solid #fde68a',
+              borderRadius: '8px',
+              color: '#92400e',
+              fontSize: '12px',
+            }}
+          >
             Catalog Notice: {typesError}
           </div>
         )}
@@ -551,7 +566,15 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
                 <div className="report-card-footer">
                   <span style={{ textTransform: 'capitalize' }}>{item.category}</span>
                   {isSelected && (
-                    <span style={{ color: '#2563eb', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <span
+                      style={{
+                        color: '#2563eb',
+                        fontWeight: 700,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
                       <CheckCircle2 size={13} /> Active
                     </span>
                   )}
@@ -575,7 +598,14 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
 
           {/* Quick Date Presets */}
           <div className="reports-quick-presets">
-            <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+              }}
+            >
               Presets:
             </span>
             <button
@@ -619,7 +649,12 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
                   type="date"
                   value={filter.date}
                   onChange={(e) =>
-                    setFilter((prev) => ({ ...prev, date: e.target.value, from: e.target.value, to: e.target.value }))
+                    setFilter((prev) => ({
+                      ...prev,
+                      date: e.target.value,
+                      from: e.target.value,
+                      to: e.target.value,
+                    }))
                   }
                 />
               </div>
@@ -658,7 +693,9 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
                     value={filter.from}
                     onChange={(e) => setFilter((prev) => ({ ...prev, from: e.target.value }))}
                   />
-                  {fieldErrors.from && <span style={{ color: '#ef4444', fontSize: '11px' }}>{fieldErrors.from}</span>}
+                  {fieldErrors.from && (
+                    <span style={{ color: '#ef4444', fontSize: '11px' }}>{fieldErrors.from}</span>
+                  )}
                 </div>
                 <div className="reports-field-group">
                   <label>Date To</label>
@@ -667,7 +704,9 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
                     value={filter.to}
                     onChange={(e) => setFilter((prev) => ({ ...prev, to: e.target.value }))}
                   />
-                  {fieldErrors.to && <span style={{ color: '#ef4444', fontSize: '11px' }}>{fieldErrors.to}</span>}
+                  {fieldErrors.to && (
+                    <span style={{ color: '#ef4444', fontSize: '11px' }}>{fieldErrors.to}</span>
+                  )}
                 </div>
               </>
             )}
@@ -756,13 +795,27 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
           <div className="reports-actions-row">
             <Button type="submit" disabled={pending || !reportType}>
               <Search size={16} />
-              <span style={{ marginLeft: '6px' }}>{pending ? 'Executing Query...' : 'Generate Preview'}</span>
+              <span style={{ marginLeft: '6px' }}>
+                {pending ? 'Executing Query...' : 'Generate Preview'}
+              </span>
             </Button>
           </div>
         </form>
 
         {error && (
-          <div style={{ marginTop: '16px', background: '#fef2f2', border: '1px solid #fecdd3', borderRadius: '8px', padding: '14px', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            style={{
+              marginTop: '16px',
+              background: '#fef2f2',
+              border: '1px solid #fecdd3',
+              borderRadius: '8px',
+              padding: '14px',
+              color: '#b91c1c',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}
+          >
             <AlertCircle size={18} />
             <span style={{ fontSize: '13px' }}>{error}</span>
           </div>
@@ -787,11 +840,10 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
                 </span>
                 <span className="reports-chip">
                   <Clock3 size={12} />
-                  Generated: {new Date(result.metadata.generatedAtUtc).toLocaleTimeString()} ({result.metadata.timeZone})
+                  Generated: {new Date(result.metadata.generatedAtUtc).toLocaleTimeString()} (
+                  {result.metadata.timeZone})
                 </span>
-                <span className="reports-chip">
-                  Lock State: {result.metadata.sourceLockStatus}
-                </span>
+                <span className="reports-chip">Lock State: {result.metadata.sourceLockStatus}</span>
               </div>
             </div>
 
@@ -832,7 +884,15 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
 
           {/* Table */}
           {!result.rows.length ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '40px 20px',
+                background: '#f8fafc',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+              }}
+            >
               <Filter size={24} style={{ color: '#94a3b8', margin: '0 auto 8px' }} />
               <p style={{ fontSize: '14px', fontWeight: 600, color: '#334155', margin: 0 }}>
                 No records found matching the specified parameters.
@@ -869,7 +929,10 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
             <div className="reports-export-box">
               <div className="reports-export-box-left">
                 <h3>Export Scoped Report</h3>
-                <p>Download the current result set with cryptographic hash verification and audit entry.</p>
+                <p>
+                  Download the current result set with cryptographic hash verification and audit
+                  entry.
+                </p>
               </div>
 
               <form className="reports-export-form" onSubmit={(e) => void runExport(e)}>
@@ -877,7 +940,12 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
                   disabled={exporting}
                   value={exportFormat}
                   onChange={(e) => setExportFormat(e.target.value)}
-                  style={{ height: '36px', padding: '0 10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                  style={{
+                    height: '36px',
+                    padding: '0 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                  }}
                 >
                   {exportFormatOptions.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -892,22 +960,35 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
                   required
                   value={exportReason}
                   onChange={(e) => setExportReason(e.target.value)}
-                  style={{ height: '36px', width: '280px', padding: '0 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12px' }}
+                  style={{
+                    height: '36px',
+                    width: '280px',
+                    padding: '0 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '12px',
+                  }}
                 />
 
                 <Button type="submit" disabled={exporting || !result.rows.length}>
                   <Download size={14} />
-                  <span style={{ marginLeft: '6px' }}>{exporting ? 'Exporting...' : 'Export File'}</span>
+                  <span style={{ marginLeft: '6px' }}>
+                    {exporting ? 'Exporting...' : 'Export File'}
+                  </span>
                 </Button>
               </form>
             </div>
           )}
 
           {exportError && (
-            <p style={{ margin: '12px 0 0', color: '#b91c1c', fontSize: '12.5px' }}>{exportError}</p>
+            <p style={{ margin: '12px 0 0', color: '#b91c1c', fontSize: '12.5px' }}>
+              {exportError}
+            </p>
           )}
           {exportSuccess && (
-            <p style={{ margin: '12px 0 0', color: '#047857', fontSize: '12.5px' }}>{exportSuccess}</p>
+            <p style={{ margin: '12px 0 0', color: '#047857', fontSize: '12.5px' }}>
+              {exportSuccess}
+            </p>
           )}
         </section>
       )}
@@ -943,7 +1024,8 @@ function formatHeader(key: string): string {
 }
 
 function renderCell(column: string, value: unknown) {
-  if (value === null || value === undefined || value === '') return <span style={{ color: '#cbd5e1' }}>—</span>;
+  if (value === null || value === undefined || value === '')
+    return <span style={{ color: '#cbd5e1' }}>—</span>;
   if (typeof value === 'boolean') {
     return value ? (
       <span className="reports-cell-badge positive">Yes</span>
@@ -958,7 +1040,12 @@ function renderCell(column: string, value: unknown) {
   // Highlight status values
   if (lowerCol.includes('status') || lowerCol.includes('state')) {
     const sLower = str.toLowerCase();
-    if (sLower.includes('present') || sLower.includes('approved') || sLower.includes('completed') || sLower.includes('active')) {
+    if (
+      sLower.includes('present') ||
+      sLower.includes('approved') ||
+      sLower.includes('completed') ||
+      sLower.includes('active')
+    ) {
       return <span className="reports-cell-badge positive">{str}</span>;
     }
     if (sLower.includes('late') || sLower.includes('pending') || sLower.includes('warning')) {

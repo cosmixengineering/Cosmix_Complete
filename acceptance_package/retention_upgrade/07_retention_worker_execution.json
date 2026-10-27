@@ -1,0 +1,13 @@
+{
+  "WorkerType": "PunchRetentionWorker",
+  "Status": "INITIALIZED_AND_LIFECYCLE_VERIFIED",
+  "IntervalHours": 24,
+  "ConfiguredRetentionDays": 180,
+  "CycleExecuted": true,
+  "CycleResult": {
+    "RecordsRedacted": 0,
+    "RunAt": "2026-10-27T09:33:21.4462901+00:00",
+    "Message": "Redacted 0 GPS punch coordinates and processed 0 legacy punch audit payloads older than 180 days."
+  },
+  "Lifecycle": "ExecuteCycleAsync, StartAsync and StopAsync executed cleanly with PeriodicTimer scheduling."
+}

@@ -40,11 +40,35 @@ public sealed class StatutoryContributionRepository(CosmixDbContext db) : IStatu
     public async Task<IReadOnlyList<EmployeeStatutoryRegistration>> GetAllRegistrationsForSchemeAsync(StatutoryScheme scheme, CancellationToken ct) =>
         await db.EmployeeStatutoryRegistrations.AsNoTracking().Where(r => r.Scheme == scheme).ToListAsync(ct);
 
+    public async Task<Cosmix.Domain.HR.PayrollAccounting.PayrollObligation?> GetFinalizedObligationForMonthAsync(DateOnly month, CancellationToken ct) =>
+        await db.PayrollObligations
+            .Include(o => o.Batch)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync(o => o.State == Cosmix.Domain.HR.PayrollAccounting.PayrollObligationState.Finalized
+                && o.Batch.PeriodStart.Year == month.Year
+                && o.Batch.PeriodStart.Month == month.Month, ct);
+
+    public Task<Cosmix.Domain.HR.PayrollAccounting.PayrollObligation?> GetObligationByIdAsync(Guid id, CancellationToken ct) =>
+        db.PayrollObligations.Include(o => o.Batch).FirstOrDefaultAsync(o => o.Id == id, ct);
+
+    public Task<Cosmix.Domain.HR.PayrollAccounting.PayrollJournalEntry?> GetJournalEntryByStatutoryContributionIdAsync(Guid contributionId, CancellationToken ct) =>
+        db.PayrollJournalEntries.FirstOrDefaultAsync(j => j.StatutoryContributionId == contributionId, ct);
+
+    public async Task AddJournalEntryAsync(Cosmix.Domain.HR.PayrollAccounting.PayrollJournalEntry entry, CancellationToken ct) =>
+        await db.PayrollJournalEntries.AddAsync(entry, ct);
+
     public async Task AddContributionAsync(StatutoryContribution contribution, CancellationToken ct) =>
         await db.StatutoryContributions.AddAsync(contribution, ct);
 
     public async Task AddRegistrationAsync(EmployeeStatutoryRegistration registration, CancellationToken ct) =>
         await db.EmployeeStatutoryRegistrations.AddAsync(registration, ct);
+
+    public async Task AcquireStatutoryPostingLockAsync(Guid contributionId, CancellationToken ct)
+    {
+        var resource = $"Cosmix.StatutoryPosting.{contributionId:N}";
+        await db.Database.ExecuteSqlAsync(
+            $"DECLARE @owner varchar(32) = CASE WHEN @@TRANCOUNT > 0 THEN 'Transaction' ELSE 'Session' END; DECLARE @result int; EXEC @result = sys.sp_getapplock @Resource = {resource}, @LockMode = 'Exclusive', @LockOwner = @owner, @LockTimeout = 10000; IF @result < 0 THROW 51003, 'Statutory posting is temporarily locked by another transaction.', 1;", ct);
+    }
 
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
 }

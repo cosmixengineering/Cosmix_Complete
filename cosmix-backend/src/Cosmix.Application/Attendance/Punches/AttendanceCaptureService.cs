@@ -22,7 +22,7 @@ using Cosmix.Domain.Authentication;
 
 namespace Cosmix.Application.Attendance.Punches;
 
-public sealed class AttendanceCaptureService(AttendanceOperation operation, IAttendanceCaptureRepository repository,
+public sealed partial class AttendanceCaptureService(AttendanceOperation operation, IAttendanceCaptureRepository repository,
     IIndividualRosterResolver rosters, ISiteGeofenceRepository geofences,
     IFaceVerificationProvider face, FaceVerificationPolicy facePolicy, TimeProvider clock,
     IAccountAccessReader access, IFaceTemplateStore templates, INotificationOutbox notifications,
@@ -45,26 +45,33 @@ public sealed class AttendanceCaptureService(AttendanceOperation operation, IAtt
             request.IsOffline && !request.DeviceCapturedAtUtc.HasValue ||
             action == PunchAction.CheckOut && (request.FaceAttemptId.HasValue || request.Proof is not null))
             throw AttendanceOperation.Invalid("invalid_punch_evidence");
-        // The secret itself is never copied to a punch or audit snapshot.
-        var payload = new { Action = action, request.IsOffline, request.DeviceCapturedAtUtc, request.Latitude,
+        // The secret itself is never copied to a punch or audit snapshot. Full location
+        // remains only in its bounded-retention raw punch, not in protected operation files.
+        var requestEvidence = new { Action = action, request.IsOffline, request.DeviceCapturedAtUtc, request.Latitude,
             request.Longitude, request.AccuracyMeters, request.FaceAttemptId, ProofDigest = request.Proof is null ? null : FaceService.Digest(request.Proof) };
+        var payload = new { requestEvidence.Action, requestEvidence.IsOffline, requestEvidence.DeviceCapturedAtUtc,
+            requestEvidence.FaceAttemptId, requestEvidence.ProofDigest,
+            // Bind the complete evidence to this request key and capture timestamp rather
+            // than publishing a reusable low-entropy hash of just the coordinates.
+            RequestDigest = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { key, requestEvidence }))) };
         return operation.WriteAsync(AttendanceCapturePermissions.Capture, "attendance.punch.submit", null, key, payload,
             "Employee submitted mobile attendance evidence", context, async (actor, token) =>
             {
                 var employeeId = actor.Identity.EmployeeId;
-                if (request.Latitude.HasValue && request.Longitude.HasValue && locationConsent is not null)
+                if ((request.Latitude.HasValue || request.Longitude.HasValue) && locationConsent is not null)
                 {
                     var activePolicy = await locationConsent.GetActivePolicyAsync(token);
-                    if (activePolicy is not null && activePolicy.IsActive)
+                    if (activePolicy is null || !activePolicy.IsActive)
                     {
-                        var consent = await locationConsent.GetConsentAsync(employeeId, activePolicy.Version, token);
-                        if (consent is null)
-                        {
-                            throw AttendanceOperation.Invalid("location_consent_required_before_gps_submission");
-                        }
+                        throw AttendanceOperation.Invalid("location_notice_not_configured");
+                    }
+                    var consent = await locationConsent.GetConsentAsync(employeeId, activePolicy.Version, token);
+                    if (consent is null)
+                    {
+                        throw AttendanceOperation.Invalid("location_consent_required_before_gps_submission");
                     }
                 }
-                var fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { actor.DeviceId, payload })));
+                var fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { actor.DeviceId, payload = requestEvidence })));
                 // This unique evidence key outlives the short-lived protected HTTP receipt.
                 var duplicate = await repository.FindPunchAsync(employeeId, key, token);
                 if (duplicate is not null)

@@ -21,6 +21,14 @@ public sealed class PayrollHandoffBatchConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.PreparedByUserId).HasMaxLength(200).IsRequired();
         builder.HasIndex(x => x.BatchReference).IsUnique();
         builder.Property(x => x.RowVersion).IsRowVersion();
+        builder.Ignore(x => x.CalculationVersion);
+        builder.Ignore(x => x.PreviewFingerprint);
+        builder.Ignore(x => x.FrozenFingerprint);
+        builder.Ignore(x => x.CalculationPrivateReference);
+        builder.Ignore(x => x.ReviewState);
+        builder.Ignore(x => x.HrApprovalRequestId);
+        builder.Ignore(x => x.HrApprovedByUserId);
+        builder.Ignore(x => x.HrApprovedAt);
         builder.HasOne(x => x.ApprovalRequest).WithMany().HasForeignKey(x => x.ApprovalRequestId).OnDelete(DeleteBehavior.Restrict);
         builder.Property(x => x.LockedByUserId).HasMaxLength(200);
     }

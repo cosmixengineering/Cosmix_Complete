@@ -418,6 +418,56 @@ await Case("decision replay rechecks exact Admin authority after receipt read", 
     };
     await Fails(() => f.Approve(p, "work-replay-authority-review"), "access_denied", 403);
 });
+await Case("missing submission fact cannot hide an approved allocation", async () => {
+    var f = await WorkFixture.Create(); var p = await f.Submit(0, 30, "work-missing-submission");
+    await f.Approve(p, "work-missing-submission-review");
+    f.Parent.Audits.RemoveAll(x => x.EventType == LeaveRecoveryWorkEvidence.Submitted &&
+        x.TargetType == LeaveRecoveryWorkEvidence.FactTarget && x.TargetId == p.Id.ToString());
+    await Fails(() => f.Reader.ReadReservedAsync(f.Parent.Employee, default), "leave_recovery_work_evidence_unavailable");
+    await Fails(() => f.Progress(), "leave_recovery_work_evidence_unavailable");
+    await Fails(() => f.Submit(0, 30, "work-missing-submission-replacement"), "leave_recovery_work_evidence_unavailable");
+    Check(f.Approvals.Count == 1 && f.Decisions.Count == 1, "Missing submission evidence cannot permit replacement allocation");
+});
+foreach (var state in new[] { ApprovalState.Returned, ApprovalState.Rejected })
+    await Case("review lifecycle and durable retry " + state, async () => {
+        var f = await WorkFixture.Create();
+        Check((await f.Progress()).Status == "commitment_only", "Promise alone has no fulfilled work");
+        var p = await f.Submit(0, 30, "work-terminal-claim");
+        var progress = await f.Progress();
+        Check(progress.FulfilledMinutes == 0 && progress.RemainingMinutes == 60 && progress.Claims.Single().State == ApprovalState.Pending,
+            "Pending actual work does not reduce the obligation");
+        f.Admin();
+        Check((await f.Service.QueueAsync(f.Parent.Context, default)).Single().Id == p.Id, "Pending claim enters reviewer queue");
+        var detail = await f.Service.DetailAsync(f.Parent.Employee, p.Id, false, f.Parent.Context, default);
+        Check(detail.Request.Intervals.Single().SessionId == f.Session.Id && detail.RetainedSource.Parent.Commitment.Id == f.Commitment.Id,
+            "Review detail retains the selected session and commitment");
+        var request = new DecideLeaveRecoveryWorkRequest(p.Version, state, "Synthetic non-credit decision");
+        var decided = await f.Service.DecideAsync(f.Parent.Employee, p.Id, request, "work-terminal-review", f.Parent.Context, default);
+        Check(decided.State == state && decided.ApprovedMinutes == 0 && (await f.Service.QueueAsync(f.Parent.Context, default)).Count == 0,
+            "Return or rejection closes the queue without work credit");
+        f.Parent.Receipts.Clear();
+        f.Session = f.Session with { Revision = 2 };
+        var replay = await f.Service.DecideAsync(f.Parent.Employee, p.Id, request, "work-terminal-review", f.Parent.Context, default);
+        Check(replay == decided && f.Decisions.Count == 1 && f.Notifications.Count == 2,
+            "Non-credit decision reconciles without receipts despite later source change");
+        f.Parent.Receipts.Clear();
+        await Fails(() => f.Service.DecideAsync(f.Parent.Employee, p.Id, request with { Reason = "Changed reason" },
+            "work-terminal-review", f.Parent.Context, default), "leave_recovery_work_already_decided");
+        await Fails(() => f.Approve(p, "work-terminal-reopen"), "leave_recovery_work_already_decided");
+        progress = await f.Progress();
+        Check(progress.FulfilledMinutes == 0 && progress.RemainingMinutes == 60 &&
+            (await f.Reader.ReadReservedAsync(f.Parent.Employee, default)).Count == 0, "Closed non-credit claim leaves all recovery minutes outstanding");
+        var replacement = await f.Submit(0, 60, "work-terminal-replacement");
+        await f.Approve(replacement, "work-terminal-replacement-review");
+        progress = await f.Progress();
+        Check(progress.Status == "fulfilled" && progress.Claims.Count == 2 && progress.FulfilledMinutes == 60,
+            "Fresh current-source claim fulfils work while preserving closed history");
+    });
+await Case("detail read rechecks reviewer authority after protected evidence IO", async () => {
+    var f = await WorkFixture.Create(); var p = await f.Submit(0, 30, "work-detail-authority"); f.Admin();
+    f.Parent.OnRead = _ => f.Parent.FixedAdmin = false;
+    await Fails(() => f.Service.DetailAsync(f.Parent.Employee, p.Id, false, f.Parent.Context, default), "access_denied", 403);
+});
 Console.WriteLine($"Recovery work claims: {checks - failed}/{checks} checks passed");
 Environment.ExitCode = failed == 0 ? 0 : 1;
 

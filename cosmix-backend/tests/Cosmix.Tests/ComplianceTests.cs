@@ -215,10 +215,9 @@ public class ComplianceTests
 
     private sealed class FakePunchRetentionRepository : IPunchRetentionRepository
     {
-        public Task<IReadOnlyList<Guid>> GetUnredactedPunchIdsOlderThanAsync(DateTimeOffset thresholdUtc, int batchSize, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<Guid>>([]);
-
-        public Task AddRedactionsAsync(IReadOnlyList<PunchLocationRedaction> redactions, CancellationToken ct) => Task.CompletedTask;
-        public Task SaveChangesAsync(CancellationToken ct) => Task.CompletedTask;
+        public Task<int> RedactBatchAsync(DateTimeOffset thresholdUtc, DateTimeOffset redactedAtUtc,
+            int retentionDays, int batchSize, CancellationToken ct) => Task.FromResult(0);
+        public Task<int> ExpireLegacyAuditBatchAsync(DateTimeOffset thresholdUtc, DateTimeOffset atUtc,
+            int batchSize, CancellationToken ct) => Task.FromResult(0);
     }
 }

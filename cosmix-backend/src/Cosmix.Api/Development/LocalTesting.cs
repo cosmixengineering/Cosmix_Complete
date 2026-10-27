@@ -34,7 +34,7 @@ internal static class LocalTesting
         var profile = Environment.GetEnvironmentVariable("COSMIX_FRESH_TESTING_HOST");
         var existing = Environment.GetEnvironmentVariable("COSMIX_EXISTING_TESTING_HOST");
         if (string.IsNullOrEmpty(profile) && string.IsNullOrEmpty(existing)) return WebApplication.CreateBuilder(setupLocalTesting ? [] : args);
-        if (!string.IsNullOrEmpty(existing) ? (existing != ExistingHostProfile && existing != CurrentHrTestingGuard.Profile && existing != AuthOnlyTestingGuard.Profile && existing != HrBusinessTestingGuard.Profile && existing != HrPermissionP1Guard.Profile && existing != HrOutstationO1Guard.Profile) || !string.IsNullOrEmpty(profile) || setupLocalTesting || args.Length != 0 :
+        if (!string.IsNullOrEmpty(existing) ? (existing != ExistingHostProfile && existing != CurrentHrTestingGuard.Profile && existing != AuthOnlyTestingGuard.Profile && existing != AuthOnlyTestingGuard.October26Profile && existing != AuthOnlyTestingGuard.October26ReadsProfile && existing != HrBusinessTestingGuard.Profile && existing != HrPermissionP1Guard.Profile && existing != HrOutstationO1Guard.Profile && existing != HrVehicleV2Guard.Profile && existing != HrVehicleV2ContinuationGuard.Profile) || !string.IsNullOrEmpty(profile) || setupLocalTesting || args.Length != 0 :
             (profile != FreshLocalTestingGuard.Profile && profile != LocalTestingA02Guard.Profile) ||
             (args.Length != 0 && !(setupLocalTesting && args.Length == 1 && args[0] == "setup-local-testing")))
             throw new InvalidOperationException("Fresh local-testing requires its reviewed configuration-only invocation.");
@@ -52,7 +52,9 @@ internal static class LocalTesting
     internal static bool Configure(WebApplicationBuilder builder)
     {
         var path = Environment.GetEnvironmentVariable("COSMIX_LOCAL_TESTING_SETTINGS");
-        if (HrOutstationO1Guard.IsSelected)
+        if (HrVehicleV2ContinuationGuard.AnySelected)
+            HrVehicleV2Host.ValidatePrivatePaths(path);
+        else if (HrOutstationO1Guard.IsSelected)
             HrOutstationO1Host.ValidatePrivatePaths(path);
         else if (HrPermissionP1Guard.IsSelected)
             HrPermissionP1Host.ValidatePrivatePaths(path);
@@ -79,6 +81,10 @@ internal static class LocalTesting
             HrPermissionP1Guard.ValidateConfiguration(builder.Configuration, path);
         if (HrOutstationO1Guard.IsSelected)
             HrOutstationO1Guard.ValidateConfiguration(builder.Configuration, path);
+        if (HrVehicleV2Guard.IsSelected)
+            HrVehicleV2Guard.ValidateConfiguration(builder.Configuration, path);
+        if (HrVehicleV2ContinuationGuard.IsSelected)
+            HrVehicleV2ContinuationGuard.ValidateConfiguration(builder.Configuration, path);
         var enabled = builder.Configuration.GetValue<bool>("LocalTesting:Enabled");
         if (!enabled)
         {
@@ -100,7 +106,11 @@ internal static class LocalTesting
             !string.IsNullOrEmpty(builder.Configuration["MobileAuthentication:Sms:BearerToken"]))
             throw new InvalidOperationException("Local testing must not configure an external SMS gateway.");
         var fresh = FreshTarget(builder.Configuration);
-        if (HrOutstationO1Guard.IsSelected)
+        if (HrVehicleV2ContinuationGuard.AnySelected)
+        {
+            builder.WebHost.UseUrls(HrVehicleV2Guard.Url);
+        }
+        else if (HrOutstationO1Guard.IsSelected)
         {
             builder.WebHost.UseUrls(HrOutstationO1Guard.Url);
         }
@@ -172,6 +182,11 @@ internal static class LocalTesting
 
     internal static void ConfigureExistingOwnedHost(IServiceCollection services)
     {
+        if (HrVehicleV2ContinuationGuard.AnySelected)
+        {
+            HrVehicleV2Host.ConfigureServices(services);
+            return;
+        }
         if (HrOutstationO1Guard.IsSelected)
         {
             HrOutstationO1Host.ConfigureServices(services);
@@ -234,6 +249,15 @@ internal static class LocalTesting
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<CosmixDbContext>();
         var configuration = scope.ServiceProvider.GetService<IConfiguration>();
+        if (HrVehicleV2ContinuationGuard.AnySelected)
+        {
+            await HrVehicleV2Database.VerifyAsync(db, CancellationToken.None,
+                configuration?.GetValue<bool>("LocalTesting:AllowUnencryptedLocalPipe") == true);
+            if (HrVehicleV2ContinuationGuard.IsSelected)
+                await HrVehicleV2ContinuationDatabase.VerifyAsync(db, CancellationToken.None);
+            else await HrVehicleV2Database.VerifyUnusedAsync(db, CancellationToken.None);
+            return;
+        }
         if (configuration is not null && FreshTarget(configuration) is { } fresh)
             await VerifyFreshDatabaseAsync(db, fresh, CancellationToken.None);
         var existing = Environment.GetEnvironmentVariable("COSMIX_EXISTING_TESTING_HOST") == ExistingHostProfile;
@@ -291,6 +315,11 @@ internal static class LocalTesting
 
     internal static void MapEndpoints(WebApplication app)
     {
+        if (HrVehicleV2ContinuationGuard.AnySelected)
+        {
+            HrVehicleV2Host.MapEndpoints(app);
+            return;
+        }
         app.MapGet("/api/v1/auth/web/local-testing", (HttpContext context) =>
         {
             context.Response.Headers.CacheControl = "no-store";

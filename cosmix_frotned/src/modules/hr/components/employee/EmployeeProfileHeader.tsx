@@ -1,15 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  Camera,
-  Clock,
-  MoreHorizontal,
-  Navigation,
-  Pencil,
-  Upload,
-  User,
-} from 'lucide-react';
+import { Camera, Clock, MoreHorizontal, Navigation, Pencil, Upload, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { request } from '@/services/api/http-client';
@@ -67,9 +59,7 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
   const profile = profileQuery.data?.profile;
 
   // Find latest active ProfilePhoto document (type = 9) that is verified and available
-  const photoDoc = docsQuery.data?.find(
-    (d) => d.type === 9 && d.isAvailable && d.scanStatus === 1,
-  );
+  const photoDoc = docsQuery.data?.find((d) => d.type === 9 && d.isAvailable && d.scanStatus === 1);
 
   // Fetch actual image blob for the profile photo
   useEffect(() => {

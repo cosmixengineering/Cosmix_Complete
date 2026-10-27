@@ -10,7 +10,7 @@ using Cosmix.Domain.HR.Employees;
 
 namespace Cosmix.Application.HR.Compensation;
 
-public sealed class EmployeeCompensationService(EmployeeOperation operation, IEmployeeHiringRepository hiring,
+public sealed partial class EmployeeCompensationService(EmployeeOperation operation, IEmployeeHiringRepository hiring,
     IEmployeeLifecycleRepository lifecycle, IEmployeeCompensationRepository repository, IPrivateFileStore files,
     MobileAuthenticationOptions options)
 {
@@ -21,25 +21,7 @@ public sealed class EmployeeCompensationService(EmployeeOperation operation, IEm
         operation.WriteAsync([EmployeeCompensationPermissions.Request, EmployeeCompensationPermissions.Read],
             "hr.employee.compensation.requested", employeeId, key, input, context, async (actor, token) =>
             {
-                if (input is null) throw EmployeeOperation.Invalid("invalid_compensation_request");
-                var terms = ValidateTerms(input.BaseAmount, input.GrossAmount, input.Currency, input.WageBasis, input.PaymentMethod);
-                ValidateReason(input.Reason, true, 1000);
-                var employee = await EmployeeAsync(employeeId, token);
-                hiring.ExpectVersion(employee, OrganizationOperation.Version(input.ExpectedVersion));
-                await RequireEligibleAsync(employee, actor.Now, token);
-                var today = Today(actor.Now);
-                var window = await WindowAsync(employeeId, today, token);
-                ValidateSchedule(employee, window.Latest, input.ExpectedCompensationId, input.EffectiveFrom, today);
-                if (await repository.HasPendingRequestAsync(employeeId, token))
-                    throw EmployeeOperation.Conflict("compensation_request_outstanding");
-                var snapshot = new CompensationChangeSnapshot(1, employeeId,
-                    window.Latest is null ? null : Map(window.Latest), terms, input.EffectiveFrom, input.Reason.Trim());
-                var evidence = await files.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(snapshot), Purpose(employeeId), token);
-                var request = new ApprovalRequest(RequestType, employeeId, actor.Identity.AccountId.ToString(),
-                    JsonSerializer.Serialize(evidence), 1, actor.Now);
-                repository.AddRequest(request);
-                await hiring.SaveChangesAsync(token);
-                return EmployeeHiringService.Result(employee) with { CompensationRequestId = request.Id };
+                return await StageInTransactionAsync(employeeId, input, actor, token);
             }, ct);
 
     public Task<EmployeeWriteResult> DecideAsync(Guid employeeId, Guid requestId, DecideCompensationChange input,

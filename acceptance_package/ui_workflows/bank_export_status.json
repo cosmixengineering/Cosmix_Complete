@@ -1,0 +1,6 @@
+{
+  "InternalCsvBankAdvice": "VERIFIED (PayrollHandoffService produces CSV bank advice with real account numbers; fake IBAN fallbacks removed; does not alter payment ledger state)",
+  "CorporateHostToHostLayout": "BLOCKED",
+  "Reason": "Corporate bank file layout specification (e.g., HBL, Meezan, MCB bulk payment direct file format) has not been provided by the company.",
+  "RequiredNextStepsToUnblock": "Obtain and configure corporate bank partner file specification."
+}

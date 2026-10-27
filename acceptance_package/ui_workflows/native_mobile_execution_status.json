@@ -1,0 +1,8 @@
+{
+  "Platform": "React Native (cosmix_mobile)",
+  "TypeScriptCheck": "PASS (\u0060npx tsc --noEmit\u0060 exited code 0 with 0 errors)",
+  "ConsentGateLogic": "PASS (LocationConsentGate blocks location acquisition when hasActivePolicy is false or unconsented)",
+  "NativeRuntimeStatus": "BLOCKED",
+  "Reason": "No native Android emulator, iOS simulator, or physical hardware device is installed or provisioned in this Windows server execution environment (\u0060adb\u0060 not found).",
+  "RequiredNextStepsToUnblock": "1. Install Android SDK command-line tools and platform-tools (\u0060adb\u0060). 2. Launch an AVD (\u0060emulator -avd \u003Cname\u003E\u0060). 3. Run \u0060npm run android\u0060 in cosmix_mobile to execute on device/emulator."
+}

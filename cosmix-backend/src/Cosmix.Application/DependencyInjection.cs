@@ -127,6 +127,7 @@ public static class DependencyInjection
         services.AddScoped<AttendancePayrollInputService>();
         services.AddScoped<IMonthLockFinancialReader, AttendanceMonthLockFinancialReader>();
         services.AddScoped<AttendancePayrollAttestationService>();
+        services.AddScoped<AttendancePayrollActivationService>();
         services.AddScoped<IAttendancePayrollFinancialSourceReader, AttendancePayrollFinancialSourceReader>();
         services.AddScoped<AttendancePayrollFinancialService>();
         services.AddScoped<IAttendancePayrollFinancialMonthReader>(provider =>

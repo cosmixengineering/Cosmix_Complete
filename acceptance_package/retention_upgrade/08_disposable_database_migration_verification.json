@@ -1,0 +1,39 @@
+{
+  "DisposableDatabaseName": "Cosmix_Disposable_c3cac8d39a69411aab606e34ff4c7deb",
+  "IsolationConfirmed": true,
+  "MigrationsTested": [
+    "20261022133924_AddComplianceWorkstreams",
+    "20261026193000_PersistStatutoryEmployeeItemsAndJournalLinks",
+    "20261027120000_PersistFinancialPostingMetadataAndEntitlements",
+    "20261027133000_PersistPayrollFinanceSetupTables"
+  ],
+  "VerifiedColumns": [
+    "PayrollJournalEntries.Scheme",
+    "PayrollJournalEntries.StatutoryContributionId",
+    "StatutoryContributions.EmployeeItemsJson",
+    "StatutoryContributions.HasEmployeeEntries",
+    "StatutoryContributions.JournalEntryId",
+    "StatutoryContributions.ObligationId",
+    "PayrollJournalEntries.AccountingPeriodId",
+    "PayrollJournalEntries.PostingDate",
+    "PayrollJournalEntries.PostingProfileId",
+    "PayrollJournalEntries.SourceKey",
+    "PayrollObligations.EmployeeEntitlementsJson",
+    "PayrollObligations.PeriodEndExclusive",
+    "PayrollObligations.PeriodStart",
+    "PayrollObligations.SourceFingerprint"
+  ],
+  "VerifiedIndexes": [
+    "IX_PayrollJournalEntries_StatutoryContributionId",
+    "IX_StatutoryContributions_JournalEntryId",
+    "IX_StatutoryContributions_ObligationId",
+    "IX_PayrollJournalEntries_AccountingPeriodId",
+    "IX_PayrollJournalEntries_PostingProfileId",
+    "IX_PayrollJournalEntries_SourceKey"
+  ],
+  "DataPreservationVerified": true,
+  "ReloadAcrossDisposedContext": true,
+  "Lifecycle": "Created -\u003E Disposed -\u003E Reloaded -\u003E Approved -\u003E Posted -\u003E Exported",
+  "ExportedCsvSample": "Scheme,ContributionMonth,EmployerRegistrationNumber,EmployeeId,RegistrationNumber,EmployeeContribution,EmployerContribution,TotalContribution,Currency,State\r\nEOBI,2026-11-01,EMPLOYER-REG-999,a8421317-97a7-4eb1-b827-42d05525b9f3,REG-A-DISP,1200.00,6000.00,7200.00,PKR,Posted\r\nEOBI,2026-11-01,EMPLOYER-REG-999,4042c788-bbd1-442b-89d1-e3b9be18e99c,REG-B-DISP,800.00,4000.00,4800.00,PKR,Posted\r\nTOTAL,2026-11-01,EMPLOYER-REG-999,COMPANY_TOTAL,,2000.00,10000.00,12000.00,PKR,Posted\r\n",
+  "Status": "VERIFIED_SAFE_ISOLATED_MIGRATION"
+}

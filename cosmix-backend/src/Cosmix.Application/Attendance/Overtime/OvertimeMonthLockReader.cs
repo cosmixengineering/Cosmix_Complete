@@ -19,9 +19,7 @@ public sealed partial class OvertimeService : IMonthLockOvertimeReader
             var data = await Evidence(dependency.Request.EmployeeId, dependency.Request.Id, ct);
             var scopes = data.Snapshot.Inputs.OriginalScopes.Concat(await summaries.ResourceScopesAsync(
                 dependency.Request.EmployeeId, data.Row.BusinessDate, data.Row.BusinessDate, ct)).ToArray();
-            if (!AttendanceScopeEvaluation.Allows(actor.Identity,
-                await access.GetGrantsAsync(actor.Identity.AccountId, actor.Now, ct), OvertimePermissions.FinancialRead, scopes))
-                throw AttendanceOperation.Denied();
+            await operation.RequireScopedPermissionAsync(actor, OvertimePermissions.FinancialRead, scopes, ct);
             if (data.Row.BusinessDate < start || data.Row.BusinessDate >= end ||
                 MonthLockEvidence.Fingerprint(data.Row.Request) != MonthLockEvidence.Fingerprint(dependency.Request) ||
                 data.Row.Approval.Id != dependency.Approval!.Id || data.Row.Decision?.Id != dependency.Decision!.Id ||

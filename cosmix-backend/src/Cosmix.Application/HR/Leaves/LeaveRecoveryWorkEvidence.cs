@@ -77,6 +77,10 @@ public sealed class LeaveRecoveryWorkEvidence(ILeaveRecoveryWorkRepository repos
         var facts = await repository.FactsAsync(employee, Submitted, ct);
         if (facts.Count > 1000 || facts.Select(x => x.TargetId).Distinct().Count() != facts.Count)
             throw AttendanceOperation.Conflict("leave_recovery_work_history_limit");
+        var submittedIds = facts.Select(x => x.TargetId).ToHashSet(StringComparer.Ordinal);
+        // A missing submission fact must not silently release a retained decision's allocation.
+        if ((await repository.FactsAsync(employee, Decided, ct)).Any(x => !submittedIds.Contains(x.TargetId)))
+            throw AttendanceOperation.Conflict("leave_recovery_work_evidence_unavailable");
         var result = new List<LeaveRecoveryWorkEvidenceRow>();
         foreach (var fact in facts)
         {

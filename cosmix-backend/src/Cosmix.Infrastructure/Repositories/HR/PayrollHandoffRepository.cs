@@ -16,6 +16,8 @@ namespace Cosmix.Infrastructure.Repositories.HR;
 /// history is appended here so a handoff line and its settlement share one database transaction.</summary>
 public sealed class PayrollHandoffRepository(CosmixDbContext db) : IPayrollHandoffRepository, IAllowanceSettlementStore
 {
+    public Task<ApprovalRequest?> ApprovalAsync(Guid id,CancellationToken ct)=>db.ApprovalRequests.AsNoTracking().SingleOrDefaultAsync(x=>x.Id==id,ct);
+    public async Task<IReadOnlyList<ApprovalDecision>> DecisionRecordsAsync(Guid id,CancellationToken ct)=>await db.ApprovalDecisions.AsNoTracking().Where(x=>x.ApprovalRequestId==id).ToArrayAsync(ct);
     private const int MaximumSourceRows = 65536;
 
     public async Task<Cosmix.Domain.Common.Audit.AuditEvent?> LoanPostingAuditAsync(Guid ledgerEntryId, CancellationToken ct)

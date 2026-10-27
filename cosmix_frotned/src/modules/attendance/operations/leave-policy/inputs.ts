@@ -85,6 +85,9 @@ export function normalizedRules(input: PolicyRules): PolicyRules {
   if (late.resetPeriod !== 'weekly') late.weekStartsOn = null;
   if (rules.ordinaryPay.salaryDivisor !== 'fixed_days')
     rules.ordinaryPay.fixedSalaryDivisorDays = null;
+  if (rules.overtime == null) delete rules.overtime;
+  else if (rules.overtime.salaryDivisor !== 'fixed_days')
+    rules.overtime.fixedSalaryDivisorDays = null;
   return rules;
 }
 export const stateNames = ['Pending', 'Approved', 'Returned', 'Rejected', 'Cancelled'];

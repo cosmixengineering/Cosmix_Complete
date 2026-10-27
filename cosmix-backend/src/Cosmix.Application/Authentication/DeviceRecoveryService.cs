@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Cosmix.Application.Authentication.Access;
 using Cosmix.Domain.Authentication;
+using Cosmix.Domain.Authentication.Mobile;
 using Cosmix.Domain.Common.Audit;
 
 namespace Cosmix.Application.Authentication;
@@ -8,7 +9,8 @@ namespace Cosmix.Application.Authentication;
 public sealed record ApproveDeviceRecoveryRequest(
     [Required, StringLength(500)] string ApprovalReference,
     [Required, StringLength(12, MinimumLength = 12)] string ExpectedAccountVersion,
-    [Required, StringLength(12, MinimumLength = 12)] string ExpectedDeviceVersion);
+    [Required, StringLength(12, MinimumLength = 12)] string ExpectedDeviceVersion,
+    Guid? ReplacementChallengeId = null);
 public sealed record DeviceRecoveryApprovalResponse(Guid PreviousDeviceId, Guid DeviceId,
     string AccountVersion, string DeviceVersion, string NextStep = "request_fresh_sms_otp");
 public sealed record DeviceRecoveryDeviceResponse(Guid Id, string Platform, string Name,
@@ -52,23 +54,55 @@ public sealed class DeviceRecoveryService(IAuthenticationRepository authenticati
             administrators.ExpectAccountVersion(account, accountVersion);
             var previous = await authentication.GetDeviceAsync(accountId, deviceId, token)
                 ?? throw new AuthenticationFailure("access_resource_not_found", 404);
-            // This historical row is never updated; the serializable transaction holds its version read through commit.
+            // Version and device state are checked under the authentication lock.
             if (!previous.RowVersion.SequenceEqual(deviceVersion)) throw new AuthenticationFailure("access_version_conflict", 409);
+            var active = await authentication.GetNonRevokedDevicesAsync(accountId, token);
             var latest = await authentication.FindDeviceAsync(accountId, previous.DeviceIdentifierHash, token);
-            if (previous.RevokedAt is null || previous.RevokedAt > review.Now || previous.RegisteredAt > review.Now ||
-                previous.Platform is not ("android" or "ios") || previous.DeviceIdentifierHash.Length != 64 ||
-                !previous.DeviceIdentifierHash.All(char.IsAsciiHexDigit) || latest?.Id != previous.Id)
+            var revokedRecovery = request.ReplacementChallengeId is null;
+            if (previous.RegisteredAt > review.Now || previous.Platform is not ("android" or "ios") ||
+                previous.DeviceIdentifierHash.Length != 64 || !previous.DeviceIdentifierHash.All(char.IsAsciiHexDigit) ||
+                (revokedRecovery && (previous.RevokedAt is null || previous.RevokedAt > review.Now || latest?.Id != previous.Id)) ||
+                (!revokedRecovery && previous.RevokedAt is not null))
+                throw new AuthenticationFailure("device_recovery_conflict", 409);
+
+            MobileOtpChallenge? replacementProof = null;
+            var replacementHash = previous.DeviceIdentifierHash;
+            var replacementPlatform = previous.Platform;
+            var replacementName = previous.DisplayName;
+            if (request.ReplacementChallengeId is { } proofId)
+            {
+                replacementProof = await authentication.GetChallengeAsync(proofId, token);
+                if (replacementProof is null) throw new AuthenticationFailure("device_recovery_conflict", 409);
+                var matching = await authentication.FindDeviceAsync(accountId, replacementProof.DeviceHash, token);
+                if (matching is { RevokedAt: null } && matching.Id != previous.Id)
+                    throw new AuthenticationFailure("device_recovery_conflict", 409);
+                replacementHash = replacementProof.DeviceHash;
+                replacementPlatform = replacementProof.Platform;
+                replacementName = replacementProof.DeviceName;
+            }
+
+            var openChallenges = await authentication.GetOpenChallengesAsync(accountId, token);
+            var sessions = await authentication.GetSessionsAsync(accountId, token);
+            // All business reads precede the last authority check before mutation. The
+            // authentication lock prevents concurrent writes, not scheduled expiry.
+            review = await RequireReviewAsync(review.Actor, accountId, token);
+            var approvalAt = clock.GetUtcNow();
+            if (replacementProof is not null && !SingleDeviceRules.CanApproveReplacement(replacementProof,
+                    accountId, review.Target.Phone?.Id, account.SecurityVersion, approvalAt))
                 throw new AuthenticationFailure("device_recovery_conflict", 409);
 
             account.InvalidateSecurityVersion();
-            foreach (var proof in await authentication.GetOpenChallengesAsync(accountId, token)) proof.Revoke(review.Now);
-            foreach (var session in await authentication.GetSessionsAsync(accountId, token))
-                if (!session.RevokedAt.HasValue) session.Revoke("device-recovery", review.Now);
-            var replacement = new RegisteredDevice(accountId, previous.DeviceIdentifierHash, previous.Platform,
-                previous.DisplayName, review.Now);
+            foreach (var proof in openChallenges) proof.Revoke(approvalAt);
+            replacementProof?.Revoke(approvalAt);
+            DeviceRecoveryRevocations.Apply(active, sessions, approvalAt);
+            // Save revocations first so the filtered unique hash index permits a same-hash replacement.
+            // Both saves remain inside one serializable transaction.
+            await administrators.SaveChangesAsync(token);
+            var replacement = new RegisteredDevice(accountId, replacementHash, replacementPlatform,
+                replacementName, approvalAt);
             authentication.AddDevice(replacement);
             administrators.AddAudit(new AuditEvent("device.recovery.approved", review.Actor.AccountId.ToString(),
-                review.RoleCode, "device", replacement.Id.ToString(), review.Now, context.CorrelationId,
+                review.RoleCode, "device", replacement.Id.ToString(), approvalAt, context.CorrelationId,
                 account.EmployeeId, protectedChangesReference: request.ApprovalReference, ipAddress: context.IpAddress,
                 deviceReference: $"session:{review.Actor.SessionId};previous-device:{previous.Id}"));
             await administrators.SaveChangesAsync(token);
@@ -84,38 +118,59 @@ public sealed class DeviceRecoveryService(IAuthenticationRepository authenticati
         if (actor.Client != SessionClient.Web || !actor.MfaSatisfied || actor.AccountId == accountId) throw Forbidden();
         return administrators.InTransactionAsync(async token =>
         {
-            var now = clock.GetUtcNow();
-            if (!await administrators.IsCurrentAdministratorAsync(actor, now, token)) throw Forbidden();
-            var approver = await authentication.GetAccountAsync(actor.AccountId, now, token);
-            var assignment = approver?.Access.Where(p => p.Assignment.UserAccountId == actor.AccountId &&
-                p.Assignment.EmployeeId == actor.EmployeeId && p.Assignment.IsEffectiveAt(now) &&
-                p.Assignment.Role.IsActive && p.Assignment.Role.SystemRole is (SystemRoleKind.Admin or SystemRoleKind.SuperAdmin) &&
-                p.Scope.UserRoleAssignmentId == p.Assignment.Id && p.Scope.Kind == AccessScopeKind.All)
-                .OrderByDescending(p => p.Assignment.Role.SystemRole).FirstOrDefault()?.Assignment;
-            if (assignment is null) throw Forbidden();
-            var grants = await permissions.GetGrantsAsync(actor.AccountId, now, token);
-            if (!AccessPermissionEvaluator.HasAllScope(actor, grants, AccessPermissionCatalog.AccountsMobileManage) ||
-                !AccessPermissionEvaluator.HasAllScope(actor, grants, AccessPermissionCatalog.RolePermissionsManage)) throw Forbidden();
-            var target = await authentication.GetAccountAsync(accountId, now, token)
-                ?? throw new AuthenticationFailure("access_resource_not_found", 404);
-            if (await administrators.HasSystemRoleAsync(accountId, now, includeScheduled: true, token)) throw Forbidden();
-            if ((await administrators.GetPotentialAccountPermissionsAsync(accountId, now, token))
-                .Any(p => !AccessPermissionEvaluator.HasAllScope(actor, grants, p.Permission.Code))) throw Forbidden();
-            if (!options.IsValid() || string.IsNullOrWhiteSpace(options.BusinessTimeZoneId))
-                throw new AuthenticationFailure("authentication_unavailable", 503);
-            bool eligible;
-            try { eligible = mobile.Eligible(target, now); }
-            catch (Exception e) when (e is TimeZoneNotFoundException or InvalidTimeZoneException or ArgumentException)
-            { throw new AuthenticationFailure("authentication_unavailable", 503); }
-            var candidate = new AuthenticatedAccount(accountId, target.Account.EmployeeId, Guid.Empty,
-                target.Account.SecurityVersion, SessionClient.Mobile, false);
-            if (!eligible || target.Account.Status != AccountStatus.Active || target.Account.CurrentSetupInvitationId.HasValue ||
-                target.Phone?.VerifiedAt is null || target.Phone.VerifiedAt > now ||
-                !AccessPermissionEvaluator.Allows(candidate, await permissions.GetGrantsAsync(accountId, now, token),
-                    AccessPermissionCatalog.SelfRead, new AccessResource(EmployeeId: target.Account.EmployeeId)))
-                throw new AuthenticationFailure("account_ineligible", 409);
-            return await action(new ReviewContext(actor, target, assignment.Role.Code, now), token);
+            var review = await RequireReviewAsync(actor, accountId, token);
+            var result = await action(review, token);
+            // Recovery saves twice inside this outer transaction. A late authority
+            // failure must roll back both saves, including revocations and audit.
+            await RequireReviewAsync(actor, accountId, token);
+            return result;
         }, ct);
+    }
+
+    private async Task<ReviewContext> RequireReviewAsync(AuthenticatedAccount actor, Guid accountId, CancellationToken ct)
+    {
+        if (current.Require() != actor ||
+            !await administrators.IsCurrentAdministratorAsync(actor, clock.GetUtcNow(), ct)) throw Forbidden();
+        var approver = await authentication.GetAccountAsync(actor.AccountId, clock.GetUtcNow(), ct);
+        var grants = await permissions.GetGrantsAsync(actor.AccountId, clock.GetUtcNow(), ct);
+        if (await administrators.HasSystemRoleAsync(accountId, clock.GetUtcNow(), includeScheduled: true, ct)) throw Forbidden();
+        var targetPermissions = await administrators.GetPotentialAccountPermissionsAsync(accountId, clock.GetUtcNow(), ct);
+        var targetGrants = await permissions.GetGrantsAsync(accountId, clock.GetUtcNow(), ct);
+        var session = await authentication.GetSessionAsync(actor.SessionId, ct);
+        // Re-read effective employment after the other authority IO, retaining the
+        // tracked account so staged security-version changes are not overwritten.
+        var target = await authentication.GetAccountAsync(accountId, clock.GetUtcNow(), ct)
+            ?? throw new AuthenticationFailure("access_resource_not_found", 404);
+        var now = clock.GetUtcNow();
+        if (current.Require() != actor || approver is null || approver.Account.SecurityVersion != actor.SecurityVersion ||
+            session is null || session.Id != actor.SessionId || session.UserAccountId != actor.AccountId ||
+            session.Client != SessionClient.Web || session.RegisteredDeviceId.HasValue ||
+            session.SecurityVersion != actor.SecurityVersion || !session.IsActiveAt(now)) throw Forbidden();
+        var assignment = approver.Access.Where(p => p.Assignment.UserAccountId == actor.AccountId &&
+            p.Assignment.EmployeeId == actor.EmployeeId && p.Assignment.IsEffectiveAt(now) &&
+            p.Assignment.Role.IsActive && p.Assignment.Role.SystemRole is (SystemRoleKind.Admin or SystemRoleKind.SuperAdmin) &&
+            p.Scope.UserRoleAssignmentId == p.Assignment.Id && p.Scope.Kind == AccessScopeKind.All)
+            .OrderByDescending(p => p.Assignment.Role.SystemRole).FirstOrDefault()?.Assignment;
+        var effectiveGrants = grants.Where(p => p.IsEffectiveAt(now)).ToArray();
+        if (assignment is null ||
+            !AccessPermissionEvaluator.HasAllScope(actor, effectiveGrants, AccessPermissionCatalog.AccountsMobileManage) ||
+            !AccessPermissionEvaluator.HasAllScope(actor, effectiveGrants, AccessPermissionCatalog.RolePermissionsManage) ||
+            targetPermissions.Any(p => !AccessPermissionEvaluator.HasAllScope(actor, effectiveGrants, p.Permission.Code)))
+            throw Forbidden();
+        if (!options.IsValid() || string.IsNullOrWhiteSpace(options.BusinessTimeZoneId))
+            throw new AuthenticationFailure("authentication_unavailable", 503);
+        bool eligible;
+        try { eligible = mobile.Eligible(target, now); }
+        catch (Exception e) when (e is TimeZoneNotFoundException or InvalidTimeZoneException or ArgumentException)
+        { throw new AuthenticationFailure("authentication_unavailable", 503); }
+        var candidate = new AuthenticatedAccount(accountId, target.Account.EmployeeId, Guid.Empty,
+            target.Account.SecurityVersion, SessionClient.Mobile, false);
+        if (!eligible || target.Account.Status != AccountStatus.Active || target.Account.CurrentSetupInvitationId.HasValue ||
+            target.Phone?.VerifiedAt is null || target.Phone.VerifiedAt > now ||
+            !AccessPermissionEvaluator.Allows(candidate, targetGrants.Where(p => p.IsEffectiveAt(now)),
+                AccessPermissionCatalog.SelfRead, new AccessResource(EmployeeId: target.Account.EmployeeId)))
+            throw new AuthenticationFailure("account_ineligible", 409);
+        return new ReviewContext(actor, target, assignment.Role.Code, now);
     }
 
     private static byte[] Version(string value)

@@ -66,8 +66,7 @@ public sealed partial class AttendanceCorrectionRepository
         foreach (var change in changes)
         {
             var evidence = approvals.Where(x => x.ApprovalId == change.ApprovalRequestId).ToArray();
-            var supported = state == EmployeeStatus.Active && change.NewStatus is EmployeeStatus.Suspended or EmployeeStatus.Resigned or EmployeeStatus.Terminated ||
-                state == EmployeeStatus.Suspended && change.NewStatus is EmployeeStatus.Resigned or EmployeeStatus.Terminated;
+            var supported = EmployeeLifecycleHistoryRules.Supports(state, change.NewStatus, change.LifecyclePolicyVersion);
             if (change.EmployeeId != employeeId ||
                 priorAt.HasValue && change.EffectiveAt <= priorAt || change.PreviousStatus != state || !supported ||
                 change.EffectiveAt < change.RecordedAt || RosterSchedule.Today(change.EffectiveAt) < joined ||

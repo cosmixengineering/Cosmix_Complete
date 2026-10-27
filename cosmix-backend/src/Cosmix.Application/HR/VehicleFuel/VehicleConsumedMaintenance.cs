@@ -7,6 +7,11 @@ namespace Cosmix.Application.HR.VehicleFuel;
 
 public sealed partial class VehicleFuelService
 {
+    // SQL materialization preserves decimal values but can change their scale.
+    // Compare every snapshot value without changing retained bytes or fingerprints.
+    private static bool SameServiceEligibility(VehicleServiceEligibilitySnapshot retained, VehicleServiceEligibilitySnapshot current) =>
+        JsonElement.DeepEquals(JsonSerializer.SerializeToElement(retained), JsonSerializer.SerializeToElement(current));
+
     private async Task<ConsumedMaintenanceEquivalence> ProveConsumedMaintenanceChain(
         VehicleServiceRecord previous, VehicleServiceEligibilitySnapshot prior, DateOnly nextDate,
         Guid? reviewedServiceId, CancellationToken ct, Guid? requiredServiceId = null)
@@ -76,7 +81,7 @@ public sealed partial class VehicleFuelService
                     node.Record.EvidencePrivateReference, node.Record.ClaimedAmount, node.Record.Currency),
                 node.Snapshot.VehicleType, ct, node.Record.PolicyVersionId,
                 validatedPredecessor: new(chain[index + 1].Record, proof));
-            if (JsonSerializer.Serialize(node.Snapshot) != JsonSerializer.Serialize(current))
+            if (!SameServiceEligibility(node.Snapshot, current))
                 throw AttendanceOperation.Conflict("vehicle_service_cycle_evidence_unavailable");
             proof = MaintenanceEquivalenceProof(node.Record, node.Snapshot, node.Decision, proof.Members);
         }
@@ -253,7 +258,7 @@ public sealed partial class VehicleFuelService
             record.ServiceDate, record.OdometerKm, retained.ClaimedOutstationKm, record.AuthorizedWorkshopReference,
             record.EvidencePrivateReference, record.ClaimedAmount, record.Currency), vehicle.VehicleType, ct,
             record.PolicyVersionId, record.Id, retained.PreviousServiceRecordId);
-        if (JsonSerializer.Serialize(retained) != JsonSerializer.Serialize(current))
+        if (!SameServiceEligibility(retained, current))
             throw AttendanceOperation.Conflict("vehicle_service_eligibility_changed");
     }
 

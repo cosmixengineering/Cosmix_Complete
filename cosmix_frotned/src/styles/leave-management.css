@@ -738,7 +738,13 @@
   gap: 14px;
   background-color: #f8fafc;
   color: #1e293b;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Poppins',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   font-size: 13px;
 }
 
@@ -843,7 +849,9 @@
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
 }
 
 .leave-v4-kpi-card:hover {

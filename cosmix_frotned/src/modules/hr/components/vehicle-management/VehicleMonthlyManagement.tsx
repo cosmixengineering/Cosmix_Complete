@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Eye, Search, Send } from 'lucide-react';
+import { Calendar, Eye, Search, Send } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/forms/TextInput';
 import { ApiError } from '@/services/api/api-error';
@@ -10,6 +10,7 @@ import { RecordView } from '../RecordView';
 import { useFinanceAccess } from '../../hooks/use-finance-access';
 import { useFinanceQuery } from '../../hooks/use-finance-queries';
 import { queryString } from '../../api/hr-finance-api';
+import '@/styles/vehicle-management.css';
 import {
   inputError,
   requiredId,
@@ -57,42 +58,61 @@ export function VehicleMonthlyManagement() {
     }
   }
   return (
-    <section>
-      <h2>Monthly distance adjustments</h2>
-      <form
-        className="hr-form-grid"
-        onSubmit={(event) => {
-          event.preventDefault();
-          load();
-        }}
-      >
-        <TextInput
-          label="Vehicle ID"
-          disabled={navigation.pending}
-          required
-          value={form.vehicleId}
-          onChange={(event) => setForm({ ...form, vehicleId: event.target.value })}
-        />
-        <TextInput
-          label="Employee ID"
-          disabled={navigation.pending}
-          required
-          value={form.employeeId}
-          onChange={(event) => setForm({ ...form, employeeId: event.target.value })}
-        />
-        <TextInput
-          label="Completed month"
-          disabled={navigation.pending}
-          required
-          type="month"
-          value={form.month}
-          onChange={(event) => setForm({ ...form, month: event.target.value })}
-        />
-        <Button type="submit" disabled={navigation.pending}>
-          <Search size={15} /> Load month
-        </Button>
-      </form>
-      {error && <p role="alert">{error}</p>}
+    <section className="veh-monthly-section">
+      <div className="veh-monthly-header-row">
+        <h2 className="veh-section-title">Monthly distance adjustments</h2>
+        <p className="veh-section-subtitle">
+          Query vehicle distance reconciliation, review odometer adjustments, and submit revisions.
+        </p>
+      </div>
+
+      <div className="veh-monthly-filter-card">
+        <form
+          className="veh-monthly-filter-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            load();
+          }}
+        >
+          <div className="veh-monthly-filter-grid">
+            <TextInput
+              label="Vehicle ID"
+              disabled={navigation.pending}
+              required
+              value={form.vehicleId}
+              onChange={(event) => setForm({ ...form, vehicleId: event.target.value })}
+              placeholder="e.g. VEH-001"
+            />
+            <TextInput
+              label="Employee ID"
+              disabled={navigation.pending}
+              required
+              value={form.employeeId}
+              onChange={(event) => setForm({ ...form, employeeId: event.target.value })}
+              placeholder="e.g. EMP-101"
+            />
+            <TextInput
+              label="Completed month"
+              disabled={navigation.pending}
+              required
+              type="month"
+              value={form.month}
+              onChange={(event) => setForm({ ...form, month: event.target.value })}
+            />
+            <div className="veh-filter-action">
+              <Button type="submit" disabled={navigation.pending} className="btn-veh-primary">
+                <Search size={14} /> Load month
+              </Button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {error && (
+        <p className="veh-filter-error" role="alert">
+          {error}
+        </p>
+      )}
       {selected && <VehicleMonthlyWorkspace key={JSON.stringify(selected)} selection={selected} />}
     </section>
   );
@@ -193,16 +213,19 @@ function VehicleMonthlyWorkspace({ selection }: { selection: Selection }) {
           </details>
         )}
       </QueryState>
-      <fieldset disabled={command.locked || preview.pending} style={{ minWidth: 0 }}>
+      <fieldset disabled={command.locked || preview.pending} className="veh-revision-fieldset">
         <legend>New adjustment revision</legend>
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={!ready || pending}
-          onClick={() => void preview.run(body)}
-        >
-          <Eye size={15} /> Preview month
-        </Button>
+        <div style={{ marginBottom: 12 }}>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={!ready || pending}
+            onClick={() => void preview.run(body)}
+            className="btn-veh-secondary"
+          >
+            <Eye size={14} /> Preview month
+          </Button>
+        </div>
         {preview.error && <p role="alert">{preview.error}</p>}
         {current && (
           <details open>
@@ -213,20 +236,23 @@ function VehicleMonthlyWorkspace({ selection }: { selection: Selection }) {
         {pending && (
           <p role="status">A pending revision must be reviewed before another is submitted.</p>
         )}
-        <TextInput
-          label="Evidence reference"
-          required
-          maxLength={500}
-          value={evidence}
-          onChange={(event) => setEvidence(event.target.value)}
-        />
-        <TextAreaField label="Submission reason" required value={reason} onChange={setReason} />
+        <div className="veh-revision-inputs">
+          <TextInput
+            label="Evidence reference"
+            required
+            maxLength={500}
+            value={evidence}
+            onChange={(event) => setEvidence(event.target.value)}
+          />
+          <TextAreaField label="Submission reason" required value={reason} onChange={setReason} />
+        </div>
         <Button
           type="button"
           disabled={!current || !ready || pending}
           onClick={() => void submit()}
+          className="btn-veh-primary"
         >
-          <Send size={15} /> Submit revision
+          <Send size={14} /> Submit revision
         </Button>
       </fieldset>
       {error && <p role="alert">{error}</p>}

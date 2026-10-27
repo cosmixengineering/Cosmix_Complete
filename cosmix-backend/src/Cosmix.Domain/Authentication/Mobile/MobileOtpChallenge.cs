@@ -5,6 +5,7 @@ namespace Cosmix.Domain.Authentication.Mobile;
 /// <summary>Stores a keyed verifier, never the code. Recheck current account/binding eligibility in the consuming transaction.</summary>
 public sealed class MobileOtpChallenge
 {
+    private const string ReplacementProofMarker = "device-replacement-proof-v1";
     private MobileOtpChallenge() { }
 
     public static MobileOtpChallenge CreatePhoneRecovery(Guid id, LoginPhoneBinding binding, int securityVersion,
@@ -83,6 +84,19 @@ public sealed class MobileOtpChallenge
         if (!IsUsableAt(at)) throw new InvalidOperationException("Challenge is not usable.");
         ConsumedAt = ModelGuard.Utc(at);
     }
+
+    /// <summary>Records valid OTP proof for a blocked new-device login, without granting a session.</summary>
+    public void MarkReplacementProof(DateTimeOffset at)
+    {
+        if (Purpose != "MobileLogin" || !IsUsableAt(at)) throw new InvalidOperationException("Challenge is not usable for device replacement.");
+        Consume(at);
+        // The existing database purpose constraint admits MobileLogin only. The verifier is no longer
+        // needed after proof and is replaced with a value a keyed verifier can never produce.
+        Verifier = ReplacementProofMarker;
+    }
+
+    public bool HasReplacementProof => Purpose == "MobileLogin" && ConsumedAt.HasValue &&
+        Verifier == ReplacementProofMarker;
 
     public void Revoke(DateTimeOffset at)
     {

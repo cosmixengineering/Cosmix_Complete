@@ -11,7 +11,7 @@ namespace Cosmix.Application.Attendance.PayrollInputs;
 /// Recorded legal dossiers are not activation. Amounts stay in the restricted source, not lock DTOs.</summary>
 public sealed class AttendanceMonthLockFinancialReader(AttendancePayrollInputService inputs,
     AttendancePayrollAttestationService attestations, IAttendancePayrollInputLedger ledger,
-    IAttendancePayrollAttestationRepository receipts) : IMonthLockFinancialReader
+    IAttendancePayrollAttestationRepository receipts, AttendancePayrollActivationService? activations = null) : IMonthLockFinancialReader
 {
     public async Task<MonthLockFinancialInspection> InspectAsync(DateOnly start, DateOnly end,
         IReadOnlyList<Guid> employeeIds, AttendanceActor actor, CancellationToken ct)
@@ -64,11 +64,12 @@ public sealed class AttendanceMonthLockFinancialReader(AttendancePayrollInputSer
             if (evidence.Jurisdictions.Count == 0 || evidence.Jurisdictions.Any(x => x.State != "configured" ||
                 x.ConfigurationVersionId is null || string.IsNullOrWhiteSpace(x.JurisdictionCode)))
                 issues.Add(new("payroll_jurisdiction_configuration_required", employee));
-            // No formally appointed activation authority or legally verified rule record exists yet.
-            // Keep this dependency visible; a settings value or recorded PDF cannot replace it.
-            issues.Add(new("legal_payroll_activation_required", employee));
+            // Settings and recorded legal dossiers do not activate payroll. Exact-source,
+            // independent company operational approval is a separate protected dependency.
+            var activation = activations is null ? null : await activations.ApprovedFingerprintAsync(row, evidence, ct);
+            if (activation is null) issues.Add(new("legal_payroll_activation_required", employee));
             entries.Add(new(employee, start, row.Id, row.Revision, row.InputFingerprint, row.CalculationVersion,
-                reference.Sha256, handoffId, handoffHash, null));
+                reference.Sha256, handoffId, handoffHash, activation));
         }
         var distinct = issues.Distinct().OrderBy(x => x.Code, StringComparer.Ordinal)
             .ThenBy(x => x.EmployeeId).ThenBy(x => x.BusinessDate).ToArray();
@@ -96,8 +97,9 @@ public sealed class AttendanceMonthLockFinancialReader(AttendancePayrollInputSer
             if (!history.Any(x => x.Id == entry.HandoffId && x.Status == "handoff") ||
                 header?.EvidenceFingerprint != entry.HandoffEvidenceFingerprint)
                 throw AttendanceOperation.Conflict("month_lock_payroll_handoff_conflict");
-            // New locks cannot currently reach this state. Never accept a client/invented hash as legal proof.
-            throw AttendanceOperation.Conflict("month_lock_legal_activation_unavailable");
+            var activation = activations is null ? null : await activations.ApprovedFingerprintAsync(row, retained, ct);
+            if (activation is null || activation != entry.LegalActivationFingerprint)
+                throw AttendanceOperation.Conflict("month_lock_legal_activation_unavailable");
         }
     }
 }

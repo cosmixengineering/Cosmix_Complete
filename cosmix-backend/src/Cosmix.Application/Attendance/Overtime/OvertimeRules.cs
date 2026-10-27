@@ -68,12 +68,21 @@ public static class OvertimeRules
         if (policy.Status != "evaluated")
         {
             if (policy.PolicyVersionId.HasValue || policy.CalculationVersion is not null || policy.ScheduledDutyCompleted.HasValue ||
-                policy.EligibleIntervals.Count != 0 || policy.RateRuleCode is not null) throw AttendanceOperation.Conflict("invalid_overtime_policy_contract");
+                policy.EligibleIntervals.Count != 0 || policy.RateRuleCode is not null || policy.OvertimeRules is not null) throw AttendanceOperation.Conflict("invalid_overtime_policy_contract");
             return;
         }
         if (policy.PolicyVersionId == Guid.Empty || policy.ScheduledDutyCompleted is null ||
             string.IsNullOrWhiteSpace(policy.CalculationVersion) || policy.CalculationVersion.Length > 100 || policy.CalculationVersion.Any(char.IsControl) ||
             policy.RateRuleCode is { } rate && (string.IsNullOrWhiteSpace(rate) || rate.Length > 100 || rate.Any(char.IsControl)))
+            throw AttendanceOperation.Conflict("invalid_overtime_policy_contract");
+        if (policy.OvertimeRules is { } rules)
+        {
+            ConfiguredOvertimeFormula.RequireRules(rules);
+            if (policy.PolicyVersionId is null || policy.RateRuleCode != ConfiguredOvertimeFormula.Version ||
+                policy.CalculationVersion != ConfiguredOvertimeFormula.Version)
+                throw AttendanceOperation.Conflict("invalid_overtime_policy_contract");
+        }
+        else if (policy.RateRuleCode == ConfiguredOvertimeFormula.Version || policy.CalculationVersion == ConfiguredOvertimeFormula.Version)
             throw AttendanceOperation.Conflict("invalid_overtime_policy_contract");
         DateTimeOffset? end = null;
         foreach (var interval in policy.EligibleIntervals.OrderBy(x => x.StartsAtUtc))

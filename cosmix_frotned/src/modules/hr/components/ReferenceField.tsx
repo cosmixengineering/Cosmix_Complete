@@ -22,6 +22,7 @@ export function ReferenceField({
   onRecord,
   error,
   enableFind = false,
+  dataField,
 }: {
   label: string;
   kind: string;
@@ -34,6 +35,7 @@ export function ReferenceField({
   onRecord?: (row: { id: string; code: string; name: string } | undefined) => void;
   error?: string;
   enableFind?: boolean;
+  dataField?: string;
 }) {
   const access = useHrAccess();
   const [search, setSearch] = useState('');
@@ -66,11 +68,12 @@ export function ReferenceField({
   if (value && !rows.some((r) => r.id === value))
     options.push({ value, label: currentLabel ?? 'Current selection' });
   return (
-    <div className="hr-reference">
+    <div className="hr-reference" data-field={dataField}>
       <SelectInput
         label={label}
         required={required}
         error={error}
+        data-field={dataField}
         disabled={disabled || !access.can(permission)}
         value={value ?? ''}
         options={options}

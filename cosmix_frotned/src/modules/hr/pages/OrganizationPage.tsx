@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Pencil, History, Power, Search, RotateCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  History,
+  Power,
+  Search,
+  RotateCw,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useHrAccess } from '../hooks/use-hr-access';
@@ -62,11 +71,7 @@ export function OrganizationPage() {
           <p className="org-page-subtitle">Manage your organization records</p>
         </div>
         {kind !== 'holiday-calendars' && manage && (
-          <button
-            type="button"
-            className="org-add-btn"
-            onClick={() => setAdding(true)}
-          >
+          <button type="button" className="org-add-btn" onClick={() => setAdding(true)}>
             <Plus size={16} strokeWidth={2.5} />
             Add {meta.singular}
           </button>

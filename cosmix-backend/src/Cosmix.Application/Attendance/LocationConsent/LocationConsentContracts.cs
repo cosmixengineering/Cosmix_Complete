@@ -10,16 +10,19 @@ public sealed record LocationConsentStatusResponse(
     ConsentStatus Status,
     DateTimeOffset? ConsentedAt);
 
+[System.Text.Json.Serialization.JsonUnmappedMemberHandling(System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow)]
 public sealed record AcceptLocationConsentRequest(
-    string? DeviceMetadata,
-    string? IpAddress);
+    [property: System.Text.Json.Serialization.JsonRequired] int ExpectedPolicyVersion,
+    [System.ComponentModel.DataAnnotations.StringLength(500)] string? DeviceMetadata = null);
 
 public sealed record LocationConsentAcceptedResponse(
     Guid ConsentId,
     DateTimeOffset AcceptedAtUtc);
 
+[System.Text.Json.Serialization.JsonUnmappedMemberHandling(System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow)]
 public sealed record PublishLocationNoticePolicyRequest(
-    string NoticeText);
+    [System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.StringLength(4000)] string NoticeText,
+    int? ExpectedPolicyVersion = null);
 
 public sealed record LocationNoticePolicyResponse(
     Guid Id,

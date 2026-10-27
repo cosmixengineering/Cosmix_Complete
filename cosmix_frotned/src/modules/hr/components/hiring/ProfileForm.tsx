@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
+  AlertCircle,
   ArrowRight,
   Building2,
   CheckCircle2,
@@ -238,6 +239,122 @@ function validateProfile(data: Profile, isOfficeCategory: boolean): Record<strin
   return errors;
 }
 
+const SERVER_ERROR_TO_FIELD: Record<string, { field: string; message: string }> = {
+  ineligible_reporting_manager: {
+    field: 'reportingManagerEmployeeId',
+    message: 'Selected reporting manager is ineligible. Please select an active and approved manager (e.g. Engr. Imran Saeed).',
+  },
+  invalid_employee_phone: {
+    field: 'personalPhone',
+    message: 'Personal phone number must follow Pakistani format (+92 followed by 10 digits).',
+  },
+  invalid_employee_identity_document: {
+    field: 'identityDocumentNumber',
+    message: 'Identity document number format is invalid (CNIC must be 13 digits, Passport min 6 chars).',
+  },
+  invalid_employee_date_of_birth: {
+    field: 'dateOfBirth',
+    message: 'Date of birth must be a valid date in the past.',
+  },
+  invalid_employee_email: {
+    field: 'officialEmail',
+    message: 'Please provide a valid email format for Official Email or Personal Email.',
+  },
+  site_staff_cannot_select_office: {
+    field: 'branchId',
+    message: 'Site / Field Operations staff cannot have an office branch assigned.',
+  },
+  select_staff_category_before_office: {
+    field: 'staffCategoryId',
+    message: 'Please select Workplace Placement before choosing an office branch.',
+  },
+  unsupported_staff_category: {
+    field: 'staffCategoryId',
+    message: 'The selected workplace category is invalid or inactive.',
+  },
+  employee_login_phone_required: {
+    field: 'loginPhoneNumber',
+    message: 'Proposed mobile login phone is required when Mobile Access is checked.',
+  },
+  employee_login_phone_conflict: {
+    field: 'loginPhoneNumber',
+    message: 'This mobile login phone is already registered to another user account.',
+  },
+  employee_identity_or_email_conflict: {
+    field: 'identityDocumentNumber',
+    message: 'An employee with this CNIC/Passport or Official Email is already registered.',
+  },
+  employee_company_sim_conflict: {
+    field: 'companyPhone',
+    message: 'This company SIM phone number is already assigned to another employee.',
+  },
+  inactive_or_unknown_employee_master: {
+    field: 'departmentId',
+    message: 'One of the selected items (Department, Designation, or Employment Type) is inactive.',
+  },
+  invalid_employee_emergency_contact: {
+    field: 'emergencyContact.phone',
+    message: 'Emergency contact details are incomplete or phone format is invalid.',
+  },
+};
+
+const FIELD_FRIENDLY_NAMES: Record<string, string> = {
+  fullLegalName: 'Full Legal Name',
+  identityDocumentType: 'Identity Document Type',
+  identityDocumentNumber: 'Identity Document Number',
+  dateOfBirth: 'Date of Birth',
+  gender: 'Gender',
+  personalPhone: 'Personal Phone',
+  'currentAddress.line1': 'Current Address Line 1',
+  'currentAddress.province': 'Current Address Province',
+  'currentAddress.city': 'Current Address City',
+  'permanentAddress.line1': 'Permanent Address Line 1',
+  'permanentAddress.province': 'Permanent Address Province',
+  'permanentAddress.city': 'Permanent Address City',
+  'emergencyContact.name': 'Emergency Contact Name',
+  'emergencyContact.relationship': 'Emergency Relationship',
+  'emergencyContact.phone': 'Emergency Phone',
+  departmentId: 'Department',
+  designationId: 'Designation',
+  staffCategoryId: 'Workplace Placement',
+  employmentTypeId: 'Employment Type',
+  branchId: 'Office Branch',
+  reportingManagerEmployeeId: 'Reporting Manager',
+  joinedOn: 'Joining Date',
+  loginPhoneNumber: 'Proposed Mobile Login Phone',
+};
+
+function scrollToField(fieldKey: string) {
+  setTimeout(() => {
+    let target = document.querySelector(`[data-field="${fieldKey}"]`) as HTMLElement | null;
+
+    if (!target && fieldKey.includes('.')) {
+      const parts = fieldKey.split('.');
+      target = document.querySelector(`[data-field="${fieldKey}"], [name="${parts[1]}"]`) as HTMLElement | null;
+    }
+
+    if (!target) {
+      target = document.querySelector(`[name="${fieldKey}"], #${fieldKey}`) as HTMLElement | null;
+    }
+
+    if (!target) {
+      target = document.querySelector('[aria-invalid="true"], [data-invalid="true"]') as HTMLElement | null;
+    }
+
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.classList.add('field-error-pulse');
+      setTimeout(() => target?.classList.remove('field-error-pulse'), 2500);
+
+      const input =
+        target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA'
+          ? target
+          : (target.querySelector('input, select, textarea') as HTMLElement | null);
+      input?.focus?.();
+    }
+  }, 70);
+}
+
 export function ProfileForm({
   employeeId,
   initial,
@@ -258,6 +375,28 @@ export function ProfileForm({
   const [data, setData] = useState(initial);
   const [baseline, setBaseline] = useState(JSON.stringify(initial));
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const handleFailure = (failure: unknown) => {
+    if (
+      failure &&
+      typeof failure === 'object' &&
+      'code' in failure &&
+      typeof (failure as { code?: string }).code === 'string'
+    ) {
+      const code = (failure as { code: string }).code;
+      if (SERVER_ERROR_TO_FIELD[code]) {
+        const mapped = SERVER_ERROR_TO_FIELD[code]!;
+        setErrors((prev) => ({
+          ...prev,
+          [mapped.field]: mapped.message,
+        }));
+        scrollToField(mapped.field);
+        return;
+      }
+    }
+    setTimeout(() => {
+      document.getElementById('profile-top-alert')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+  };
   const action = useHrAction();
   useDirtyForm(editable && JSON.stringify(data) !== baseline);
   const docs = useHrQuery(`employees/${employeeId}/documents`, documentsSchema, [
@@ -341,13 +480,8 @@ export function ProfileForm({
     const validationErrors = validateProfile(data, isOfficeNow);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      setTimeout(() => {
-        const firstInvalid = document.querySelector('[aria-invalid="true"]');
-        if (firstInvalid) {
-          firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          (firstInvalid as HTMLElement).focus?.();
-        }
-      }, 50);
+      const firstField = Object.keys(validationErrors)[0];
+      if (firstField) scrollToField(firstField);
       return;
     }
     setErrors({});
@@ -360,6 +494,7 @@ export function ProfileForm({
       },
       'PUT',
       writeResult,
+      handleFailure,
     );
     if (result) {
       setBaseline(JSON.stringify(data));
@@ -374,29 +509,61 @@ export function ProfileForm({
         void handleSave('financial');
       }}
     >
-      {Object.keys(errors).length > 0 && (
-        <div className="hr-message hr-message--error" role="alert" style={{ marginBottom: '20px' }}>
-          <strong>Mandatory fields required:</strong> Please fill in all required fields marked with
-          * before saving ({Object.keys(errors).length} missing or invalid).
+      {(Object.keys(errors).length > 0 || !!action.error) && (
+        <div id="profile-top-alert" className="modern-error-banner" role="alert">
+          <div className="modern-error-header">
+            <AlertCircle size={20} />
+            <span>
+              {Object.keys(errors).length > 0
+                ? `${Object.keys(errors).length} mandatory field${Object.keys(errors).length > 1 ? 's' : ''} require attention:`
+                : 'Action could not be saved:'}
+            </span>
+          </div>
+          <p className="modern-error-message">
+            {action.error ||
+              'Please complete all required fields marked with * and ensure formats are valid. Click any field below to jump directly to it:'}
+          </p>
+          {Object.keys(errors).length > 0 && (
+            <div className="modern-error-list">
+              {Object.entries(errors).map(([key]) => (
+                <button
+                  key={key}
+                  type="button"
+                  className="modern-error-pill"
+                  onClick={() => scrollToField(key)}
+                >
+                  <span>&bull; {FIELD_FRIENDLY_NAMES[key] || key}</span>
+                  <ArrowRight size={12} />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
       <fieldset disabled={!editable || action.pending}>
-        <FormSection title="Identity" id="identity">
+        <FormSection
+          title="Identity Information"
+          subtitle="Please complete employee legal identity documents, full name, and birth details."
+          id="identity"
+        >
           <Field
             label="Full legal name"
             required
+            dataField="fullLegalName"
             error={errors.fullLegalName}
             value={data.fullLegalName}
             onChange={(v) => set('fullLegalName', v)}
           />
           <Field
             label="Father or spouse name"
+            dataField="fatherOrSpouseName"
             value={data.fatherOrSpouseName}
             onChange={(v) => set('fatherOrSpouseName', v)}
           />
           <EnumField
             label="Identity document type"
             required
+            dataField="identityDocumentType"
             error={errors.identityDocumentType}
             value={data.identityDocumentType}
             options={['CNIC', 'Passport']}
@@ -412,6 +579,7 @@ export function ProfileForm({
           <Field
             label="Identity document number"
             required
+            dataField="identityDocumentNumber"
             error={errors.identityDocumentNumber}
             value={data.identityDocumentNumber}
             placeholder={data.identityDocumentType === 2 ? 'Passport Number' : '42101-1234567-1'}
@@ -440,6 +608,7 @@ export function ProfileForm({
           />
           <Field
             label="Identity expiry date"
+            dataField="identityDocumentExpiresOn"
             value={data.identityDocumentExpiresOn}
             type="date"
             onChange={(v) => set('identityDocumentExpiresOn', v)}
@@ -447,6 +616,7 @@ export function ProfileForm({
           <Field
             label="Date of birth"
             required
+            dataField="dateOfBirth"
             error={errors.dateOfBirth}
             value={data.dateOfBirth}
             type="date"
@@ -455,6 +625,7 @@ export function ProfileForm({
           <SelectInput
             label="Gender"
             required
+            data-field="gender"
             error={errors.gender}
             value={data.gender ?? ''}
             options={GENDER_OPTIONS}
@@ -462,13 +633,18 @@ export function ProfileForm({
           />
           <SelectInput
             label="Marital status"
+            data-field="maritalStatus"
             error={errors.maritalStatus}
             value={data.maritalStatus ?? ''}
             options={MARITAL_STATUS_OPTIONS}
             onChange={(e) => set('maritalStatus', e.target.value || null)}
           />
         </FormSection>
-        <FormSection title="Contact details" id="contacts">
+        <FormSection
+          title="Contact Details"
+          subtitle="Phone numbers and official email addresses for internal communication."
+          id="contacts"
+        >
           <PhoneField
             label="Personal phone"
             required
@@ -514,6 +690,7 @@ export function ProfileForm({
           />
           <Field
             label="Personal email"
+            dataField="personalEmail"
             error={errors.personalEmail}
             type="email"
             max={320}
@@ -522,6 +699,7 @@ export function ProfileForm({
           />
           <Field
             label="Official email"
+            dataField="officialEmail"
             error={errors.officialEmail}
             type="email"
             max={320}
@@ -551,20 +729,12 @@ export function ProfileForm({
           value={data.emergencyContact}
           onChange={(v) => set('emergencyContact', v)}
         />
-        <FormSection title="Workplace Placement (Office vs Site)" id="placement">
-          <p
-            className="hr-form-hint"
-            style={{
-              gridColumn: '1 / -1',
-              margin: '0 0 12px 0',
-              color: '#64748b',
-              fontSize: '13px',
-            }}
-          >
-            Specify whether this employee will be based in a registered office branch or deployed to
-            active field/construction sites.
-          </p>
-          <div className="workplace-placement-grid" style={{ gridColumn: '1 / -1' }}>
+        <FormSection
+          title="Workplace Placement (Office vs Site)"
+          subtitle="Specify whether this employee will be based in a registered office branch or deployed to active field/construction sites."
+          id="placement"
+        >
+          <div className="workplace-placement-grid" data-field="staffCategoryId" style={{ gridColumn: '1 / -1' }}>
             <div
               className={`placement-card ${isOffice ? 'is-selected' : ''}`}
               role="button"
@@ -673,6 +843,7 @@ export function ProfileForm({
                 label="Assigned Office Branch"
                 kind="branches"
                 required
+                dataField="branchId"
                 error={errors.branchId}
                 value={data.branchId}
                 onChange={(v) => set('branchId', v)}
@@ -689,19 +860,24 @@ export function ProfileForm({
               <div>
                 <strong>Site Staff Deployment Mode Activated:</strong>
                 <p style={{ margin: '4px 0 0' }}>
-                  Is employee ka koi office branch nahi hoga. Profile submit hone k baad{' '}
-                  <strong>Admin Dashboard</strong> se isko active site boundaries, GPS geofencing
-                  aur site supervisor roster assign kiye jaayenge.
+                  This employee will not be assigned to a physical office branch. After profile
+                  submission, active site boundaries, GPS geofencing, and site supervisor rosters
+                  will be assigned from the <strong>Admin Dashboard</strong>.
                 </p>
               </div>
             </div>
           )}
         </FormSection>
-        <FormSection title="Employment Details" id="employment">
+        <FormSection
+          title="Employment Details"
+          subtitle="Department, designation, reporting hierarchy, and joining timeline."
+          id="employment"
+        >
           <ReferenceField
             label="Department"
             kind="departments"
             required
+            dataField="departmentId"
             error={errors.departmentId}
             value={data.departmentId}
             onChange={(v) => set('departmentId', v)}
@@ -710,6 +886,7 @@ export function ProfileForm({
             label="Designation"
             kind="designations"
             required
+            dataField="designationId"
             error={errors.designationId}
             value={data.designationId}
             onChange={(v) => set('designationId', v)}
@@ -718,6 +895,7 @@ export function ProfileForm({
             label="Employment type"
             kind="employment-types"
             required
+            dataField="employmentTypeId"
             error={errors.employmentTypeId}
             value={data.employmentTypeId}
             onChange={(v) => set('employmentTypeId', v)}
@@ -726,6 +904,7 @@ export function ProfileForm({
             label="Reporting manager"
             kind="employees"
             required
+            dataField="reportingManagerEmployeeId"
             error={errors.reportingManagerEmployeeId}
             excludeId={employeeId}
             value={data.reportingManagerEmployeeId}
@@ -734,6 +913,7 @@ export function ProfileForm({
           <Field
             label="Joining date"
             required
+            dataField="joinedOn"
             error={errors.joinedOn}
             type="date"
             value={data.joinedOn}
@@ -741,6 +921,7 @@ export function ProfileForm({
           />
           <Field
             label="Probation end date"
+            dataField="probationEndsOn"
             error={errors.probationEndsOn}
             type="date"
             value={data.probationEndsOn}
@@ -750,23 +931,31 @@ export function ProfileForm({
             <Field
               label="Existing proposed shift reference"
               readOnly
+              dataField="proposedShiftId"
               value={data.proposedShiftId}
               onChange={() => undefined}
             />
           )}
         </FormSection>
-        <FormSection title="Mobile access and company SIM" id="mobile">
-          <label className="hr-check">
-            <input
-              type="checkbox"
-              checked={data.mobileAccessRequested}
-              onChange={(e) => set('mobileAccessRequested', e.target.checked)}
-            />
-            Mobile access requested
-          </label>
+        <FormSection
+          title="Mobile access and company SIM"
+          subtitle="Request mobile app login access and optional company-issued SIM."
+          id="mobile"
+        >
+          <div className="col-span-full" style={{ gridColumn: '1 / -1', marginBottom: '8px' }}>
+            <label className="hr-check">
+              <input
+                type="checkbox"
+                checked={data.mobileAccessRequested}
+                onChange={(e) => set('mobileAccessRequested', e.target.checked)}
+              />
+              Mobile access requested
+            </label>
+          </div>
           <PhoneField
             label="Proposed mobile login phone"
             required={data.mobileAccessRequested}
+            dataField="loginPhoneNumber"
             error={errors.loginPhoneNumber}
             value={data.loginPhoneNumber}
             onChange={(v) => {
@@ -788,18 +977,21 @@ export function ProfileForm({
           />
           <Field
             label="SIM issued on"
+            dataField="simIssuedOn"
             type="date"
             value={data.simIssuedOn}
             onChange={(v) => set('simIssuedOn', v)}
           />
           <Field
             label="SIM status"
+            dataField="simStatus"
             max={40}
             value={data.simStatus}
             onChange={(v) => set('simStatus', v)}
           />
           <Field
             label="SIM credit tier"
+            dataField="simCreditTier"
             max={50}
             value={data.simCreditTier}
             onChange={(v) => set('simCreditTier', v)}

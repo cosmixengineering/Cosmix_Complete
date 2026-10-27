@@ -9,7 +9,7 @@
   --alw-primary: #2563eb;
   --alw-primary-hover: #1d4ed8;
   --alw-surface: #f8fafc;
-  
+
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -171,7 +171,9 @@
   align-items: center;
   gap: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .allowance-kpi-card:hover {
@@ -244,12 +246,12 @@
 
 /* Tabs Bar */
 .allowance-nav-tabs {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: #ffffff;
-  padding: 4px 6px;
-  border-radius: 8px;
+  padding: 3px 4px;
+  border-radius: 7px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   width: fit-content;
@@ -258,15 +260,16 @@
 .allowance-tab-btn {
   background: transparent;
   border: none;
-  padding: 6px 14px;
-  font-size: 12.5px;
+  padding: 4px 10px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #64748b;
-  border-radius: 6px;
+  border-radius: 5px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  height: 28px;
   transition: all 0.15s ease;
 }
 
@@ -405,21 +408,37 @@
 
 .allowance-input,
 .allowance-select {
-  height: 32px;
-  padding: 5px 10px;
+  height: 38px;
+  padding: 0 12px;
   background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 12px;
+  border: 1.5px solid #d5dae2;
+  border-radius: 7px;
+  font-size: 13px;
   color: #0f172a;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .allowance-input:focus,
 .allowance-select:focus {
-  border-color: var(--alw-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.allowance-filter-inputs-grid .custom-select-field > label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.allowance-filter-inputs-grid .custom-select-trigger {
+  height: 38px !important;
+  font-size: 13px !important;
+  border-radius: 7px !important;
 }
 
 .allowance-textarea {
@@ -433,7 +452,9 @@
   font-family: inherit;
   outline: none;
   resize: vertical;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .allowance-textarea:focus {
@@ -495,7 +516,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .claim-item-card:hover {

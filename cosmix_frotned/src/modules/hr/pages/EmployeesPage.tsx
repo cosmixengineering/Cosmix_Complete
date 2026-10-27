@@ -10,6 +10,7 @@ import {
   Pencil,
   User,
   Users,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { DataTable } from '@/components/data-display/DataTable';
@@ -107,20 +108,41 @@ export function EmployeesPage() {
       </div>
       <ActionMessage action={createAction} />
       <div className="hr-toolbar">
-        <label className="hr-search">
-          <Search size={17} />
-          <span className="sr-only">Search employees</span>
-          <input
-            aria-label="Search employees"
-            placeholder="Search employee name, number or phone"
-            maxLength={100}
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
-        </label>
+        <div className="hr-toolbar-search-field">
+          <label htmlFor="employee-search-input" className="hr-toolbar-search-label">
+            Search employee
+          </label>
+          <div className="hr-toolbar-search-wrap">
+            <Search size={14} className="hr-toolbar-search-icon" aria-hidden="true" />
+            <input
+              id="employee-search-input"
+              type="text"
+              aria-label="Search employees"
+              placeholder="Search employee name, number or phone..."
+              maxLength={100}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="hr-toolbar-search-input"
+            />
+            {search && (
+              <button
+                type="button"
+                className="hr-toolbar-search-clear"
+                onClick={() => {
+                  setSearch('');
+                  setPage(1);
+                }}
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+        </div>
         <SelectInput
           label="Hiring status"
           value={status}

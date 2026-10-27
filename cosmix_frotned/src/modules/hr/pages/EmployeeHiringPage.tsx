@@ -9,7 +9,6 @@ import {
 } from 'react-router-dom';
 import {
   ArrowLeft,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   CreditCard,
@@ -20,8 +19,6 @@ import {
   Send,
   User,
   Fingerprint,
-  Sparkles,
-  Clock,
   Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -257,10 +254,8 @@ function HiringWorkspace({ employeeId }: { employeeId: string }) {
   const step1Done = query.data ? isStep1Complete(query.data.profile) : false;
 
   const stepIndex = ONBOARDING_STEPS.findIndex((s) => s.key === tab);
-  const currentStep = ONBOARDING_STEPS[stepIndex >= 0 ? stepIndex : 0]!;
   const prevStep = stepIndex > 0 ? ONBOARDING_STEPS[stepIndex - 1] : null;
   const nextStep = stepIndex < ONBOARDING_STEPS.length - 1 ? ONBOARDING_STEPS[stepIndex + 1] : null;
-  const progressPercentage = Math.round(((stepIndex + 1) / ONBOARDING_STEPS.length) * 100);
 
   return (
     <>
@@ -290,143 +285,32 @@ function HiringWorkspace({ employeeId }: { employeeId: string }) {
                   </p>
                 )}
 
-                <div className="onboarding-wizard-wrapper">
-                  {/* Progress Card with Connected Stepper Track */}
-                  <div className="onboarding-progress-card">
-                    <div className="onboarding-progress-header">
-                      <div className="onboarding-progress-stats">
-                        <span className="onboarding-step-counter-badge">
-                          <Sparkles size={12} /> {currentStep.stepTag} OF 07
-                        </span>
-                        <span className="onboarding-percentage-text">
-                          {progressPercentage}% Onboarding Completed
-                        </span>
-                      </div>
-                      <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 500 }}>
-                        All progress saved in draft
-                      </span>
-                    </div>
+                <div className="erp-wizard-container">
+                  <nav className="erp-steps-bar" role="tablist" aria-label="Onboarding Steps">
+                    {ONBOARDING_STEPS.map((s, idx) => {
+                      const allowed = tabs.find((t) => t.key === s.key)?.allowed ?? false;
+                      const isLocked = idx > 0 && !step1Done;
+                      const isClickable = allowed && !isLocked;
+                      const isActive = tab === s.key;
+                      const isCompleted = stepIndex > idx || (idx === 0 && step1Done);
 
-                    <div className="onboarding-track-bar">
-                      <div
-                        className="onboarding-track-fill"
-                        style={{ width: `${progressPercentage}%` }}
-                      />
-                    </div>
-
-                    <div
-                      className="onboarding-stepper-track"
-                      role="tablist"
-                      aria-label="Onboarding Steps"
-                    >
-                      {ONBOARDING_STEPS.map((s, idx) => {
-                        const allowed = tabs.find((t) => t.key === s.key)?.allowed ?? false;
-                        const isLocked = idx > 0 && !step1Done;
-                        const isClickable = allowed && !isLocked;
-                        const isActive = tab === s.key;
-                        const isCompleted = stepIndex > idx || (idx === 0 && step1Done);
-
-                        return (
-                          <div
-                            key={s.key}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Link
-                              to={isClickable ? `?tab=${s.key}` : '#'}
-                              className={`onboarding-step-pill ${isActive ? 'is-active' : ''} ${isCompleted ? 'is-completed' : ''} ${isLocked ? 'is-locked' : ''}`}
-                              title={
-                                isLocked
-                                  ? 'Complete and save Step 1 (Profile & Workplace Placement) first to unlock this step'
-                                  : !allowed
-                                    ? 'Insufficient permissions'
-                                    : s.title
-                              }
-                              style={{
-                                opacity: isClickable ? 1 : 0.45,
-                                cursor: isClickable ? 'pointer' : 'not-allowed',
-                              }}
-                              onClick={(e) => {
-                                if (!isClickable) {
-                                  e.preventDefault();
-                                } else {
-                                  setSaved(false);
-                                }
-                              }}
-                            >
-                              <div className="onboarding-step-bubble">
-                                {isLocked ? (
-                                  <Lock size={12} />
-                                ) : isCompleted ? (
-                                  <CheckCircle2 size={14} />
-                                ) : (
-                                  s.stepNumber
-                                )}
-                              </div>
-                              <div className="onboarding-step-label-group">
-                                <span className="onboarding-step-tag">
-                                  {s.stepTag}
-                                  {isLocked && <span className="step-locked-badge">LOCKED</span>}
-                                </span>
-                                <span className="onboarding-step-name">{s.shortTitle}</span>
-                              </div>
-                            </Link>
-                            {idx < ONBOARDING_STEPS.length - 1 && (
-                              <ChevronRight size={13} className="onboarding-step-divider" />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Active Step Hero Banner */}
-                  <div className="onboarding-hero-banner">
-                    <div className="onboarding-hero-left">
-                      <div className="onboarding-hero-icon-box">
-                        <currentStep.icon size={22} />
-                      </div>
-                      <div className="onboarding-hero-meta">
-                        <span className="onboarding-hero-pill">
-                          {currentStep.stepTag} • EMPLOYEE ONBOARDING WIZARD
-                        </span>
-                        <h2 className="onboarding-hero-title">
-                          Step {currentStep.stepNumber}: {currentStep.title}
-                        </h2>
-                        <p className="onboarding-hero-desc">{currentStep.description}</p>
-                      </div>
-                    </div>
-                    <div className="onboarding-hero-right">
-                      <span className="onboarding-hero-badge">
-                        <Clock size={12} /> ~2 min
-                      </span>
-                    </div>
-                  </div>
-
-                  {!step1Done && (
-                    <div className="onboarding-locked-banner">
-                      <div className="onboarding-locked-banner-left">
-                        <div className="onboarding-locked-banner-icon">
-                          <Lock size={18} />
-                        </div>
-                        <div>
-                          <strong style={{ fontSize: '13.5px', color: '#92400e' }}>
-                            Step 1 Required: Profile &amp; Workplace Placement
-                          </strong>
-                          <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#78350f' }}>
-                            Please fill in mandatory personal identity, contacts, addresses, and
-                            workplace placement (*) and click &quot;Save &amp; Continue&quot;.
-                            Subsequent steps (Financial, Medical, Documents, Biometrics, and
-                            Submission) will unlock automatically once Step 1 is saved.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                      return (
+                        <Link
+                          key={s.key}
+                          to={isClickable ? `?tab=${s.key}` : '#'}
+                          title={s.title}
+                          className={`erp-step-tab ${isActive ? 'is-active' : ''} ${isCompleted ? 'is-completed' : ''} ${isLocked ? 'is-locked' : ''}`}
+                          onClick={(e) => {
+                            if (!isClickable) e.preventDefault();
+                            else setSaved(false);
+                          }}
+                        >
+                          <span className="erp-step-title">Step {s.stepNumber}</span>
+                          {isLocked && <Lock size={12} className="erp-step-lock" />}
+                        </Link>
+                      );
+                    })}
+                  </nav>
                 </div>
 
                 <div className="onboarding-step-content-box" key={tab}>

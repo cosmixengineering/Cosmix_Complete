@@ -6,6 +6,7 @@ using Cosmix.Application.Attendance.Rosters;
 using Cosmix.Application.Authentication.Access;
 using Cosmix.Domain.Attendance.Overtime;
 using Cosmix.Domain.Common.Approvals;
+using Cosmix.Domain.HR.Policies;
 
 namespace Cosmix.Application.Attendance.Overtime;
 
@@ -61,7 +62,8 @@ public sealed record OvertimeEligibility(string Status, Guid? VersionId, bool? A
     Guid? GlobalVersionId = null, Guid? EmployeeVersionId = null);
 public sealed record OvertimeEligibleInterval(DateTimeOffset StartsAtUtc, DateTimeOffset EndsAtUtc);
 public sealed record OvertimeDurationResult(string Status, Guid? PolicyVersionId, string? CalculationVersion,
-    bool? ScheduledDutyCompleted, IReadOnlyList<OvertimeEligibleInterval> EligibleIntervals, string? RateRuleCode = null);
+    bool? ScheduledDutyCompleted, IReadOnlyList<OvertimeEligibleInterval> EligibleIntervals, string? RateRuleCode = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] AttendanceOvertimeRules? OvertimeRules = null);
 public sealed record OvertimeSessionSource(Guid Id, Guid SessionKey, int Revision, DateTimeOffset StartsAtUtc,
     DateTimeOffset? EndsAtUtc, Guid? SiteId, Guid ShiftVersionId, Guid? PolicyVersionId,
     Guid? CheckInAssessmentId, Guid? CheckOutAssessmentId, Guid? CorrectionDecisionId, bool ValidDutyEvidence,

@@ -2,6 +2,7 @@ import { PermissionsAndroid, Platform } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import type { LocationSample } from '../../types/contracts';
 import { AppError } from '../../utils/errors';
+import { validateLocation } from '../../utils/validation';
 
 Geolocation.setRNConfiguration({
   skipPermissionRequests: Platform.OS === 'android',
@@ -31,16 +32,31 @@ export class CurrentLocation {
   read(): Promise<LocationSample> {
     return new Promise((resolve, reject) =>
       Geolocation.getCurrentPosition(
-        position =>
-          resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracyMeters: position.coords.accuracy,
-            capturedAtUtc: new Date(position.timestamp).toISOString(),
-            mocked:
-              (position as typeof position & { mocked?: boolean }).mocked ===
-              true,
-          }),
+        position => {
+          try {
+            const sample: LocationSample = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracyMeters: position.coords.accuracy,
+              capturedAtUtc: new Date(position.timestamp).toISOString(),
+              mocked:
+                (position as typeof position & { mocked?: boolean }).mocked ===
+                true,
+            };
+            // Validate original native values before normalization so invalid values
+            // cannot round into the accepted coordinate/accuracy ranges.
+            validateLocation(sample, Date.now());
+            resolve({
+              ...sample,
+              latitude: Number(sample.latitude.toFixed(7)),
+              longitude: Number(sample.longitude.toFixed(7)),
+              // Never understate the native uncertainty to meet a boundary limit.
+              accuracyMeters: Math.ceil(sample.accuracyMeters * 100) / 100,
+            });
+          } catch (failure) {
+            reject(failure);
+          }
+        },
         error =>
           reject(
             new AppError(

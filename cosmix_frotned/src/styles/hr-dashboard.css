@@ -1933,7 +1933,6 @@
   background: #fbfcfe;
 }
 
-
 /* ==========================================================================
    Exact Pixel-Perfect HR Dashboard Styles (Matching Reference Screenshot)
    ========================================================================== */
@@ -2910,7 +2909,9 @@
   display: flex !important;
   flex-direction: column !important;
   overflow-x: hidden !important;
-  transition: margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1), width 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition:
+    margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .hr-shell.is-collapsed .hr-workspace {
@@ -2942,7 +2943,6 @@
     max-width: 100% !important;
   }
 }
-
 
 /* ==========================================================================
    Organization Master Page & Modern Popup Dialog (media_1792655285646_b21385d4)
@@ -3586,7 +3586,6 @@
   cursor: not-allowed !important;
 }
 
-
 /* ==========================================================================
    Employee Detail Page & Modern Overview UI (media_1792655693430_7916e940.png)
    ========================================================================== */
@@ -3685,7 +3684,9 @@
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  transition: transform 0.15s ease, background 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
 }
 
 .emp-avatar-cam-btn:hover {

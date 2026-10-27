@@ -22,7 +22,7 @@ import {
 
 type Identity = { accountId: string; sessionId: string };
 export type AttendancePorts = {
-  camera: { capture(): Promise<string> };
+  camera: { capture(ensureCurrent: () => void): Promise<string> };
   location: {
     ensurePermission(): Promise<void>;
     read(): Promise<LocationSample>;
@@ -47,12 +47,59 @@ export class AttendanceWorkflow {
     return this.exclusive(async () => {
       await this.requireNoPending();
       const identity = this.ports.identity();
-      const started = this.ports.now();
+      const stateRequestedAt = this.ports.now();
       progress('preparing');
       const state = await this.api.request<AttendanceState>(
         '/api/v1/me/attendance/state',
       );
+      const stateReceivedAt = this.ports.now();
       this.requireState(state, 'check-in');
+      // Location and the authoritative dated roster/boundary are checked before
+      // camera access or any face-provider work. This does not record a punch.
+      await this.ports.location.ensurePermission();
+      this.requireIdentity(identity);
+      progress('location');
+      const initialLocation = await this.ports.location.read();
+      validateLocation(initialLocation, this.ports.now());
+      this.requireIdentity(identity);
+      progress('preparing');
+      const preflight = await this.api.request<unknown>(
+        '/api/v1/me/attendance/check-in/preflight',
+        {
+          method: 'POST',
+          body: {
+            latitude: initialLocation.latitude,
+            longitude: initialLocation.longitude,
+            accuracyMeters: initialLocation.accuracyMeters,
+            deviceCapturedAtUtc: initialLocation.capturedAtUtc,
+          },
+        },
+      );
+      const preflightReceivedAt = this.ports.now();
+      if (
+        !isRecord(preflight) ||
+        preflight.canOpenCamera !== true ||
+        !isTimestamp(preflight.checkedAtUtc)
+      ) {
+        throw new AppError('invalid_server_response');
+      }
+      const preflightCheckedAt = Date.parse(preflight.checkedAtUtc);
+      // The state timestamp was generated somewhere within its HTTP round trip.
+      // Anchor it at receipt and retain that round trip as clock uncertainty;
+      // adding the request duration again would age a fresh preflight twice.
+      const stateRoundTrip = Math.max(0, stateReceivedAt - stateRequestedAt);
+      const preflightAgeLowerBound =
+        Date.parse(state.serverTimeUtc) +
+        preflightReceivedAt -
+        stateReceivedAt -
+        preflightCheckedAt;
+      if (
+        preflightAgeLowerBound > 30000 ||
+        preflightAgeLowerBound + stateRoundTrip < -5000
+      ) {
+        throw new AppError('invalid_server_response');
+      }
+      this.requireIdentity(identity);
       const capability = await this.api.request<FaceCapability>(
         '/api/v1/attendance/face/capability',
       );
@@ -65,7 +112,6 @@ export class AttendanceWorkflow {
       ) {
         throw new AppError('face_provider_unavailable');
       }
-      await this.ports.location.ensurePermission();
       this.checkInKey ??= this.ports.createKey('punch-in');
       const challenge = await this.api.request<FaceChallenge>(
         '/api/v1/attendance/face/challenges',
@@ -76,8 +122,10 @@ export class AttendanceWorkflow {
         },
       );
       this.requireChallenge(challenge);
+      // Use the newer server check as the local expiry hint. Server verification
+      // and final punch submission remain authoritative for proof expiration.
       const serverNow = () =>
-        Date.parse(state.serverTimeUtc) + this.ports.now() - started;
+        preflightCheckedAt + this.ports.now() - preflightReceivedAt;
       const ensureCurrent = () => {
         if (serverNow() >= Date.parse(challenge.expiresAtUtc)) {
           throw new AppError('face_challenge_expired');
@@ -86,7 +134,7 @@ export class AttendanceWorkflow {
       };
       ensureCurrent();
       progress('camera');
-      let image: string | null = await this.ports.camera.capture();
+      let image: string | null = await this.ports.camera.capture(ensureCurrent);
       try {
         validateCaptureBase64(image);
         ensureCurrent();
@@ -182,6 +230,7 @@ export class AttendanceWorkflow {
       );
       this.requireState(state, 'check-out');
       await this.ports.location.ensurePermission();
+      this.requireIdentity(identity);
       progress('location');
       const location = await this.ports.location.read();
       validateLocation(location, this.ports.now());

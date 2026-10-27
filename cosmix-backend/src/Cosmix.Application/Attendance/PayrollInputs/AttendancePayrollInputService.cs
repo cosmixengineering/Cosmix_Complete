@@ -56,7 +56,7 @@ public sealed class AttendancePayrollInputService(AttendanceOperation operation,
                 if (bytes.Length > 8 * 1024 * 1024) throw AttendanceOperation.Conflict("payroll_input_evidence_limit");
                 var reference = AttendanceOperation.Reference(await files.WriteAsync(bytes, Purpose(employeeId, monthStart, revision), token));
                 var record = new AttendancePayrollInputRevision(employeeId, monthStart, revision, inspected.Latest?.Id,
-                    AttendancePayrollInputRules.Version, evidence.PreviewFingerprint, reference, actor.Identity.AccountId, actor.Now);
+                    evidence.Calculation.SourceManifest.CalculationVersion, evidence.PreviewFingerprint, reference, actor.Identity.AccountId, actor.Now);
                 ledger.Add(record);
                 var result = Detail(record, evidence, true);
                 return new AttendanceChange<AttendancePayrollInputDetail>(record.Id, inspected.Latest is null ? null : Map(inspected.Latest), result);
@@ -99,9 +99,7 @@ public sealed class AttendancePayrollInputService(AttendanceOperation operation,
     {
         Validate(employeeId, month);
         var current = await producer.ResourceScopesAsync(employeeId, month, ct);
-        if (!AttendanceScopeEvaluation.Allows(actor.Identity,
-            await access.GetGrantsAsync(actor.Identity.AccountId, actor.Now, ct), AttendancePayrollInputPermissions.Read, current))
-            throw AttendanceOperation.Denied();
+        await operation.RequireScopedPermissionAsync(actor, AttendancePayrollInputPermissions.Read, current, ct);
         var inspected = await Inspect(employeeId, month, actor, AttendancePayrollInputPermissions.Read, ct);
         var issues = inspected.Calculation.Issues.Select(x => new MonthLockIssue(x.Code, employeeId, x.BusinessDate)).ToList();
         if (inspected.Calculation.State != "ready") issues.Add(new("payroll_input_sources_unavailable", employeeId));
@@ -123,9 +121,7 @@ public sealed class AttendancePayrollInputService(AttendanceOperation operation,
     {
         var row = await ledger.FindAsync(employeeId, id, ct) ?? throw AttendanceOperation.Conflict("month_lock_payroll_revision_missing");
         var scopes = await producer.ResourceScopesAsync(employeeId, row.PeriodStart, ct);
-        if (!AttendanceScopeEvaluation.Allows(actor.Identity,
-                await access.GetGrantsAsync(actor.Identity.AccountId, actor.Now, ct), AttendancePayrollInputPermissions.Read, scopes))
-            throw AttendanceOperation.Denied();
+        await operation.RequireScopedPermissionAsync(actor, AttendancePayrollInputPermissions.Read, scopes, ct);
         return await ReadEvidence(row, actor, AttendancePayrollInputPermissions.Read, ct);
     }
 
@@ -133,9 +129,7 @@ public sealed class AttendancePayrollInputService(AttendanceOperation operation,
     {
         var calculation = await producer.CalculateAsync(employeeId, monthStart, ct);
         ValidateCalculation(calculation, employeeId, monthStart);
-        if (!AttendanceScopeEvaluation.Allows(actor.Identity,
-                await access.GetGrantsAsync(actor.Identity.AccountId, actor.Now, ct), permission, calculation.SourceManifest.OriginalScopes))
-            throw AttendanceOperation.Denied();
+        await operation.RequireScopedPermissionAsync(actor, permission, calculation.SourceManifest.OriginalScopes, ct);
         var days = calculation.SourceManifest.Days.Where(x => x.Snapshot is not null || x.BranchId.HasValue)
             .Select(x => new AttendancePayrollJurisdictionDay(x.BusinessDate, x.Snapshot?.Employment.SiteId,
                 x.BranchId ?? x.Snapshot?.Roster.BranchId, x.OfficeSource ?? x.Snapshot?.OfficeSource)).ToArray();
@@ -161,7 +155,7 @@ public sealed class AttendancePayrollInputService(AttendanceOperation operation,
             Purpose(row.EmployeeId, row.PeriodStart, row.Revision), ct);
         if (evidence.SchemaVersion != 1 || evidence.EmployeeId != row.EmployeeId || evidence.MonthStart != row.PeriodStart ||
             evidence.Revision != row.Revision || evidence.ActorUserId != row.ActorUserId || evidence.CreatedAtUtc != row.CreatedAtUtc ||
-            row.CalculationVersion != AttendancePayrollInputRules.Version || evidence.PreviewFingerprint != row.InputFingerprint ||
+            !AttendancePayrollInputRules.IsSupportedVersion(row.CalculationVersion) || row.CalculationVersion!=evidence.Calculation.SourceManifest.CalculationVersion || evidence.PreviewFingerprint != row.InputFingerprint ||
             Fingerprint(evidence.Calculation, evidence.Jurisdictions) != row.InputFingerprint)
             throw AttendanceOperation.Conflict("payroll_input_evidence_invalid");
         ValidateCalculation(evidence.Calculation, row.EmployeeId, row.PeriodStart);
@@ -171,9 +165,9 @@ public sealed class AttendancePayrollInputService(AttendanceOperation operation,
                 (day.OfficeSource ?? day.Snapshot?.OfficeSource) is { } office &&
                 x.ConfigurationVersionId == office.OfficeGeofenceVersionId && x.JurisdictionCode == office.JurisdictionCode)) != 1))
             throw AttendanceOperation.Conflict("payroll_input_evidence_invalid");
-        if (JsonSerializer.Serialize(evidence.OriginalScopes) != JsonSerializer.Serialize(evidence.Calculation.SourceManifest.OriginalScopes) ||
-            !AttendanceScopeEvaluation.Allows(actor.Identity, await access.GetGrantsAsync(actor.Identity.AccountId, actor.Now, ct), permission, evidence.OriginalScopes))
+        if (JsonSerializer.Serialize(evidence.OriginalScopes) != JsonSerializer.Serialize(evidence.Calculation.SourceManifest.OriginalScopes))
             throw AttendanceOperation.Denied();
+        await operation.RequireScopedPermissionAsync(actor, permission, evidence.OriginalScopes, ct);
         return evidence;
     }
 
@@ -181,7 +175,7 @@ public sealed class AttendancePayrollInputService(AttendanceOperation operation,
     {
         if (calculation.EmployeeId != employeeId || calculation.MonthStart != monthStart || calculation.MonthEndExclusive != monthStart.AddMonths(1) ||
             calculation.InputFingerprint is not { Length: 64 } || calculation.SourceManifest.EmployeeId != employeeId ||
-            calculation.SourceManifest.MonthStart != monthStart || calculation.SourceManifest.CalculationVersion != AttendancePayrollInputRules.Version ||
+            calculation.SourceManifest.MonthStart != monthStart || calculation.SourceManifest.CalculationVersion != AttendancePayrollInputRules.VersionFor(calculation.SourceManifest.Days.Select(x=>x.Compensation)) ||
             !AttendanceScopeEvaluation.IsValid(calculation.SourceManifest.OriginalScopes) ||
             calculation.SourceManifest.OriginalScopes.SelectMany(x => x.Alternatives).Any(x => x.EmployeeId != employeeId) ||
             calculation.Lines.Count > 732 || calculation.Lines.Select(x => x.Key).Distinct(StringComparer.Ordinal).Count() != calculation.Lines.Count ||

@@ -31,6 +31,10 @@ public sealed record AttendancePayrollInputResult(string State, IReadOnlyList<At
 public static class AttendancePayrollInputRules
 {
     public const string Version = "attendance-payroll-inputs-v1";
+    public const string WageVersion = "attendance-payroll-inputs-wages-v2";
+    public static bool IsSupportedVersion(string version) => version is Version or WageVersion;
+    public static string VersionFor(IEnumerable<AttendancePayrollCompensation?> compensation) =>
+        compensation.Any(x => x is not null && x.WageBasis != WageBasis.Monthly) ? WageVersion : Version;
     public const int MaximumDays = 366;
 
     public static AttendancePayrollInputResult Calculate(DateOnly monthStart, IReadOnlyList<AttendancePayrollInputDay> input)
@@ -123,14 +127,14 @@ public static class AttendancePayrollInputRules
                         priorDays.Select(x => x.BusinessDate).ToArray()));
                     break;
                 }
-                confirmedAmount += retained.OrdinaryLine?.Amount ?? 0;
+                confirmedAmount += Comparison(retained.OrdinaryLine);
             }
             // An unknown prior deduction must never appear as a numeric provisional charge.
             if (!priorAvailable) continue;
             var threshold = Line("late_threshold", day, group, monthStart, late.SalaryBasis!.Value,
                 late.SalaryDivisor!.Value, late.FixedSalaryDivisorDays, late.DeductionDaysPerThreshold ?? 0,
                 0, 0, late.Rounding!.Value, signature, late);
-            var priorOrdinary = confirmedAmount + ordinary.Where(x => x.CompletionDate >= monthStart).Sum(x => x.Amount);
+            var priorOrdinary = confirmedAmount + ordinary.Where(x => x.CompletionDate >= monthStart).Sum(Comparison);
             lines.Add(threshold with { Amount = Math.Max(0, threshold.CandidateAmount - priorOrdinary), OrdinaryComparisonAmount = priorOrdinary,
                 ApplicationCode = priorOrdinary == 0 ? "late_candidate" : threshold.CandidateAmount > priorOrdinary
                     ? "late_excess_over_ordinary" : "suppressed_by_ordinary" });
@@ -173,6 +177,18 @@ public static class AttendancePayrollInputRules
         var fixedDay = day.Time.DayStatus == AttendanceDayStatus.Absent ||
             (day.Time.DayStatus == AttendanceDayStatus.HalfDay || CompletedUnpaidHalfLeave(day, capacity)) && fraction == rules.UnpaidHalfDayDeductionDays ||
             day.Time.DayStatus == AttendanceDayStatus.Leave && day.Time.PayableTicks == 0;
+        if(day.Compensation!.WageBasis != WageBasis.Monthly)
+        {
+            // The salary producer pays only retained ordinary paid units. Keep the exact lost
+            // entitlement as comparison evidence, never subtract the same unpaid time again.
+            var paidCapacity=day.Time.RequiredDutyTicks ?? capacity;
+            var lost=Math.Max(0,paidCapacity-Math.Min(day.Time.PayableTicks.Value,paidCapacity));
+            if(lost==0)return;
+            var comparison=Line("ordinary_shortfall",day,[day],month,AttendanceDeductionSalaryBasis.BaseSalary,
+                rules.SalaryDivisor!.Value,rules.FixedSalaryDivisorDays,0,lost,paidCapacity,rules.Rounding!.Value,null);
+            lines.Add(comparison with {Amount=0,OrdinaryComparisonAmount=comparison.CandidateAmount,ApplicationCode="unpaid_time_already_excluded_from_earnings"});
+            return;
+        }
         lines.Add(Line(fixedDay ? "ordinary_day" : "ordinary_shortfall", day, [day], month,
             rules.SalaryBasis!.Value, rules.SalaryDivisor!.Value, rules.FixedSalaryDivisorDays,
             fraction, fixedDay ? 0 : shortfall, fixedDay ? 0 : scheduled, rules.Rounding!.Value, null));
@@ -214,7 +230,7 @@ public static class AttendancePayrollInputRules
     {
         var salary = day.Compensation;
         var code = salary is null ? "compensation_evidence_unavailable" :
-            salary.WageBasis != WageBasis.Monthly ? "monthly_compensation_required" :
+            !Enum.IsDefined(salary.WageBasis) ? "compensation_wage_basis_invalid" :
             salary.Currency != "PKR" ? "pkr_compensation_required" :
             salary.EffectiveFrom > day.BusinessDate || salary.EffectiveTo <= day.BusinessDate ||
                 salary.BaseAmount < 0 || salary.GrossAmount < salary.BaseAmount ? "compensation_evidence_invalid" : null;
@@ -232,6 +248,16 @@ public static class AttendancePayrollInputRules
         var (salaryN, salaryD) = Rational(amount);
         var (fractionN, fractionD) = shortfall > 0 ? (new BigInteger(shortfall), new BigInteger(scheduled)) : Rational(fraction);
         var numerator = salaryN * fractionN; var denominator = salaryD * fractionD * days;
+        if(salary.WageBasis != WageBasis.Monthly)
+        {
+            var input=completion.TimeInput!;
+            var capacity=completion.Time?.RequiredDutyTicks ?? checked((long)(input.ScheduledMinutes-
+                (input.Rules.PaidTime!.BreakTreatment==AttendanceBreakTreatment.DeductScheduledUnpaidBreak?Math.Min(input.ScheduledMinutes,input.UnpaidBreakMinutes):0))*TimeSpan.TicksPerMinute);
+            if(capacity<=0)throw new ArgumentException("Paid duty capacity is required for daily/hourly penalties.");
+            days=1;
+            denominator=salaryD*fractionD;
+            if(salary.WageBasis==WageBasis.Hourly){numerator*=capacity;denominator*=TimeSpan.TicksPerHour;}
+        }
         if (late?.DeductionKind == AttendanceLateDeductionKind.FixedAmount)
             (numerator, denominator) = Rational(late.FixedAmountPkr!.Value);
         if (late?.DeductionKind == AttendanceLateDeductionKind.Hours)
@@ -239,17 +265,29 @@ public static class AttendancePayrollInputRules
             var (hoursN, hoursD) = Rational(late.DeductionHoursPerThreshold!.Value);
             numerator = salaryN * hoursN * 60;
             denominator = salaryD * hoursD * days * completion.TimeInput!.ScheduledMinutes;
+            if(salary.WageBasis!=WageBasis.Monthly)
+            {
+                var input=completion.TimeInput!;
+                var capacity=completion.Time?.RequiredDutyTicks ?? checked((long)(input.ScheduledMinutes-
+                    (input.Rules.PaidTime!.BreakTreatment==AttendanceBreakTreatment.DeductScheduledUnpaidBreak?Math.Min(input.ScheduledMinutes,input.UnpaidBreakMinutes):0))*TimeSpan.TicksPerMinute);
+                numerator=salaryN*hoursN;
+                denominator=salaryD*hoursD;
+                if(salary.WageBasis==WageBasis.Daily){numerator*=TimeSpan.TicksPerHour;denominator*=capacity;}
+            }
         }
         var gcd = BigInteger.GreatestCommonDivisor(numerator, denominator); numerator /= gcd; denominator /= gcd;
         var value = Round(numerator, denominator, rounding);
         var sourceDates = sources.Select(x => x.BusinessDate).ToArray();
-        var key = Hash(new { Version, kind, completion.BusinessDate, sourceDates, signature });
+        var version=salary.WageBasis==WageBasis.Monthly?Version:WageVersion;
+        var key = Hash(new { Version=version, kind, completion.BusinessDate, sourceDates, signature });
         return new(key, kind, completion.BusinessDate, sourceDates, sources.Select(x => x.PolicyVersionId!.Value).Distinct().ToArray(),
             sources.SelectMany(x => x.SourceIds).Concat(salary.SourceIds).Distinct().Order().ToArray(),
             sources.Select(x => x.SourceFingerprint).ToArray(), salary.Id, salary.Fingerprint, basis, amount, days,
             fraction, shortfall, scheduled, numerator.ToString(System.Globalization.CultureInfo.InvariantCulture),
             denominator.ToString(System.Globalization.CultureInfo.InvariantCulture), value, salary.Currency, rounding, signature, value);
     }
+    private static decimal Comparison(AttendancePayrollInputLine? line) => line is null ? 0 :
+        line.ApplicationCode=="unpaid_time_already_excluded_from_earnings"?line.OrdinaryComparisonAmount:line.Amount;
     private static (BigInteger N, BigInteger D) Rational(decimal value)
     {
         var bits = decimal.GetBits(value);

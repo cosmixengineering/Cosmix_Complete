@@ -23,8 +23,16 @@ public sealed class StatutoryContributionConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.CreatedByUserId).HasMaxLength(200).IsRequired();
         builder.Property(x => x.ApprovedByUserId).HasMaxLength(200);
         builder.Property(x => x.PostedByUserId).HasMaxLength(200);
+        builder.Property(x => x.JournalEntryId);
+        builder.Property(x => x.EmployeeItemsJson);
+        builder.Property(x => x.HasEmployeeEntries).IsRequired();
+        builder.Property(x => x.ObligationId);
+        builder.Ignore(x => x.Entries);
+        builder.Ignore(x => x.RowVersion);
 
         builder.HasIndex(x => new { x.Scheme, x.ContributionMonth }).IsUnique();
         builder.HasIndex(x => x.State);
+        builder.HasIndex(x => x.JournalEntryId);
+        builder.HasIndex(x => x.ObligationId);
     }
 }

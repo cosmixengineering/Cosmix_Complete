@@ -57,7 +57,7 @@ function effectiveLatestPerCode(rows: ApprovalRoute[]): Map<string, ApprovalRout
 export function ApprovalRoutingPage() {
   const access = useApprovalAccess();
   const tabs = [
-    ...(access.canRead ? [{ id: 'routes', label: 'Approval routes' }] : []),
+    ...(access.canRead || access.canManage ? [{ id: 'routes', label: 'Approval routes' }] : []),
     ...(access.canDelegate ? [{ id: 'delegations', label: 'Delegations' }] : []),
   ];
   const [tab, setTab] = useState(tabs[0]?.id ?? '');
@@ -70,18 +70,20 @@ export function ApprovalRoutingPage() {
         <h1>Approval Routing</h1>
       </div>
       <FinanceTabs tabs={tabs} active={active} onChange={setTab} label="Approval routing views" />
-      {active === 'routes' && <ApprovalRoutes canManage={access.canManage} />}
+      {active === 'routes' && (
+        <ApprovalRoutes canRead={access.canRead} canManage={access.canManage} />
+      )}
       {active === 'delegations' && <ApprovalDelegations />}
     </section>
   );
 }
 
-function ApprovalRoutes({ canManage }: { canManage: boolean }) {
+function ApprovalRoutes({ canRead, canManage }: { canRead: boolean; canManage: boolean }) {
   const [requestType, setRequestType] = useState('allowance');
   const list = useFinanceQuery(
     `/approvals/routes?requestType=${encodeURIComponent(requestType)}`,
     approvalRouteList,
-    true,
+    canRead,
   );
   const latest = useMemo(() => effectiveLatestPerCode(list.data ?? []), [list.data]);
   return (
@@ -100,47 +102,53 @@ function ApprovalRoutes({ canManage }: { canManage: boolean }) {
           Each stage is published as one immutable version row. A request type becomes routable only
           when its stages form a contiguous 1..N sequence for the latest version.
         </p>
-        <ApprovalQueryState query={list}>
-          {!list.data?.length && (
-            <FinanceNotice>
-              No route rows exist for this request type. Routed requests fail with
-              approval_route_unconfigured until every stage is published.
-            </FinanceNotice>
-          )}
-          {list.data?.map((row) => (
-            <article className="hr-repeat" key={row.id}>
-              <div className="hr-repeat-heading">
-                <h3>
-                  {row.code} &middot; stage {row.stage} &middot; version {row.version}
-                </h3>
-                {latest.get(row.code)?.id === row.id && (
-                  <span className="hr-status hr-status--ok">Latest</span>
-                )}
-              </div>
-              <RecordView
-                value={{
-                  routeReference: row.id,
-                  code: row.code,
-                  version: row.version,
-                  requestType: row.requestType,
-                  approverPermission: row.approverPermission,
-                  stage: row.stage,
-                  effectiveFrom: row.effectiveFrom,
-                  effectiveTo: row.effectiveTo,
-                  staffCategoryId: row.staffCategoryId,
-                  departmentId: row.departmentId,
-                  siteId: row.siteId,
-                  minimumAmount: row.minimumAmount,
-                  maximumAmount: row.maximumAmount,
-                  currency: row.currency,
-                  minimumDurationMinutes: row.minimumDurationMinutes,
-                  maximumDurationMinutes: row.maximumDurationMinutes,
-                  riskCode: row.riskCode,
-                }}
-              />
-            </article>
-          ))}
-        </ApprovalQueryState>
+        {canRead ? (
+          <ApprovalQueryState query={list}>
+            {!list.data?.length && (
+              <FinanceNotice>
+                No route rows exist for this request type. Routed requests fail with
+                approval_route_unconfigured until every stage is published.
+              </FinanceNotice>
+            )}
+            {list.data?.map((row) => (
+              <article className="hr-repeat" key={row.id}>
+                <div className="hr-repeat-heading">
+                  <h3>
+                    {row.code} &middot; stage {row.stage} &middot; version {row.version}
+                  </h3>
+                  {latest.get(row.code)?.id === row.id && (
+                    <span className="hr-status hr-status--ok">Latest</span>
+                  )}
+                </div>
+                <RecordView
+                  value={{
+                    routeReference: row.id,
+                    code: row.code,
+                    version: row.version,
+                    requestType: row.requestType,
+                    approverPermission: row.approverPermission,
+                    stage: row.stage,
+                    effectiveFrom: row.effectiveFrom,
+                    effectiveTo: row.effectiveTo,
+                    staffCategoryId: row.staffCategoryId,
+                    departmentId: row.departmentId,
+                    siteId: row.siteId,
+                    minimumAmount: row.minimumAmount,
+                    maximumAmount: row.maximumAmount,
+                    currency: row.currency,
+                    minimumDurationMinutes: row.minimumDurationMinutes,
+                    maximumDurationMinutes: row.maximumDurationMinutes,
+                    riskCode: row.riskCode,
+                  }}
+                />
+              </article>
+            ))}
+          </ApprovalQueryState>
+        ) : (
+          <FinanceNotice>
+            Reading route history requires approval route read permission.
+          </FinanceNotice>
+        )}
       </div>
       {canManage && <PublishRouteForm requestType={requestType} />}
     </>
@@ -148,6 +156,7 @@ function ApprovalRoutes({ canManage }: { canManage: boolean }) {
 }
 
 function PublishRouteForm({ requestType }: { requestType: string }) {
+  const access = useApprovalAccess();
   const action = useFinanceAction();
   const [form, setForm] = useState({
     code: '',
@@ -183,6 +192,9 @@ function PublishRouteForm({ requestType }: { requestType: string }) {
     const stage = Number(form.stage);
     if (!Number.isInteger(stage) || stage < 1 || stage > 20)
       errors.stage = 'Choose a stage from 1 to 20.';
+    else if (!access.canPublishStage(stage))
+      errors.stage =
+        'Publishing requires All-scope route management and review authority for this stage.';
     if (!form.effectiveFrom) errors.effectiveFrom = 'An effective from date is required.';
     if (form.effectiveTo && form.effectiveFrom && form.effectiveTo < form.effectiveFrom)
       errors.effectiveTo = 'The effective to date cannot be before the effective from date.';
@@ -243,10 +255,17 @@ function PublishRouteForm({ requestType }: { requestType: string }) {
     <div className="hr-form-section">
       <h2>Publish a route stage</h2>
       <p className="muted">
-        Publishing requires the fixed SuperAdmin role holding approvals.routes.manage. The approver
-        permission is derived from the stage number. Enter the current latest version of the code so
-        a concurrent publish fails instead of overwriting.
+        Publishing requires a current web session with MFA, approvals.routes.manage and the selected
+        stage-review permission, both with All scope. The approver permission is derived from the
+        stage number. Enter the current latest version of the code so a concurrent publish fails
+        instead of overwriting.
       </p>
+      {!access.canPublishStage(Number(form.stage)) && (
+        <FinanceNotice>
+          Your account needs All-scope route management and review authority for the selected stage
+          before you can publish it.
+        </FinanceNotice>
+      )}
       <form onSubmit={(event) => void submit(event)}>
         <div className="hr-form-grid">
           <TextInput
@@ -360,7 +379,10 @@ function PublishRouteForm({ requestType }: { requestType: string }) {
         />
         <ApprovalActionMessage action={action} operation="publishRoute" />
         <div className="hr-actions">
-          <Button type="submit" disabled={action.pending}>
+          <Button
+            type="submit"
+            disabled={action.pending || !access.canPublishStage(Number(form.stage))}
+          >
             {action.pending ? 'Publishing...' : 'Publish stage'}
           </Button>
         </div>

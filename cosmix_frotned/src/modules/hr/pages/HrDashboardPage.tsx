@@ -29,12 +29,7 @@ import { isSystemAdmin } from '@/auth/contracts';
 import { useAttendanceAccess } from '@/modules/attendance/hooks/use-attendance-access';
 import { useAttendanceQuery } from '@/modules/attendance/hooks/use-attendance-query';
 import { leavePage } from '@/modules/attendance/operations/leave-policy/contracts';
-import {
-  dashboardCount,
-  dashboardCsv,
-  dashboardMoney,
-  dashboardRead,
-} from '../utils/dashboard';
+import { dashboardCount, dashboardCsv, dashboardMoney, dashboardRead } from '../utils/dashboard';
 import { dashboardAttendanceSummary, dashboardPayrollSummary } from '../schemas/dashboard';
 import { businessDate } from '@/utils/format';
 import '@/styles/hr-dashboard.css';
@@ -83,7 +78,8 @@ export function HrDashboardPage() {
   const isAdmin = isSystemAdmin(access.user);
   const canReadEmployees = access.can('hr.employees.read');
   const canReadSites = access.can('hr.sites.read');
-  const canReadHiring = isAdmin && access.can('hr.employees.read', 'hr.employees.submissions.review');
+  const canReadHiring =
+    isAdmin && access.can('hr.employees.read', 'hr.employees.submissions.review');
   const canReadLeaves = isAdmin && attendanceAccess.can('attendance.leaves.review');
   const canReadAttendance = access.can('attendance.reports.read');
   const canReadPayroll = access.can(
@@ -157,9 +153,8 @@ export function HrDashboardPage() {
   const hiringCount = hiring.count ?? 0;
 
   // Percentage for progress bar
-  const approvedPercent = totalEmployeesCount > 0
-    ? Math.round((approvedCount / totalEmployeesCount) * 100)
-    : 45;
+  const approvedPercent =
+    totalEmployeesCount > 0 ? Math.round((approvedCount / totalEmployeesCount) * 100) : 45;
   const draftsPercent = 100 - approvedPercent;
 
   const dashboardReads = [
@@ -234,7 +229,7 @@ export function HrDashboardPage() {
           const cancellationPending = lr.cancellations?.some((request) => request.state === 0);
           list.push({
             id: `leave-${lr.id}`,
-            employeeName: `Employee #${(lr as any).employeeNumber ?? (lr.employeeId ? lr.employeeId.slice(0, 8) : 'Staff')}`,
+            employeeName: `Employee #${('employeeNumber' in lr ? lr.employeeNumber : undefined) ?? (lr.employeeId ? lr.employeeId.slice(0, 8) : 'Staff')}`,
             avatarText: 'LV',
             type: `${lr.typeName} Request`,
             details: `${lr.requestedMinutes} mins • ${lr.startDate} to ${lr.endDate}`,
@@ -252,7 +247,11 @@ export function HrDashboardPage() {
   const handleExportCSV = () => {
     const csvContent = dashboardCsv([
       ['Metric', 'Value', 'Details'],
-      ['Employee directory', String(totalEmployeesCount), 'Unarchived directory records; includes drafts.'],
+      [
+        'Employee directory',
+        String(totalEmployeesCount),
+        'Unarchived directory records; includes drafts.',
+      ],
       ['Approved onboarding', String(approvedCount), 'Onboarding status.'],
       ['Draft onboarding', String(draftsCount), 'Draft onboarding records.'],
       ['Site directory', sites.label, 'Site records.'],
@@ -399,7 +398,9 @@ export function HrDashboardPage() {
       <div className="dash-exact-alert-banner">
         <Shield size={13} className="dash-exact-alert-icon" />
         <div className="dash-exact-alert-text">
-          <strong>System live status:</strong> {totalEmployeesCount} total directory records verified ({approvedCount} approved onboarding, {draftsCount} in onboarding queue) across active operational zones.
+          <strong>System live status:</strong> {totalEmployeesCount} total directory records
+          verified ({approvedCount} approved onboarding, {draftsCount} in onboarding queue) across
+          active operational zones.
         </div>
       </div>
 
@@ -552,7 +553,7 @@ export function HrDashboardPage() {
             >
               <span>Leave {year}</span>
               <span className="dash-exact-tab-count">
-                {pendingLeavesQuery.data?.totalCount ?? (leaves.count ?? 0)}
+                {pendingLeavesQuery.data?.totalCount ?? leaves.count ?? 0}
               </span>
             </button>
           </div>
@@ -576,7 +577,9 @@ export function HrDashboardPage() {
                   <Inbox size={34} strokeWidth={1.5} />
                 </div>
                 <h3 className="dash-exact-empty-title">
-                  {activeTab === 'hiring' ? 'No pending hiring submissions' : 'No pending leave requests'}
+                  {activeTab === 'hiring'
+                    ? 'No pending hiring submissions'
+                    : 'No pending leave requests'}
                 </h3>
                 <p className="dash-exact-empty-sub">
                   {activeTab === 'hiring'
@@ -586,7 +589,9 @@ export function HrDashboardPage() {
                 <button
                   type="button"
                   className="dash-exact-empty-btn"
-                  onClick={() => void navigate(activeTab === 'hiring' ? '/hr/employees/new' : '/hr/leaves')}
+                  onClick={() =>
+                    void navigate(activeTab === 'hiring' ? '/hr/employees/new' : '/hr/leaves')
+                  }
                 >
                   <span>{activeTab === 'hiring' ? 'Add New Employee' : 'Open Leave Desk'}</span>
                   <ArrowUpRight size={13} />
@@ -637,7 +642,7 @@ export function HrDashboardPage() {
             <span>
               {activeTab === 'hiring'
                 ? `${(submissionsQuery.data?.totalCount ?? 0) + draftsCount} onboarding & hiring records`
-                : `${pendingLeavesQuery.data?.totalCount ?? (leaves.count ?? 0)} leave requests for ${year}`}
+                : `${pendingLeavesQuery.data?.totalCount ?? leaves.count ?? 0} leave requests for ${year}`}
             </span>
           </div>
         </div>
@@ -687,7 +692,9 @@ export function HrDashboardPage() {
               </div>
             </div>
 
-            <p className="dash-exact-onboarding-note">Includes drafts; excludes archived records.</p>
+            <p className="dash-exact-onboarding-note">
+              Includes drafts; excludes archived records.
+            </p>
           </div>
 
           <div className="dash-exact-onboarding-footer">

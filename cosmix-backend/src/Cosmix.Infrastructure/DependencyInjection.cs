@@ -96,6 +96,7 @@ public static class DependencyInjection
         services.AddScoped<IAttendancePayrollInputRepository, AttendancePayrollInputRepository>();
         services.AddScoped<IAttendancePayrollInputLedger, AttendancePayrollInputLedger>();
         services.AddScoped<IAttendancePayrollAttestationRepository, AttendancePayrollAttestationRepository>();
+        services.AddScoped<IAttendancePayrollActivationRepository, AttendancePayrollActivationRepository>();
         services.AddScoped<IAttendancePayrollFinancialRepository, AttendancePayrollFinancialRepository>();
         services.AddScoped<Cosmix.Application.HR.Allowances.IDeploymentRepository, DeploymentRepository>();
         services.AddScoped<IAttendanceLegalReviewRepository, AttendanceLegalReviewRepository>();
@@ -140,6 +141,8 @@ public static class DependencyInjection
         services.AddSingleton(configuration.GetSection(PrivateFileStorageOptions.SectionName).Get<PrivateFileStorageOptions>() ?? new());
         services.AddSingleton(configuration.GetSection(ClamAvScannerOptions.SectionName).Get<ClamAvScannerOptions>() ?? new());
         services.AddSingleton<IPrivateFileStore, EncryptedPrivateFileStore>();
+        services.AddSingleton<IPunchRetentionPrivateFiles>(provider =>
+            (IPunchRetentionPrivateFiles)provider.GetRequiredService<IPrivateFileStore>());
         services.AddScoped(provider => new Lazy<IPrivateFileStore>(() => provider.GetRequiredService<IPrivateFileStore>()));
         services.AddSingleton<IEmployeeFileScanner, ClamAvEmployeeFileScanner>();
         services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
@@ -167,10 +170,14 @@ public static class DependencyInjection
 
         services.AddScoped<ILocationConsentRepository, LocationConsentRepository>();
         services.AddScoped<LocationConsentService>();
+        services.AddScoped<Cosmix.Application.Common.Security.SensitiveComplianceOperation>();
         services.AddSingleton(configuration.GetSection(PunchRetentionOptions.SectionName).Get<PunchRetentionOptions>() ?? new());
         services.AddScoped<IPunchRetentionRepository, PunchRetentionRepository>();
         services.AddScoped<PunchRetentionService>();
         services.AddHostedService<PunchRetentionWorker>();
+        services.AddScoped<IPayrollFinanceRepository, PayrollFinanceRepository>();
+        services.AddScoped<PayrollFinanceOperation>();
+        services.AddScoped<PayrollFinanceSetupService>();
         services.AddScoped<IPayrollAccountingRepository, PayrollAccountingRepository>();
         services.AddScoped<PayrollAccountingService>();
         services.AddScoped<IStatutoryContributionRepository, StatutoryContributionRepository>();

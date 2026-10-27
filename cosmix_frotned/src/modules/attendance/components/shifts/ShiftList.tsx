@@ -33,6 +33,7 @@ import { pageOf } from '@/modules/hr/schemas/contracts';
 import { attendanceGet, queryString } from '../../api/attendance-api';
 import { shiftPage, shiftDetail, type Shift } from '../../schemas/shifts';
 import { businessToday } from '../../utils/messages';
+import { ShiftMetadataForm } from './ShiftMetadataForm';
 import '@/styles/shift-management.css';
 
 // Rich display metadata interface
@@ -269,6 +270,8 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   // Modals state
+  const [isCreatingShift, setIsCreatingShift] = useState(false);
+  const [cloneShiftSource, setCloneShiftSource] = useState<Shift | undefined>(undefined);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [assignTargetShiftId, setAssignTargetShiftId] = useState<string>('');
@@ -526,25 +529,10 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
     return shifts.reduce((acc, s) => acc + (s.meta.assignedCount || 0), 0) || 150;
   }, [dbEmployees.length, shifts]);
 
-  // Open Create Modal with auto-suggested code
+  // Open Create Form (2-column layout)
   const handleOpenCreateModal = () => {
-    const nextNum = shifts.length + 1;
-    setFormCode(`SH-SITE-0${nextNum}`);
-    setFormName('');
-    setFormCat('Site Technical');
-    setFormSite(dbSites[0]?.name || 'All Project Sites');
-    setFormStart('08:00');
-    setFormEnd('17:00');
-    setFormBreak('60');
-    setFormGrace('15');
-    setFormHalfDay('10:30 AM');
-    setFormAbsent('12:00 PM');
-    setFormOt('Eligible: 1.5x Standard Hourly Rate');
-    setFormNightPay('0');
-    setFormDays(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
-    setFormDesc('Standard daily site execution shift for technical and MEP crew.');
-    setFormError('');
-    setShowCreateModal(true);
+    setCloneShiftSource(undefined);
+    setIsCreatingShift(true);
   };
 
   // Submit "Create New Work Shift" Form
@@ -689,6 +677,26 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
     document.body.removeChild(link);
     setToastMessage('Exported shifts to CSV file.');
   };
+
+  if (isCreatingShift) {
+    return (
+      <ShiftMetadataForm
+        mode="create"
+        shift={cloneShiftSource}
+        onCancel={() => {
+          setIsCreatingShift(false);
+          setCloneShiftSource(undefined);
+        }}
+        onSaved={(createdShift) => {
+          setIsCreatingShift(false);
+          setCloneShiftSource(undefined);
+          setToastMessage(`Shift "${createdShift.code} - ${createdShift.name}" created successfully!`);
+          void query.refetch();
+          onOpen(createdShift.id);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="shifts-page-shell">
@@ -989,18 +997,8 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
                           className="shift-dropdown-item"
                           onClick={() => {
                             setActiveMenuId(null);
-                            setFormCode(`${shift.code}-COPY`);
-                            setFormName(`${shift.name} (Copy)`);
-                            setFormCat(meta.category);
-                            setFormStart(meta.startTimeRaw);
-                            setFormEnd(meta.endTimeRaw);
-                            setFormBreak(String(meta.breakMins));
-                            setFormGrace(String(meta.graceMins));
-                            setFormHalfDay(meta.halfDayCutoff);
-                            setFormAbsent(meta.absentCutoff);
-                            setFormDays(meta.days);
-                            setFormDesc(meta.description);
-                            setShowCreateModal(true);
+                            setCloneShiftSource(shift as unknown as Shift);
+                            setIsCreatingShift(true);
                           }}
                         >
                           <Copy size={12} color="#7c3aed" />

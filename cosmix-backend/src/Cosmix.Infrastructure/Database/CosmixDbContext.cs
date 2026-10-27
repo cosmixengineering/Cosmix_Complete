@@ -204,6 +204,10 @@ public sealed class CosmixDbContext(DbContextOptions<CosmixDbContext> options)
     public DbSet<SalaryPayment> SalaryPayments => Set<SalaryPayment>();
     public DbSet<EmployeeStatutoryRegistration> EmployeeStatutoryRegistrations => Set<EmployeeStatutoryRegistration>();
     public DbSet<StatutoryContribution> StatutoryContributions => Set<StatutoryContribution>();
+    public DbSet<PayrollLedgerAccount> PayrollLedgerAccounts => Set<PayrollLedgerAccount>();
+    public DbSet<PayrollAccountingPeriod> PayrollAccountingPeriods => Set<PayrollAccountingPeriod>();
+    public DbSet<PayrollPostingProfile> PayrollPostingProfiles => Set<PayrollPostingProfile>();
+    public DbSet<EmployeeStatutoryCoverage> EmployeeStatutoryCoverages => Set<EmployeeStatutoryCoverage>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

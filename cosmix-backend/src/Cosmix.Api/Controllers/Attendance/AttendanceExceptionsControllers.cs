@@ -11,6 +11,12 @@ namespace Cosmix.Api.Controllers.Attendance;
 [ProducesResponseType<ProblemDetails>(404), ProducesResponseType<ProblemDetails>(409)]
 public sealed class AttendanceExceptionsController(AttendanceExceptionService service) : ControllerBase
 {
+    [HttpGet("missing-checkouts"), ProducesResponseType<MissingCheckoutReviewQueue>(200)]
+    [EndpointSummary("Review overdue open sessions with missing checkout")]
+    [EndpointDescription("attendance.exceptions.read and current web MFA. Uses the retained business date and exact scheduled end, including overnight shifts. Untrusted schedule evidence is review-required only after the maximum supported 24-hour duty. No attendance or salary decision is made. Follow the scoped cursor for more cases.")]
+    public Task<MissingCheckoutReviewQueue> MissingCheckouts([FromQuery] AttendanceExceptionQueueRequest request, CancellationToken ct) =>
+        service.MissingCheckoutsAsync(request, new(HttpContext.Connection.RemoteIpAddress?.ToString() ?? "", HttpContext.TraceIdentifier), ct);
+
     [HttpGet, ProducesResponseType<AttendanceExceptionQueueResponse>(200)]
     [EndpointSummary("Read scoped attendance exceptions")]
     [EndpointDescription("attendance.exceptions.read and current web MFA. From inclusive/To exclusive, maximum 366 days. Scope All/Employee/Site/Department/Team/Project with targetId except All; All requires an All grant. Optional exact kind filter. PageSize 1–100, at most 200 candidates scanned. Original linked evidence and each historical date are scoped before disclosure. Unavailable sources are omitted; no hidden total count. Follow account/filter-bound NextCursor even after an empty page. This is detection history, not an unresolved-work count or approval queue.")]

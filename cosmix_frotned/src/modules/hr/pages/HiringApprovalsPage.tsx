@@ -63,11 +63,9 @@ export function HiringApprovalsPage() {
   const [adminMessage, setAdminMessage] = useState('');
 
   // 1. Fetch Draft Employees (14 drafts awaiting onboarding review/completion)
-  const draftsQuery = useHrQuery(
-    'employees?status=0&pageSize=50&page=1',
-    pageOf(employeeSchema),
-    ['hr.employees.read'],
-  );
+  const draftsQuery = useHrQuery('employees?status=0&pageSize=50&page=1', pageOf(employeeSchema), [
+    'hr.employees.read',
+  ]);
 
   // 2. Fetch Formal Hiring Submissions (if permitted)
   const submissionsQuery = useHrQuery(
@@ -86,13 +84,14 @@ export function HiringApprovalsPage() {
     if (submissionsQuery.data?.items?.length) {
       for (const s of submissionsQuery.data.items) {
         const empName = s.name || `Employee #${s.employeeNumber}`;
-        const initials = empName
-          .split(' ')
-          .filter(Boolean)
-          .map((n) => n[0])
-          .join('')
-          .slice(0, 2)
-          .toUpperCase() || 'EM';
+        const initials =
+          empName
+            .split(' ')
+            .filter(Boolean)
+            .map((n) => n[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase() || 'EM';
 
         list.push({
           id: `sub-${s.id}`,
@@ -120,13 +119,14 @@ export function HiringApprovalsPage() {
         if (submissionsQuery.data?.items?.some((s) => s.employeeId === emp.id)) continue;
 
         const empName = emp.name || `Draft Employee #${emp.employeeNumber}`;
-        const initials = empName
-          .split(' ')
-          .filter(Boolean)
-          .map((n) => n[0])
-          .join('')
-          .slice(0, 2)
-          .toUpperCase() || 'EM';
+        const initials =
+          empName
+            .split(' ')
+            .filter(Boolean)
+            .map((n) => n[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase() || 'EM';
 
         list.push({
           id: `draft-${emp.id}`,
@@ -199,7 +199,8 @@ export function HiringApprovalsPage() {
               <span className="hr-requests-tagline">HR Operations • Approvals Queue</span>
               <h1 className="hr-requests-title">Pending Approvals</h1>
               <p className="hr-requests-subtitle">
-                Comprehensive tracking list of onboarding, leave, and request submissions awaiting management review.
+                Comprehensive tracking list of onboarding, leave, and request submissions awaiting
+                management review.
               </p>
             </div>
           </div>
@@ -207,7 +208,14 @@ export function HiringApprovalsPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Button
               variant="secondary"
-              style={{ height: '26px', padding: '0 9px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+              style={{
+                height: '26px',
+                padding: '0 9px',
+                fontSize: '11px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+              }}
               disabled={refreshing}
               onClick={() => {
                 void draftsQuery.refetch();
@@ -237,10 +245,19 @@ export function HiringApprovalsPage() {
             <ClipboardCheck size={14} />
           </div>
           <div className="hr-requests-kpi-content">
-            <span style={{ fontSize: '9.5px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+            <span
+              style={{
+                fontSize: '9.5px',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+              }}
+            >
               TOTAL PENDING
             </span>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>{totalCount}</div>
+            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>
+              {totalCount}
+            </div>
             <span style={{ fontSize: '10px', color: '#64748b' }}>Across all categories</span>
           </div>
         </div>
@@ -253,11 +270,22 @@ export function HiringApprovalsPage() {
             <Users size={14} />
           </div>
           <div className="hr-requests-kpi-content">
-            <span style={{ fontSize: '9.5px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+            <span
+              style={{
+                fontSize: '9.5px',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+              }}
+            >
               ONBOARDING &amp; HIRING
             </span>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>{onboardingCount}</div>
-            <span style={{ fontSize: '10px', color: '#64748b' }}>New hire submissions &amp; drafts</span>
+            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>
+              {onboardingCount}
+            </div>
+            <span style={{ fontSize: '10px', color: '#64748b' }}>
+              New hire submissions &amp; drafts
+            </span>
           </div>
         </div>
 
@@ -269,10 +297,19 @@ export function HiringApprovalsPage() {
             <Calendar size={14} />
           </div>
           <div className="hr-requests-kpi-content">
-            <span style={{ fontSize: '9.5px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+            <span
+              style={{
+                fontSize: '9.5px',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+              }}
+            >
               LEAVE APPLICATIONS
             </span>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>{leaveCount}</div>
+            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>
+              {leaveCount}
+            </div>
             <span style={{ fontSize: '10px', color: '#64748b' }}>Awaiting manager action</span>
           </div>
         </div>
@@ -285,11 +322,22 @@ export function HiringApprovalsPage() {
             <Coins size={14} />
           </div>
           <div className="hr-requests-kpi-content">
-            <span style={{ fontSize: '9.5px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+            <span
+              style={{
+                fontSize: '9.5px',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+              }}
+            >
               CLAIMS &amp; ADVANCES
             </span>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>{advanceCount}</div>
-            <span style={{ fontSize: '10px', color: '#64748b' }}>Salary advance &amp; expenses</span>
+            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>
+              {advanceCount}
+            </div>
+            <span style={{ fontSize: '10px', color: '#64748b' }}>
+              Salary advance &amp; expenses
+            </span>
           </div>
         </div>
       </div>
@@ -346,7 +394,9 @@ export function HiringApprovalsPage() {
       {/* 4. Approvals List */}
       <div className="hr-requests-container">
         <div className="hr-requests-count-summary">
-          <span>Showing {filteredItems.length} of {totalCount} pending approvals</span>
+          <span>
+            Showing {filteredItems.length} of {totalCount} pending approvals
+          </span>
           <span style={{ fontSize: '11.5px', color: '#94a3b8' }}>
             Sorted by most recent submission
           </span>
@@ -354,13 +404,30 @@ export function HiringApprovalsPage() {
 
         {filteredItems.length === 0 ? (
           <div className="hr-requests-empty">
-            <div className="hr-requests-empty-icon" style={{ background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+            <div
+              className="hr-requests-empty-icon"
+              style={{
+                background: '#f8fafc',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 12px',
+              }}
+            >
               <Inbox size={26} color="#94a3b8" />
             </div>
             <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 4px' }}>
               No pending approvals found
             </h3>
-            <p style={{ fontSize: '12.5px', color: '#64748b', margin: '0 0 16px', maxWidth: '360px' }}>
+            <p
+              style={{
+                fontSize: '12.5px',
+                color: '#64748b',
+                margin: '0 0 16px',
+                maxWidth: '360px',
+              }}
+            >
               {searchTerm
                 ? 'No requests match your current search query. Try clearing the search filter.'
                 : 'All requests in this category have been processed or none are currently pending review.'}
@@ -405,9 +472,7 @@ export function HiringApprovalsPage() {
 
               {/* Middle Column: Details & Evidence */}
               <div className="hr-request-card-mid" style={{ flex: 1, minWidth: '220px' }}>
-                <span style={{ fontSize: '11px', color: '#334155' }}>
-                  {item.details}
-                </span>
+                <span style={{ fontSize: '11px', color: '#334155' }}>{item.details}</span>
                 <div className="hr-request-date" style={{ marginTop: '2px' }}>
                   <Clock size={11} color="#94a3b8" />
                   <span>Submitted: {item.submittedAt}</span>
@@ -471,7 +536,9 @@ export function HiringApprovalsPage() {
           if (!open) setSelectedItem(null);
         }}
         title="Pending Approval Details"
-        description={selectedItem ? `${selectedItem.employeeName} • #${selectedItem.employeeNumber}` : ''}
+        description={
+          selectedItem ? `${selectedItem.employeeName} • #${selectedItem.employeeNumber}` : ''
+        }
       >
         {selectedItem && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px 0' }}>
@@ -491,8 +558,8 @@ export function HiringApprovalsPage() {
             >
               <Shield size={16} color="#2563eb" style={{ flexShrink: 0 }} />
               <div>
-                <strong>HR Notice:</strong> As HR Desk, this view is read-only.
-                Final authorization decision is handled by <strong>{selectedItem.approverRole}</strong>.
+                <strong>HR Notice:</strong> As HR Desk, this view is read-only. Final authorization
+                decision is handled by <strong>{selectedItem.approverRole}</strong>.
               </div>
             </div>
 
@@ -505,10 +572,25 @@ export function HiringApprovalsPage() {
                 padding: '14px 16px',
               }}
             >
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                  marginBottom: '8px',
+                }}
+              >
                 Employee Information
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', fontSize: '13px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '10px',
+                  fontSize: '13px',
+                }}
+              >
                 <div>
                   <span style={{ color: '#64748b' }}>Full Name:</span>{' '}
                   <strong>{selectedItem.employeeName}</strong>
@@ -537,17 +619,30 @@ export function HiringApprovalsPage() {
                 padding: '14px 16px',
               }}
             >
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                  marginBottom: '8px',
+                }}
+              >
                 Approval Workflow Summary
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+              <div
+                style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}
+              >
                 <div>
                   <span style={{ color: '#64748b' }}>Request Type:</span>{' '}
                   <strong>{selectedItem.requestType}</strong>
                 </div>
                 <div>
                   <span style={{ color: '#64748b' }}>Current Status:</span>{' '}
-                  <span className="hr-status-pill hr-status-pill--pending" style={{ marginLeft: '4px' }}>
+                  <span
+                    className="hr-status-pill hr-status-pill--pending"
+                    style={{ marginLeft: '4px' }}
+                  >
                     {selectedItem.statusText}
                   </span>
                 </div>
@@ -559,21 +654,37 @@ export function HiringApprovalsPage() {
                   <span style={{ color: '#64748b' }}>Assigned Approver:</span>{' '}
                   <strong>{selectedItem.approverRole}</strong>
                 </div>
-                <div style={{ marginTop: '4px', padding: '8px', background: '#f8fafc', borderRadius: '4px', color: '#475569', fontSize: '12px' }}>
+                <div
+                  style={{
+                    marginTop: '4px',
+                    padding: '8px',
+                    background: '#f8fafc',
+                    borderRadius: '4px',
+                    color: '#475569',
+                    fontSize: '12px',
+                  }}
+                >
                   {selectedItem.details}
                 </div>
               </div>
             </div>
 
             {/* Actions */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
+            <div
+              style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}
+            >
               <Button variant="secondary" onClick={() => setSelectedItem(null)}>
                 Close
               </Button>
               <Link
                 to={`${basePath}/employees/${selectedItem.employeeId}`}
                 className="button button--primary"
-                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                style={{
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
                 onClick={() => setSelectedItem(null)}
               >
                 <ArrowUpRight size={14} />
@@ -599,7 +710,11 @@ export function HiringApprovalsPage() {
             }
           }}
           title="Hiring Decision Review"
-          description={adminSubmission ? `${adminSubmission.name ?? 'Employee'} · #${adminSubmission.employeeNumber}` : ''}
+          description={
+            adminSubmission
+              ? `${adminSubmission.name ?? 'Employee'} · #${adminSubmission.employeeNumber}`
+              : ''
+          }
         >
           {adminSubmission && (
             <HiringSubmissionReview
@@ -621,4 +736,3 @@ export function HiringApprovalsPage() {
     </div>
   );
 }
-

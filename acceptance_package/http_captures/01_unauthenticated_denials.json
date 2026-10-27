@@ -1,0 +1,30 @@
+[
+  {
+    "Method": "GET",
+    "Path": "/api/v1/me/location-consent",
+    "StatusCode": 401,
+    "StatusText": "Unauthorized",
+    "WwwAuthenticate": "Bearer"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/admin/location-consent/policy",
+    "StatusCode": 401,
+    "StatusText": "Unauthorized",
+    "WwwAuthenticate": "Bearer"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/payroll-accounting/obligations",
+    "StatusCode": 401,
+    "StatusText": "Unauthorized",
+    "WwwAuthenticate": "Bearer"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/statutory-contributions",
+    "StatusCode": 401,
+    "StatusText": "Unauthorized",
+    "WwwAuthenticate": "Bearer"
+  }
+]

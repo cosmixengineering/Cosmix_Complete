@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/auth/use-auth';
 import { isSystemAdmin } from '@/auth/contracts';
+import { hrConfigurationNavigation } from '@/modules/hr/policy-navigation';
 import { Button } from '@/components/ui/Button';
 import logo from '@/assets/images/cosmix-logo.png';
 import '@/styles/admin-dashboard.css';
@@ -89,6 +90,9 @@ export function AdminLayout() {
     { to: '/admin/users', label: 'Users & Roles', icon: UserCheck },
     { to: '/admin/departments', label: 'Departments', icon: Network },
     { to: '/admin/settings', label: 'Settings', icon: Settings },
+    ...hrConfigurationNavigation(user, status)
+      .filter((link) => link.allowed)
+      .map((link) => ({ ...link, icon: Settings })),
   ];
 
   return (
@@ -102,16 +106,9 @@ export function AdminLayout() {
       )}
 
       {/* Admin Sidebar */}
-      <aside
-        className={`admin-sidebar ${open ? 'is-open' : ''}`}
-        aria-label="Admin Navigation"
-      >
+      <aside className={`admin-sidebar ${open ? 'is-open' : ''}`} aria-label="Admin Navigation">
         <div className="admin-sidebar-header">
-          <Link
-            to="/admin/dashboard"
-            className="admin-brand"
-            onClick={() => setOpen(false)}
-          >
+          <Link to="/admin/dashboard" className="admin-brand" onClick={() => setOpen(false)}>
             <img src={logo} alt="Cosmix Engineering" className="admin-brand-logo" />
             {!collapsed && (
               <div className="admin-brand-text">

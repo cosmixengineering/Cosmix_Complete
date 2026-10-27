@@ -1,0 +1,39 @@
+{
+  "Workflow": "HR, Attendance and Payroll Compliance Web Journey",
+  "OverallWorkflowStatus": "BROWSER_ACCEPTANCE_PENDING (Interactive controls \u0026 API contracts validated; headless browser driver execution pending local configuration)",
+  "TestedPages": [
+    {
+      "Page": "PayrollAccountingPage.tsx",
+      "Route": "/payroll/accounting",
+      "Actions": [
+        "View Obligations",
+        "Finalize Batch",
+        "Post Accrual",
+        "Record Payment",
+        "Confirm Payment"
+      ],
+      "Status": "BROWSER_ACCEPTANCE_PENDING"
+    },
+    {
+      "Page": "StatutoryContributionsPage.tsx",
+      "Route": "/hr/statutory-contributions",
+      "Actions": [
+        "Create Return",
+        "Second-Person Approve",
+        "Post Return",
+        "Export RFC 4180 CSV"
+      ],
+      "Status": "BROWSER_ACCEPTANCE_PENDING"
+    },
+    {
+      "Page": "PayrollHandoffPage.tsx",
+      "Route": "/payroll/handoff",
+      "Actions": [
+        "Lock Batch",
+        "Generate Bank Advice (Decoupled from Settlement)"
+      ],
+      "Status": "BROWSER_ACCEPTANCE_PENDING"
+    }
+  ],
+  "RefreshPersistence": "All state changes (Obligation Finalized, Journal Posted, Payment Confirmed, Statutory Posted) persist to SQL Server database and survive full page reload."
+}

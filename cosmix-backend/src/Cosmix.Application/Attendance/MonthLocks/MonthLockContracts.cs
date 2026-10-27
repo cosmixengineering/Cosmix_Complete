@@ -85,7 +85,11 @@ public sealed record MonthLockPopulation(IReadOnlyList<MonthLockCell> Cells, str
 public sealed record MonthLockEmployeeEvidence(Guid EmployeeId, DateOnly? JoinedOn, EmployeeStatus CachedStatus,
     bool ApprovedEmployment, IReadOnlyList<MonthLockStatusEvidence> Statuses);
 public sealed record MonthLockStatusEvidence(Guid Id, EmployeeStatus PreviousStatus, EmployeeStatus NewStatus,
-    DateTimeOffset EffectiveAt, DateTimeOffset RecordedAt, bool ApprovedProvenance);
+    DateTimeOffset EffectiveAt, DateTimeOffset RecordedAt, bool ApprovedProvenance)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? LifecyclePolicyVersion { get; init; }
+}
 public sealed record MonthLockSourceEvidence(string Fingerprint, IReadOnlyList<MonthLockIssue> Issues,
     IReadOnlyList<MonthLockOvertimeDependency>? Overtime = null);
 public sealed record MonthLockExisting(AttendancePeriodLock Period, AttendancePeriodLockEvent? Event,

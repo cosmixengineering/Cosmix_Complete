@@ -14,8 +14,8 @@ public static class AttendancePolicyPermissions
     public const string Publish = "attendance.policies.publish";
     public const string ApplicabilityRead = "attendance.policies.applicability.read";
     public static IReadOnlyList<AccessPermissionDefinition> Definitions { get; } = [
-        new(Configure, "Read and validate attendance, salary, OT and deduction policy settings as fixed Admin/SuperAdmin with matching explicit All permission", true, true, false),
-        new(Publish, "Direct attendance policy publication and dated assignment as fixed Admin/SuperAdmin with matching explicit All permission", true, true, false),
+        new(Configure, "Read and validate attendance, salary, OT and deduction policy settings with explicit All-scope permission and current web MFA", true, true, false),
+        new(Publish, "Direct attendance policy publication and dated assignment with explicit All-scope permission and current web MFA", true, true, false),
         new(ApplicabilityRead, "Read dated attendance policy applicability within historical employee scope", true, true, false)
     ];
 }
@@ -45,7 +45,7 @@ public sealed class AttendancePolicySettingsService(AttendanceOperation operatio
                     AttendanceOrdinaryPaidDayTreatment.NoDeduction, AttendanceDeductionRounding.TwoDecimalPlacesHalfUp),
                 AttendanceLatePolicyChangeCountingStrategy.RestartOnLateRuleChange,
                 AttendanceLateSalaryEffectiveDateBasis.ThresholdCompletionDate,
-                AttendanceLateOverlapTreatment.LargerOfOrdinaryOrLate)), ct, requireSystemRole: true);
+                AttendanceLateOverlapTreatment.LargerOfOrdinaryOrLate)), ct);
 
     public Task<AttendancePolicySettingsValidationResponse> ValidateAsync(ValidateAttendancePolicySettingsRequest request,
         AuthRequestContext context, CancellationToken ct) =>
@@ -57,5 +57,5 @@ public sealed class AttendancePolicySettingsService(AttendanceOperation operatio
                     ? Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(validation.CanonicalJson!))) : null;
                 return Task.FromResult(new AttendancePolicySettingsValidationResponse(validation.IsValid, false,
                     validation.CanonicalJson, fingerprint, validation.Errors));
-            }, ct, requireSystemRole: true);
+            }, ct);
 }

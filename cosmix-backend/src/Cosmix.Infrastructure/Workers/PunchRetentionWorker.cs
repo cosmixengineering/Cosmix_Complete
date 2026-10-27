@@ -11,10 +11,21 @@ public sealed class PunchRetentionWorker(
     IConfiguration configuration,
     ILogger<PunchRetentionWorker> logger) : BackgroundService
 {
+    public async Task<PunchRetentionRunResult> ExecuteCycleAsync(CancellationToken stoppingToken = default)
+    {
+        logger.LogInformation("PunchRetentionWorker starting retention cycle.");
+        using var scope = scopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<PunchRetentionService>();
+        var result = await service.RunRetentionAsync(stoppingToken);
+        logger.LogInformation("PunchRetentionWorker cycle completed: {Message}", result.Message);
+        return result;
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var intervalHours = configuration.GetValue<int?>("PunchRetention:RunIntervalHours") ?? 24;
         intervalHours = Math.Max(1, intervalHours);
+        var startupDelaySeconds = configuration.GetValue<int?>("PunchRetention:StartupDelaySeconds") ?? 60;
 
         logger.LogInformation("PunchRetentionWorker initialized with interval of {IntervalHours} hours.", intervalHours);
 
@@ -22,18 +33,16 @@ public sealed class PunchRetentionWorker(
 
         try
         {
-            // Initial run after startup delay of 1 minute to allow system boot
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            if (startupDelaySeconds > 0)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(startupDelaySeconds), stoppingToken);
+            }
 
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    logger.LogInformation("PunchRetentionWorker starting retention cycle.");
-                    using var scope = scopeFactory.CreateScope();
-                    var service = scope.ServiceProvider.GetRequiredService<PunchRetentionService>();
-                    var result = await service.RunRetentionAsync(stoppingToken);
-                    logger.LogInformation("PunchRetentionWorker cycle completed: {Message}", result.Message);
+                    await ExecuteCycleAsync(stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {

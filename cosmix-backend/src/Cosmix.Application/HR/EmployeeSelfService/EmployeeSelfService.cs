@@ -12,7 +12,7 @@ using Cosmix.Domain.Common.Audit;
 
 namespace Cosmix.Application.HR.EmployeeSelfService;
 
-public sealed class EmployeeSelfService(
+public sealed partial class EmployeeSelfService(
     IEmployeeSelfServiceRepository repository,
     ICurrentAuthentication current,
     IAccountAccessReader accessReader,
@@ -21,7 +21,8 @@ public sealed class EmployeeSelfService(
     ISchedulingJournalRepository journal,
     LeaveService? leaves = null,
     AttendanceSummaryService? attendance = null,
-    IEmployeePayrollHistoryReader? payrollHistory = null)
+    IEmployeePayrollHistoryReader? payrollHistory = null,
+    Cosmix.Application.HR.Payslips.PayslipService? payslips = null)
 {
     public Task<EssProfileResponse> GetProfileAsync(AuthRequestContext context, CancellationToken ct) =>
         ReadAuditedAsync(EmployeeSelfServicePermissions.ProfileRead, context,
@@ -143,17 +144,19 @@ public sealed class EmployeeSelfService(
                 clock.GetUtcNow(), context.CorrelationId, employeeScopeId: identity.EmployeeId,
                 ipAddress: context.IpAddress, deviceReference: identity.SessionId.ToString()));
             await journal.SaveChangesAsync(token);
+            await RequireFinancialAuthorityAsync(identity, token);
             return result;
         }, ct);
     }
 
     private async Task<string> RequireFinancialAuthorityAsync(AuthenticatedAccount identity, CancellationToken ct)
     {
-        if (!await journal.IsCurrentSessionAsync(identity, ct))
+        if (current.Require() != identity || !await journal.IsCurrentSessionAsync(identity, ct))
             throw new AuthenticationFailure("invalid_authentication", 401);
         var grants = await accessReader.GetGrantsAsync(identity.AccountId, clock.GetUtcNow(), ct);
         var own = new AccessResource(EmployeeId: identity.EmployeeId);
-        var basis = grants.FirstOrDefault(grant => AccessPermissionEvaluator.Allows(identity, [grant],
+        var checkedAt = clock.GetUtcNow();
+        var basis = grants.FirstOrDefault(grant => grant.IsEffectiveAt(checkedAt) && AccessPermissionEvaluator.Allows(identity, [grant],
             EmployeeSelfServicePermissions.FinancesRead, own));
         if (basis is null) throw new AuthenticationFailure("forbidden", 403);
         return await authorization.GetAssignmentRoleCodeAsync(basis.RoleAssignmentId, ct)

@@ -12,7 +12,8 @@ public sealed record AttendancePolicyRules(
     [property: JsonRequired] AttendanceArrivalRules? Arrival,
     [property: JsonRequired] AttendancePaidTimeRules? PaidTime,
     [property: JsonRequired] AttendanceLateDeductionRules? LateDeduction,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] AttendanceOrdinaryPayRules? OrdinaryPay = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] AttendanceOrdinaryPayRules? OrdinaryPay = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] AttendanceOvertimeRules? Overtime = null);
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 [JsonNumberHandling(JsonNumberHandling.Strict)]
@@ -267,6 +268,12 @@ public static class AttendancePolicyRulesCodec
         else if (rules.OrdinaryPay is not null)
             errors.Add(new("$.ordinaryPay", "schema_option_mismatch", "Ordinary payroll-input settings require rules schema 3."));
 
+        if (rules.Overtime is { } overtime)
+        {
+            if (rules.SchemaVersion != 3)
+                errors.Add(new("$.overtime", "schema_option_mismatch", "Overtime settings require rules schema 3."));
+            errors.AddRange(AttendanceOvertimeRulesValidation.Validate(overtime));
+        }
         if (errors.Count > 0) return new(null, null, errors.AsReadOnly());
         // Decimal trailing zeroes are not a semantic change and must not change a rules fingerprint.
         var normalized = rules with
@@ -281,6 +288,10 @@ public static class AttendancePolicyRulesCodec
             {
                 FullUnpaidDayDeductionDays = Normalize(ordinaryRules.FullUnpaidDayDeductionDays!.Value),
                 UnpaidHalfDayDeductionDays = Normalize(ordinaryRules.UnpaidHalfDayDeductionDays!.Value)
+            },
+            Overtime = rules.Overtime is not { } overtimeRules ? null : overtimeRules with
+            {
+                RateMultiplier = Normalize(overtimeRules.RateMultiplier!.Value)
             }
         };
         return new(normalized, JsonSerializer.Serialize(normalized, Options), Array.Empty<AttendancePolicyRuleError>());

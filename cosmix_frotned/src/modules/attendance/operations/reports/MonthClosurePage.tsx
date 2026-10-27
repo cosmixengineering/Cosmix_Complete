@@ -251,7 +251,7 @@ function MonthRecord({
                       <th>Employee</th>
                       <th>Source revision</th>
                       <th>Handoff</th>
-                      <th>Legal activation evidence</th>
+                      <th>Company activation evidence</th>
                     </tr>
                   </thead>
                   <tbody>

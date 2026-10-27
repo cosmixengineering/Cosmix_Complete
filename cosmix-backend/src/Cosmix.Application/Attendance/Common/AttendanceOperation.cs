@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Cosmix.Application.Attendance.Shifts;
 using Cosmix.Application.Authentication;
@@ -20,6 +21,41 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
 {
     private const string ResultCode = "attendance-operation-v1";
     private const string ScopedResultCode = "attendance-operation-v2";
+
+    /// <summary>Authorize a server-resolved dependency and retain its exact scopes for this
+    /// operation's final checks. The actor's request-local state survives its audit-role copy.</summary>
+    public async Task RequireScopedPermissionAsync(AttendanceActor actor, string permission,
+        IReadOnlyList<AttendanceResourceScope> scopes, CancellationToken ct)
+    {
+        if (AccessPermissionCatalog.Find(permission) is null || !permission.StartsWith("attendance.", StringComparison.Ordinal) ||
+            !AttendanceScopeEvaluation.IsValid(scopes)) throw Denied();
+        // Callers can own mutable lists. Freeze both levels before the first awaited read.
+        var retained = scopes.Select(scope => new AttendanceResourceScope(Array.AsReadOnly(
+            scope.Alternatives.Distinct().OrderBy(x => JsonSerializer.Serialize(x), StringComparer.Ordinal).ToArray()))).ToArray();
+        await RequireSupplementalPermissionAsync(actor, permission, retained, false, ct);
+    }
+
+    /// <summary>Retain an explicit All-scope dependency; employee-scoped authority cannot
+    /// replace it if the All grant expires before the operation completes.</summary>
+    public Task RequireAllPermissionAsync(AttendanceActor actor, string permission, CancellationToken ct) =>
+        RequireSupplementalPermissionAsync(actor, permission, [], true, ct);
+
+    private async Task RequireSupplementalPermissionAsync(AttendanceActor actor, string permission,
+        IReadOnlyList<AttendanceResourceScope> scopes, bool requiresAll, CancellationToken ct)
+    {
+        if (AccessPermissionCatalog.Find(permission) is null || !permission.StartsWith("attendance.", StringComparison.Ordinal))
+            throw Denied();
+        if (current.Require() != actor.Identity || !await journal.IsCurrentSessionAsync(actor.Identity, ct))
+            throw new AuthenticationFailure("invalid_authentication", 401);
+        var grants = await access.GetGrantsAsync(actor.Identity.AccountId, clock.GetUtcNow(), ct);
+        if (!await journal.IsCurrentSessionAsync(actor.Identity, ct))
+            throw new AuthenticationFailure("invalid_authentication", 401);
+        var checkedAt = clock.GetUtcNow();
+        if (!AttendanceScopeEvaluation.Allows(actor.Identity, grants.Where(x => x.IsEffectiveAt(checkedAt)), permission, scopes, requiresAll))
+            throw Denied();
+        if (requiresAll) actor.SupplementalAuthority.RegisterAll(permission);
+        else actor.SupplementalAuthority.Register(permission, scopes);
+    }
 
     /// <summary>Reconcile a prior commit before an external provider call. A missing receipt is not
     /// authorization for the eventual write: finalization must still call WriteAsync.</summary>
@@ -43,13 +79,15 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
         Func<AttendanceActor, CancellationToken, Task<IReadOnlyList<AccessResource>>>? resources = null,
         bool self = false, bool requireDevice = false,
         Func<AttendanceActor, CancellationToken, Task<IReadOnlyList<AttendanceResourceScope>>>? resourceScopes = null,
-        bool requireSystemRole = false, bool requireAdministrator = false) =>
+        bool requireSystemRole = false, bool requireAdministrator = false,
+        Func<AttendanceActor, CancellationToken, Task>? afterSave = null) =>
         AuthorizedAsync(permission, employeeId, resources, resourceScopes, self, requireDevice, async (actor, targets, token) =>
         {
             var result = await action(actor, token);
             await RequireCurrentAsync(permission, actor, targets, requireSystemRole, requireAdministrator, token);
             Audit(actor, operation, self ? actor.Identity.EmployeeId : employeeId, context);
             await journal.SaveChangesAsync(token);
+            if (afterSave is not null) await afterSave(actor, token);
             return result;
         }, ct, requireSystemRole, requireAdministrator);
 
@@ -62,7 +100,8 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
         Func<AttendanceActor, CancellationToken, Task>? beforeReplay = null,
         bool requireSystemRole = false,
         Func<AttendanceActor, CancellationToken, Task>? beforeCommit = null,
-        bool requireAdministrator = false)
+        bool requireAdministrator = false,
+        Func<AttendanceActor, CancellationToken, Task>? afterSave = null)
     {
         ValidateWrite(key, payload, reason);
         return AuthorizedAsync(permission, employeeId, resources, resourceScopes, self, requireDevice, async (actor, targets, token) =>
@@ -72,7 +111,11 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
             var digest = Digest(actor, permission, subject, payload, reason);
             if (beforeReplay is not null) await beforeReplay(actor, token);
             var replay = await ReplayAsync<T>(permission, operation, subject, key, digest, actor, context, token, requireSystemRole, requireAdministrator, beforeReplay);
-            if (replay.Found) return replay.Result!;
+            if (replay.Found)
+            {
+                if (afterSave is not null) await afterSave(actor, token);
+                return replay.Result!;
+            }
             var change = await action(actor, token);
             if (change.ResourceId == Guid.Empty) throw new InvalidOperationException("Attendance writes require a resource identity.");
             var resultReference = await files.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(
@@ -93,6 +136,7 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
             journal.AddReceipt(receipt);
             Audit(actor, operation, subject, context, change.ResourceId, Reference(evidence));
             await journal.SaveChangesAsync(token);
+            if (afterSave is not null) await afterSave(actor, token);
             return change.After;
         }, ct, requireSystemRole, requireAdministrator);
     }
@@ -149,20 +193,30 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
         if (snapshot.Result is null) throw Conflict("idempotency_result_unavailable");
         Audit(actor, operation + ".replay", subject, context, snapshot.ResourceId);
         await journal.SaveChangesAsync(ct);
+        // A retry still exposes the original saved scope. Keep that scope authorized
+        // through persistence, independently of the request's current resource scope.
+        await RequireCurrentAsync(permission, actor,
+            new(snapshot.Resources, snapshot.ResourceScopes, snapshot.RequiresAll), requireSystemRole, requireAdministrator, ct);
         return new(true, snapshot.Result);
     }
 
     private async Task RequireCurrentAsync(string permission, AttendanceActor actor, AuthorizationTargets targets,
         bool requireSystemRole, bool requireAdministrator, CancellationToken ct)
     {
-        if (!await journal.IsCurrentSessionAsync(actor.Identity, ct))
+        if (current.Require() != actor.Identity || !await journal.IsCurrentSessionAsync(actor.Identity, ct))
             throw new AuthenticationFailure("invalid_authentication", 401);
-        var grants = await MatchingGrantsAsync(actor.Identity, permission, clock.GetUtcNow(), requireSystemRole, ct);
+        var authority = await access.GetGrantsAsync(actor.Identity.AccountId, clock.GetUtcNow(), ct);
+        var grants = await MatchingGrantsAsync(actor.Identity, permission, clock.GetUtcNow(), requireSystemRole, ct, authority);
         if (requireAdministrator)
             grants = (await AdministratorAuthorityAsync(actor.Identity, grants, actor.RoleCode, ct)).Grants;
+        if (!await journal.IsCurrentSessionAsync(actor.Identity, ct))
+            throw new AuthenticationFailure("invalid_authentication", 401);
+        var checkedAt = clock.GetUtcNow();
+        grants = grants.Where(x => x.IsEffectiveAt(checkedAt)).ToArray();
         if (targets.Scopes is null
             ? !Allows(actor.Identity, grants, permission, targets.Resources, targets.RequiresAll)
             : !AttendanceScopeEvaluation.Allows(actor.Identity, grants, permission, targets.Scopes)) throw Denied();
+        if (!actor.SupplementalAuthority.Allows(actor.Identity, authority.Where(x => x.IsEffectiveAt(checkedAt)))) throw Denied();
     }
 
     private Task<T> AuthorizedAsync<T>(string permission, Guid? employeeId,
@@ -223,7 +277,14 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
                     : !AttendanceScopeEvaluation.Allows(identity, grants, permission, groups)) throw Denied();
             }
             else role = await authorization.GetAssignmentRoleCodeAsync(basis.RoleAssignmentId, token) ?? throw Denied();
-            return await action(actor with { RoleCode = role }, new(flat, groups, requiresAll), token);
+            actor = actor with { RoleCode = role };
+            var targets = new AuthorizationTargets(flat, groups, requiresAll);
+            await RequireCurrentAsync(permission, actor, targets, requireSystemRole, requireAdministrator, token);
+            var result = await action(actor, targets, token);
+            // This includes read, write and retry audit saves. Authentication locking
+            // cannot prevent a scheduled grant/session expiry while awaiting IO.
+            await RequireCurrentAsync(permission, actor, targets, requireSystemRole, requireAdministrator, token);
+            return result;
         }, ct);
     }
 
@@ -277,9 +338,9 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
         (assignment.RevokedAt is null || now < assignment.RevokedAt);
 
     private async Task<PermissionGrant[]> MatchingGrantsAsync(AuthenticatedAccount identity, string permission,
-        DateTimeOffset now, bool requireSystemRole, CancellationToken ct)
+        DateTimeOffset now, bool requireSystemRole, CancellationToken ct, IReadOnlyList<PermissionGrant>? authority = null)
     {
-        var grants = (await access.GetGrantsAsync(identity.AccountId, now, ct))
+        var grants = (authority ?? await access.GetGrantsAsync(identity.AccountId, now, ct))
             .Where(x => x.Permission == permission && AccessPermissionEvaluator.ForSession(identity, [x]).Count != 0);
         var matching = new List<PermissionGrant>();
         foreach (var grant in grants)
@@ -290,7 +351,8 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
                     identity.AccountId, grant.RoleAssignmentId, now, ct)) continue;
             matching.Add(grant);
         }
-        return matching.ToArray();
+        var checkedAt = clock.GetUtcNow();
+        return matching.Where(x => x.IsEffectiveAt(checkedAt)).ToArray();
     }
 
     private static bool Allows(AuthenticatedAccount actor, IEnumerable<PermissionGrant> grants, string permission,
@@ -329,6 +391,42 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
         bool RequiresAll, IReadOnlyList<AttendanceResourceScope>? ResourceScopes = null);
 }
 
-public sealed record AttendanceActor(AuthenticatedAccount Identity, string RoleCode, DateTimeOffset Now, Guid? DeviceId);
+public sealed record AttendanceActor(AuthenticatedAccount Identity, string RoleCode, DateTimeOffset Now, Guid? DeviceId)
+{
+    [JsonIgnore] internal AttendanceSupplementalAuthority SupplementalAuthority { get; } = new();
+}
+
+internal sealed class AttendanceSupplementalAuthority
+{
+    // Each dependency is already individually bounded by AttendanceScopeEvaluation. This
+    // aggregate accommodates a global month plus retained source/target histories, while
+    // repeated day/source checks share one immutable requirement instead of growing a log.
+    private const int MaximumGroups = 131072;
+    private const int MaximumAlternatives = 524288;
+    private readonly Dictionary<(string Permission, string Scope), AttendanceResourceScope> groups = [];
+    private readonly HashSet<string> allPermissions = new(StringComparer.Ordinal);
+    private int alternativeCount;
+
+    internal void RegisterAll(string permission) => allPermissions.Add(permission);
+
+    internal void Register(string permission, IReadOnlyList<AttendanceResourceScope> scopes)
+    {
+        var additions = scopes.Select(scope => (Key: (permission, JsonSerializer.Serialize(scope)), Scope: scope))
+            .DistinctBy(x => x.Key).Where(x => !groups.ContainsKey(x.Key)).ToArray();
+        var extra = additions.Sum(x => x.Scope.Alternatives.Count);
+        if (groups.Count + additions.Length > MaximumGroups || alternativeCount + extra > MaximumAlternatives)
+            throw AttendanceOperation.Denied();
+        foreach (var item in additions) groups.Add(item.Key, item.Scope);
+        alternativeCount += extra;
+    }
+
+    internal bool Allows(AuthenticatedAccount actor, IEnumerable<PermissionGrant> grants)
+    {
+        var current = grants.ToArray();
+        return allPermissions.All(permission => AccessPermissionEvaluator.HasAllScope(actor, current, permission)) &&
+            groups.All(group => group.Value.Alternatives.Any(resource =>
+            AccessPermissionEvaluator.Allows(actor, current, group.Key.Permission, resource)));
+    }
+}
 public sealed record AttendanceChange<T>(Guid ResourceId, object? Before, T After);
 public sealed record AttendanceReplay<T>(bool Found, T? Result);

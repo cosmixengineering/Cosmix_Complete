@@ -29,7 +29,7 @@ public sealed class ApprovalRoutingService(ICurrentAuthentication current, IAcco
 
     public Task<ApprovalRouteDto> PublishAsync(PublishApprovalRouteRequest input, string key,
         AuthRequestContext context, CancellationToken ct) =>
-        Authorized(ApprovalPermissions.Manage, true, async (actor, now, role, token) =>
+        Authorized(ApprovalPermissions.Manage, false, async (actor, now, role, token) =>
         {
             ApprovalRouteResolver.RequireType(input.RequestType); RequireReason(input.Reason);
             if (input.ExpectedLatestVersion < 0 || input.Stage is < 1 or > 20 || input.ApproverPermission != ApprovalPermissions.StageReview(input.Stage) ||

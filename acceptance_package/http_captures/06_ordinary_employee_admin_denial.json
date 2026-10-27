@@ -1,0 +1,6 @@
+{
+  "AttemptedAction": "POST /api/v1/admin/location-consent/policy",
+  "Actor": "Ordinary Employee",
+  "StatusCode": 403,
+  "Verdict": "DENIED_403_FORBIDDEN"
+}

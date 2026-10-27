@@ -252,6 +252,16 @@ export const ordinaryPay = z.strictObject({
   applicablePaidHolidayTreatment: choice(['no_deduction']),
   rounding: choice(rounding),
 });
+export const overtimePay = z.strictObject({
+  standardDutySeconds: z.number().int().min(60).max(86400).nullable(),
+  salaryBasis: choice(['base_salary']),
+  salaryDivisor: choice(salaryDivisor),
+  fixedSalaryDivisorDays: z.number().int().min(1).max(366).nullable(),
+  rateMultiplier: z.number().positive().max(100).multipleOf(0.0001).nullable(),
+  rounding: choice(rounding),
+  breakTreatment: choice(['count_all_breaks']),
+});
+export type OvertimePay = z.infer<typeof overtimePay>;
 export const policyRules = z.strictObject({
   schemaVersion: z.literal(3),
   arrival: z.strictObject({
@@ -297,6 +307,7 @@ export const policyRules = z.strictObject({
     overlapTreatment: choice(['larger_of_ordinary_or_late']),
   }),
   ordinaryPay,
+  overtime: overtimePay.nullable().optional(),
 });
 export type PolicyRules = z.infer<typeof policyRules>;
 export const ruleErrors = z.array(

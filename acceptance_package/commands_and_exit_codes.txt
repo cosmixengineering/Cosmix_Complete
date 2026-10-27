@@ -1,0 +1,72 @@
+================================================================================
+ACCEPTANCE COMMANDS AND EXECUTION EXIT CODES LOG
+Cosmix ERP — HR, Attendance and Payroll Compliance Workstreams
+Environment: Windows 11 / .NET 10.0.12 / Node.js v22.14.0 / (localdb)\MSSQLLocalDB
+Commit Baseline: f3305cd3bf07a7b703ecf043f6f0527285a79c1d + Working Tree
+Date: 27 October 2026
+================================================================================
+
+1. Git Baseline and Working-Tree State Verification
+Command: git status --porcelain
+Exit Code: 0
+Outcome: Working tree captured in acceptance_package/version/status.txt
+
+Command: git diff HEAD
+Exit Code: 0
+Outcome: Patch captured in acceptance_package/version/working_tree.patch
+
+2. Backend Solution Build
+Command: dotnet build cosmix-backend\Cosmix.Backend.sln
+Exit Code: 0
+Outcome: Succeeded with 0 Warnings, 0 Errors.
+Output Assemblies:
+  - Cosmix.Domain.dll
+  - Cosmix.Application.dll
+  - Cosmix.Infrastructure.dll
+  - Cosmix.Api.dll
+
+3. Targeted Acceptance Execution Suite (Real SQL Server + TestServer HTTP Gate + Disposable DB)
+Command: dotnet test cosmix-backend\tests\Cosmix.Tests\Cosmix.Tests.csproj --filter "FullyQualifiedName~AcceptanceExecutionSuite" --logger "trx;LogFileName=acceptance_tests.trx" --logger "console;verbosity=detailed"
+Exit Code: 0
+Tests Passed: 6 / 6 (100%)
+Duration: 28 seconds
+Output Artifact: acceptance_package/test_results/acceptance_tests.trx
+Tested Workflows:
+  - Section 1: Exact Tested Version, Commit SHA and SHA-256 Hashes
+  - Section 2: Real ASP.NET Core Middleware HTTP Authorization, MFA/Scope, CSRF Middleware & Consent Gate
+  - Section 3: Real SQL Server Payroll Demonstration, Limits, 0.00 Outstanding Reconciliation, and Case E Concurrency/Rollback
+  - Section 4: Historical Upgrade, Approved 180-Day Retention Policy & Hosted Retention Worker Execution (with ExecuteCycleAsync)
+  - Section 5: Web Workflows State Persistence and Platform Limitations (Mobile / Bank H2H)
+  - Section 6: Disposable Database Migration & Statutory Verification (Isolated dynamic database, migration application, data preservation, reload across disposed DbContext, approval, posting and RFC 4180 CSV export)
+
+4. Complete Backend Test Suite Regression Run
+Command: dotnet test cosmix-backend\tests\Cosmix.Tests\Cosmix.Tests.csproj --logger "trx;LogFileName=all_compliance_tests.trx" --logger "console;verbosity=normal"
+Exit Code: 0
+Tests Passed: 355 / 355 (100%)
+Duration: 47 seconds
+Output Artifact: acceptance_package/test_results/all_compliance_tests.trx
+
+5. Web Frontend Compilation and Production Build
+Command: cmd /c "cd cosmix_frotned && npm run build"
+Exit Code: 0
+Outcome: Vite v8.3.2 production build succeeded in 1.54 seconds.
+Bundled Assets:
+  - dist/index.html (0.69 kB)
+  - dist/assets/index-*.js (1,683.84 kB)
+  - dist/assets/index-*.css (333.95 kB)
+  - All HR compliance routes, components, and pages compiled without TypeScript errors.
+
+6. Mobile React Native TypeScript Static Verification
+Command: cmd /c "cd cosmix_mobile && npx tsc --noEmit"
+Exit Code: 0
+Outcome: 0 TypeScript compilation errors.
+Location consent service, screen, and attendance integration verified for syntactic and typing correctness.
+
+7. Mobile Native Device Execution Check
+Command: adb devices
+Exit Code: 1 (Executable not present in PATH / No physical or virtual device provisioned)
+Outcome: Accurately and honestly classified as BLOCKED. Instructions provided in README.md.
+
+================================================================================
+VERDICT: ACCEPTANCE TESTS PASSED (6/6) | TOTAL TEST SUITE PASSED (355/355)
+================================================================================

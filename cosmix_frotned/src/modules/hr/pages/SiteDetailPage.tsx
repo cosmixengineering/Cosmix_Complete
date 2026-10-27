@@ -372,11 +372,23 @@ function SiteEvidence({ siteId }: { siteId: string }) {
         <Link to="/hr/sites" className="site-back-link">
           <ArrowLeft size={16} /> Back to sites
         </Link>
-        <div style={{ padding: '24px', background: '#fff', borderRadius: '10px', border: '1px solid #fee2e2' }}>
+        <div
+          style={{
+            padding: '24px',
+            background: '#fff',
+            borderRadius: '10px',
+            border: '1px solid #fee2e2',
+          }}
+        >
           <p style={{ color: '#dc2626', fontWeight: 600, margin: '0 0 12px' }}>
             Site information is currently unavailable.
           </p>
-          <button type="button" className="site-btn-secondary" onClick={refresh} disabled={fetching}>
+          <button
+            type="button"
+            className="site-btn-secondary"
+            onClick={refresh}
+            disabled={fetching}
+          >
             <RotateCw size={14} /> Retry
           </button>
         </div>
@@ -468,10 +480,7 @@ function SiteEvidence({ siteId }: { siteId: string }) {
             Refresh
           </button>
 
-          <Link
-            to={'/hr/attendance/sites/' + siteId + '/geofences'}
-            className="site-btn-primary"
-          >
+          <Link to={'/hr/attendance/sites/' + siteId + '/geofences'} className="site-btn-primary">
             <MapPin size={15} />
             Manage geofence
           </Link>
@@ -486,7 +495,9 @@ function SiteEvidence({ siteId }: { siteId: string }) {
         </div>
         <div className="site-meta-col">
           <span className="site-meta-label">Address</span>
-          <span className="site-meta-val">{site.address || 'Sundar Industrial Estate, Lahore'}</span>
+          <span className="site-meta-val">
+            {site.address || 'Sundar Industrial Estate, Lahore'}
+          </span>
         </div>
         <div className="site-meta-col">
           <span className="site-meta-label">City</span>
@@ -509,9 +520,7 @@ function SiteEvidence({ siteId }: { siteId: string }) {
           <div className="site-card-header">
             <div className="site-card-title-row">
               <h2 className="site-card-title">Geofence</h2>
-              <span className="site-version-pill">
-                Version {boundary?.versionNumber ?? 1}
-              </span>
+              <span className="site-version-pill">Version {boundary?.versionNumber ?? 1}</span>
               <span className="site-card-date-meta">
                 Effective {effectiveStart} &bull; As of {asOfDateFormatted}
               </span>
@@ -571,10 +580,7 @@ function SiteEvidence({ siteId }: { siteId: string }) {
 
           {/* Map Preview Area */}
           <div className="geofence-map-container">
-            <RecordedSiteMap
-              boundary={boundary}
-              locations={sessions}
-            />
+            <RecordedSiteMap boundary={boundary} locations={sessions} />
           </div>
 
           {/* Map Footer Indicators */}
@@ -597,9 +603,7 @@ function SiteEvidence({ siteId }: { siteId: string }) {
           </div>
 
           <div className="supervisor-hero">
-            <div className="supervisor-avatar-circle">
-              {supervisorInitials}
-            </div>
+            <div className="supervisor-avatar-circle">{supervisorInitials}</div>
             <div className="supervisor-hero-info">
               <div className="supervisor-hero-name">
                 {matchingSupervisor?.fullLegalName || 'Muhammad Rashid'}
@@ -733,71 +737,73 @@ function SiteEvidence({ siteId }: { siteId: string }) {
                 </table>
               </div>
             )
+          ) : filteredSessions.length === 0 ? (
+            <div className="personnel-empty-state">
+              <div className="personnel-empty-icon-circle">
+                <Users size={24} />
+              </div>
+              <div className="personnel-empty-title">No open check-in sessions</div>
+              <div className="personnel-empty-sub">
+                No personnel check-in sessions were started in the last 24 hours.
+              </div>
+            </div>
           ) : (
-            filteredSessions.length === 0 ? (
-              <div className="personnel-empty-state">
-                <div className="personnel-empty-icon-circle">
-                  <Users size={24} />
-                </div>
-                <div className="personnel-empty-title">No open check-in sessions</div>
-                <div className="personnel-empty-sub">
-                  No personnel check-in sessions were started in the last 24 hours.
-                </div>
-              </div>
-            ) : (
-              <div className="personnel-table-wrapper">
-                <table className="personnel-table">
-                  <thead>
-                    <tr>
-                      <th>EMPLOYEE</th>
-                      <th>SESSION START (UTC)</th>
-                      <th>RECORDED COORDINATES</th>
-                      <th>GPS ACCURACY</th>
-                      <th>MAP</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredSessions.map((worker) => (
-                      <tr key={worker.employeeId}>
-                        <td>
-                          <div className="personnel-emp-cell">
-                            <div className="personnel-emp-avatar">
-                              {worker.fullLegalName.slice(0, 2).toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="personnel-emp-name">{worker.fullLegalName}</div>
-                              <div className="personnel-emp-code">#{worker.employeeNumber}</div>
-                            </div>
+            <div className="personnel-table-wrapper">
+              <table className="personnel-table">
+                <thead>
+                  <tr>
+                    <th>EMPLOYEE</th>
+                    <th>SESSION START (UTC)</th>
+                    <th>RECORDED COORDINATES</th>
+                    <th>GPS ACCURACY</th>
+                    <th>MAP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSessions.map((worker) => (
+                    <tr key={worker.employeeId}>
+                      <td>
+                        <div className="personnel-emp-cell">
+                          <div className="personnel-emp-avatar">
+                            {worker.fullLegalName.slice(0, 2).toUpperCase()}
                           </div>
-                        </td>
-                        <td>{timestamp(worker.checkInTimeUtc)}</td>
-                        <td>
-                          {worker.latitude && worker.longitude
-                            ? `${worker.latitude.toFixed(4)}, ${worker.longitude.toFixed(4)}`
-                            : 'Not recorded'}
-                        </td>
-                        <td>{worker.accuracyMeters ? `${worker.accuracyMeters} m` : 'N/A'}</td>
-                        <td>
-                          {worker.latitude !== null && worker.longitude !== null ? (
-                            <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${worker.latitude},${worker.longitude}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              title="Open in Google Maps"
-                              style={{ color: '#2563eb', display: 'inline-flex', alignItems: 'center' }}
-                            >
-                              <ExternalLink size={14} />
-                            </a>
-                          ) : (
-                            'N/A'
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )
+                          <div>
+                            <div className="personnel-emp-name">{worker.fullLegalName}</div>
+                            <div className="personnel-emp-code">#{worker.employeeNumber}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{timestamp(worker.checkInTimeUtc)}</td>
+                      <td>
+                        {worker.latitude && worker.longitude
+                          ? `${worker.latitude.toFixed(4)}, ${worker.longitude.toFixed(4)}`
+                          : 'Not recorded'}
+                      </td>
+                      <td>{worker.accuracyMeters ? `${worker.accuracyMeters} m` : 'N/A'}</td>
+                      <td>
+                        {worker.latitude !== null && worker.longitude !== null ? (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${worker.latitude},${worker.longitude}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Open in Google Maps"
+                            style={{
+                              color: '#2563eb',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <ExternalLink size={14} />
+                          </a>
+                        ) : (
+                          'N/A'
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
@@ -805,11 +811,12 @@ function SiteEvidence({ siteId }: { siteId: string }) {
         <div className="personnel-footer-bar">
           <div className="personnel-footer-left">
             <Info size={14} />
-            <span>Open check-in sessions: started in the last 24 hours. Locations are recorded at check-in.</span>
+            <span>
+              Open check-in sessions: started in the last 24 hours. Locations are recorded at
+              check-in.
+            </span>
           </div>
-          <div className="personnel-footer-right">
-            Updated {lastUpdatedFormatted}
-          </div>
+          <div className="personnel-footer-right">Updated {lastUpdatedFormatted}</div>
         </div>
       </div>
     </div>

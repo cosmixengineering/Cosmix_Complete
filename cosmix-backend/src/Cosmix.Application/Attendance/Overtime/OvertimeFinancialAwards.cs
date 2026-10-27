@@ -30,8 +30,20 @@ public static class OvertimeFinancialAwardRules
     /// <summary>An evaluated duration helper is not authority for an unconfigured monetary formula.</summary>
     public static void RequireSupportedFormula(OvertimeSourceResponse source)
     {
+        OvertimeRules.ValidatePolicy(source.DurationPolicy);
         if (source.Roster.StartsAt is null || source.Roster.EndsAt is null)
             throw AttendanceOperation.Conflict("overtime_schedule_unavailable");
+        if (source.DurationPolicy.OvertimeRules is { } rules)
+        {
+            ConfiguredOvertimeFormula.RequireRules(rules);
+            if (source.DurationPolicy.PolicyVersionId is null || source.DurationPolicy.PolicyVersionId == Guid.Empty ||
+                source.DurationPolicy.RateRuleCode != ConfiguredOvertimeFormula.Version ||
+                source.DurationPolicy.CalculationVersion != ConfiguredOvertimeFormula.Version)
+                throw AttendanceOperation.Conflict("overtime_rate_policy_unavailable");
+            if ((source.Roster.EndsAt.Value - source.Roster.StartsAt.Value).Ticks != (long)rules.StandardDutySeconds!.Value * TimeSpan.TicksPerSecond)
+                throw AttendanceOperation.Conflict("overtime_schedule_policy_mismatch");
+            return;
+        }
         if ((source.Roster.EndsAt.Value - source.Roster.StartsAt.Value).Ticks != OvertimeFormula.StandardDutyTicks)
             throw AttendanceOperation.Conflict("overtime_non_nine_hour_schedule_unavailable");
         if (source.DurationPolicy.RateRuleCode != OvertimeFormula.Version)

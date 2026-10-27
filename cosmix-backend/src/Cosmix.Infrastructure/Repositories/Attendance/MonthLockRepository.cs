@@ -97,7 +97,8 @@ public sealed class MonthLockRepository(CosmixDbContext db) : IMonthLockReposito
             .Select(x => new { x.EmployeeId, Source = new MonthLockStatusEvidence(x.Id, x.PreviousStatus, x.NewStatus, x.EffectiveAt, x.RecordedAt,
                 db.ApprovalRequests.Any(a => a.Id == x.ApprovalRequestId && a.SubjectId == x.EmployeeId && a.RequestType == EmployeeLifecycleService.RequestType &&
                     a.Stage == 1 && a.State == ApprovalState.Approved && a.ClosedAt == x.RecordedAt && db.ApprovalDecisions.Any(d => d.ApprovalRequestId == a.Id &&
-                        d.Decision == ApprovalState.Approved && d.DecidedAt == x.RecordedAt && d.ActorUserId == x.ChangedByUserId && d.ActorUserId != a.RequesterUserId))) })
+                        d.Decision == ApprovalState.Approved && d.DecidedAt == x.RecordedAt && d.ActorUserId == x.ChangedByUserId && d.ActorUserId != a.RequesterUserId)))
+                { LifecyclePolicyVersion = x.LifecyclePolicyVersion } })
             .Take(16385).ToArrayAsync(ct);
         if (statuses.Length > 16384) throw AttendanceOperation.Conflict("month_lock_lifecycle_limit");
         var evidence = employees.Select(x => new MonthLockEmployeeEvidence(x.Id, x.JoinedOn, x.Status, approved.Contains(x.Id),

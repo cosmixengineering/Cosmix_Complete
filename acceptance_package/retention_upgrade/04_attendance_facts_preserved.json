@@ -1,0 +1,12 @@
+{
+  "PunchId": "ac2fe78f-7b44-499c-acce-4aadc6e9161f",
+  "Action": "CheckIn",
+  "ReceivedAtUtc": "2026-04-20T09:33:20.9531657+00:00",
+  "DeviceCapturedAtUtc": "2026-04-20T09:33:20.9531657+00:00",
+  "RegisteredDeviceId": "acc-device-1",
+  "Latitude": null,
+  "Longitude": null,
+  "AccuracyMeters": null,
+  "AppendOnlyIntegrity": "PRESERVED_UNCHANGED",
+  "PrivacyCompliance": "ZERO_EMPLOYEE_PII_EXPORTED"
+}

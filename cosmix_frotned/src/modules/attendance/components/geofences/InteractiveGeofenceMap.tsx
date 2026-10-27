@@ -291,9 +291,7 @@ export function InteractiveGeofenceMap({
         </div>
 
         {/* Map Attribution Tag */}
-        <div className="map-attribution-badge">
-          © Google Maps
-        </div>
+        <div className="map-attribution-badge">© Google Maps</div>
       </div>
 
       {/* Radius Presets and Quick Controls */}

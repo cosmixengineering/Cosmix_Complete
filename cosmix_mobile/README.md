@@ -12,11 +12,13 @@ vehicle activity/claims, attendance corrections, overtime, encashment, monthly
 attendance, full punch/payroll history, profile/assigned items, finances and inbox. See
 [docs/Employee-Self-Service.md](docs/Employee-Self-Service.md) for contracts and
 access requirements. The owner subsequently authorized builds and testing.
-Android x86_64 debug compilation, source checks, backend Release publishing and
-the emulator login/HTTPS smoke test pass. The SMS provider remains absent, so
-successful employee sign-in and real biometric attendance are not accepted yet.
-See [the verification record](docs/Verification-20261020.md) for exact evidence
-and limits.
+The 26 October verification passed source checks, 117 controlled regression checks,
+Android JavaScript bundling, and normal native login against the isolated local
+backend with its synthetic OTP delivery sink. The existing Android debug APK ran
+the current source through Metro. Native versioned consent, dashboard, own profile
+and empty attendance history were verified; real SMS delivery and biometric
+attendance acceptance remain unverified. See the verification section below and
+[the earlier build record](docs/Verification-20261020.md) for evidence and limits.
 
 The authenticated workspace now has five tabs: Home, Services, Attendance,
 History and Profile. The shared circular bottom bar follows the owner's visual
@@ -128,8 +130,10 @@ contains the fallback logic.
 - The server owns permissions, device approval, enrollment, schedules, location
   policy, face matching, liveness and punch acceptance. The mobile app never
   contains CompreFace administrator credentials or an API key.
-- Check In obtains a server challenge and uses a camera photo, normalized JPEG,
-  protected upload, server verification and fresh location. A failed/expired
+- Check In first reads fresh location and calls the server location preflight
+  against the assigned dated site/office boundary. Only an allowed result opens
+  the camera: server challenge, normalized JPEG, protected upload, server
+  verification, then a second fresh location for final server validation. A failed/expired
   face result cannot submit a punch. Check Out does not capture a face.
 - Temporary camera files stay in app cache and are cleaned after capture. No
   image is saved to the gallery or persisted in app state. Cache cleanup after
@@ -138,18 +142,53 @@ contains the fallback logic.
   An explicit retry reconciles that submission; it never silently creates a new
   punch. Only an explicit `Accepted` receipt is presented as ordinary success.
   Review, rejection and exception results remain distinct.
+- On authenticated entry, the current published location notice must be checked
+  and accepted explicitly for its displayed version. Foreground and attendance
+  actions recheck policy; unavailable checks offer retry or sign-out. No active
+  notice blocks the workspace and attendance callbacks until HR publishes one.
 - Camera and precise foreground location are requested when needed. No
   background location or microphone permission is requested. Known simulated
-  location is rejected, including in an emulator.
+  location is rejected, including in an emulator. Session checks after native
+  permission and camera processing prevent further GPS or image work after
+  sign-out; temporary image cleanup still runs.
 - Background views have a privacy cover. Android release windows additionally
   block screenshots. Android backups are disabled. No tokens, OTPs or face
   payloads are logged. A production API URL and release signing are still pending.
 
 ## Verification and remaining acceptance
 
+On 26 October 2026, the current original checkout passed `npm run verify`, all
+117 external controlled checks, and the Android production JavaScript bundle.
+The isolated Android 37 emulator used the existing native debug APK with current
+Metro source and certificate-validated HTTPS to the local API clone. Normal
+synthetic OTP login, explicit version 1 acceptance, exact version 2 reacceptance,
+the no-active-policy gate, dashboard, own profile and empty filtered attendance
+history passed. The clone recorded one consent per displayed version. Camera
+and precise/coarse location permissions remained ungranted during these checks.
+Evidence and source hashes are outside Git in
+`D:/CosmixFirst11Verification/final-acceptance/mobile/report.md` and
+`continuation-source-hashes.json` beside it.
+
+The later continuation reproduced and fixed session changes during location and
+camera permission dialogs and camera processing. Its 34 additional checks compose
+the actual workflow, HTTP client, camera/location adapters and history client with
+controlled native modules and transport. They cover temporary file cleanup,
+preflight rejection, failed face/final GPS, exact uncertain-submit retry and
+overnight history dates. These last guards passed source checks and bundling;
+the earlier native smoke was not rerun after them.
+
+The native fixture had no verified face enrollment, so attendance correctly
+remained unavailable. No enrollment was fabricated and no accepted biometric
+punch, real camera liveness, print/replay rejection or physical GPS result is
+claimed. GPS-before-camera ordering and rejection paths were exercised using
+the actual coordinator and location adapter with controlled API/native ports.
+OTP delivery used only the external local verification host's synthetic sink;
+the production SMS provider is still absent. A fresh native rebuild was
+interrupted to free host resources and is not claimed as a new build pass.
+
 See [docs/Employee-Attendance-Implementation.md](docs/Employee-Attendance-Implementation.md)
 and [docs/Verification-20261020.md](docs/Verification-20261020.md)
-for current evidence. A successful source check or debug build does not prove
+for implementation detail and earlier evidence. A successful source check or debug build does not prove
 real biometric attendance acceptance. Real login requires an SMS provider and
 an eligible employee/device. Full acceptance also needs HR enrollment, approved
 attendance policy/roster/site settings, and consented physical-device camera,

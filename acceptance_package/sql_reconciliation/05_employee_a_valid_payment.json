@@ -1,0 +1,12 @@
+{
+  "Id": "db20c589-d472-4fc2-bd3f-db61474a13df",
+  "ObligationId": "182742f9-439c-46fd-9e13-517b699aedb9",
+  "EmployeeId": "75cb9f21-883f-4811-807d-0f15c0dd4c91",
+  "Amount": 96500.00,
+  "State": "Confirmed",
+  "PaymentReference": "PAY-A-202610-01",
+  "PaymentJournalEntryId": "78cf5ffe-8723-4ca5-b1f0-d769aba74ea9",
+  "ConfirmedAt": "2026-10-27T09:33:30.9645417+00:00",
+  "ConfirmedByUserId": "ed960f42-2c31-4b10-801e-2fe41c1c849b",
+  "CreatedAt": "2026-10-27T09:33:30.9067179+00:00"
+}

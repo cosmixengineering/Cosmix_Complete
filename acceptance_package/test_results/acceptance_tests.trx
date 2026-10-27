@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="670720df-40e7-4dd2-9149-2340601f0eee" name="Huma.Khan@SOFTWARE-PC1 2026-10-27 14:31:58" runUser="COSMIXRND\Huma.Khan" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-27T14:31:58.2320728+05:00" queuing="2026-10-27T14:31:58.2320732+05:00" start="2026-10-27T14:31:35.8476309+05:00" finish="2026-10-27T14:32:21.8621746+05:00" />
+  <TestSettings name="default" id="444accef-825c-4910-bdd6-ec8b9425d3a5">
+    <Deployment runDeploymentRoot="Huma.Khan_SOFTWARE-PC1_2026-10-27_14_31_58" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="5a1cdb40-54b3-4d0c-9c88-0a280c8bfcd3" testId="8561953a-9eec-3fd1-c0f4-74d2ede418f2" testName="Cosmix.Tests.AcceptanceExecutionSuite.Section1_Record_Exact_Tested_Version_And_Hashes" computerName="SOFTWARE-PC1" duration="00:00:00.0283722" startTime="2026-10-27T14:32:18.9854551+05:00" endTime="2026-10-27T14:32:19.0136214+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5a1cdb40-54b3-4d0c-9c88-0a280c8bfcd3">
+      <Output>
+        <StdOut>=== Recording Exact Tested Version &amp; Hashes ===</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="2b9c441d-acfd-4b9c-a535-b9632927a1a0" testId="060913cf-5329-c0e2-23ab-2831fc816869" testName="Cosmix.Tests.AcceptanceExecutionSuite.Section5_Record_User_Workflows_And_Platform_Limitations" computerName="SOFTWARE-PC1" duration="00:00:00.0229507" startTime="2026-10-27T14:32:19.0139995+05:00" endTime="2026-10-27T14:32:19.0375722+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2b9c441d-acfd-4b9c-a535-b9632927a1a0">
+      <Output>
+        <StdOut>=== Recording Web Workflows and Platform Limitations ===</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="48db0e7c-d1b7-456e-9221-d7cfaa94e959" testId="02a3ee1c-6b1e-dd5f-6427-95a257d29f43" testName="Cosmix.Tests.AcceptanceExecutionSuite.Section6_Disposable_Database_Migration_And_Statutory_Verification" computerName="SOFTWARE-PC1" duration="00:00:20.9523131" startTime="2026-10-27T14:31:37.1946385+05:00" endTime="2026-10-27T14:31:58.1708066+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="48db0e7c-d1b7-456e-9221-d7cfaa94e959">
+      <Output>
+        <StdOut>=== Running Disposable Database Migration &amp; Statutory Verification ===</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="734360e5-6312-4130-96b8-11456138c979" testId="fb09644c-570d-30e2-940c-88ae8f257005" testName="Cosmix.Tests.AcceptanceExecutionSuite.Section4_Historical_Upgrade_And_Retention_Worker_Execution" computerName="SOFTWARE-PC1" duration="00:00:09.5867402" startTime="2026-10-27T14:31:58.2083622+05:00" endTime="2026-10-27T14:32:07.7618459+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="734360e5-6312-4130-96b8-11456138c979">
+      <Output>
+        <StdOut>=== Running Retention Worker &amp; Historical Data Upgrade in Disposable Database ===</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="1a97aefc-515a-40bf-b057-5be5723aef56" testId="06856311-978e-b079-a29a-0d6fff51d8f3" testName="Cosmix.Tests.AcceptanceExecutionSuite.Section2_Actual_Http_Authorization_And_Consent_Evidence" computerName="SOFTWARE-PC1" duration="00:00:02.6015437" startTime="2026-10-27T14:32:19.0382688+05:00" endTime="2026-10-27T14:32:21.6401179+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1a97aefc-515a-40bf-b057-5be5723aef56">
+      <Output>
+        <StdOut>=== Running Real HTTP Authorization Evidence ===</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="5acd3f22-3d58-4ac0-8ac8-f39e8f71bee6" testId="794d026a-1c15-ed10-bef4-0b033cac6c17" testName="Cosmix.Tests.AcceptanceExecutionSuite.Section3_Actual_SqlServer_Payroll_Fixture_And_Reconciliation" computerName="SOFTWARE-PC1" duration="00:00:11.2221461" startTime="2026-10-27T14:32:07.7647467+05:00" endTime="2026-10-27T14:32:18.9846114+05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5acd3f22-3d58-4ac0-8ac8-f39e8f71bee6">
+      <Output>
+        <StdOut>=== Running Real SQL Server Payroll Demonstration in Disposable Database ===</StdOut>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Cosmix.Tests.AcceptanceExecutionSuite.Section5_Record_User_Workflows_And_Platform_Limitations" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix-backend\tests\cosmix.tests\bin\debug\net10.0\cosmix.tests.dll" id="060913cf-5329-c0e2-23ab-2831fc816869">
+      <Execution id="2b9c441d-acfd-4b9c-a535-b9632927a1a0" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\cosmix-backend\tests\Cosmix.Tests\bin\Debug\net10.0\Cosmix.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Cosmix.Tests.AcceptanceExecutionSuite" name="Section5_Record_User_Workflows_And_Platform_Limitations" />
+    </UnitTest>
+    <UnitTest name="Cosmix.Tests.AcceptanceExecutionSuite.Section2_Actual_Http_Authorization_And_Consent_Evidence" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix-backend\tests\cosmix.tests\bin\debug\net10.0\cosmix.tests.dll" id="06856311-978e-b079-a29a-0d6fff51d8f3">
+      <Execution id="1a97aefc-515a-40bf-b057-5be5723aef56" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\cosmix-backend\tests\Cosmix.Tests\bin\Debug\net10.0\Cosmix.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Cosmix.Tests.AcceptanceExecutionSuite" name="Section2_Actual_Http_Authorization_And_Consent_Evidence" />
+    </UnitTest>
+    <UnitTest name="Cosmix.Tests.AcceptanceExecutionSuite.Section1_Record_Exact_Tested_Version_And_Hashes" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix-backend\tests\cosmix.tests\bin\debug\net10.0\cosmix.tests.dll" id="8561953a-9eec-3fd1-c0f4-74d2ede418f2">
+      <Execution id="5a1cdb40-54b3-4d0c-9c88-0a280c8bfcd3" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\cosmix-backend\tests\Cosmix.Tests\bin\Debug\net10.0\Cosmix.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Cosmix.Tests.AcceptanceExecutionSuite" name="Section1_Record_Exact_Tested_Version_And_Hashes" />
+    </UnitTest>
+    <UnitTest name="Cosmix.Tests.AcceptanceExecutionSuite.Section6_Disposable_Database_Migration_And_Statutory_Verification" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix-backend\tests\cosmix.tests\bin\debug\net10.0\cosmix.tests.dll" id="02a3ee1c-6b1e-dd5f-6427-95a257d29f43">
+      <Execution id="48db0e7c-d1b7-456e-9221-d7cfaa94e959" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\cosmix-backend\tests\Cosmix.Tests\bin\Debug\net10.0\Cosmix.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Cosmix.Tests.AcceptanceExecutionSuite" name="Section6_Disposable_Database_Migration_And_Statutory_Verification" />
+    </UnitTest>
+    <UnitTest name="Cosmix.Tests.AcceptanceExecutionSuite.Section3_Actual_SqlServer_Payroll_Fixture_And_Reconciliation" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix-backend\tests\cosmix.tests\bin\debug\net10.0\cosmix.tests.dll" id="794d026a-1c15-ed10-bef4-0b033cac6c17">
+      <Execution id="5acd3f22-3d58-4ac0-8ac8-f39e8f71bee6" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\cosmix-backend\tests\Cosmix.Tests\bin\Debug\net10.0\Cosmix.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Cosmix.Tests.AcceptanceExecutionSuite" name="Section3_Actual_SqlServer_Payroll_Fixture_And_Reconciliation" />
+    </UnitTest>
+    <UnitTest name="Cosmix.Tests.AcceptanceExecutionSuite.Section4_Historical_Upgrade_And_Retention_Worker_Execution" storage="c:\users\huma.khan\downloads\cosmix_erp_software\cosmix-backend\tests\cosmix.tests\bin\debug\net10.0\cosmix.tests.dll" id="fb09644c-570d-30e2-940c-88ae8f257005">
+      <Execution id="734360e5-6312-4130-96b8-11456138c979" />
+      <TestMethod codeBase="C:\Users\Huma.Khan\Downloads\Cosmix_Erp_software\cosmix-backend\tests\Cosmix.Tests\bin\Debug\net10.0\Cosmix.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Cosmix.Tests.AcceptanceExecutionSuite" name="Section4_Historical_Upgrade_And_Retention_Worker_Execution" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="8561953a-9eec-3fd1-c0f4-74d2ede418f2" executionId="5a1cdb40-54b3-4d0c-9c88-0a280c8bfcd3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="060913cf-5329-c0e2-23ab-2831fc816869" executionId="2b9c441d-acfd-4b9c-a535-b9632927a1a0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="02a3ee1c-6b1e-dd5f-6427-95a257d29f43" executionId="48db0e7c-d1b7-456e-9221-d7cfaa94e959" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fb09644c-570d-30e2-940c-88ae8f257005" executionId="734360e5-6312-4130-96b8-11456138c979" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="06856311-978e-b079-a29a-0d6fff51d8f3" executionId="1a97aefc-515a-40bf-b057-5be5723aef56" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="794d026a-1c15-ed10-bef4-0b033cac6c17" executionId="5acd3f22-3d58-4ac0-8ac8-f39e8f71bee6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="6" executed="6" passed="6" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.12)&#xD;
+[xUnit.net 00:00:00.19]   Discovering: Cosmix.Tests&#xD;
+[xUnit.net 00:00:00.42]   Discovered:  Cosmix.Tests&#xD;
+[xUnit.net 00:00:00.48]   Starting:    Cosmix.Tests&#xD;
+[xUnit.net 00:00:45.01]   Finished:    Cosmix.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

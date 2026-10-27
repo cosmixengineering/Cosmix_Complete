@@ -10,17 +10,15 @@ namespace Cosmix.Api.Controllers.Attendance;
 [Route("api/v1")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 [ProducesResponseType<ProblemDetails>(400), ProducesResponseType<ProblemDetails>(401), ProducesResponseType<ProblemDetails>(403)]
-public sealed class LocationConsentController(
-    LocationConsentService service,
-    ICurrentAuthentication current) : ControllerBase
+public sealed class LocationConsentController(LocationConsentService service) : ControllerBase
 {
+    private AuthRequestContext Context() => new(HttpContext.Connection.RemoteIpAddress?.ToString() ?? "", HttpContext.TraceIdentifier);
     [HttpGet("me/location-consent")]
     [EndpointSummary("Get location consent status for current employee")]
     [ProducesResponseType<LocationConsentStatusResponse>(200)]
     public Task<LocationConsentStatusResponse> GetStatus(CancellationToken ct)
     {
-        var account = current.Require();
-        return service.GetStatusAsync(account.EmployeeId, ct);
+        return service.GetStatusAsync(Context(), ct);
     }
 
     [HttpPost("me/location-consent/accept")]
@@ -28,22 +26,22 @@ public sealed class LocationConsentController(
     [ProducesResponseType<LocationConsentAcceptedResponse>(200)]
     public Task<LocationConsentAcceptedResponse> Accept(AcceptLocationConsentRequest request, CancellationToken ct)
     {
-        var account = current.Require();
-        return service.AcceptAsync(account.EmployeeId, request, ct);
+        return service.AcceptAsync(request, Context(), ct);
     }
 
     [HttpGet("admin/location-consent/policy")]
+    [Authorize(Policy = "location.consent.admin")]
     [EndpointSummary("Get current active location tracking notice policy")]
     [ProducesResponseType<LocationNoticePolicyResponse>(200)]
     public Task<LocationNoticePolicyResponse?> GetPolicy(CancellationToken ct) =>
-        service.GetPolicyAsync(ct);
+        service.GetPolicyAsync(Context(), ct);
 
     [HttpPost("admin/location-consent/policy")]
+    [Authorize(Policy = "location.consent.admin")]
     [EndpointSummary("Publish a new version of location tracking notice policy")]
     [ProducesResponseType<LocationNoticePolicyResponse>(200)]
     public Task<LocationNoticePolicyResponse> PublishPolicy(PublishLocationNoticePolicyRequest request, CancellationToken ct)
     {
-        var account = current.Require();
-        return service.PublishPolicyAsync(request, account.AccountId.ToString(), ct);
+        return service.PublishPolicyAsync(request, Context(), ct);
     }
 }

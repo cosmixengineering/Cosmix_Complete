@@ -128,6 +128,22 @@ export const publishV4Input = z
     message: 'Exclusive end must follow effective from.',
   });
 
+export const publishBaseInput = z
+  .strictObject({
+    ...publishV4Input.shape,
+    settings: configurableLeaveSettings.transform((settings) => ({
+      ...settings,
+      eligibleStaffCategoryIds: settings.eligibleStaffCategoryIds.map((value) =>
+        value.toLowerCase(),
+      ),
+      holidayCalendarId: settings.holidayCalendarId.toLowerCase(),
+    })),
+  })
+  .refine((value) => value.effectiveTo > value.effectiveFrom, {
+    path: ['effectiveTo'],
+    message: 'Exclusive end must follow effective from.',
+  });
+
 export const capabilities = ['encashment', 'recovery', 'benefits', 'recoveryFulfilment'] as const;
 export type Capability = (typeof capabilities)[number];
 export type CapabilityChoice = '' | 'enabled' | 'unconfigured';
@@ -247,7 +263,7 @@ export const capabilityNumbers: Record<Capability, NumberField[]> = {
   ],
 };
 
-export function inputFromDraft(draft: PolicyDraft) {
+export function inputFromDraft(draft: PolicyDraft, baseOnly = false) {
   if (draft.copyProblem) throw new Error(draft.copyProblem);
   if (!draft.paidReviewed)
     throw new Error('Confirm paid kinds, including an explicit empty selection.');
@@ -266,7 +282,7 @@ export function inputFromDraft(draft: PolicyDraft) {
   const numbers = (fields: NumberField[], prefix = '') =>
     Object.fromEntries(fields.map(({ key }) => [key, number(prefix + key)]));
   const blocks: Partial<Record<Capability, unknown>> = {};
-  for (const capability of capabilities) {
+  for (const capability of baseOnly ? [] : capabilities) {
     const choice = draft.capabilities[capability];
     if (choice === 'unconfigured') {
       if (draft.copiedNulls.includes(capability)) blocks[capability] = null;
@@ -307,7 +323,7 @@ export function inputFromDraft(draft: PolicyDraft) {
         sourceChangeHandling: number(prefix + 'sourceChangeHandling'),
       };
   }
-  return publishV4Input.parse({
+  return (baseOnly ? publishBaseInput : publishV4Input).parse({
     code: draft.fields.code,
     name: draft.fields.name,
     effectiveFrom: draft.fields.effectiveFrom,
@@ -315,7 +331,7 @@ export function inputFromDraft(draft: PolicyDraft) {
     reason: draft.fields.reason,
     settings: {
       ...numbers(baseNumbers),
-      settingsVersion: 4,
+      settingsVersion: baseOnly ? 2 : 4,
       eligibleStaffCategoryIds: (draft.fields.eligibleStaffCategoryIds ?? '')
         .split(/[\s,]+/)
         .filter(Boolean),
@@ -344,10 +360,18 @@ function sameValue(left: unknown, right: unknown): boolean {
   return left === right;
 }
 export function publishV4Intent(input: unknown) {
-  const body = publishV4Input.parse(input);
+  return publicationIntent(input, false);
+}
+export function publishBaseIntent(input: unknown) {
+  return publicationIntent(input, true);
+}
+function publicationIntent(input: unknown, baseOnly: boolean) {
+  const body = (baseOnly ? publishBaseInput : publishV4Input).parse(input);
   const expected = structuredClone(body);
   const schema = readableLeavePolicy.superRefine((response, context) => {
-    const settings = v4Settings.safeParse(response.settings);
+    const settings = (baseOnly ? configurableLeaveSettings : v4Settings).safeParse(
+      response.settings,
+    );
     if (
       !settings.success ||
       !sameValue(settings.data, expected.settings) ||
@@ -359,7 +383,7 @@ export function publishV4Intent(input: unknown) {
     )
       context.addIssue({
         code: 'custom',
-        message: 'The returned publication does not match the submitted v4 settings.',
+        message: 'The returned publication does not match the submitted settings.',
       });
   });
   return { path: '/hr/leave-settings/policies', method: 'POST' as const, body, schema };

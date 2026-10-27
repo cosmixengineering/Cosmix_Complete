@@ -75,3 +75,21 @@ also found an unrelated extra EOF blank line in `src/styles/onboarding-stepper.c
 Neither unrelated file was changed. Authenticated visual/API acceptance remains
 unverified: the running site redirected to sign-in and showed a connection error.
 No mock session, API host, database migration or real employee write was introduced.
+
+## Saved-source payroll activation - 26 October 2026
+
+The payroll inputs revision detail now exposes the separate company operational
+activation workflow at the existing saved source. Reads require the exact
+All-scope `attendance.payroll-activation.read` grant; requesting and deciding also
+require their separate `.request` and `.approve` grants. The server requires the
+current web MFA account and payroll-input read access. No grants are assigned by
+the page. The requester and payroll beneficiary cannot approve their own request.
+
+Requests retain an explicit documentary reference, SHA-256, statement and reason,
+bound to the source revision/fingerprint, policy versions, coverage and historical
+jurisdictions. A decision submits the current request rowversion. A stale source
+requires renewed source review; pending or approved requests cannot be duplicated.
+The existing mutation transport preserves an uncertain submission for an unchanged
+idempotent retry. The page labels this as company operational authorization, with
+legal certification and payment instruction both false. It does not alter the
+saved payroll input DTO or assert that real company authorization is configured.

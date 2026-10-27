@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Calendar,
@@ -30,10 +30,13 @@ import {
   CalendarCheck2,
   Paperclip,
 } from 'lucide-react';
+import { useAuth } from '@/auth/use-auth';
 import { useHrQuery } from '@/modules/hr/hooks/use-hr-queries';
 import { employeeArchivePageSchema } from '@/modules/hr/components/employee/employee-archive-directory';
 import { queryString } from '../api/attendance-api';
 import '@/styles/leave-management.css';
+
+
 
 export interface LeaveAppItem {
   id: string;
@@ -65,6 +68,8 @@ export interface LeaveAppItem {
   auditTrail: string;
   appliedOn: string;
 }
+
+
 
 const INITIAL_APPLICATIONS: LeaveAppItem[] = [
   {
@@ -182,10 +187,27 @@ const INITIAL_APPLICATIONS: LeaveAppItem[] = [
   },
 ];
 
+
+
 export function LeaveManagementPage() {
+  const { user } = useAuth();
+  const isAdmin = Boolean(
+    user?.roles?.some((r: string) => {
+      const lower = r.toLowerCase();
+      return (
+        lower.includes('admin') ||
+        lower.includes('executive') ||
+        lower.includes('director') ||
+        lower.includes('pm') ||
+        lower.includes('manager')
+      );
+    })
+  );
   const [activeTab, setActiveTab] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'LONG'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
+
+
 
   // Real DB employees
   const directoryQuery = useHrQuery(
@@ -195,10 +217,14 @@ export function LeaveManagementPage() {
   );
   const dbEmployees = directoryQuery.data?.items || [];
 
+
+
   const [applications, setApplications] = useState<LeaveAppItem[]>(INITIAL_APPLICATIONS);
   const [selectedApp, setSelectedApp] = useState<LeaveAppItem | null>(null);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [toast, setToast] = useState('');
+
+
 
   // Form states for Apply Modal
   const [newEmpCode, setNewEmpCode] = useState('SA');
@@ -211,6 +237,8 @@ export function LeaveManagementPage() {
   const [newReason, setNewReason] = useState('');
   const [hasMedicalFile, setHasMedicalFile] = useState(false);
 
+
+
   // Auto-dismiss toast
   useEffect(() => {
     if (toast) {
@@ -218,6 +246,8 @@ export function LeaveManagementPage() {
       return () => clearTimeout(timer);
     }
   }, [toast]);
+
+
 
   // Working days calculation for modal
   const calculatedDuration = useMemo(() => {
@@ -236,6 +266,8 @@ export function LeaveManagementPage() {
     };
   }, [newFromDate, newToDate, newFraction]);
 
+
+
   // Tab counts
   const counts = useMemo(() => {
     return {
@@ -245,6 +277,8 @@ export function LeaveManagementPage() {
       long: applications.filter((a) => a.isLong).length,
     };
   }, [applications]);
+
+
 
   // Filtered applications
   const filteredApps = useMemo(() => {
@@ -258,10 +292,14 @@ export function LeaveManagementPage() {
         if (!app.isLong) return false;
       }
 
+
+
       // Type filter
       if (typeFilter !== 'ALL' && app.leaveType !== typeFilter) {
         return false;
       }
+
+
 
       // Search query
       if (searchQuery.trim()) {
@@ -279,6 +317,8 @@ export function LeaveManagementPage() {
     });
   }, [applications, activeTab, typeFilter, searchQuery]);
 
+
+
   // Approve action
   const handleApprove = (id: string, name: string) => {
     setApplications((prev) =>
@@ -289,6 +329,8 @@ export function LeaveManagementPage() {
     }
     setToast(`Approved leave application for ${name}! Attendance register updated.`);
   };
+
+
 
   // Reject action
   const handleReject = (id: string, name: string) => {
@@ -301,6 +343,8 @@ export function LeaveManagementPage() {
     setToast(`Leave application for ${name} rejected. Notification sent to employee.`);
   };
 
+
+
   // Submit Apply Modal Form
   const handleSubmitApply = (e: React.FormEvent) => {
     e.preventDefault();
@@ -311,6 +355,8 @@ export function LeaveManagementPage() {
       ZA: { name: 'Zainab Ali', code: 'EMP-1045', role: 'HR Assistant', dept: 'HR Operations', site: 'Lahore HQ', bg: '#f3e8ff', color: '#7e22ce' },
       BA: { name: 'Bilal Ahmed', code: 'EMP-1046', role: 'Field Tech', dept: 'MEP & Execution', site: 'Karachi Tower', bg: '#f1f5f9', color: '#475569' },
     };
+
+
 
     // Match DB employee or fallback
     const defaultProfile = {
@@ -338,11 +384,15 @@ export function LeaveManagementPage() {
     const randomNum = Math.floor(100 + Math.random() * 899);
     const appCode = `LV-2026-${randomNum}`;
 
+
+
     let typeKey: 'SICK' | 'ANNUAL' | 'CASUAL' | 'SHORT' | 'LWP' = 'CASUAL';
     if (newType === 'Sick Leave') typeKey = 'SICK';
     else if (newType === 'Annual Leave') typeKey = 'ANNUAL';
     else if (newType === 'Short Permission') typeKey = 'SHORT';
     else if (newType === 'Leave Without Pay') typeKey = 'LWP';
+
+
 
     const newApp: LeaveAppItem = {
       id: `app-${Date.now()}`,
@@ -374,11 +424,15 @@ export function LeaveManagementPage() {
       appliedOn: new Date().toISOString().slice(0, 10),
     };
 
+
+
     setApplications([newApp, ...applications]);
     setIsApplyModalOpen(false);
     setNewReason('');
     setToast(`Application ${appCode} submitted successfully for ${p.name}!`);
   };
+
+
 
   return (
     <div className="leave-v4-shell">
@@ -389,6 +443,8 @@ export function LeaveManagementPage() {
           <span>{toast}</span>
         </div>
       )}
+
+
 
       {/* 1. Header & Navigation Links */}
       <div className="leave-v4-header">
@@ -405,7 +461,15 @@ export function LeaveManagementPage() {
           </p>
         </div>
 
+
+
         <div className="leave-v4-nav-links">
+          {isAdmin && (
+            <Link to="/admin/approvals?type=leave" className="leave-v4-btn-nav" title="Admin Approvals Queue">
+              <Shield size={12} color="#2563eb" />
+              Admin Approvals
+            </Link>
+          )}
           <Link to="/hr/attendance/leave-settings" className="leave-v4-btn-nav" title="Configure policies">
             <Settings size={12} color="#64748b" />
             Leave Settings
@@ -420,6 +484,8 @@ export function LeaveManagementPage() {
           </Link>
         </div>
       </div>
+
+
 
       {/* 2. Top 4 KPI Summary Cards - Calm Enterprise Styling */}
       <div className="leave-v4-kpis-grid">
@@ -439,6 +505,8 @@ export function LeaveManagementPage() {
           </div>
         </div>
 
+
+
         {/* KPI 2 */}
         <div className="leave-v4-kpi-card" onClick={() => setActiveTab('APPROVED')} style={{ cursor: 'pointer' }}>
           <div className="leave-v4-kpi-left">
@@ -455,6 +523,8 @@ export function LeaveManagementPage() {
           </div>
         </div>
 
+
+
         {/* KPI 3 */}
         <div className="leave-v4-kpi-card" onClick={() => setActiveTab('LONG')} style={{ cursor: 'pointer' }}>
           <div className="leave-v4-kpi-left">
@@ -470,6 +540,8 @@ export function LeaveManagementPage() {
             <Clock size={15} />
           </div>
         </div>
+
+
 
         {/* KPI 4 */}
         <div className="leave-v4-kpi-card">
@@ -488,6 +560,8 @@ export function LeaveManagementPage() {
         </div>
       </div>
 
+
+
       {/* 3. Action Toolbar: Filters + Search + Excel/PDF + Apply Leave */}
       <div className="leave-v4-toolbar">
         <div className="leave-v4-toolbar-left">
@@ -502,6 +576,8 @@ export function LeaveManagementPage() {
             />
           </div>
 
+
+
           <select
             className="leave-v4-select"
             value={typeFilter}
@@ -515,6 +591,8 @@ export function LeaveManagementPage() {
             <option value="LWP">Leave Without Pay (LWP)</option>
           </select>
         </div>
+
+
 
         <div className="leave-v4-toolbar-right">
           <button
@@ -555,6 +633,8 @@ export function LeaveManagementPage() {
         </div>
       </div>
 
+
+
       {/* 4. Category Filter Tabs */}
       <div className="leave-v4-tabs-bar">
         <button
@@ -568,6 +648,8 @@ export function LeaveManagementPage() {
           </span>
         </button>
 
+
+
         <button
           type="button"
           className={`leave-v4-tab ${activeTab === 'PENDING' ? 'active' : ''}`}
@@ -580,6 +662,8 @@ export function LeaveManagementPage() {
           </span>
         </button>
 
+
+
         <button
           type="button"
           className={`leave-v4-tab ${activeTab === 'APPROVED' ? 'active' : ''}`}
@@ -591,6 +675,8 @@ export function LeaveManagementPage() {
             {counts.approved}
           </span>
         </button>
+
+
 
         <button
           type="button"
@@ -605,6 +691,8 @@ export function LeaveManagementPage() {
         </button>
       </div>
 
+
+
       {/* 5. Active Leave Requests Table */}
       <div className="leave-v4-card">
         <div className="leave-v4-card-header">
@@ -618,6 +706,8 @@ export function LeaveManagementPage() {
             Automatic Attendance Register integration
           </span>
         </div>
+
+
 
         <div className="leave-v4-table-wrap">
           <table className="leave-v4-table">
@@ -675,6 +765,8 @@ export function LeaveManagementPage() {
                       </div>
                     </td>
 
+
+
                     {/* Employee Info */}
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
@@ -704,11 +796,15 @@ export function LeaveManagementPage() {
                       </div>
                     </td>
 
+
+
                     {/* Leave Dates & Duration */}
                     <td>
                       <div style={{ fontWeight: 650, color: '#0f172a', fontSize: '11.5px' }}>{app.durationLabel}</div>
                       <div style={{ fontSize: '10px', color: '#64748b' }}>{app.datesLabel}</div>
                     </td>
+
+
 
                     {/* Quota Balance */}
                     <td>
@@ -720,11 +816,15 @@ export function LeaveManagementPage() {
                       </div>
                     </td>
 
+
+
                     {/* Site Reliever / Handover */}
                     <td>
                       <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '11.5px' }}>{app.reliever}</div>
                       <div style={{ fontSize: '10px', color: '#64748b' }}>Phone: {app.relieverPhone}</div>
                     </td>
+
+
 
                     {/* Reason & Documents */}
                     <td>
@@ -739,6 +839,8 @@ export function LeaveManagementPage() {
                         <span style={{ fontSize: '9.5px', color: '#94a3b8' }}>Standard 1-Day Notice</span>
                       )}
                     </td>
+
+
 
                     {/* Status */}
                     <td style={{ textAlign: 'center' }}>
@@ -769,6 +871,8 @@ export function LeaveManagementPage() {
                       )}
                     </td>
 
+
+
                     {/* Actions */}
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -795,6 +899,8 @@ export function LeaveManagementPage() {
                             <Check size={10} /> Approve
                           </button>
                         )}
+
+
 
                         <button
                           type="button"
@@ -827,6 +933,8 @@ export function LeaveManagementPage() {
         </div>
       </div>
 
+
+
       {/* 6. DETAILED MODAL WINDOW FOR LEAVE APPLICATION */}
       {selectedApp && (
         <div className="leave-v4-modal-overlay" onClick={() => setSelectedApp(null)}>
@@ -851,6 +959,8 @@ export function LeaveManagementPage() {
               </button>
             </div>
 
+
+
             {/* Modal Body */}
             <div className="leave-v4-modal-body">
               {/* Applicant Card */}
@@ -867,6 +977,8 @@ export function LeaveManagementPage() {
                 </div>
               </div>
 
+
+
               {/* Schedule Details Strip */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
@@ -875,12 +987,16 @@ export function LeaveManagementPage() {
                   <div style={{ fontSize: '10.5px', color: '#64748b' }}>{selectedApp.datesLabel}</div>
                 </div>
 
+
+
                 <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                   <span style={{ fontSize: '9.5px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Reliever Handover</span>
                   <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '12px', marginTop: '2px' }}>{selectedApp.reliever}</div>
                   <div style={{ fontSize: '10.5px', color: '#64748b' }}>Phone: {selectedApp.relieverPhone}</div>
                 </div>
               </div>
+
+
 
               {/* Stated Reason */}
               <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
@@ -894,6 +1010,8 @@ export function LeaveManagementPage() {
                   </div>
                 )}
               </div>
+
+
 
               {/* Evidence / Medical document */}
               {selectedApp.docVerified && (
@@ -914,6 +1032,8 @@ export function LeaveManagementPage() {
                   </button>
                 </div>
               )}
+
+
 
               {/* Approval Workflow Trail */}
               <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
@@ -937,6 +1057,8 @@ export function LeaveManagementPage() {
               </div>
             </div>
 
+
+
             {/* Modal Footer */}
             <div className="leave-v4-modal-footer">
               <button
@@ -952,6 +1074,8 @@ export function LeaveManagementPage() {
                 Print Voucher
               </button>
 
+
+
               <button
                 type="button"
                 onClick={() => setSelectedApp(null)}
@@ -960,7 +1084,9 @@ export function LeaveManagementPage() {
                 Close
               </button>
 
-              {selectedApp.status !== 'REJECTED' && (
+
+
+              {isAdmin && selectedApp.status !== 'REJECTED' && (
                 <button
                   type="button"
                   onClick={() => {
@@ -987,7 +1113,9 @@ export function LeaveManagementPage() {
                 </button>
               )}
 
-              {selectedApp.status !== 'APPROVED' && (
+
+
+              {isAdmin && selectedApp.status !== 'APPROVED' && (
                 <button
                   type="button"
                   onClick={() => {
@@ -1019,6 +1147,8 @@ export function LeaveManagementPage() {
         </div>
       )}
 
+
+
       {/* 7. APPLY LEAVE APPLICATION MODAL */}
       {isApplyModalOpen && (
         <div className="leave-v4-modal-overlay" onClick={() => setIsApplyModalOpen(false)}>
@@ -1042,6 +1172,8 @@ export function LeaveManagementPage() {
                 <X size={15} />
               </button>
             </div>
+
+
 
             {/* Modal Form */}
             <form onSubmit={handleSubmitApply}>
@@ -1074,6 +1206,8 @@ export function LeaveManagementPage() {
                     )}
                   </select>
 
+
+
                   {/* Quota Strip */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', paddingTop: '4px' }}>
                     <div style={{ background: '#ffffff', padding: '6px', borderRadius: '5px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
@@ -1090,6 +1224,8 @@ export function LeaveManagementPage() {
                     </div>
                   </div>
                 </div>
+
+
 
                 {/* 2. Leave Category & Day Fraction */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -1111,6 +1247,8 @@ export function LeaveManagementPage() {
                     </select>
                   </div>
 
+
+
                   <div>
                     <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
                       Day Fraction / Schedule
@@ -1129,6 +1267,8 @@ export function LeaveManagementPage() {
                   </div>
                 </div>
 
+
+
                 {/* 3. Dates & Auto-Calculated Working Days */}
                 <div style={{ background: '#eff6ff', padding: '10px 12px', borderRadius: '8px', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
@@ -1144,6 +1284,8 @@ export function LeaveManagementPage() {
                       />
                     </div>
 
+
+
                     <div>
                       <label style={{ fontSize: '10.5px', fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: '2px' }}>To Date</label>
                       <input
@@ -1156,6 +1298,8 @@ export function LeaveManagementPage() {
                       />
                     </div>
 
+
+
                     <div>
                       <label style={{ fontSize: '10.5px', fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: '2px' }}>Duration</label>
                       <div style={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: '6px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 750, color: '#1d4ed8', fontSize: '11.5px' }}>
@@ -1163,6 +1307,8 @@ export function LeaveManagementPage() {
                       </div>
                     </div>
                   </div>
+
+
 
                   {/* Warning if > 3 days */}
                   {calculatedDuration.isLong ? (
@@ -1179,6 +1325,8 @@ export function LeaveManagementPage() {
                     </div>
                   )}
                 </div>
+
+
 
                 {/* 4. Site Handover & Emergency Contact */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -1200,6 +1348,8 @@ export function LeaveManagementPage() {
                     </select>
                   </div>
 
+
+
                   <div>
                     <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
                       Emergency Contact Phone
@@ -1214,6 +1364,8 @@ export function LeaveManagementPage() {
                     />
                   </div>
                 </div>
+
+
 
                 {/* 5. Medical file for Sick Leave */}
                 {newType === 'Sick Leave' && (
@@ -1232,6 +1384,8 @@ export function LeaveManagementPage() {
                   </div>
                 )}
 
+
+
                 {/* 6. Reason for Absence */}
                 <div>
                   <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
@@ -1248,6 +1402,8 @@ export function LeaveManagementPage() {
                   />
                 </div>
               </div>
+
+
 
               {/* Form Footer */}
               <div className="leave-v4-modal-footer">
@@ -1273,3 +1429,4 @@ export function LeaveManagementPage() {
     </div>
   );
 }
+

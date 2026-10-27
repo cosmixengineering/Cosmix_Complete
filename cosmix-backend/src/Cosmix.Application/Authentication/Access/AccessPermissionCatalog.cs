@@ -92,6 +92,7 @@ public static class AccessPermissionCatalog
         .. ZonePermissions.Definitions,
         .. AttendancePayrollInputPermissions.Definitions,
         .. AttendancePayrollAttestationPermissions.Definitions,
+        .. AttendancePayrollActivationPermissions.Definitions,
         .. AttendanceLegalReviewPermissions.Definitions,
         .. CompanySettingsPermissions.Definitions,
         .. HrFoundationPolicyPermissions.Definitions,

@@ -1,4 +1,5 @@
 import { useHrAccess } from '../../hr/hooks/use-hr-access';
+import { stagePermission } from '../api/approval-schemas';
 
 export const approvalPermissions = {
   read: 'approvals.routes.read',
@@ -6,16 +7,27 @@ export const approvalPermissions = {
   delegate: 'approvals.delegations.manage',
 } as const;
 
-// Server authorization (administrator status, All scope, fixed SuperAdmin) stays
-// authoritative; these checks only decide which views and controls are presented.
+// The server validates the current web MFA session and permission scopes.
+// These checks only decide which views and controls are presented.
 export function useApprovalAccess() {
   const access = useHrAccess();
+  const canManage = Boolean(
+    access.user?.account?.webAccessEnabled &&
+    access.user.account.client === 1 &&
+    access.can(approvalPermissions.manage),
+  );
   return {
     ready: access.ready,
     subject: access.subject,
     accountId: access.user?.account?.accountId ?? null,
     canRead: access.can(approvalPermissions.read),
-    canManage: access.can(approvalPermissions.manage),
+    canManage,
+    canPublishStage: (stage: number) =>
+      canManage &&
+      Number.isInteger(stage) &&
+      stage >= 1 &&
+      stage <= 20 &&
+      access.can(stagePermission(stage)),
     canDelegate: access.can(approvalPermissions.delegate),
     holdsPermission: (permission: string) =>
       Boolean(access.user?.grants.some((grant) => grant.permission === permission)),

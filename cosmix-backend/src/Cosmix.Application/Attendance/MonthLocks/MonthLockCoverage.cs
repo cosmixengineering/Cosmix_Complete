@@ -27,13 +27,14 @@ public static class MonthLockCoverage
             DateTimeOffset? departure = null, previous = null; var valid = true;
             foreach (var change in employee.Statuses.OrderBy(x => x.EffectiveAt).ThenBy(x => x.Id))
             {
-                var allowed = state == EmployeeStatus.Active && change.NewStatus is EmployeeStatus.Suspended or EmployeeStatus.Resigned or EmployeeStatus.Terminated ||
-                    state == EmployeeStatus.Suspended && change.NewStatus is EmployeeStatus.Resigned or EmployeeStatus.Terminated;
+                // Retirement and suspension release are policy-gated HR transitions. Retain
+                // their recorded approval version; today's policy must not rewrite history.
+                var allowed = EmployeeLifecycleHistoryRules.Supports(state, change.NewStatus, change.LifecyclePolicyVersion);
                 if (!change.ApprovedProvenance || change.PreviousStatus != state || !allowed ||
                     previous.HasValue && change.EffectiveAt <= previous || change.EffectiveAt < change.RecordedAt || RosterSchedule.Today(change.EffectiveAt) < joined)
                 { valid = false; break; }
                 state = change.NewStatus; previous = change.EffectiveAt; represented.Add(state);
-                if (state is EmployeeStatus.Resigned or EmployeeStatus.Terminated) departure = change.EffectiveAt;
+                if (state is EmployeeStatus.Resigned or EmployeeStatus.Terminated or EmployeeStatus.Retired) departure = change.EffectiveAt;
             }
             if (!valid || !represented.Contains(employee.CachedStatus))
             { issues.Add(new("lifecycle_provenance_unavailable", employee.EmployeeId)); continue; }

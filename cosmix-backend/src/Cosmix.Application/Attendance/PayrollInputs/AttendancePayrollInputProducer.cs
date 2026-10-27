@@ -127,7 +127,7 @@ public sealed class AttendancePayrollInputProducer(IAttendancePayrollInputReposi
             result = result with { State = issues.Length == 0 ? "ready" : "unavailable", Issues = issues };
         }
         var manifest = new AttendancePayrollInputManifest(1, employeeId, monthStart, monthStart.AddMonths(1),
-            range.From, range.To, AttendancePayrollInputRules.Version, range.Population.EvidenceFingerprint, scopes, manifestDays, confirmed);
+            range.From, range.To, AttendancePayrollInputRules.VersionFor(manifestDays.Select(x=>x.Compensation)), range.Population.EvidenceFingerprint, scopes, manifestDays, confirmed);
         var digest = Hash(new { Manifest = manifest, Result = result });
         return new(employeeId, monthStart, monthStart.AddMonths(1), range.From, range.To,
             result.State, digest, result.Lines, result.Issues, manifest);

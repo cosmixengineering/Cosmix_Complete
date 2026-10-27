@@ -15,6 +15,7 @@ export function Field({
   readOnly = false,
   error,
   placeholder,
+  dataField,
 }: {
   label: string;
   value: string | null;
@@ -26,7 +27,9 @@ export function Field({
   readOnly?: boolean;
   error?: string;
   placeholder?: string;
+  dataField?: string;
 }) {
+  const effectivePlaceholder = placeholder ?? (type === 'date' ? undefined : 'Type here');
   return (
     <TextInput
       label={label}
@@ -36,7 +39,8 @@ export function Field({
       required={required}
       readOnly={readOnly}
       error={error}
-      placeholder={placeholder}
+      placeholder={effectivePlaceholder}
+      data-field={dataField}
       pattern={pattern ?? (type === 'tel' ? '\\+[1-9][0-9]{1,14}' : undefined)}
       autoComplete="off"
       onChange={(e) => onChange(e.target.value || null)}
@@ -52,6 +56,7 @@ export function PhoneField({
   error,
   placeholder = '3001234567',
   readOnly = false,
+  dataField,
 }: {
   label: string;
   value: string | null;
@@ -60,6 +65,7 @@ export function PhoneField({
   error?: string;
   placeholder?: string;
   readOnly?: boolean;
+  dataField?: string;
 }) {
   const id = useId();
 
@@ -97,7 +103,7 @@ export function PhoneField({
   };
 
   return (
-    <div className="field">
+    <div className="field" data-field={dataField}>
       <label htmlFor={id}>
         {label}
         {required && (
@@ -120,6 +126,7 @@ export function PhoneField({
           placeholder={placeholder}
           required={required}
           readOnly={readOnly}
+          data-field={dataField}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? id + '-error' : undefined}
           autoComplete="off"
@@ -212,6 +219,7 @@ export function EnumField({
   options,
   required = false,
   error,
+  dataField,
 }: {
   label: string;
   value: number | null;
@@ -219,6 +227,7 @@ export function EnumField({
   options: string[];
   required?: boolean;
   error?: string;
+  dataField?: string;
 }) {
   return (
     <SelectInput
@@ -226,6 +235,7 @@ export function EnumField({
       value={value ?? ''}
       required={required}
       error={error}
+      data-field={dataField}
       options={[
         { value: '', label: 'Select ' + label.toLowerCase() },
         ...options.map((label, i) => ({ value: String(i + 1), label })),
@@ -236,17 +246,24 @@ export function EnumField({
 }
 export function FormSection({
   title,
+  subtitle,
   children,
   id,
+  className,
 }: {
   title: string;
+  subtitle?: string;
   children: ReactNode;
   id?: string;
+  className?: string;
 }) {
   return (
-    <section className="hr-form-section" id={id}>
-      <h2>{title}</h2>
-      <div className="hr-form-grid">{children}</div>
+    <section className={`hr-form-section ${className ?? ''}`} id={id}>
+      <div className="hr-section-header">
+        <h2 className="hr-section-title">{title}</h2>
+        {subtitle && <p className="hr-section-subtitle">{subtitle}</p>}
+      </div>
+      <div className="hr-form-grid erp-form-grid-3">{children}</div>
     </section>
   );
 }
@@ -279,6 +296,7 @@ export function AddressFields({
       <Field
         label={label + ' line 1'}
         required={required}
+        dataField={`${prefix}.line1`}
         error={errors?.[`${prefix}.line1`]}
         value={a.line1}
         max={250}
@@ -286,6 +304,7 @@ export function AddressFields({
       />
       <Field
         label={label + ' line 2'}
+        dataField={`${prefix}.line2`}
         value={a.line2}
         max={250}
         onChange={(v) => set('line2', v)}
@@ -293,6 +312,7 @@ export function AddressFields({
       <ReferenceField
         label={label + ' city reference'}
         kind="cities"
+        dataField={`${prefix}.cityId`}
         value={a.cityId}
         error={errors?.[`${prefix}.cityId`]}
         onChange={(v) => set('cityId', v)}
@@ -300,6 +320,7 @@ export function AddressFields({
       <Field
         label={label + ' city'}
         required={required && !a.cityId}
+        dataField={`${prefix}.city`}
         error={errors?.[`${prefix}.city`]}
         value={a.city}
         max={100}
@@ -308,6 +329,7 @@ export function AddressFields({
       <Field
         label={label + ' province'}
         required={required}
+        dataField={`${prefix}.province`}
         error={errors?.[`${prefix}.province`]}
         value={a.province}
         max={100}
@@ -315,6 +337,7 @@ export function AddressFields({
       />
       <Field
         label={label + ' postal code'}
+        dataField={`${prefix}.postalCode`}
         value={a.postalCode}
         max={20}
         onChange={(v) => set('postalCode', v)}
@@ -369,6 +392,7 @@ export function EmergencyFields({
       <Field
         label="Emergency contact name"
         required={required}
+        dataField="emergencyContact.name"
         error={errors?.['emergencyContact.name']}
         value={a.name}
         onChange={(v) => set('name', v)}
@@ -376,6 +400,7 @@ export function EmergencyFields({
       <SelectInput
         label="Relationship"
         required={required}
+        data-field="emergencyContact.relationship"
         error={errors?.['emergencyContact.relationship']}
         value={a.relationship ?? ''}
         options={relationshipOptions}
@@ -384,12 +409,14 @@ export function EmergencyFields({
       <PhoneField
         label="Emergency phone"
         required={required}
+        dataField="emergencyContact.phone"
         error={errors?.['emergencyContact.phone']}
         value={a.phone}
         onChange={(v) => set('phone', v)}
       />
       <PhoneField
         label="Emergency alternate phone"
+        dataField="emergencyContact.alternatePhone"
         error={errors?.['emergencyContact.alternatePhone']}
         value={a.alternatePhone}
         onChange={(v) => set('alternatePhone', v)}

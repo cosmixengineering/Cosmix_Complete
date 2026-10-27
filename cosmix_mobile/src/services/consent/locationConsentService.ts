@@ -1,5 +1,7 @@
 import { Platform } from 'react-native';
-import type { SessionManager } from '../../auth/SessionManager';
+import type { BackendApi } from '../api/ApiClient';
+import { AppError } from '../../utils/errors';
+import { isGuid, isRecord, isTimestamp } from '../../utils/validation';
 
 export interface LocationConsentStatus {
   hasActivePolicy: boolean;
@@ -15,41 +17,77 @@ export interface ConsentAcceptedResponse {
 }
 
 export class LocationConsentService {
-  constructor(private readonly session: SessionManager) {}
+  constructor(private readonly session: BackendApi) {}
 
   async getConsentStatus(): Promise<LocationConsentStatus> {
-    try {
-      const res = await this.session.request<any>('/api/v1/me/location-consent', {
+    const value = await this.session.request<unknown>(
+      '/api/v1/me/location-consent',
+      {
         method: 'GET',
-      });
-      const statusMap: Record<number | string, 'NotRequired' | 'PendingConsent' | 'Consented'> = {
-        0: 'NotRequired',
-        1: 'PendingConsent',
-        2: 'Consented',
-        NotRequired: 'NotRequired',
-        PendingConsent: 'PendingConsent',
-        Consented: 'Consented',
-      };
-      return {
-        ...res,
-        status: statusMap[res?.status] ?? 'NotRequired',
-      };
-    } catch {
-      return {
-        hasActivePolicy: false,
-        status: 'NotRequired',
-      };
+      },
+    );
+    if (!isRecord(value) || typeof value.hasActivePolicy !== 'boolean') {
+      throw new AppError('invalid_server_response');
     }
+    const status =
+      value.status === 0 || value.status === 'NotRequired'
+        ? 'NotRequired'
+        : value.status === 1 || value.status === 'PendingConsent'
+        ? 'PendingConsent'
+        : value.status === 2 || value.status === 'Consented'
+        ? 'Consented'
+        : null;
+    if (
+      !status ||
+      value.hasActivePolicy !== (status !== 'NotRequired') ||
+      (value.hasActivePolicy &&
+        (!Number.isSafeInteger(value.activePolicyVersion) ||
+          (value.activePolicyVersion as number) <= 0 ||
+          typeof value.noticeText !== 'string' ||
+          !value.noticeText.trim())) ||
+      (value.consentedAt != null && !isTimestamp(value.consentedAt))
+    ) {
+      throw new AppError('invalid_server_response');
+    }
+    return {
+      hasActivePolicy: value.hasActivePolicy,
+      status,
+      activePolicyVersion: value.hasActivePolicy
+        ? (value.activePolicyVersion as number)
+        : undefined,
+      noticeText: value.hasActivePolicy
+        ? (value.noticeText as string)
+        : undefined,
+      consentedAt: value.consentedAt as string | undefined,
+    };
   }
 
-  async acceptConsent(): Promise<ConsentAcceptedResponse> {
-    const metadata = `Platform=${Platform.OS}, OSVersion=${Platform.Version}`;
-    return await this.session.request<ConsentAcceptedResponse>('/api/v1/me/location-consent/accept', {
-      method: 'POST',
-      body: {
-        deviceMetadata: metadata,
-        ipAddress: null,
+  async acceptConsent(
+    expectedPolicyVersion: number,
+  ): Promise<ConsentAcceptedResponse> {
+    if (
+      !Number.isSafeInteger(expectedPolicyVersion) ||
+      expectedPolicyVersion <= 0
+    ) {
+      throw new AppError('invalid_server_response');
+    }
+    const value = await this.session.request<unknown>(
+      '/api/v1/me/location-consent/accept',
+      {
+        method: 'POST',
+        body: {
+          expectedPolicyVersion,
+          deviceMetadata: `Platform=${Platform.OS}, OSVersion=${Platform.Version}`,
+        },
       },
-    });
+    );
+    if (
+      !isRecord(value) ||
+      !isGuid(value.consentId) ||
+      !isTimestamp(value.acceptedAtUtc)
+    ) {
+      throw new AppError('invalid_server_response');
+    }
+    return { consentId: value.consentId, acceptedAtUtc: value.acceptedAtUtc };
   }
 }

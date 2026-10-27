@@ -13,7 +13,8 @@ public static class HrReportPdfExporter
     public const string GeneratorVersion = "hr-report-pdf-v1";
 
     public static byte[] Generate(HrReportMetadata metadata, IReadOnlyList<string> headers,
-        IReadOnlyList<IReadOnlyList<string>> rows)
+        IReadOnlyList<IReadOnlyList<string>> rows, string documentTitle = "Cosmix | HR report",
+        string footer = "Source-backed HR data; not payroll certification")
     {
         var pages = new List<StringBuilder>();
         var page = new StringBuilder();
@@ -22,7 +23,7 @@ public static class HrReportPdfExporter
         {
             if (pages.Count >= MaximumPages) throw AttendanceOperation.Conflict("hr_report_pdf_page_limit");
             page = new(); pages.Add(page); y = 738;
-            Text(page, 40, 802, 13, "Cosmix | HR report");
+            Text(page, 40, 802, 13, documentTitle);
             Text(page, 40, 780, 9, metadata.ReportType);
             Text(page, 40, 762, 8, $"Generated UTC: {metadata.GeneratedAtUtc:yyyy-MM-dd HH:mm:ss} | Records: {rows.Count}");
         }
@@ -53,7 +54,7 @@ public static class HrReportPdfExporter
             for (var column = 0; column < headers.Count; column++)
                 Write(headers[column] + ": " + JsonSerializer.Serialize(rows[row][column]));
         }
-        for (var i = 0; i < pages.Count; i++) Text(pages[i], 40, 30, 8, $"Page {i + 1} of {pages.Count} | Source-backed HR data; not payroll certification");
+        for (var i = 0; i < pages.Count; i++) Text(pages[i], 40, 30, 8, $"Page {i + 1} of {pages.Count} | {footer}");
         return Serialize(pages);
     }
 

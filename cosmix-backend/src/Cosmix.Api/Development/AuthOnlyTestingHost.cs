@@ -3,6 +3,7 @@ using System.Security.Principal;
 using Cosmix.Api.Authentication;
 using Cosmix.Infrastructure.Authentication.Bootstrap;
 using Cosmix.Infrastructure.Zones;
+using Cosmix.Infrastructure.Workers;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace Cosmix.Api.Development;
@@ -41,7 +42,8 @@ internal static class AuthOnlyTestingHost
         if (!OperatingSystem.IsWindows()) throw AuthOnlyTestingGuard.Refuse();
         // AddInfrastructure also registers this retention job outside the six API worker registrations.
         foreach (var service in services.Where(s => s.ServiceType == typeof(IHostedService) &&
-                     s.ImplementationType == typeof(ZoneClaimRetentionWorker)).ToArray())
+                     (s.ImplementationType == typeof(ZoneClaimRetentionWorker) ||
+                      s.ImplementationType == typeof(PunchRetentionWorker))).ToArray())
             services.Remove(service);
         var dataProtectionWorker = typeof(DataProtectionServiceCollectionExtensions).Assembly.GetType(
             "Microsoft.AspNetCore.DataProtection.Internal.DataProtectionHostedService", throwOnError: true)!;
@@ -50,7 +52,7 @@ internal static class AuthOnlyTestingHost
             workers.Any(s => s.Lifetime != ServiceLifetime.Singleton ||
                 s.ImplementationType != typeof(OtpDeliveryWorker) && s.ImplementationType != dataProtectionWorker))
             throw AuthOnlyTestingGuard.Refuse();
-        services.AddDataProtection().SetApplicationName(AuthOnlyTestingGuard.Profile)
+        services.AddDataProtection().SetApplicationName(AuthOnlyTestingGuard.SelectedProfile)
             .PersistKeysToFileSystem(new DirectoryInfo(AuthOnlyTestingGuard.DataProtectionDirectory)).ProtectKeysWithDpapi();
     }
 }

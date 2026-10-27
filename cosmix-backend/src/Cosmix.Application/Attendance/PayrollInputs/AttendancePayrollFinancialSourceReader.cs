@@ -94,9 +94,7 @@ public sealed class AttendancePayrollFinancialSourceReader(IAttendancePayrollInp
 
     private async Task Require(IReadOnlyList<AttendanceResourceScope> scopes, AttendanceActor actor, CancellationToken ct)
     {
-        var grants = await access.GetGrantsAsync(actor.Identity.AccountId, actor.Now, ct);
-        if (!AttendanceScopeEvaluation.Allows(actor.Identity, grants, AttendancePayrollInputPermissions.Read, scopes) ||
-            !AttendanceScopeEvaluation.Allows(actor.Identity, grants, AttendancePayrollAttestationPermissions.Read, scopes))
-            throw AttendanceOperation.Denied();
+        await operation.RequireScopedPermissionAsync(actor, AttendancePayrollInputPermissions.Read, scopes, ct);
+        await operation.RequireScopedPermissionAsync(actor, AttendancePayrollAttestationPermissions.Read, scopes, ct);
     }
 }

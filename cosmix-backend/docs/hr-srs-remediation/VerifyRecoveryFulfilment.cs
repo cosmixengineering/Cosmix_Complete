@@ -174,6 +174,27 @@ await Scenario("current authorization and self ownership retained", async () => 
     f.FixedAdmin = true;
     await Fails(() => f.Service.GetRecoveryCommitmentsAsync(f.Parent.Request.Id, f.Context, default), "leave_not_found", 404);
 });
+await Scenario("same key cannot change the promised minutes", async () => {
+    var f = await FulfilmentFixture.Create(); var original = await f.Create("g1-bound-minutes");
+    await BlockedWithoutWrite(f, () => f.Service.CreateRecoveryCommitmentAsync(f.Parent.Request.Id,
+        f.Request with { CommittedMinutes = 30 }, "g1-bound-minutes", f.Context, default), "idempotency_key_reused");
+    Check(f.Commitments.Single().CommittedMinutes == original.CommittedMinutes, "Failed changed-payload replay preserves original promise");
+});
+await Scenario("journal failure rolls back reservation and permits exact retry", async () => {
+    var f = await FulfilmentFixture.Create(); f.FailJournalSave = true;
+    await BlockedWithoutWrite(f, () => f.Create("g1-journal-retry"), "synthetic_journal_failure", 503);
+    f.FailJournalSave = false;
+    var created = await f.Create("g1-journal-retry");
+    var replay = await f.Create("g1-journal-retry");
+    Check(created == replay && f.Commitments.Count == 1 && f.Receipts.Count == 1,
+        "Retry after failed reservation journal creates exactly one promise and receipt");
+});
+await Scenario("missing protected commitment proof blocks history", async () => {
+    var f = await FulfilmentFixture.Create(); var created = await f.Create("g1-history-proof");
+    var fact = f.Audits.Single(x => x.EventType == LeaveEncashmentService.RecoveryOperation && x.TargetId == created.Id.ToString());
+    f.Damage(fact.ProtectedChangesReference!);
+    await BlockedWithoutWrite(f, () => History(f), "private_evidence_unavailable");
+});
 Console.WriteLine($"HR recovery reservation integrity: {checks - failures}/{checks} checks passed");
 Environment.ExitCode = failures == 0 ? 0 : 1;
 

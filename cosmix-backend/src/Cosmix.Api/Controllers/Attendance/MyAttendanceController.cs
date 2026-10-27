@@ -14,6 +14,12 @@ namespace Cosmix.Api.Controllers.Attendance;
 [ProducesResponseType<ProblemDetails>(409), ProducesResponseType<ProblemDetails>(503)]
 public sealed class MyAttendanceController(AttendanceCaptureService service) : ControllerBase
 {
+    [HttpPost("check-in/preflight"), RequestSizeLimit(8192), ProducesResponseType<CheckInPreflightResponse>(200)]
+    [EndpointSummary("Check my fresh location before opening the Check In camera")]
+    [EndpointDescription("Current mobile session, registered device and attendance.punches.self required. Resolves the current dated site or office roster and reliable geofence; requires current location consent and capture policy. No client employee/site or face evidence is accepted. No punch or face operation is created. Success only permits the camera step; final Check In still revalidates fresh location and face proof.")]
+    public Task<CheckInPreflightResponse> Preflight(CheckInPreflightRequest request, CancellationToken ct) =>
+        service.PreflightAsync(request, Context(), ct);
+
     [HttpPost("check-in"), RequestSizeLimit(8192), ProducesResponseType<PunchResponse>(200)]
     [EndpointSummary("Record my mobile Check In evidence")]
     [EndpointDescription("Requires attendance.punches.self, a current mobile session and registered device. Identity and time come from the server. 200 confirms evidence receipt; inspect Outcome before displaying attendance success. Valid active face proof, site roster and reliable geofence are required for Accepted. Offline remains Unverified. Same Idempotency-Key and identical payload replay the original receipt; no client employee or site identity is accepted.")]

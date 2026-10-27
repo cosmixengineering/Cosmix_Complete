@@ -1,5 +1,19 @@
 # SRS module map
 
+## Latest historical vehicle check - 26 October 2026
+
+Approved V2 legacy fixtures exist in the verified testing database. The live
+SQL decimal-scale eligibility defect was fixed without dropping evidence fields.
+V2Continue01 then passed74actualHTTP requests /63named checks: eight maintenance
+approvals, concurrent pending approval, historical receipt replay after successors,
+dated trip correction and independent fuel reconciliation. Original1000 remains
+immutable; corrected1500 / difference+500 is NotRecorded, not settlement.
+Old-row/evidence preservation passed against the continuation baseline, retaining
+the original V2 OTP-table limitation. All new sessions logged out; host exited.
+See [exact V2Continue01 evidence](hr-srs-remediation/Vehicle-V2-Continue01-Execution.md).
+Benefit/recovery positive SQL acceptance remains separate; no full HR claim.
+No migration, payment, real provider or legal activation was performed.
+
 ## Latest HR/mobile pilot check - 20 October 2026
 
 The subsequent `hr-pilot-build09` Release passed with zero warnings/errors.
@@ -514,3 +528,33 @@ This does not replace the still-unexecuted policy-backed benefit/recovery,
 historical vehicle/outstation SQL scenarios or frontend UAT.
 [Latest six-area status and file handoff](hr-srs-remediation/HR-Six-Gap-Continuation-20261020.md).
 [R1 exact evidence and limits](hr-srs-remediation/HR-Reports-R1-20261020.md).
+
+### HR Reverification - 26 October 2026
+
+Fresh current-checkout Release build passed with zero warnings/errors. Nine
+existing standalone benefit/recovery/vehicle/outstation/query/OpenAPI suites
+passed **2,246/2,246** checks against frozen output; generated contracts include
+550 paths. No live SQL or device acceptance is implied. The benefits client
+contract now correctly describes independent fixed Admin membership plus an
+explicit All-scoped permission that may come from a delegated custom role.
+
+The existing LocalDB instance started successfully, but a read-only query found
+no registered `Cosmix_Testing` in the connection's context. Database work stopped;
+no migration, repair, substitute database, fixture or API host was used. Full HR
+production acceptance remains open for the exact live and deployment boundaries
+in the [26 October verification record](hr-srs-remediation/HR-Backend-Verification-20261026.md).
+
+Later same-day discovery supersedes that connection finding: direct connection
+to the SSMS-context pipe `LOCALDB#48AA6F9F` verified the original `Cosmix_Testing`
+ONLINE, with 26 applied migrations matching source. No migration was applied.
+Missing business fixtures and expired temporary grants, not app/face availability,
+now constrain benefit/recovery/historical-vehicle live acceptance. The user
+approved preparation of the [business fixture manifest](hr-srs-remediation/Business-SQL-Manifest-20261026.md),
+not execution of its business writes. Auth-only preparation is not acceptance of
+those flows.
+
+Subsequent live26October runs now establish Auth01 16/16checks (22HTTP requests)
+and Read01 32/32checks (38HTTP requests). Read01 includes16actual business
+read/validation/permission/missing-record assertions, not positive lifecycle
+acceptance. Each retained156unchanged protected SQL snapshots; no migration,
+business fixture or provider activation. [Executed evidence](hr-srs-remediation/HR-Live-API-Checks-20261026.md).

@@ -31,6 +31,26 @@ public sealed class PayrollObligation
     public string? FinalizedByUserId { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public string CreatedByUserId { get; private set; } = string.Empty;
+    public string? SourceFingerprint { get; private set; }
+    public DateOnly? PeriodStart { get; private set; }
+    public DateOnly? PeriodEndExclusive { get; private set; }
+    public string? EmployeeEntitlementsJson { get; private set; }
+
+    public void BindSource(string fingerprint, DateOnly start, DateOnly endExclusive, string? employeeEntitlementsJson = null)
+    {
+        if (State != PayrollObligationState.Draft || SourceFingerprint is not null || endExclusive <= start)
+            throw new InvalidOperationException("Only a new obligation can bind its immutable payroll source.");
+        SourceFingerprint = ModelGuard.Required(fingerprint, 64, nameof(fingerprint));
+        PeriodStart = start; PeriodEndExclusive = endExclusive;
+        EmployeeEntitlementsJson = employeeEntitlementsJson;
+    }
+
+    public void SetEmployeeEntitlementsJson(string json)
+    {
+        if (State != PayrollObligationState.Draft)
+            throw new InvalidOperationException("Entitlements can only be set on draft obligations.");
+        EmployeeEntitlementsJson = json;
+    }
 
     public void Finalize(string actorUserId, DateTimeOffset at)
     {

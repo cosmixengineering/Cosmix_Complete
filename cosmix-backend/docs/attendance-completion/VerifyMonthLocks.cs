@@ -89,7 +89,8 @@ Check(legacyDetail.PayrollInputs is null && legacyDetail.Summaries.Single().Summ
 f.Files[retainedSnapshotFile.Key]=retainedSnapshotFile.Value;
 f.Grants.Clear();await Fails(()=>f.Finalize(preview),"access_denied");
 var scope=new LockFixture();await scope.Prepare();scope.Grants.RemoveAll(x=>x.Permission==MonthLockPermissions.Read);
-scope.Grants.Add(new(MonthLockPermissions.Read,true,Guid.NewGuid(),AccessScopeKind.Employee,scope.Employee));
+scope.Grants.Add(new(MonthLockPermissions.Read,true,Guid.NewGuid(),AccessScopeKind.Employee,scope.Employee)
+    {AuthorityTimingKnown=true,ValidFromUtc=new(2026,1,1,0,0,0,TimeSpan.Zero),ValidUntilUtc=new(2027,1,1,0,0,0,TimeSpan.Zero)});
 await Fails(()=>scope.Preview(),"access_denied");
 var mobile=new LockFixture();await mobile.Prepare();mobile.Actor=mobile.Actor with {Client=SessionClient.Mobile};await Fails(()=>mobile.Preview(),"access_denied");
 var mfa=new LockFixture();await mfa.Prepare();mfa.Actor=mfa.Actor with {MfaSatisfied=false};await Fails(()=>mfa.Preview(),"access_denied");
@@ -239,7 +240,8 @@ public sealed class LockFixture
     {
         FinancialReaderConfigured=financialReaderConfigured;
         foreach(var permission in new[]{MonthLockPermissions.Read,MonthLockPermissions.Finalize,AttendanceSummaryPermissions.Calculate})
-            Grants.Add(new(permission,true,Guid.NewGuid(),AccessScopeKind.All,null));
+            Grants.Add(new(permission,true,Guid.NewGuid(),AccessScopeKind.All,null)
+                {AuthorityTimingKnown=true,ValidFromUtc=new(2026,1,1,0,0,0,TimeSpan.Zero),ValidUntilUtc=new(2027,1,1,0,0,0,TimeSpan.Zero)});
         var current=LockProxy.Make<ICurrentAuthentication>((m,a)=>Actor);
         var access=LockProxy.Make<IAccountAccessReader>((m,a)=>Task.FromResult<IReadOnlyList<PermissionGrant>>(Grants.ToArray()));
         var authorization=LockProxy.Make<IAccessManagementRepository>((m,a)=>m.Name switch{

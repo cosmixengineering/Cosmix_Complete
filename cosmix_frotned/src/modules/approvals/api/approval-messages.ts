@@ -7,7 +7,7 @@ export type ApprovalWriteOperation = 'publishRoute' | 'grantDelegation' | 'revok
 // ApprovalRoutingRepository. Unknown codes still fall back to the shared status message.
 const codes: Record<string, string> = {
   access_denied:
-    'The server refused this action. Approval routing requires an administrator account holding the needed permission; publishing a route version additionally requires the fixed SuperAdmin role.',
+    'The server refused this action. Approval routing requires a current web session with MFA and the required explicit permissions. Publishing also requires All-scope route management and review authority for the selected stage.',
   approval_route_unconfigured:
     'No configured route row matches this request type and subject, so routed requests fail with 409 approval_route_unconfigured. Publish the required stages first.',
   fixed_approval_route:
@@ -68,7 +68,7 @@ export function approvalError(error: unknown): string {
 const writeHints: Record<ApprovalWriteOperation, Record<number, string>> = {
   publishRoute: {
     400: 'The route values were rejected. Check the code pattern, expected latest version, stage, effective dates, amount bounds, currency and reason.',
-    403: 'Publishing a route version requires a fixed SuperAdmin administrator that also holds approvals.routes.manage with full scope. Ask a SuperAdmin to publish this version.',
+    403: 'Publishing requires a current web session with MFA, approvals.routes.manage and the selected stage-review permission, both with All scope. Reload your permissions or ask your access administrator to assign the required authority.',
     409: 'The latest version of this route code changed while you were publishing, or this idempotency key was reused with a different payload. Reload the routes, check the expected latest version and publish again.',
   },
   grantDelegation: {

@@ -1,0 +1,118 @@
+[
+  {
+    "MigrationId": "20261005075444_InitialFoundation",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261005113807_AddInitialHrAttendanceModels",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261006074233_CompleteReviewedHrAttendanceDataModel",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261006105213_CorrectReviewedModelLifecycles",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261006144249_AddSharedMobileAuthentication",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261007080926_AddWebSmsAuthenticationAndProtectedRoles",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261007090713_AddAccountRecoveryAndOwnerInitialization",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261007122140_AddOrganizationMastersAndHolidayRevisions",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261007141249_AddEmployeeHiringDraftsAndDocumentPrivacy",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261007151945_CompleteEmployeeHiringApproval",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261007164427_LinkEmployeeStatusApprovals",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261008074438_AddEmployeeChangeJournal",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261009064639_AddDirectSiteSchedulingAndTemporaryAmendments",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261009083807_AddAttendanceCaptureAndFactualSummaries",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261009104434_AddAttendanceCarryForwardAndDirectMonthLocks",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261012081503_AddOvertimeEligibilityAndDutyZones",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261012082833_RetainZoneWarningTransitions",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261012114635_AddSiteReportResponsesAndShiftReminders",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261012125614_AddDirectPoliciesAndAdminLeave",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261012135725_AddAttendancePayrollInputsAndCompanySettings",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261012151917_AddAttendanceFinancialAttestationsAndLegalReviewEvidence",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261013101327_AddOfficeRosterHistory",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261013121357_CompleteHrFoundationPartA",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261013145007_AddOfficeCaptureValidationAndOfflineZoneClaims",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261015144424_AddFinancialAdjustmentsAndOutstationDeployments",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261022133924_AddComplianceWorkstreams",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261026193000_PersistStatutoryEmployeeItemsAndJournalLinks",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261027120000_PersistFinancialPostingMetadataAndEntitlements",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261027133000_PersistPayrollFinanceSetupTables",
+    "ProductVersion": "10.0.12"
+  }
+]

@@ -1,8 +1,10 @@
 # Approvals
 
-This module owns Approval inbox, Decision history.
+This module owns the existing approval route and delegation workspace.
 
-Only folder boundaries are prepared. No module screens, navigation, API integrations or workflows are implemented. Confirm the SRS and decisions before creating fields or rules.
+Route publication supports allowance, fuel, vehicle maintenance, leave encashment, advance, loan and policy exception. It requires a current web MFA session with explicit All-scope `approvals.routes.manage` and the selected `approvals.stages.N.review` permission. The server validates current account eligibility and authority. No role name alone grants publication access.
+
+Route history additionally requires `approvals.routes.read`; publication-only actors can reach the form without reading history. Delegations retain their own permission and scope checks. Fixed decisions and independent reviewer rules in the consuming workflows remain authoritative; this screen does not configure arbitrary leave, attendance or payroll approval chains.
 
 - `pages/`: route-level screens.
 - `components/`: UI used only by this module.

@@ -6,13 +6,83 @@ using Cosmix.Application.Attendance.Rosters;
 using Cosmix.Application.Authentication;
 using Cosmix.Application.Authentication.Access;
 using Cosmix.Domain.Attendance.Corrections;
+using Cosmix.Domain.Attendance.WorkSessions;
 
 namespace Cosmix.Application.Attendance.Corrections;
 
 /// <summary>Read-only exception visibility. Detection is not an approval, resolution or pay decision.</summary>
 public sealed class AttendanceExceptionService(AttendanceOperation operation, IAttendanceExceptionRepository repository,
-    IAttendanceSummaryRepository summaries, IAccountAccessReader access, IAttendanceCursorProtector cursors)
+    IAttendanceSummaryRepository summaries, IAccountAccessReader access, IAttendanceCursorProtector cursors,
+    IIndividualRosterResolver? rosters = null, TimeProvider? clock = null)
 {
+    public Task<MissingCheckoutReviewQueue> MissingCheckoutsAsync(AttendanceExceptionQueueRequest request,
+        AuthRequestContext context, CancellationToken ct)
+    {
+        if (request.From == default || request.To == DateOnly.MaxValue || request.To <= request.From ||
+            request.To.DayNumber - request.From.DayNumber > 366 || !Enum.IsDefined(request.Scope) ||
+            request.Kind is not (null or AttendanceExceptionKind.MissingCheckOut) || request.PageSize is < 1 or > 100 ||
+            request.TargetId == Guid.Empty || (request.Scope == CorrectionQueueScope.All) != !request.TargetId.HasValue)
+            throw AttendanceOperation.Invalid("invalid_attendance_exception_queue");
+        const string purpose = "attendance.exceptions.missing-checkout-review";
+        var digest = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(request with { Cursor = null })));
+        return operation.ReadAsync(AttendanceExceptionPermissions.Read, purpose, null, context, async (actor, token) =>
+        {
+            if (rosters is null) throw new AuthenticationFailure("attendance_roster_unavailable", 503);
+            var position = request.Cursor is null ? null : cursors.Unprotect(request.Cursor, actor.Identity.AccountId, purpose, digest);
+            const int scanLimit = 200;
+            var rows = await repository.OpenSessionCandidatesAsync(request, position, scanLimit + 1, token);
+            var grants = await access.GetGrantsAsync(actor.Identity.AccountId, actor.Now, token);
+            var result = new List<MissingCheckoutReviewItem>(); var scanned = 0;
+            var now = (clock ?? TimeProvider.System).GetUtcNow();
+            foreach (var row in rows.Take(scanLimit))
+            {
+                scanned++; position = new(row.StartsAtUtc, row.Id);
+                IReadOnlyList<AttendanceResourceScope> scopes;
+                try { scopes = await OpenSessionScopes(row, token); }
+                catch (AuthenticationFailure failure) when (failure.Code == "attendance_exception_source_unavailable")
+                { continue; }
+                if (!AttendanceScopeEvaluation.Allows(actor.Identity, grants, AttendanceExceptionPermissions.Read, scopes)) continue;
+                EffectiveRosterResponse? roster;
+                try { roster = await rosters.ResolveAsync(row.EmployeeId, row.AttendanceDate, token); }
+                catch (AuthenticationFailure failure) when ((failure.StatusCode is 404 or 409) &&
+                    (failure.Code is "employee_assignment_unavailable" or "shift_schedule_missing" or "roster_assignment_overlap"))
+                { roster = null; }
+                var item = MissingCheckoutReviewRules.Evaluate(row, roster, now);
+                if (item is not null) result.Add(item);
+                if (result.Count == request.PageSize) break;
+            }
+            return new MissingCheckoutReviewQueue(result, rows.Count > scanned && position is not null ?
+                cursors.Protect(actor.Identity.AccountId, purpose, digest, position) : null);
+        }, ct, resourceScopes: request.Scope == CorrectionQueueScope.All ? null : async (_, token) =>
+        {
+            var target = request.TargetId!.Value;
+            if (!await repository.ScopeExistsAsync(request.Scope, target, token)) throw AttendanceOperation.Missing();
+            return [new([request.Scope switch
+            {
+                CorrectionQueueScope.Employee => new AccessResource(EmployeeId: target),
+                CorrectionQueueScope.Site => new AccessResource(SiteId: target),
+                CorrectionQueueScope.Department => new AccessResource(DepartmentId: target),
+                CorrectionQueueScope.Team => new AccessResource(TeamId: target),
+                CorrectionQueueScope.Project => new AccessResource(ProjectId: target),
+                _ => throw AttendanceOperation.Invalid()
+            }])];
+        });
+    }
+
+    private async Task<IReadOnlyList<AttendanceResourceScope>> OpenSessionScopes(WorkSession session, CancellationToken ct)
+    {
+        IReadOnlyList<AttendanceResourceScope> historical;
+        try { historical = await summaries.ResourceScopesAsync(session.EmployeeId, session.AttendanceDate,
+            session.AttendanceDate, ct); }
+        catch (AuthenticationFailure failure) when (failure.StatusCode is 404 or 409)
+        { throw AttendanceOperation.Conflict("attendance_exception_source_unavailable"); }
+        if (!AttendanceScopeEvaluation.IsValid(historical) || historical.Any(x => x.Alternatives.Any(y => y.EmployeeId != session.EmployeeId)))
+            throw AttendanceOperation.Conflict("attendance_exception_source_unavailable");
+        var scopes = historical.ToList();
+        if (session.SiteId is { } site && !historical.Any(x => x.Alternatives.Any(y => y.SiteId == site)))
+            scopes.Add(new([new AccessResource(EmployeeId: session.EmployeeId, SiteId: site)]));
+        return scopes;
+    }
     public Task<AttendanceExceptionNotice> OwnDetailAsync(Guid id, AuthRequestContext context, CancellationToken ct)
     {
         if (id == Guid.Empty) throw AttendanceOperation.Invalid();

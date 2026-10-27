@@ -99,6 +99,9 @@ public sealed class AuthenticationRepository(CosmixDbContext db) : IAuthenticati
         await db.RegisteredDevices.Where(x => x.UserAccountId == accountId)
             .OrderByDescending(x => x.RegisteredAt).ThenBy(x => x.Id)
             .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+    public async Task<IReadOnlyList<RegisteredDevice>> GetNonRevokedDevicesAsync(Guid accountId, CancellationToken ct) =>
+        await db.RegisteredDevices.Where(x => x.UserAccountId == accountId && x.RevokedAt == null)
+            .OrderBy(x => x.RegisteredAt).ThenBy(x => x.Id).ToListAsync(ct);
     public void AddChallenge(MobileOtpChallenge challenge, OtpDelivery delivery) { db.Add(challenge); db.Add(delivery); }
     public void AddRateBucket(AuthRateBucket bucket) => db.Add(bucket);
     public void AddDevice(RegisteredDevice device) => db.Add(device);

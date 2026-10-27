@@ -1,6 +1,7 @@
 using Cosmix.Application.Attendance.Common;
 using Cosmix.Application.Attendance.Corrections;
 using Cosmix.Domain.Attendance.Corrections;
+using Cosmix.Domain.Attendance.WorkSessions;
 using Cosmix.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,6 +52,36 @@ public sealed class AttendanceExceptionRepository(CosmixDbContext db) : IAttenda
 
     public async Task<IReadOnlyList<AttendanceException>> CandidatesAsync(AttendanceExceptionQueueRequest request,
         AttendanceCursorPosition? after, int limit, CancellationToken ct) => await CandidateQuery(request, after, limit).ToArrayAsync(ct);
+    internal IQueryable<WorkSession> OpenSessionCandidateQuery(AttendanceExceptionQueueRequest request,
+        AttendanceCursorPosition? after, int limit)
+    {
+        var query = db.WorkSessions.AsNoTracking().Where(x => x.AttendanceDate >= request.From &&
+            x.AttendanceDate < request.To && x.EndsAtUtc == null &&
+            !db.WorkSessions.Any(newer => newer.SessionKey == x.SessionKey && newer.Revision > x.Revision));
+        query = request.Scope switch
+        {
+            CorrectionQueueScope.Employee => query.Where(x => x.EmployeeId == request.TargetId),
+            CorrectionQueueScope.Site => query.Where(x => x.SiteId == request.TargetId ||
+                db.EmployeeAssignments.Any(m => m.EmployeeId == x.EmployeeId && m.EffectiveFrom <= x.AttendanceDate &&
+                    (m.EffectiveTo == null || x.AttendanceDate < m.EffectiveTo) && m.SiteId == request.TargetId)),
+            CorrectionQueueScope.Department => query.Where(x => db.EmployeeAssignments.Any(m => m.EmployeeId == x.EmployeeId &&
+                m.EffectiveFrom <= x.AttendanceDate && (m.EffectiveTo == null || x.AttendanceDate < m.EffectiveTo) && m.DepartmentId == request.TargetId)),
+            CorrectionQueueScope.Team => query.Where(x => db.TeamMembers.Any(m => m.EmployeeId == x.EmployeeId && m.TeamId == request.TargetId &&
+                m.EffectiveFrom <= x.AttendanceDate && (m.EffectiveTo == null || x.AttendanceDate < m.EffectiveTo) &&
+                (m.TerminatedEffectiveTo == null || x.AttendanceDate < m.TerminatedEffectiveTo))),
+            CorrectionQueueScope.Project => query.Where(x => db.ProjectMembers.Any(m => m.EmployeeId == x.EmployeeId && m.ProjectId == request.TargetId &&
+                m.EffectiveFrom <= x.AttendanceDate && (m.EffectiveTo == null || x.AttendanceDate < m.EffectiveTo) &&
+                (m.TerminatedEffectiveTo == null || x.AttendanceDate < m.TerminatedEffectiveTo))),
+            _ => query
+        };
+        if (after is not null) query = query.Where(x => x.StartsAtUtc > after.CreatedAtUtc ||
+            x.StartsAtUtc == after.CreatedAtUtc && x.Id.CompareTo(after.Id) > 0);
+        return query.OrderBy(x => x.StartsAtUtc).ThenBy(x => x.Id).Take(limit);
+    }
+
+    public async Task<IReadOnlyList<WorkSession>> OpenSessionCandidatesAsync(AttendanceExceptionQueueRequest request,
+        AttendanceCursorPosition? after, int limit, CancellationToken ct) =>
+        await OpenSessionCandidateQuery(request, after, limit).ToArrayAsync(ct);
     public Task<bool> ScopeExistsAsync(CorrectionQueueScope scope, Guid id, CancellationToken ct) => scope switch
     {
         CorrectionQueueScope.Employee => db.Employees.AnyAsync(x => x.Id == id, ct),

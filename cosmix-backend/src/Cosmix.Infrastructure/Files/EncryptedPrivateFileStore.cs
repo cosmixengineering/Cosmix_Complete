@@ -2,12 +2,13 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Cosmix.Application.Authentication;
+using Cosmix.Application.Attendance.PunchRetention;
 using Cosmix.Application.Common.Files;
 
 namespace Cosmix.Infrastructure.Files;
 
 /// <summary>AES-256-GCM local objects. Provision the directory and separate 32-byte key files before registration.</summary>
-public sealed class EncryptedPrivateFileStore : IPrivateFileStore
+public sealed class EncryptedPrivateFileStore : IPrivateFileStore, IPunchRetentionPrivateFiles
 {
     private const int EnvelopeOverhead = 32;
     private readonly string directory;
@@ -57,6 +58,31 @@ public sealed class EncryptedPrivateFileStore : IPrivateFileStore
         try { return await ReadCoreAsync(reference, purpose, ct); }
         catch (OperationCanceledException) { throw; }
         catch (Exception) { ct.ThrowIfCancellationRequested(); throw Unavailable(); }
+    }
+
+    public async Task<bool> DeleteAuthenticatedAsync(PrivateFileReference reference, string purpose, CancellationToken ct)
+    {
+        const string prefix = "attendance:operation:";
+        const string suffix = ":attendance.punch.submit:audit";
+        if (!purpose.StartsWith(prefix, StringComparison.Ordinal) ||
+            !purpose.EndsWith(suffix, StringComparison.Ordinal) ||
+            purpose.Length != prefix.Length + 32 + suffix.Length ||
+            !Guid.TryParseExact(purpose.AsSpan(prefix.Length, 32), "N", out _))
+            throw new ArgumentException("Only legacy punch audit evidence may expire.", nameof(purpose));
+        ValidatePurpose(purpose);
+        ValidateReference(reference);
+        PrivateFilePath.Require(directory, true);
+        var path = Path.Combine(directory, reference.StorageKey);
+        if (!File.Exists(path)) return false; // Caller must have a durable purge intent to accept this case.
+        // Authenticate purpose, digest and object metadata before deleting any bytes.
+        var plaintext = await ReadAsync(reference, purpose, ct);
+        CryptographicOperations.ZeroMemory(plaintext);
+        ct.ThrowIfCancellationRequested();
+        PrivateFilePath.Require(path, false); // Also rejects links/reparse points in every path segment.
+        File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.ReadOnly);
+        PrivateFilePath.Require(path, false);
+        File.Delete(path);
+        return true;
     }
 
     private async Task<PrivateFileReference> WriteCoreAsync(byte[] content, string purpose, CancellationToken ct,

@@ -76,10 +76,7 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
 
       {/* Modern Tabs Bar */}
       <nav className="emp-nav-tabs" aria-label="Employee navigation">
-        <Link
-          to="?section=overview"
-          className={`emp-nav-tab ${isOverview ? 'active' : ''}`}
-        >
+        <Link to="?section=overview" className={`emp-nav-tab ${isOverview ? 'active' : ''}`}>
           <User size={15} />
           Overview
         </Link>
@@ -97,10 +94,7 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
           <Briefcase size={15} />
           Employment
         </Link>
-        <Link
-          to="?section=bank"
-          className={`emp-nav-tab ${name === 'bank' ? 'active' : ''}`}
-        >
+        <Link to="?section=bank" className={`emp-nav-tab ${name === 'bank' ? 'active' : ''}`}>
           <Landmark size={15} />
           Bank details
         </Link>
@@ -164,11 +158,9 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
 }
 
 function EmployeeOverview({ employeeId }: { employeeId: string }) {
-  const profileQuery = useHrQuery(
-    `employees/${employeeId}`,
-    profileResponse,
-    ['hr.employees.read'],
-  );
+  const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
+    'hr.employees.read',
+  ]);
 
   const profile = profileQuery.data?.profile;
 
@@ -217,9 +209,7 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
                   <MapPin size={15} className="emp-block-icon" />
                   <span>Current address</span>
                 </div>
-                <div className="emp-block-value">
-                  {currentAddressStr || 'Address not added'}
-                </div>
+                <div className="emp-block-value">{currentAddressStr || 'Address not added'}</div>
                 <Link to="?section=basic&edit=1" className="emp-block-action">
                   + Add address
                 </Link>
@@ -231,9 +221,7 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
                   <Home size={15} className="emp-block-icon" />
                   <span>Permanent address</span>
                 </div>
-                <div className="emp-block-value">
-                  {permanentAddressStr || 'Address not added'}
-                </div>
+                <div className="emp-block-value">{permanentAddressStr || 'Address not added'}</div>
                 <Link to="?section=basic&edit=1" className="emp-block-action">
                   + Add address
                 </Link>
@@ -249,9 +237,7 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
                   <Mail size={15} className="emp-block-icon" />
                   <span>Personal email</span>
                 </div>
-                <div className="emp-block-value">
-                  {profile?.personalEmail || 'Not added'}
-                </div>
+                <div className="emp-block-value">{profile?.personalEmail || 'Not added'}</div>
                 <Link to="?section=basic&edit=1" className="emp-block-action">
                   + Add email
                 </Link>
@@ -428,11 +414,9 @@ function CurrentSection({
   const [historyRevision, setHistoryRevision] = useState(0);
   const [saved, setSaved] = useState(false);
 
-  const profileQuery = useHrQuery(
-    `employees/${employeeId}`,
-    profileResponse,
-    ['hr.employees.read'],
-  );
+  const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
+    'hr.employees.read',
+  ]);
   const isApproved = (profileQuery.data?.employee?.status ?? 2) === 2;
 
   const query = useHrQuery(
@@ -466,11 +450,14 @@ function CurrentSection({
           }}
         >
           <div>
-            <div style={{ fontWeight: 650, fontSize: '14px', color: '#854d0e', marginBottom: '3px' }}>
+            <div
+              style={{ fontWeight: 650, fontSize: '14px', color: '#854d0e', marginBottom: '3px' }}
+            >
               Employee Onboarding in Progress ({statusLabel})
             </div>
             <div style={{ fontSize: '12.5px', color: '#a16207' }}>
-              Formal version trees and live change requests become active after the employee onboarding is approved.
+              Formal version trees and live change requests become active after the employee
+              onboarding is approved.
             </div>
           </div>
           <Link
@@ -595,7 +582,11 @@ function CurrentSection({
         />
       )}
       {edit && (
-        <Link className="hr-back" to={`?section=${section.name}`} style={{ marginTop: '16px', display: 'inline-flex' }}>
+        <Link
+          className="hr-back"
+          to={`?section=${section.name}`}
+          style={{ marginTop: '16px', display: 'inline-flex' }}
+        >
           <ArrowLeft size={16} />
           Back to current details
         </Link>

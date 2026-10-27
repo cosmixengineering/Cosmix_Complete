@@ -14,6 +14,14 @@ public sealed record SubmitPunchRequest([property: JsonRequired] bool IsOffline,
     DateTimeOffset? DeviceCapturedAtUtc, decimal? Latitude, decimal? Longitude, decimal? AccuracyMeters,
     Guid? FaceAttemptId = null, [StringLength(128)] string? Proof = null);
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed record CheckInPreflightRequest(
+    [property: JsonRequired] decimal Latitude,
+    [property: JsonRequired] decimal Longitude,
+    [property: JsonRequired] decimal AccuracyMeters,
+    [property: JsonRequired] DateTimeOffset DeviceCapturedAtUtc);
+public sealed record CheckInPreflightResponse(bool CanOpenCamera, DateTimeOffset CheckedAtUtc);
+
 public sealed record AttendanceHistoryRequest(DateOnly From, DateOnly To,
     [Range(1, 1000000)] int Page = 1, [Range(1, 100)] int PageSize = 25);
 public sealed record PunchValidationResponse(Guid EvidenceId, Guid? CapturePolicyVersionId, int? CapturePolicyRevision,

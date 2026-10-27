@@ -29,10 +29,13 @@ evidence and row versions after a conflict, rather than silently resubmitting.
    `leaveTypeId`, `policyVersionId`, `kpiYearFrom`,
    `expectedKpiFinalizationId` and `reason`. The server chooses the amount from
    the approved policy. Clients cannot submit a score or awarded amount.
-4. The Admin needs `attendance.leaves.benefits.review` with explicit All scope
-   on their current Admin assignment. It is not automatically granted by policy
-   configuration. Self-awards are forbidden. This direct review does not add an
-   unapproved second approval stage.
+4. The reviewer must independently hold a genuine active fixed Admin assignment
+   and `attendance.leaves.benefits.review` with explicit All scope. That permission
+   may be delegated through a separate active custom-role assignment using the
+   existing authorized role-assignment flow. Neither policy configuration nor a
+   custom role alone grants Admin authority. Current membership, permission,
+   expiry/revocation and MFA remain checked; self-awards are forbidden. This
+   direct review does not add an unapproved second approval stage.
 5. The response includes exact minutes and their retained `standardDayMinutes`,
    source/target periods, policy/KPI identities, `encashmentEligible`, status and
    `evidenceFingerprint`. Keep these units; do not divide by a hardcoded workday.

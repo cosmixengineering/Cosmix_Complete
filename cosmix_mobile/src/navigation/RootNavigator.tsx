@@ -12,6 +12,8 @@ import type { RootStackParams } from './types';
 import { WorkspaceNavigator } from './WorkspaceNavigator';
 import { useMotionPreference } from '../hooks/useMotionPreference';
 
+import { LocationConsentGate } from '../screens/consent/LocationConsentGate';
+
 const Stack = createNativeStackNavigator<RootStackParams>();
 export function RootNavigator(): React.JSX.Element {
   const auth = useSession();
@@ -25,7 +27,7 @@ export function RootNavigator(): React.JSX.Element {
       </View>
     );
   }
-  return (
+  const navigation = (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
@@ -72,5 +74,10 @@ export function RootNavigator(): React.JSX.Element {
         )}
       </Stack.Navigator>
     </NavigationContainer>
+  );
+  return auth.status === 'authenticated' ? (
+    <LocationConsentGate key={auth.sessionId}>{navigation}</LocationConsentGate>
+  ) : (
+    navigation
   );
 }

@@ -45,7 +45,7 @@ builder.Services.AddSingleton(builder.Configuration.GetSection(
 builder.Services.AddHostedService<FaceRetirementWorker>();
 builder.Services.AddHostedService<DocumentExpiryReminderWorker>();
 if (localTesting) LocalTesting.ConfigureOwnedHost(builder.Services, LocalTesting.FreshTarget(builder.Configuration));
-if (localTesting && !HrReportTestingGuard.IsSelected && !HrPermissionP1Guard.IsSelected && !HrOutstationO1Guard.IsSelected) LocalTesting.ConfigureExistingOwnedHost(builder.Services);
+if (localTesting && !HrReportTestingGuard.IsSelected && !HrPermissionP1Guard.IsSelected && !HrOutstationO1Guard.IsSelected && !HrVehicleV2ContinuationGuard.AnySelected) LocalTesting.ConfigureExistingOwnedHost(builder.Services);
 builder.Services.AddAttendanceTrafficControls(builder.Configuration);
 builder.Services.AddSingleton<IAttendanceCursorProtector, AttendanceCursorProtector>();
 builder.Services.AddSingleton<Cosmix.Application.Attendance.FaceVerification.IFaceCaptureProtector, FaceCaptureProtector>();
@@ -97,7 +97,7 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 }));
 
 // Later ASP.NET registrations can add Data Protection's hosted service again.
-if (localTesting && (HrReportTestingGuard.IsSelected || HrPermissionP1Guard.IsSelected || HrOutstationO1Guard.IsSelected)) LocalTesting.ConfigureExistingOwnedHost(builder.Services);
+if (localTesting && (HrReportTestingGuard.IsSelected || HrPermissionP1Guard.IsSelected || HrOutstationO1Guard.IsSelected || HrVehicleV2ContinuationGuard.AnySelected)) LocalTesting.ConfigureExistingOwnedHost(builder.Services);
 var app = builder.Build();
 if (localTesting && HrOutstationO1Guard.IsSelected)
     app.UseMiddleware<CorrelationIdMiddleware>();
@@ -105,9 +105,16 @@ HrVehicleTestingBoundary? vehicleTestingBoundary = null;
 HrReportTestingBoundary? reportTestingBoundary = null;
 HrPermissionP1Boundary? permissionTestingBoundary = null;
 HrOutstationO1Boundary? outstationTestingBoundary = null;
+HrVehicleV2Boundary? vehicleV2Boundary = null;
 if (localTesting)
 {
     await LocalTesting.VerifyDatabaseAsync(app.Services);
+    if (HrVehicleV2ContinuationGuard.AnySelected)
+    {
+        vehicleV2Boundary = app.Services.GetRequiredService<HrVehicleV2Boundary>();
+        if (HrVehicleV2ContinuationGuard.IsSelected) vehicleV2Boundary.InitializeContinuation();
+        app.Use(vehicleV2Boundary.InvokeAsync);
+    }
     if (HrOutstationO1Guard.IsSelected)
     {
         outstationTestingBoundary = app.Services.GetRequiredService<HrOutstationO1Boundary>();
@@ -175,6 +182,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 app.UseAuthentication();
+if (vehicleV2Boundary is not null)
+    app.Use(vehicleV2Boundary.AuthorizeActorAsync);
 if (outstationTestingBoundary is not null)
     app.Use(outstationTestingBoundary.AuthorizeActorAsync);
 if (permissionTestingBoundary is not null)
@@ -186,6 +195,8 @@ if (vehicleTestingBoundary is not null)
 app.UseRateLimiter();
 app.UseMiddleware<WebCsrfMiddleware>();
 app.UseAuthorization();
+if (vehicleV2Boundary is not null)
+    app.Use(vehicleV2Boundary.PrepareOtpAsync);
 if (outstationTestingBoundary is not null)
     app.Use(outstationTestingBoundary.PrepareOtpAsync);
 if (permissionTestingBoundary is not null)

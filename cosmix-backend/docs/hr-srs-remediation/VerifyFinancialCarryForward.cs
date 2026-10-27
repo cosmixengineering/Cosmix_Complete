@@ -197,7 +197,8 @@ public sealed class FinancialFixture
 
     public FinancialFixture()
     {
-        foreach (var permission in Permissions) Grants.Add(new(permission, true, Guid.NewGuid(), AccessScopeKind.Site, Site));
+        foreach (var permission in Permissions) Grants.Add(new(permission, true, Guid.NewGuid(), AccessScopeKind.Site, Site)
+            { AuthorityTimingKnown = true, ValidFromUtc = Now.AddDays(-1), ValidUntilUtc = Now.AddDays(1) });
         Scopes = [new([new(Employee, SiteId: Site)])];
         Source = MakeSource(); ChangeDuty(4);
         var current = FinancialProxy.Make<ICurrentAuthentication>((_, _) => Identity);
@@ -255,7 +256,7 @@ public sealed class FinancialFixture
             return Add(Resolutions, (AttendancePayrollFinancialResolution)args[0]!);
         });
         var locks = FinancialProxy.Make<IAttendancePayrollFinancialTargetLockReader>((_, _) => { Inside(); return Task.FromResult(LockMembership); });
-        Service = new(Operation, source, repository, ledger, producer, files, access, current, journal, clock, locks);
+        Service = new(Operation, source, repository, ledger, producer, files, current, journal, locks);
     }
 
     public Task<AttendancePayrollFinancialPreview> Preview() => Service.PreviewAsync(Employee, Month, Context, default);

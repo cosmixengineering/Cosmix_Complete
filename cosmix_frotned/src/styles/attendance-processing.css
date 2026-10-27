@@ -1429,7 +1429,6 @@
   }
 }
 
-
 /* ==========================================================================
    ATTENDANCE & TIME-TRACKING V4 (Pixel-match to media_1792661643823_48374141.png & media_1792661638916_b64deb84.png)
    Fluid 100% Responsive Enterprise Attendance Matrix & Daily Log
@@ -1446,7 +1445,13 @@
   gap: 14px;
   background-color: #f8fafc;
   color: #1e293b;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Poppins',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
 }
 
 /* Header */
@@ -1984,10 +1989,18 @@
   text-align: center;
 }
 
-.stat-p { color: #15803d; }
-.stat-l { color: #c2410c; }
-.stat-a { color: #b91c1c; }
-.stat-lv { color: #7e22ce; }
+.stat-p {
+  color: #15803d;
+}
+.stat-l {
+  color: #c2410c;
+}
+.stat-a {
+  color: #b91c1c;
+}
+.stat-lv {
+  color: #7e22ce;
+}
 
 /* Attendance Day Badges in Matrix */
 .att-badge,
@@ -2003,37 +2016,44 @@
   line-height: 1;
 }
 
-.att-badge.p, .att-day-badge.p {
+.att-badge.p,
+.att-day-badge.p {
   background: #dcfce7;
   color: #15803d;
 }
 
-.att-badge.l, .att-day-badge.l {
+.att-badge.l,
+.att-day-badge.l {
   background: #ffedd5;
   color: #c2410c;
 }
 
-.att-badge.a, .att-day-badge.a {
+.att-badge.a,
+.att-day-badge.a {
   background: #fee2e2;
   color: #b91c1c;
 }
 
-.att-badge.lv, .att-day-badge.lv {
+.att-badge.lv,
+.att-day-badge.lv {
   background: #f3e8ff;
   color: #7e22ce;
 }
 
-.att-badge.h, .att-day-badge.h {
+.att-badge.h,
+.att-day-badge.h {
   background: #dbeafe;
   color: #1e40af;
 }
 
-.att-badge.dash, .att-day-badge.off {
+.att-badge.dash,
+.att-day-badge.off {
   color: #94a3b8;
   font-weight: 700;
 }
 
-.att-badge.blank, .att-day-badge.future {
+.att-badge.blank,
+.att-day-badge.future {
   color: #cbd5e1;
 }
 

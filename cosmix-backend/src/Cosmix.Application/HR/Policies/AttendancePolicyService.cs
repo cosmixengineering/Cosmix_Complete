@@ -17,20 +17,20 @@ public sealed class AttendancePolicyService(AttendanceOperation operation, IAtte
         operation.ReadAsync(AttendancePolicyPermissions.Configure, "attendance.policy.list", null, context,
             async (_, token) => Page((await repository.ListAsync(token)).Where(x => string.IsNullOrEmpty(search) ||
                 x.Code.Contains(search, StringComparison.OrdinalIgnoreCase) || x.Name.Contains(search, StringComparison.OrdinalIgnoreCase))
-                .Select(Map), page, pageSize), ct, requireSystemRole: true);
+                .Select(Map), page, pageSize), ct);
     public Task<AttendancePolicyView> DetailAsync(Guid id, AuthRequestContext context, CancellationToken ct) =>
         operation.ReadAsync(AttendancePolicyPermissions.Configure, "attendance.policy.detail", null, context,
-            async (_, token) => Map(await Find(id, token)), ct, requireSystemRole: true);
+            async (_, token) => Map(await Find(id, token)), ct);
     public Task<AttendancePolicyPage<AttendancePolicyVersionView>> VersionsAsync(Guid id, AuthRequestContext context, CancellationToken ct,
         int page = 1, int pageSize = 50) =>
         operation.ReadAsync(AttendancePolicyPermissions.Configure, "attendance.policy.versions", null, context,
             async (_, token) => { await Find(id, token); return Page(
-                (await repository.VersionsAsync(id, token)).Select(Map), page, pageSize); }, ct, requireSystemRole: true);
+                (await repository.VersionsAsync(id, token)).Select(Map), page, pageSize); }, ct);
     public Task<AttendancePolicyPage<AttendancePolicyAssignmentView>> AssignmentsAsync(Guid id, AuthRequestContext context, CancellationToken ct,
         int page = 1, int pageSize = 50) =>
         operation.ReadAsync(AttendancePolicyPermissions.Configure, "attendance.policy.assignments", null, context,
             async (_, token) => { await Find(id, token); return Page(
-                (await repository.AssignmentsAsync(id, token)).Select(x => Map(x.Assignment, x.End)), page, pageSize); }, ct, requireSystemRole: true);
+                (await repository.AssignmentsAsync(id, token)).Select(x => Map(x.Assignment, x.End)), page, pageSize); }, ct);
     public Task<AttendancePolicyResolution> EffectiveAsync(Guid employeeId, DateOnly date, AuthRequestContext context, CancellationToken ct) =>
         operation.ReadAsync(AttendancePolicyPermissions.ApplicabilityRead, "attendance.policy.effective", employeeId, context,
             (_, token) => resolver.ResolveAsync(employeeId, date, token), ct,
@@ -47,7 +47,7 @@ public sealed class AttendancePolicyService(AttendanceOperation operation, IAtte
                 if (await repository.CodeExistsAsync(policy.Code, token)) throw AttendanceOperation.Conflict("policy_code_exists");
                 repository.Add(policy); await repository.SaveChangesAsync(token);
                 return new AttendanceChange<AttendancePolicyView>(policy.Id, null, Map(policy));
-            }, ct, requireSystemRole: true);
+            }, ct);
     }
 
     public Task<AttendancePolicyPublicationPreview> PreviewAsync(Guid id, PreviewAttendancePolicyRequest request,
@@ -56,7 +56,7 @@ public sealed class AttendancePolicyService(AttendanceOperation operation, IAtte
             {
                 var policy = await Current(id, request.ExpectedVersion, request.ExpectedRevision, token);
                 return await Preview(policy, request, actor.Now, token);
-            }, ct, requireSystemRole: true);
+            }, ct);
 
     public Task<AttendancePolicyPublicationResult> PublishAsync(Guid id, PublishAttendancePolicyRequest request, string key,
         AuthRequestContext context, CancellationToken ct) => operation.WriteAsync(AttendancePolicyPermissions.Publish,
@@ -74,7 +74,7 @@ public sealed class AttendancePolicyService(AttendanceOperation operation, IAtte
                     actor.Identity.AccountId.ToString(), actor.Now, PolicyAuthority.DirectHr);
                 repository.Add(version); policy.AdvanceRevision(); await repository.SaveChangesAsync(token);
                 return new AttendanceChange<AttendancePolicyPublicationResult>(version.Id, before, new(Map(policy), Map(version)));
-            }, ct, requireSystemRole: true);
+            }, ct);
 
     public Task<AttendancePolicyAssignmentResult> AssignAsync(Guid id, AssignAttendancePolicyRequest request, string key,
         AuthRequestContext context, CancellationToken ct) => operation.WriteAsync(AttendancePolicyPermissions.Publish,
@@ -87,7 +87,7 @@ public sealed class AttendancePolicyService(AttendanceOperation operation, IAtte
                     request.EffectiveFrom, request.EffectiveTo, request.Reason, actor);
                 repository.Add(assignment); policy.AdvanceRevision(); await repository.SaveChangesAsync(token);
                 return new AttendanceChange<AttendancePolicyAssignmentResult>(assignment.Id, null, new(Map(policy), Map(assignment, null)));
-            }, ct, requireSystemRole: true);
+            }, ct);
 
     public Task<AttendancePolicyAssignmentResult> EndAsync(Guid id, Guid assignmentId, EndAttendancePolicyAssignmentRequest request,
         string key, AuthRequestContext context, CancellationToken ct) => operation.WriteAsync(AttendancePolicyPermissions.Publish,
@@ -101,7 +101,7 @@ public sealed class AttendancePolicyService(AttendanceOperation operation, IAtte
                 repository.Add(end); policy.AdvanceRevision(); await repository.SaveChangesAsync(token);
                 return new AttendanceChange<AttendancePolicyAssignmentResult>(end.Id, Map(previous.Assignment, null),
                     new(Map(policy), Map(previous.Assignment, end)));
-            }, ct, requireSystemRole: true);
+            }, ct);
 
     public Task<AttendancePolicyAssignmentResult> ReplaceAsync(Guid id, Guid assignmentId, ReplaceAttendancePolicyAssignmentRequest request,
         string key, AuthRequestContext context, CancellationToken ct) => operation.WriteAsync(AttendancePolicyPermissions.Publish,
@@ -120,7 +120,7 @@ public sealed class AttendancePolicyService(AttendanceOperation operation, IAtte
                 repository.Add(end); repository.Add(assignment); policy.AdvanceRevision(); await repository.SaveChangesAsync(token);
                 return new AttendanceChange<AttendancePolicyAssignmentResult>(assignment.Id, Map(previous.Assignment, null),
                     new(Map(policy), Map(assignment, null)));
-            }, ct, requireSystemRole: true);
+            }, ct);
 
     private async Task<AttendancePolicyPublicationPreview> Preview(Policy policy, PreviewAttendancePolicyRequest request,
         DateTimeOffset now, CancellationToken ct)

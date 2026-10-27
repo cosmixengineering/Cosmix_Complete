@@ -25,9 +25,10 @@ public sealed class OvertimeSources(IOvertimeRepository repository, IAttendanceS
             throw AttendanceOperation.Conflict("overtime_compensation_version_unavailable");
         if (salary.WageBasis != WageBasis.Monthly) throw AttendanceOperation.Conflict("overtime_monthly_salary_required");
         if (salary.Currency != "PKR") throw AttendanceOperation.Conflict("overtime_pkr_salary_required");
-        return new(OvertimeFormula.Version, salary.Id, source.Source.BusinessDate, salary.BaseAmount,
-            DateTime.DaysInMonth(source.Source.BusinessDate.Year, source.Source.BusinessDate.Month), approvedTicks,
-            OvertimeFormula.WholeRupees(salary.BaseAmount, source.Source.BusinessDate, approvedTicks), "PKR");
+        OvertimeFinancialAwardRules.RequireSupportedFormula(source.Source);
+        return new(source.Source.DurationPolicy.RateRuleCode!, salary.Id, source.Source.BusinessDate, salary.BaseAmount,
+            ConfiguredOvertimeFormula.RetainedDivisorDays(source.Source), approvedTicks,
+            ConfiguredOvertimeFormula.RetainedAmount(source.Source, salary.BaseAmount, approvedTicks), "PKR");
     }
     public async Task<OvertimeSourceSnapshot> LoadAsync(Guid employeeId, DateOnly date, CancellationToken ct)
     {

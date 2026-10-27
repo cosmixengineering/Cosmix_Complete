@@ -1,0 +1,55 @@
+{
+  "ObligationId": "182742f9-439c-46fd-9e13-517b699aedb9",
+  "BatchId": "a12f81f4-3549-4904-b458-113e19765267",
+  "TotalGross": 180000.40,
+  "TotalNet": 173800.10,
+  "AccrualJournalId": "0526878f-8c17-4904-a997-4b2beac7b08d",
+  "DebitAccount": "5010",
+  "CreditAccount": "2010",
+  "Amount": 173800.10,
+  "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
+  "PostingDate": "2026-10-31",
+  "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
+  "SourceKey": "ACCRUAL-SALARY-182742f9439c46fd9e13517b699aedb9",
+  "DeductionEntries": [
+    {
+      "Id": "c697e54c-b085-42e5-a6fc-301403bc1627",
+      "DebitAccountCode": "5010",
+      "CreditAccountCode": "2020",
+      "Amount": 1800.20,
+      "Description": "Employee EOBI deduction for 2026-10",
+      "StatutoryContributionId": "c6e92c29-00f3-4076-8e1c-7bcf464b4854",
+      "Scheme": "EOBI",
+      "PostingDate": "2026-10-31",
+      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
+      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
+      "SourceKey": "ACCRUAL-EOBI-182742f9439c46fd9e13517b699aedb9"
+    },
+    {
+      "Id": "79ba9369-32ac-4d3a-a972-4a4125fe0bee",
+      "DebitAccountCode": "5010",
+      "CreditAccountCode": "1050",
+      "Amount": 3500.00,
+      "Description": "Staff loan principal recoveries for 2026-10",
+      "StatutoryContributionId": null,
+      "Scheme": null,
+      "PostingDate": "2026-10-31",
+      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
+      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
+      "SourceKey": "ACCRUAL-LOAN-182742f9439c46fd9e13517b699aedb9"
+    },
+    {
+      "Id": "9c612729-1077-4703-9cdf-ad413d2241db",
+      "DebitAccountCode": "5010",
+      "CreditAccountCode": "2030",
+      "Amount": 900.10,
+      "Description": "Employee Social Security deduction for 2026-10",
+      "StatutoryContributionId": "893303f3-42fd-4f8c-954f-a819cac673fe",
+      "Scheme": "PESSI",
+      "PostingDate": "2026-10-31",
+      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
+      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
+      "SourceKey": "ACCRUAL-SS-182742f9439c46fd9e13517b699aedb9"
+    }
+  ]
+}

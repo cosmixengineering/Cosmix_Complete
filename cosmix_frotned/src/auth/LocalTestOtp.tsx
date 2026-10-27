@@ -87,7 +87,14 @@ export function LocalTestOtp({
         margin: '0.75rem 0',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.5rem',
+        }}
+      >
         <strong style={{ fontSize: '0.8125rem', color: '#854d0e' }}>Local Testing OTP</strong>
         <Button
           variant="ghost"
@@ -101,10 +108,23 @@ export function LocalTestOtp({
       </div>
 
       {code && (
-        <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem' }}>
+        <div
+          style={{
+            marginTop: '0.4rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.4rem',
+          }}
+        >
           <p role="status" style={{ margin: 0, fontSize: '0.8125rem', color: '#166534' }}>
-            <CheckCircle2 size={15} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 4 }} />
-            OTP Auto-filled: <strong style={{ fontSize: '0.95rem', letterSpacing: '0.1em' }}>{code}</strong>
+            <CheckCircle2
+              size={15}
+              style={{ display: 'inline', verticalAlign: '-2px', marginRight: 4 }}
+            />
+            OTP Auto-filled:{' '}
+            <strong style={{ fontSize: '0.95rem', letterSpacing: '0.1em' }}>{code}</strong>
           </p>
           {onAutoVerify && (
             <Button
@@ -121,7 +141,10 @@ export function LocalTestOtp({
 
       {error && (
         <div style={{ marginTop: '0.4rem' }}>
-          <p role="status" style={{ margin: '0 0 0.4rem 0', fontSize: '0.75rem', color: '#b91c1c' }}>
+          <p
+            role="status"
+            style={{ margin: '0 0 0.4rem 0', fontSize: '0.75rem', color: '#b91c1c' }}
+          >
             No valid OTP found for this challenge (it may have expired or timed out).
           </p>
           {onReset && (

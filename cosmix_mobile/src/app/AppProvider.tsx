@@ -18,6 +18,7 @@ import { SecureRequestStore } from '../services/storage/SecureRequestStore';
 import { RequestCoordinator } from '../services/selfService/RequestCoordinator';
 import { SelfServiceClient } from '../services/selfService/SelfServiceClient';
 import { EvidencePicker } from '../services/documents/EvidencePicker';
+import { PayslipFiles } from '../services/documents/PayslipFiles';
 import { AppError } from '../utils/errors';
 import { randomSecret, requestKey } from '../utils/random';
 
@@ -26,6 +27,7 @@ function createServices() {
   const vault = new SecureVault(async () => {
     await requestStore.clear();
     await EvidencePicker.clearTemporaryCopies();
+    await PayslipFiles.clearTemporaryCopies();
   });
   const api = new ApiClient(environment.apiBaseUrl, nativeTransport);
   const session = new SessionManager(api, vault, randomSecret, {
@@ -78,7 +80,7 @@ export function AppProvider({
 }: React.PropsWithChildren): React.JSX.Element {
   const [services] = useState(createServices);
   useEffect(() => {
-    EvidencePicker.clearTemporaryCopies()
+    Promise.all([EvidencePicker.clearTemporaryCopies(), PayslipFiles.clearTemporaryCopies()])
       .catch(() => undefined)
       .then(() => services.session.initialize());
     const subscription = AppState.addEventListener('change', next => {

@@ -1,12 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-  Fuel,
-  RefreshCw,
-  Calculator,
-  History,
-  CheckCircle2,
-  Info,
-} from 'lucide-react';
+import { Fuel, RefreshCw, Calculator, History, CheckCircle2, Info } from 'lucide-react';
 import {
   fetchCurrentFuelPrices,
   fetchFuelPriceHistory,
@@ -39,7 +32,9 @@ export function LiveFuelRatesWidget() {
       const data = await fetchCurrentFuelPrices();
       setPrices(data.prices);
       setSource(data.source);
-      setLastRefreshed(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+      setLastRefreshed(
+        new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      );
     } finally {
       setLoading(false);
     }
@@ -126,12 +121,20 @@ export function LiveFuelRatesWidget() {
                   gap: '4px',
                 }}
               >
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }} />
+                <span
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: '#16a34a',
+                  }}
+                />
                 AutoOnes Synced
               </span>
             </div>
             <span style={{ fontSize: '11.5px', color: '#64748b' }}>
-              Official notified prices for fuel reimbursement claims across project sites &bull; Source: {source}
+              Official notified prices for fuel reimbursement claims across project sites &bull;
+              Source: {source}
             </span>
           </div>
         </div>
@@ -211,7 +214,14 @@ export function LiveFuelRatesWidget() {
           onClick={() => setCalcFuelType('petrol')}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '11.5px', fontWeight: 700, textTransform: 'uppercase', color: '#15803d' }}>
+            <span
+              style={{
+                fontSize: '11.5px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                color: '#15803d',
+              }}
+            >
               Motor Gasoline (Petrol)
             </span>
             <span
@@ -235,12 +245,30 @@ export function LiveFuelRatesWidget() {
             <span style={{ fontSize: '12px', color: '#64748b' }}>/ litre</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11.5px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '11.5px',
+            }}
+          >
             <span style={{ color: '#64748b' }}>
-              Effective: <strong>{prices.find((p) => p.slug === 'petrol')?.effective_date || 'Current'}</strong>
+              Effective:{' '}
+              <strong>
+                {prices.find((p) => p.slug === 'petrol')?.effective_date || 'Current'}
+              </strong>
             </span>
             {calcFuelType === 'petrol' && (
-              <span style={{ color: '#16a34a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span
+                style={{
+                  color: '#16a34a',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
                 <CheckCircle2 size={12} /> Active in Calculator
               </span>
             )}
@@ -261,7 +289,14 @@ export function LiveFuelRatesWidget() {
           onClick={() => setCalcFuelType('diesel')}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '11.5px', fontWeight: 700, textTransform: 'uppercase', color: '#1d4ed8' }}>
+            <span
+              style={{
+                fontSize: '11.5px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                color: '#1d4ed8',
+              }}
+            >
               High Speed Diesel (HSD)
             </span>
             <span
@@ -285,12 +320,30 @@ export function LiveFuelRatesWidget() {
             <span style={{ fontSize: '12px', color: '#64748b' }}>/ litre</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11.5px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '11.5px',
+            }}
+          >
             <span style={{ color: '#64748b' }}>
-              Effective: <strong>{prices.find((p) => p.slug === 'diesel')?.effective_date || 'Current'}</strong>
+              Effective:{' '}
+              <strong>
+                {prices.find((p) => p.slug === 'diesel')?.effective_date || 'Current'}
+              </strong>
             </span>
             {calcFuelType === 'diesel' && (
-              <span style={{ color: '#2563eb', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span
+                style={{
+                  color: '#2563eb',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
                 <CheckCircle2 size={12} /> Active in Calculator
               </span>
             )}
@@ -309,7 +362,14 @@ export function LiveFuelRatesWidget() {
             marginBottom: '16px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '10px',
+            }}
+          >
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>
               Official OGRA Historical Rates (Last 15 Revisions)
             </span>
@@ -356,10 +416,19 @@ export function LiveFuelRatesWidget() {
           </div>
 
           {historyLoading ? (
-            <p style={{ fontSize: '12px', color: '#64748b' }}>Loading historical rates from AutoOnes API…</p>
+            <p style={{ fontSize: '12px', color: '#64748b' }}>
+              Loading historical rates from AutoOnes API…
+            </p>
           ) : (
             <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '12px',
+                  textAlign: 'left',
+                }}
+              >
                 <thead>
                   <tr style={{ borderBottom: '1px solid #cbd5e1', color: '#64748b' }}>
                     <th style={{ padding: '6px 8px' }}>Effective Date</th>
@@ -379,14 +448,25 @@ export function LiveFuelRatesWidget() {
                       </td>
                       <td style={{ padding: '6px 8px' }}>
                         {Number(row.change_pkr) > 0 ? (
-                          <span style={{ color: '#dc2626', fontWeight: 600 }}>+{row.change_pkr}</span>
+                          <span style={{ color: '#dc2626', fontWeight: 600 }}>
+                            +{row.change_pkr}
+                          </span>
                         ) : Number(row.change_pkr) < 0 ? (
-                          <span style={{ color: '#16a34a', fontWeight: 600 }}>{row.change_pkr}</span>
+                          <span style={{ color: '#16a34a', fontWeight: 600 }}>
+                            {row.change_pkr}
+                          </span>
                         ) : (
                           <span style={{ color: '#94a3b8' }}>0.00</span>
                         )}
                       </td>
-                      <td style={{ padding: '6px 8px', textTransform: 'uppercase', color: '#64748b', fontSize: '11px' }}>
+                      <td
+                        style={{
+                          padding: '6px 8px',
+                          textTransform: 'uppercase',
+                          color: '#64748b',
+                          fontSize: '11px',
+                        }}
+                      >
                         {row.source}
                       </td>
                     </tr>
@@ -413,7 +493,8 @@ export function LiveFuelRatesWidget() {
             Real-time Fuel Reimbursement Counter
           </span>
           <span style={{ fontSize: '11.5px', color: '#64748b' }}>
-            &bull; Counts liters and amount dynamically using live OGRA rate (PKR {activeRate.toFixed(2)}/L)
+            &bull; Counts liters and amount dynamically using live OGRA rate (PKR{' '}
+            {activeRate.toFixed(2)}/L)
           </span>
         </div>
 
@@ -427,7 +508,15 @@ export function LiveFuelRatesWidget() {
           }}
         >
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#475569',
+                marginBottom: '4px',
+              }}
+            >
               Total Trip Distance (km)
             </label>
             <input
@@ -450,7 +539,15 @@ export function LiveFuelRatesWidget() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#475569',
+                marginBottom: '4px',
+              }}
+            >
               Baseline Commute to Deduct (km)
             </label>
             <input
@@ -473,7 +570,15 @@ export function LiveFuelRatesWidget() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#475569',
+                marginBottom: '4px',
+              }}
+            >
               Fuel Economy / Standard
             </label>
             <select
@@ -498,7 +603,15 @@ export function LiveFuelRatesWidget() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#475569',
+                marginBottom: '4px',
+              }}
+            >
               Fuel Product Type
             </label>
             <div style={{ display: 'flex', gap: '6px', height: '34px' }}>
@@ -554,33 +667,62 @@ export function LiveFuelRatesWidget() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' }}>
             <div>
-              <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>Eligible Distance</span>
-              <strong style={{ fontSize: '15px', color: '#0f172a' }}>{calculation.eligibleKm.toFixed(1)} km</strong>
+              <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>
+                Eligible Distance
+              </span>
+              <strong style={{ fontSize: '15px', color: '#0f172a' }}>
+                {calculation.eligibleKm.toFixed(1)} km
+              </strong>
             </div>
 
             <div>
-              <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>Fuel Consumed</span>
-              <strong style={{ fontSize: '15px', color: '#2563eb' }}>{calculation.fuelLiters.toFixed(2)} Litres</strong>
+              <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>
+                Fuel Consumed
+              </span>
+              <strong style={{ fontSize: '15px', color: '#2563eb' }}>
+                {calculation.fuelLiters.toFixed(2)} Litres
+              </strong>
             </div>
 
             <div>
-              <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>Applied OGRA Rate</span>
-              <strong style={{ fontSize: '15px', color: '#16a34a' }}>PKR {calculation.fuelPricePerLiter.toFixed(2)} / L</strong>
+              <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>
+                Applied OGRA Rate
+              </span>
+              <strong style={{ fontSize: '15px', color: '#16a34a' }}>
+                PKR {calculation.fuelPricePerLiter.toFixed(2)} / L
+              </strong>
             </div>
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>Calculated Total Claim</span>
+            <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>
+              Calculated Total Claim
+            </span>
             <div style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a' }}>
-              PKR {calculation.claimedAmount.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              PKR{' '}
+              {calculation.claimedAmount.toLocaleString('en-PK', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '11px', color: '#64748b' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            marginTop: '8px',
+            fontSize: '11px',
+            color: '#64748b',
+          }}
+        >
           <Info size={12} color="#3b82f6" />
           <span>
-            Calculation breakdown: ({calcTripKm} km &minus; {calcCommuteKm} km commute) &divide; {calcVehicleKpl} km/L &times; PKR {activeRate.toFixed(2)} = <strong>PKR {calculation.claimedAmount.toFixed(2)}</strong>.
+            Calculation breakdown: ({calcTripKm} km &minus; {calcCommuteKm} km commute) &divide;{' '}
+            {calcVehicleKpl} km/L &times; PKR {activeRate.toFixed(2)} ={' '}
+            <strong>PKR {calculation.claimedAmount.toFixed(2)}</strong>.
           </span>
         </div>
       </div>

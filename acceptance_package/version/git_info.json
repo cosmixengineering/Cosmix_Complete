@@ -1,0 +1,7 @@
+{
+  "Branch": "feature/hr-payroll-compliance",
+  "BaseCommit": "f3305cd3bf07a7b703ecf043f6f0527285a79c1d",
+  "TimestampUtc": "2026-10-27T09:33:34.4623277\u002B00:00",
+  "Repository": "c:\\Users\\Huma.Khan\\Downloads\\Cosmix_Erp_software",
+  "Environment": "Windows 11, .NET 10.0.401, SQL Server MSSQLLocalDB 17.0, Node v22.14.0"
+}
