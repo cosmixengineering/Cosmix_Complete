@@ -394,7 +394,12 @@ export const payrollSkipped = z.object({
   sourceId: id.nullable(),
 });
 
-const salaryEmployeeTotal = z.object({ employeeId: id, grossEarnings: money, totalDeductions: money, netPay: money });
+const salaryEmployeeTotal = z.object({
+  employeeId: id,
+  grossEarnings: money,
+  totalDeductions: money,
+  netPay: money,
+});
 const salaryRunFields = {
   calculationVersion: text.optional(),
   salaryComplete: z.boolean().optional(),

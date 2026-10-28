@@ -13,6 +13,7 @@ import {
   UserRound,
   ArrowUpRight,
   Inbox,
+  KeyRound,
 } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
@@ -22,6 +23,7 @@ import { pageOf, employeeSchema } from '../schemas/contracts';
 import { submissionSummarySchema, type SubmissionSummary } from '../schemas/approvals';
 import { labelDate } from '../utils/messages';
 import { HiringSubmissionReview } from '../components/approvals/HiringSubmissionReview';
+import { EmployeeAccessSetup } from '../components/approvals/EmployeeAccessSetup';
 import '../components/approvals/hiring-review.css';
 import '@/styles/hr-requests.css';
 import '@/styles/hr-dashboard.css';
@@ -61,6 +63,11 @@ export function HiringApprovalsPage() {
   const [reviewDirty, setReviewDirty] = useState(false);
   const [reviewBusy, setReviewBusy] = useState(false);
   const [adminMessage, setAdminMessage] = useState('');
+  const [accessEmployee, setAccessEmployee] = useState<{
+    id: string;
+    name: string;
+    number: number;
+  } | null>(null);
 
   // 1. Fetch Draft Employees (14 drafts awaiting onboarding review/completion)
   const draftsQuery = useHrQuery('employees?status=0&pageSize=50&page=1', pageOf(employeeSchema), [
@@ -511,6 +518,33 @@ export function HiringApprovalsPage() {
                   <span>Profile</span>
                 </Link>
 
+                {/* Roles & Access Setup button (Admin or reviewer) */}
+                {item.category === 'onboarding' &&
+                  access.can('hr.employees.submissions.review', 'access.accounts.read') && (
+                    <Button
+                      variant="secondary"
+                      style={{
+                        height: '24px',
+                        padding: '0 8px',
+                        fontSize: '10px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                      onClick={() =>
+                        setAccessEmployee({
+                          id: item.employeeId,
+                          name: item.employeeName,
+                          number: item.employeeNumber,
+                        })
+                      }
+                      title="Configure roles and access credentials for this employee"
+                    >
+                      <KeyRound size={11} />
+                      <span>Setup Access</span>
+                    </Button>
+                  )}
+
                 {/* Admin Decision Button (Only shown if user has admin review rights) */}
                 {isAdminReviewer && item.submissionRef && (
                   <Button
@@ -671,14 +705,39 @@ export function HiringApprovalsPage() {
 
             {/* Actions */}
             <div
-              style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '10px',
+                marginTop: '8px',
+                flexWrap: 'wrap',
+              }}
             >
               <Button variant="secondary" onClick={() => setSelectedItem(null)}>
                 Close
               </Button>
+              {selectedItem.category === 'onboarding' &&
+                access.can('hr.employees.submissions.review', 'access.accounts.read') && (
+                  <Button
+                    variant="primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    onClick={() => {
+                      const emp = {
+                        id: selectedItem.employeeId,
+                        name: selectedItem.employeeName,
+                        number: selectedItem.employeeNumber,
+                      };
+                      setSelectedItem(null);
+                      setAccessEmployee(emp);
+                    }}
+                  >
+                    <KeyRound size={14} />
+                    <span>Configure Roles &amp; Access</span>
+                  </Button>
+                )}
               <Link
                 to={`${basePath}/employees/${selectedItem.employeeId}`}
-                className="button button--primary"
+                className="button button--secondary"
                 style={{
                   textDecoration: 'none',
                   display: 'inline-flex',
@@ -725,14 +784,51 @@ export function HiringApprovalsPage() {
               onSaved={(decision) => {
                 setReviewDirty(false);
                 setAdminMessage(`Decision recorded: ${decision}.`);
+                const approvedEmp = adminSubmission
+                  ? {
+                      id: adminSubmission.employeeId,
+                      name: adminSubmission.name ?? 'Employee',
+                      number: adminSubmission.employeeNumber,
+                    }
+                  : null;
                 setAdminSubmission(null);
                 void draftsQuery.refetch();
                 void submissionsQuery.refetch();
+                if (decision.toLowerCase().includes('approve') && approvedEmp) {
+                  setAccessEmployee(approvedEmp);
+                }
               }}
             />
           )}
         </Dialog>
       )}
+
+      {/* 7. Roles & Access Setup Dialog */}
+      <Dialog
+        open={!!accessEmployee}
+        onOpenChange={(open) => {
+          if (!open) setAccessEmployee(null);
+        }}
+        title="Employee Roles &amp; System Access Setup"
+        description={
+          accessEmployee
+            ? `${accessEmployee.name} • #${String(accessEmployee.number).padStart(4, '0')}`
+            : ''
+        }
+      >
+        {accessEmployee && (
+          <div style={{ maxHeight: '78vh', overflowY: 'auto', padding: '4px' }}>
+            <EmployeeAccessSetup
+              employeeId={accessEmployee.id}
+              approved
+              onSaved={() => {
+                void draftsQuery.refetch();
+                if (isAdminReviewer) void submissionsQuery.refetch();
+              }}
+            />
+          </div>
+        )}
+      </Dialog>
     </div>
   );
 }

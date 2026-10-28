@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   FileText,
   UserCheck,
+  ShieldCheck,
   Network,
   Settings,
   HelpCircle,
@@ -87,7 +88,8 @@ export function AdminLayout() {
     { to: '/admin/projects', label: 'Projects', icon: ListTodo },
     { to: '/admin/approvals', label: 'Approvals', icon: ClipboardCheck },
     { to: '/admin/reports', label: 'Reports', icon: FileText },
-    { to: '/admin/users', label: 'Users & Roles', icon: UserCheck },
+    { to: '/admin/roles', label: 'Roles & Permissions', icon: ShieldCheck },
+    { to: '/admin/users', label: 'Users & Accounts', icon: UserCheck },
     { to: '/admin/departments', label: 'Departments', icon: Network },
     { to: '/admin/settings', label: 'Settings', icon: Settings },
     ...hrConfigurationNavigation(user, status)

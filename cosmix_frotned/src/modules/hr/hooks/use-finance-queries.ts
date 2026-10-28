@@ -43,6 +43,7 @@ export function useFinanceAction() {
     method: 'POST' | 'PUT',
     schema: z.ZodType<T>,
     onRejected?: () => void,
+    successMessage = 'Saved successfully.',
   ): Promise<T | undefined> {
     const signal = lifetime();
     if (active.current || signal.aborted) return;
@@ -61,14 +62,12 @@ export function useFinanceAction() {
     setErrorStatus(null);
     setSuccess(null);
     try {
-      const result = schema.parse(
-        await financeWrite(path, body, method, previous.current.key, schema, signal),
-      );
+      const result = await financeWrite(path, body, method, previous.current.key, schema, signal);
       if (signal.aborted) return;
       previous.current = null;
       await cache.invalidateQueries({ queryKey: ['hr'], refetchType: 'none' });
       if (signal.aborted) return;
-      setSuccess('Saved successfully.');
+      setSuccess(successMessage);
       return result;
     } catch (failure) {
       if (signal.aborted) return;

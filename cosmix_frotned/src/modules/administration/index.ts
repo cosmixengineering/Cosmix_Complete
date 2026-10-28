@@ -1,2 +1,2 @@
-// Export approved module features here when implementation begins.
-export {};
+export { RolesPermissionsPage } from './pages/RolesPermissionsPage';
+export * from './api/access-api';

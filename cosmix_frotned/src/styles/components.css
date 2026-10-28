@@ -314,9 +314,16 @@ td:last-child {
 }
 
 @keyframes errorPulseGlow {
-  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
-  50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0.25); border-color: #dc2626 !important; }
-  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0.25);
+    border-color: #dc2626 !important;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
 }
 .field-error-pulse {
   animation: errorPulseGlow 1.4s ease-in-out 3;
@@ -570,7 +577,9 @@ select,
   outline: none !important;
   cursor: pointer !important;
   box-sizing: border-box !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease !important;
 }
 
 select:hover,
@@ -628,7 +637,9 @@ select:disabled,
   font-size: 13px !important;
   color: #0f172a !important;
   user-select: none !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease !important;
 }
 
 .custom-select-trigger:hover {
@@ -688,7 +699,9 @@ select:disabled,
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.04);
   z-index: 1050;
   overflow: hidden;
   animation: dropdownPop 0.15s ease-out;

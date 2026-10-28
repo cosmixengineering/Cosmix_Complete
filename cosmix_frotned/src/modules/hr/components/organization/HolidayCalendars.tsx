@@ -76,11 +76,7 @@ export function HolidayCalendars() {
           </label>
         </div>
         {access.can('hr.holidays.manage') && (
-          <button
-            type="button"
-            className="org-add-btn"
-            onClick={() => setCreating(true)}
-          >
+          <button type="button" className="org-add-btn" onClick={() => setCreating(true)}>
             <Plus size={15} strokeWidth={2.5} />
             New calendar
           </button>
@@ -145,7 +141,9 @@ export function HolidayCalendars() {
                           </span>
                         </td>
                         <td>
-                          <span className={`org-badge-status ${r.isActive ? 'active' : 'inactive'}`}>
+                          <span
+                            className={`org-badge-status ${r.isActive ? 'active' : 'inactive'}`}
+                          >
                             <span className="org-badge-dot"></span>
                             {r.isActive ? 'Active' : 'Inactive'}
                           </span>
@@ -252,7 +250,8 @@ function CalendarDetailModal({
                         {query.data.calendar.name}
                       </DialogPrimitive.Title>
                       <DialogPrimitive.Description className="org-modal-desc">
-                        Code: <strong>{query.data.calendar.code}</strong> • Revision {query.data.calendar.revision} •{' '}
+                        Code: <strong>{query.data.calendar.code}</strong> • Revision{' '}
+                        {query.data.calendar.revision} •{' '}
                         <span
                           className={`org-status-pill-${query.data.calendar.isActive ? 'active' : 'inactive'}`}
                         >
@@ -277,7 +276,8 @@ function CalendarDetailModal({
                       <div className="cal-detail-item">
                         <span className="cal-detail-label">Period</span>
                         <span className="cal-detail-value">
-                          {query.data.calendar.effectiveFrom} — {query.data.calendar.effectiveTo ?? 'Open-ended'}
+                          {query.data.calendar.effectiveFrom} —{' '}
+                          {query.data.calendar.effectiveTo ?? 'Open-ended'}
                         </span>
                       </div>
                       <div className="cal-detail-item">
@@ -301,7 +301,9 @@ function CalendarDetailModal({
 
                       <div className="cal-holidays-scroll-box" style={{ background: '#ffffff' }}>
                         {query.data.holidays.length === 0 ? (
-                          <div className="cal-empty-holidays">No holidays listed in this calendar.</div>
+                          <div className="cal-empty-holidays">
+                            No holidays listed in this calendar.
+                          </div>
                         ) : (
                           <table className="org-table" style={{ margin: 0 }}>
                             <thead>
@@ -326,8 +328,17 @@ function CalendarDetailModal({
                     </div>
 
                     {showHistory && (
-                      <div style={{ marginTop: '12px', borderTop: '1px solid #e2e8f0', paddingTop: '10px' }}>
-                        <OrganizationHistory path={'holiday-calendars/' + id} permission="hr.holidays.read" />
+                      <div
+                        style={{
+                          marginTop: '12px',
+                          borderTop: '1px solid #e2e8f0',
+                          paddingTop: '10px',
+                        }}
+                      >
+                        <OrganizationHistory
+                          path={'holiday-calendars/' + id}
+                          permission="hr.holidays.read"
+                        />
                       </div>
                     )}
                   </div>
@@ -569,7 +580,8 @@ export function CalendarEditor({
                     <div className="cal-holidays-scroll-box">
                       {rows.length === 0 ? (
                         <div className="cal-empty-holidays">
-                          No holidays added yet. Click <strong>+ Add holiday</strong> to define specific dates.
+                          No holidays added yet. Click <strong>+ Add holiday</strong> to define
+                          specific dates.
                         </div>
                       ) : (
                         rows.map((r, i) => (
@@ -614,9 +626,7 @@ export function CalendarEditor({
                               onChange={(e) =>
                                 setRows((prev) =>
                                   prev.map((x, j) =>
-                                    j === i
-                                      ? { ...x, notificationReference: e.target.value }
-                                      : x,
+                                    j === i ? { ...x, notificationReference: e.target.value } : x,
                                   ),
                                 )
                               }
@@ -654,17 +664,9 @@ export function CalendarEditor({
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="org-btn-submit"
-                disabled={action.pending}
-              >
+              <button type="submit" className="org-btn-submit" disabled={action.pending}>
                 <Check size={14} />
-                {action.pending
-                  ? 'Publishing...'
-                  : value
-                    ? 'Publish revision'
-                    : 'Publish calendar'}
+                {action.pending ? 'Publishing...' : value ? 'Publish revision' : 'Publish calendar'}
               </button>
             </div>
           </form>

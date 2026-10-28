@@ -149,7 +149,8 @@ export function FileUploadDropzone({
               {value.name}
             </span>
             <span className="upload-selected-size">
-              {formatFileSize(value.size)} &middot; <CheckCircle2 size={13} color="#16a34a" /> Ready to upload
+              {formatFileSize(value.size)} &middot; <CheckCircle2 size={13} color="#16a34a" /> Ready
+              to upload
             </span>
           </div>
           {!disabled && (
@@ -167,7 +168,11 @@ export function FileUploadDropzone({
       )}
 
       {activeError && (
-        <p className="field-error" role="alert" style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
+        <p
+          className="field-error"
+          role="alert"
+          style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}
+        >
           <AlertCircle size={14} />
           <span>{activeError}</span>
         </p>

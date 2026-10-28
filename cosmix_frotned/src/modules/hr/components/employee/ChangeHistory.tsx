@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { History } from 'lucide-react';
 import { Pagination } from '@/components/data-display/Pagination';
 import { Dialog } from '@/components/ui/Dialog';
 import { useHrQuery } from '../../hooks/use-hr-queries';
@@ -35,31 +36,97 @@ export function ChangeHistory({ employeeId, section }: { employeeId: string; sec
 
   if (!isApproved) {
     return (
-      <section className="hr-form-section">
-        <h2>Change history</h2>
-        <p className="muted">
+      <div className="emp-card" style={{ marginTop: '16px' }}>
+        <div className="emp-card-header simple">
+          <div className="emp-card-title">
+            <History size={17} className="emp-card-title-icon" />
+            <span>Change history</span>
+          </div>
+        </div>
+        <p className="muted" style={{ margin: 0, fontSize: '13px' }}>
           Change history is activated once the employee onboarding has been approved.
         </p>
-      </section>
+      </div>
     );
   }
   return (
-    <section className="hr-form-section">
-      <h2>Change history</h2>
+    <div className="emp-card" style={{ marginTop: '16px' }}>
+      <div className="emp-card-header simple">
+        <div className="emp-card-title">
+          <History size={17} className="emp-card-title-icon" />
+          <span>Change history</span>
+        </div>
+      </div>
       <QueryState query={query}>
-        {!query.data?.items.length && <p className="muted">No changes recorded.</p>}
-        {query.data?.items.map((r) => (
-          <div className="hr-repeat" key={r.id}>
-            <button className="hr-text-button" onClick={() => setSelected(r.id)}>
-              Effective {r.effectiveFrom}
-            </button>
-            <p className="muted">
-              {labelDate(r.recordedAt)} &middot; Actor {r.actorId}
-            </p>
+        {(!query.data?.items || query.data.items.length === 0) && (
+          <p className="muted" style={{ margin: 0, fontSize: '13px' }}>
+            No changes have been recorded for this section yet.
+          </p>
+        )}
+        {query.data?.items && query.data.items.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {query.data.items.map((r) => (
+              <div
+                key={r.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 14px',
+                  background: '#f8fafc',
+                  border: '1px solid #f1f5f9',
+                  borderRadius: '6px',
+                }}
+              >
+                <div>
+                  <button
+                    className="hr-text-button"
+                    style={{
+                      fontWeight: 600,
+                      color: '#2563eb',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      padding: 0,
+                      border: 'none',
+                      background: 'transparent',
+                    }}
+                    onClick={() => setSelected(r.id)}
+                  >
+                    Effective {r.effectiveFrom}
+                  </button>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                    {labelDate(r.recordedAt)} &middot; Actor {r.actorId}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelected(r.id)}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '12px',
+                    borderRadius: '4px',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#334155',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                  }}
+                >
+                  View diff
+                </button>
+              </div>
+            ))}
           </div>
-        ))}
-        {query.data && (
-          <Pagination page={page} pageSize={10} total={query.data.totalCount} onChange={setPage} />
+        )}
+        {query.data && query.data.totalCount > 10 && (
+          <div style={{ marginTop: '12px' }}>
+            <Pagination
+              page={page}
+              pageSize={10}
+              total={query.data.totalCount}
+              onChange={setPage}
+            />
+          </div>
         )}
       </QueryState>
       <Dialog
@@ -82,6 +149,6 @@ export function ChangeHistory({ employeeId, section }: { employeeId: string; sec
           )}
         </QueryState>
       </Dialog>
-    </section>
+    </div>
   );
 }

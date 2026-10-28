@@ -4375,3 +4375,157 @@
   transform: translateX(2px);
   color: #2563eb;
 }
+
+/* ==========================================================================
+   Employee Detail Section Cards & Modal Polish
+   ========================================================================== */
+.emp-card-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #0b1a3d;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.emp-card-edit-btn:hover {
+  background: #1e3a8a;
+  color: #ffffff;
+}
+
+.emp-empty-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-style: italic;
+}
+
+.emp-kv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.emp-kv-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #f8fafc;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+}
+
+.emp-kv-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.emp-kv-value {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+/* Change Form Popup Modal Tweaks & Field standardization */
+.change-form-modal {
+  max-width: 680px !important;
+}
+
+.change-form-modal .hr-form-section {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin-bottom: 14px !important;
+  box-shadow: none !important;
+}
+
+.change-form-modal .hr-section-header {
+  margin-bottom: 8px !important;
+  padding-bottom: 4px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.change-form-modal .hr-section-title {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+}
+
+.change-form-modal .hr-section-subtitle {
+  font-size: 12px !important;
+  color: #64748b !important;
+  margin: 2px 0 0 0 !important;
+}
+
+.change-form-modal .hr-form-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px 14px !important;
+}
+
+.change-form-modal .field.wide {
+  grid-column: 1 / -1 !important;
+}
+
+.change-form-modal .field label {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  margin-bottom: 4px !important;
+  display: block !important;
+}
+
+.change-form-modal .field input,
+.change-form-modal .field select,
+.change-form-modal .select-input-container select,
+.change-form-modal .erp-ref-input,
+.change-form-modal .erp-ref-select {
+  height: 36px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 0 11px !important;
+  font-size: 12.5px !important;
+  color: #0f172a !important;
+  transition: all 0.15s ease !important;
+  background: #ffffff !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.change-form-modal .field input:focus,
+.change-form-modal .field select:focus,
+.change-form-modal .select-input-container select:focus,
+.change-form-modal .erp-ref-input:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12) !important;
+  outline: none !important;
+}
+
+.change-form-modal textarea {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 8px 11px !important;
+  font-size: 12.5px !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  min-height: 56px !important;
+  resize: vertical !important;
+}

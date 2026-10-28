@@ -11,6 +11,7 @@ import { AccountSessionsPage } from '@/pages/AccountSessionsPage';
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 import { AdminApprovalsPage } from '@/pages/AdminApprovalsPage';
 import { AdminModulePage } from '@/pages/AdminModulePage';
+import { RolesPermissionsPage } from '@/modules/administration';
 import { AppLayout } from '@/layouts/AppLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import {
@@ -152,7 +153,8 @@ export function AppRoutes() {
           <Route path="operations" element={<AdminModulePage moduleKey="operations" />} />
           <Route path="projects" element={<AdminModulePage moduleKey="projects" />} />
           <Route path="reports" element={<AdminModulePage moduleKey="reports" />} />
-          <Route path="users" element={<AdminModulePage moduleKey="users" />} />
+          <Route path="users" element={<RolesPermissionsPage />} />
+          <Route path="roles" element={<RolesPermissionsPage />} />
           <Route path="departments" element={<AdminModulePage moduleKey="departments" />} />
           <Route path="settings" element={<AdminModulePage moduleKey="settings" />} />
           <Route path="attendance" element={<Navigate to="/hr/attendance" replace />} />

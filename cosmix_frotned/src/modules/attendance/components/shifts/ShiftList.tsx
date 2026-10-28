@@ -82,7 +82,8 @@ const DEFAULT_METAS: Record<string, ShiftRichMeta> = {
     assignedCount: 82,
     assignedLabel: '82 Site Technicians & Engineers',
     sites: ['Karachi High-Rise', 'Islamabad Complex', 'Lucky One Mall'],
-    description: 'Standard daily site execution shift for HVAC technicians, field electricians, welders and pipe fitters.',
+    description:
+      'Standard daily site execution shift for HVAC technicians, field electricians, welders and pipe fitters.',
     iconType: 'sun',
   },
   'SH-SITE-DAY': {
@@ -105,7 +106,8 @@ const DEFAULT_METAS: Record<string, ShiftRichMeta> = {
     assignedCount: 82,
     assignedLabel: '82 Site Technicians & Engineers',
     sites: ['Karachi High-Rise', 'Islamabad Complex'],
-    description: 'Standard daily site execution shift for HVAC technicians, field electricians, welders and pipe fitters.',
+    description:
+      'Standard daily site execution shift for HVAC technicians, field electricians, welders and pipe fitters.',
     iconType: 'sun',
   },
   'SH-HQ-01': {
@@ -128,7 +130,8 @@ const DEFAULT_METAS: Record<string, ShiftRichMeta> = {
     assignedCount: 34,
     assignedLabel: '34 HQ & Regional Office Staff',
     sites: ['Lahore HQ & Central Workshop', 'Islamabad Regional Office'],
-    description: 'Corporate 5-day office schedule for Human Resources, Finance, Procurement, and Executive Sales teams.',
+    description:
+      'Corporate 5-day office schedule for Human Resources, Finance, Procurement, and Executive Sales teams.',
     iconType: 'building',
   },
   'SH-CORP-GEN': {
@@ -151,7 +154,8 @@ const DEFAULT_METAS: Record<string, ShiftRichMeta> = {
     assignedCount: 34,
     assignedLabel: '34 HQ & Regional Office Staff',
     sites: ['Lahore HQ & Central Workshop'],
-    description: 'Corporate 5-day office schedule for Human Resources, Finance, Procurement, and Executive Sales teams.',
+    description:
+      'Corporate 5-day office schedule for Human Resources, Finance, Procurement, and Executive Sales teams.',
     iconType: 'building',
   },
   'SH-NGT-01': {
@@ -174,7 +178,8 @@ const DEFAULT_METAS: Record<string, ShiftRichMeta> = {
     assignedCount: 24,
     assignedLabel: '24 Night Maintenance Specialists',
     sites: ['Karachi High-Rise', 'Lucky One Mall'],
-    description: 'Turnaround and overnight heavy MEP maintenance. Includes Rs. 500 / night differential allowance.',
+    description:
+      'Turnaround and overnight heavy MEP maintenance. Includes Rs. 500 / night differential allowance.',
     iconType: 'moon',
   },
   'SH-SITE-NIGHT': {
@@ -197,7 +202,8 @@ const DEFAULT_METAS: Record<string, ShiftRichMeta> = {
     assignedCount: 24,
     assignedLabel: '24 Night MEP Specialists',
     sites: ['Karachi High-Rise'],
-    description: 'Turnaround and overnight heavy MEP maintenance. Includes Rs. 500 / night differential allowance.',
+    description:
+      'Turnaround and overnight heavy MEP maintenance. Includes Rs. 500 / night differential allowance.',
     iconType: 'moon',
   },
   'SH-FRI-01': {
@@ -220,7 +226,8 @@ const DEFAULT_METAS: Record<string, ShiftRichMeta> = {
     assignedCount: 10,
     assignedLabel: '10 Specialized Techs',
     sites: ['Karachi High-Rise', 'Islamabad Complex'],
-    description: 'Friday half-day schedule allowing safe departure for Juma congregational prayers.',
+    description:
+      'Friday half-day schedule allowing safe departure for Juma congregational prayers.',
     iconType: 'special',
   },
   'SH-RAM-01': {
@@ -243,7 +250,8 @@ const DEFAULT_METAS: Record<string, ShiftRichMeta> = {
     assignedCount: 0,
     assignedLabel: 'Seasonal Template (Inactive)',
     sites: ['All Sites (When Activated)'],
-    description: 'Pre-configured holy month Ramadan shift with reduced 6-hour working duration and continuous duty.',
+    description:
+      'Pre-configured holy month Ramadan shift with reduced 6-hour working duration and continuous duty.',
     iconType: 'special',
   },
 };
@@ -328,7 +336,7 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
     const sm = sParts[1] ?? 0;
     const eh = eParts[0] ?? 0;
     const em = eParts[1] ?? 0;
-    let diffMins = (eh * 60 + em) - (sh * 60 + sm);
+    let diffMins = eh * 60 + em - (sh * 60 + sm);
     if (diffMins <= 0) diffMins += 24 * 60; // overnight
     const breakMins = parseInt(formBreak, 10) || 0;
     const workMins = Math.max(0, diffMins - breakMins);
@@ -402,10 +410,16 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
           endTimeRaw = (v.endTime || '17:00').slice(0, 5);
           durationHours = Number(((v.scheduledMinutes || 540) / 60).toFixed(1));
           breakMins = (v.unpaidBreakMinutes || 0) + (v.paidBreakMinutes || 0);
-          workHours = Number(Math.max(0, ((v.scheduledMinutes || 540) - (v.unpaidBreakMinutes || 0)) / 60).toFixed(1));
+          workHours = Number(
+            Math.max(0, ((v.scheduledMinutes || 540) - (v.unpaidBreakMinutes || 0)) / 60).toFixed(
+              1,
+            ),
+          );
 
           const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-          const activeDays = dayNames.filter((_, idx) => ((v.applicableWeekdays || 63) & (1 << idx)) !== 0);
+          const activeDays = dayNames.filter(
+            (_, idx) => ((v.applicableWeekdays || 63) & (1 << idx)) !== 0,
+          );
           if (activeDays.length > 0) {
             days = activeDays;
           }
@@ -433,10 +447,20 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
           category = 'Night Operations';
           iconType = 'moon';
           nightAllowance = 500;
-        } else if (codeUpper.includes('HQ') || codeUpper.includes('CORP') || nameLower.includes('office') || nameLower.includes('corporate')) {
+        } else if (
+          codeUpper.includes('HQ') ||
+          codeUpper.includes('CORP') ||
+          nameLower.includes('office') ||
+          nameLower.includes('corporate')
+        ) {
           category = 'Corporate';
           iconType = 'building';
-        } else if (codeUpper.includes('FRI') || codeUpper.includes('RAM') || nameLower.includes('friday') || nameLower.includes('special')) {
+        } else if (
+          codeUpper.includes('FRI') ||
+          codeUpper.includes('RAM') ||
+          nameLower.includes('friday') ||
+          nameLower.includes('special')
+        ) {
           category = 'Special';
           iconType = 'special';
         }
@@ -449,7 +473,8 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
           assignedCount = baseCount + (index < remainder ? 1 : 0);
         }
 
-        const assignedSites = dbSites.length > 0 ? dbSites.map((s) => s.name) : ['All Project Sites'];
+        const assignedSites =
+          dbSites.length > 0 ? dbSites.map((s) => s.name) : ['All Project Sites'];
 
         const meta: ShiftRichMeta = {
           category,
@@ -484,11 +509,41 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
 
     // Fallback if backend returns 0 shifts
     const standardMockupList = [
-      { id: 'mock-sh-site-01', code: 'SH-SITE-01', name: 'General Site Shift (Day Shift)', isActive: true, version: 'AAAAAA==' },
-      { id: 'mock-sh-hq-01', code: 'SH-HQ-01', name: 'Head Office & Corporate Shift', isActive: true, version: 'AAAAAA==' },
-      { id: 'mock-sh-ngt-01', code: 'SH-NGT-01', name: 'Night Maintenance & Overhaul Shift', isActive: true, version: 'AAAAAA==' },
-      { id: 'mock-sh-fri-01', code: 'SH-FRI-01', name: 'Friday Special Early-Close Shift', isActive: true, version: 'AAAAAA==' },
-      { id: 'mock-sh-ram-01', code: 'SH-RAM-01', name: 'Ramzan Seasonal Reduced Shift', isActive: false, version: 'AAAAAA==' },
+      {
+        id: 'mock-sh-site-01',
+        code: 'SH-SITE-01',
+        name: 'General Site Shift (Day Shift)',
+        isActive: true,
+        version: 'AAAAAA==',
+      },
+      {
+        id: 'mock-sh-hq-01',
+        code: 'SH-HQ-01',
+        name: 'Head Office & Corporate Shift',
+        isActive: true,
+        version: 'AAAAAA==',
+      },
+      {
+        id: 'mock-sh-ngt-01',
+        code: 'SH-NGT-01',
+        name: 'Night Maintenance & Overhaul Shift',
+        isActive: true,
+        version: 'AAAAAA==',
+      },
+      {
+        id: 'mock-sh-fri-01',
+        code: 'SH-FRI-01',
+        name: 'Friday Special Early-Close Shift',
+        isActive: true,
+        version: 'AAAAAA==',
+      },
+      {
+        id: 'mock-sh-ram-01',
+        code: 'SH-RAM-01',
+        name: 'Ramzan Seasonal Reduced Shift',
+        isActive: false,
+        version: 'AAAAAA==',
+      },
     ];
 
     return standardMockupList.map((mock) => ({
@@ -562,7 +617,7 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
       const sm = sParts[1] ?? 0;
       const eh = eParts[0] ?? 0;
       const em = eParts[1] ?? 0;
-      let diffMins = (eh * 60 + em) - (sh * 60 + sm);
+      let diffMins = eh * 60 + em - (sh * 60 + sm);
       const endDayOffset = diffMins <= 0 ? 1 : 0;
       if (diffMins <= 0) diffMins += 24 * 60;
       const breakMins = parseInt(formBreak, 10) || 0;
@@ -622,14 +677,25 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
         graceMins: parseInt(formGrace, 10) || 15,
         halfDayCutoff: formHalfDay || '10:30 AM',
         absentCutoff: formAbsent || '12:00 PM',
-        otRule: formOt.includes('1.5x') ? '1.5x Hourly OT' : formOt.includes('2.0x') ? '2.0x Double OT' : 'Not Applicable',
+        otRule: formOt.includes('1.5x')
+          ? '1.5x Hourly OT'
+          : formOt.includes('2.0x')
+            ? '2.0x Double OT'
+            : 'Not Applicable',
         nightAllowance: parseFloat(formNightPay) || 0,
         days: formDays,
         assignedCount: 0,
         assignedLabel: '0 Workers Assigned (Newly Created)',
         sites: [formSite],
         description: formDesc.trim() || 'Custom work schedule configured by HR.',
-        iconType: formCat === 'Night Operations' ? 'moon' : formCat === 'Corporate' ? 'building' : formCat === 'Special' ? 'special' : 'sun',
+        iconType:
+          formCat === 'Night Operations'
+            ? 'moon'
+            : formCat === 'Corporate'
+              ? 'building'
+              : formCat === 'Special'
+                ? 'special'
+                : 'sun',
       };
 
       try {
@@ -642,7 +708,8 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
       setToastMessage(`Shift "${payload.code} - ${payload.name}" created successfully!`);
       void query.refetch();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to save shift. Please check input values.';
+      const msg =
+        err instanceof Error ? err.message : 'Failed to save shift. Please check input values.';
       setFormError(msg);
     } finally {
       setFormSubmitting(false);
@@ -656,7 +723,16 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
 
   // Export to CSV
   const handleExportExcel = () => {
-    const headers = ['Shift Code', 'Name', 'Category', 'Timings', 'Grace', 'Overtime Rule', 'Night Allowance', 'Status'];
+    const headers = [
+      'Shift Code',
+      'Name',
+      'Category',
+      'Timings',
+      'Grace',
+      'Overtime Rule',
+      'Night Allowance',
+      'Status',
+    ];
     const rows = filteredShifts.map((s) => [
       s.code,
       `"${s.name.replace(/"/g, '""')}"`,
@@ -667,7 +743,9 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
       `Rs. ${s.meta.nightAllowance}`,
       s.isActive ? 'Active' : 'Inactive',
     ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
@@ -690,7 +768,9 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
         onSaved={(createdShift) => {
           setIsCreatingShift(false);
           setCloneShiftSource(undefined);
-          setToastMessage(`Shift "${createdShift.code} - ${createdShift.name}" created successfully!`);
+          setToastMessage(
+            `Shift "${createdShift.code} - ${createdShift.name}" created successfully!`,
+          );
           void query.refetch();
           onOpen(createdShift.id);
         }}
@@ -878,7 +958,12 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
           </div>
 
           {/* Export Buttons */}
-          <button type="button" onClick={handleExportExcel} className="shifts-btn-excel" title="Export to Excel">
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="shifts-btn-excel"
+            title="Export to Excel"
+          >
             <FileSpreadsheet size={13} color="#16a34a" />
             Excel
           </button>
@@ -1080,9 +1165,7 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
                         );
                       })}
                     </div>
-                    <span className="shift-days-summary">
-                      {meta.days.length} Days / Week
-                    </span>
+                    <span className="shift-days-summary">{meta.days.length} Days / Week</span>
                   </div>
 
                   {/* Operational Notes */}
@@ -1093,7 +1176,9 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
                 <div className="shift-card-v2-footer">
                   <span className="shift-assigned-badge">
                     <Users size={11} />
-                    {meta.assignedCount > 0 ? `${meta.assignedCount} Workers Assigned` : 'No Workers Assigned'}
+                    {meta.assignedCount > 0
+                      ? `${meta.assignedCount} Workers Assigned`
+                      : 'No Workers Assigned'}
                   </span>
 
                   <button
@@ -1143,14 +1228,29 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
                   <tr key={s.id}>
                     <td>
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#242b5f', fontSize: '11px' }}>
+                        <span
+                          style={{
+                            fontFamily: 'monospace',
+                            fontWeight: 700,
+                            color: '#242b5f',
+                            fontSize: '11px',
+                          }}
+                        >
                           {s.code}
                         </span>
                         <strong style={{ color: '#0f172a' }}>{s.name}</strong>
                       </div>
                     </td>
                     <td>
-                      <span style={{ fontSize: '11px', color: '#475569', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          color: '#475569',
+                          background: '#f1f5f9',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                        }}
+                      >
                         {s.meta.category}
                       </span>
                     </td>
@@ -1199,7 +1299,8 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
             <h4 className="shifts-matrix-title">Site-Wise Shift Assignment Matrix</h4>
           </div>
           <span className="shifts-matrix-subtitle">
-            {dbSites.length > 0 ? dbSites.length : 8} Active Project Sites &bull; {totalWorkers} Workers
+            {dbSites.length > 0 ? dbSites.length : 8} Active Project Sites &bull; {totalWorkers}{' '}
+            Workers
           </span>
         </div>
 
@@ -1266,13 +1367,23 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
               <div className="shift-modal-info-banner">
                 <AlertCircle size={16} />
                 <span>
-                  Define shift hours, grace threshold, meal break, and assigned project sites. All biometric machines and mobile app check-ins will automatically follow these rules.
+                  Define shift hours, grace threshold, meal break, and assigned project sites. All
+                  biometric machines and mobile app check-ins will automatically follow these rules.
                 </span>
               </div>
 
               {/* Error Message */}
               {formError && (
-                <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '8px 12px', borderRadius: '6px', fontSize: '11.5px', fontWeight: 500 }}>
+                <div
+                  style={{
+                    background: '#fee2e2',
+                    color: '#b91c1c',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '11.5px',
+                    fontWeight: 500,
+                  }}
+                >
                   {formError}
                 </div>
               )}
@@ -1315,7 +1426,9 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
                   >
                     <option value="Site Technical">Site Technical / field MEP</option>
                     <option value="Corporate">Head Office / Corporate Management</option>
-                    <option value="Night Operations">Night Operations / Emergency Turnaround</option>
+                    <option value="Night Operations">
+                      Night Operations / Emergency Turnaround
+                    </option>
                     <option value="Special">Special / Seasonal Half-Day</option>
                   </select>
                 </div>
@@ -1336,9 +1449,15 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
                       ))
                     ) : (
                       <>
-                        <option value="Karachi High-Rise Commercial Tower">Karachi High-Rise Commercial Tower</option>
-                        <option value="Islamabad Federal Govt Complex">Islamabad Federal Govt Complex</option>
-                        <option value="Lahore HQ &amp; Central Workshop">Lahore HQ &amp; Central Workshop</option>
+                        <option value="Karachi High-Rise Commercial Tower">
+                          Karachi High-Rise Commercial Tower
+                        </option>
+                        <option value="Islamabad Federal Govt Complex">
+                          Islamabad Federal Govt Complex
+                        </option>
+                        <option value="Lahore HQ &amp; Central Workshop">
+                          Lahore HQ &amp; Central Workshop
+                        </option>
                       </>
                     )}
                   </select>
@@ -1443,9 +1562,15 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
                     onChange={(e) => setFormOt(e.target.value)}
                     className="shift-form-select"
                   >
-                    <option value="Eligible: 1.5x Standard Hourly Rate">Eligible: 1.5x Standard Hourly Rate</option>
-                    <option value="Eligible: 2.0x Double Rate (Holiday/Night)">Eligible: 2.0x Double Rate (Holiday/Night)</option>
-                    <option value="Not Eligible (Fixed Corporate Salary)">Not Eligible (Salaried Management)</option>
+                    <option value="Eligible: 1.5x Standard Hourly Rate">
+                      Eligible: 1.5x Standard Hourly Rate
+                    </option>
+                    <option value="Eligible: 2.0x Double Rate (Holiday/Night)">
+                      Eligible: 2.0x Double Rate (Holiday/Night)
+                    </option>
+                    <option value="Not Eligible (Fixed Corporate Salary)">
+                      Not Eligible (Salaried Management)
+                    </option>
                   </select>
                 </div>
 
@@ -1486,11 +1611,7 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
                         className={`shift-weekday-box ${isChecked ? 'selected' : ''}`}
                         onClick={() => toggleDay(day.key)}
                       >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => {}}
-                        />
+                        <input type="checkbox" checked={isChecked} onChange={() => {}} />
                         <span>{day.label}</span>
                       </label>
                     );
@@ -1520,11 +1641,7 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="shift-modal-btn-confirm"
-                  disabled={formSubmitting}
-                >
+                <button type="submit" className="shift-modal-btn-confirm" disabled={formSubmitting}>
                   {formSubmitting ? (
                     <>
                       <RotateCcw size={13} className="animate-spin" />
@@ -1543,7 +1660,11 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
       {/* 7. "Assign List" Modal Dialog */}
       {showAssignModal && (
         <div className="shift-modal-backdrop" onClick={() => setShowAssignModal(false)}>
-          <div className="shift-modal-dialog" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
+          <div
+            className="shift-modal-dialog"
+            style={{ maxWidth: '480px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="shift-modal-head">
               <h2 className="shift-modal-title">Assign Work Shift List</h2>
               <button
@@ -1559,7 +1680,8 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
               <div className="shift-modal-info-banner">
                 <Users size={16} />
                 <span>
-                  Map an entire project site, department, or designated workforce to this shift schedule. Biometric rules will sync immediately.
+                  Map an entire project site, department, or designated workforce to this shift
+                  schedule. Biometric rules will sync immediately.
                 </span>
               </div>
 
@@ -1593,9 +1715,15 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
                     ))
                   ) : (
                     <>
-                      <option value="Karachi High-Rise Commercial Tower">Karachi High-Rise Commercial Tower</option>
-                      <option value="Islamabad Federal Govt Complex">Islamabad Federal Govt Complex</option>
-                      <option value="Lahore HQ &amp; Central Workshop">Lahore HQ &amp; Central Workshop</option>
+                      <option value="Karachi High-Rise Commercial Tower">
+                        Karachi High-Rise Commercial Tower
+                      </option>
+                      <option value="Islamabad Federal Govt Complex">
+                        Islamabad Federal Govt Complex
+                      </option>
+                      <option value="Lahore HQ &amp; Central Workshop">
+                        Lahore HQ &amp; Central Workshop
+                      </option>
                     </>
                   )}
                 </select>
@@ -1603,11 +1731,7 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
 
               <div className="shift-form-group">
                 <label className="shift-form-label">Effective From Date</label>
-                <input
-                  type="date"
-                  defaultValue={businessToday()}
-                  className="shift-form-input"
-                />
+                <input type="date" defaultValue={businessToday()} className="shift-form-input" />
               </div>
 
               <div className="shift-modal-foot" style={{ margin: '8px -20px -16px' }}>

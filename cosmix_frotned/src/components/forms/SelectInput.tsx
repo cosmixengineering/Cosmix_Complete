@@ -151,7 +151,7 @@ export function SelectInput({
         aria-invalid={Boolean(error)}
         aria-describedby={error ? inputId + '-error' : undefined}
         data-field={dataField}
-        className={`custom-select-trigger ${isOpen ? 'is-open' : ''} ${Boolean(error) ? 'is-invalid' : ''} ${disabled ? 'is-disabled' : ''}`}
+        className={`custom-select-trigger ${isOpen ? 'is-open' : ''} ${error ? 'is-invalid' : ''} ${disabled ? 'is-disabled' : ''}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         onKeyDown={(e) => {
           if (disabled) return;
@@ -212,9 +212,7 @@ export function SelectInput({
                     onClick={() => handleSelect(opt.value)}
                   >
                     <span className="custom-select-option-label">{opt.label}</span>
-                    {isSelected && !isBlank && (
-                      <Check size={14} className="custom-select-check" />
-                    )}
+                    {isSelected && !isBlank && <Check size={14} className="custom-select-check" />}
                   </div>
                 );
               })

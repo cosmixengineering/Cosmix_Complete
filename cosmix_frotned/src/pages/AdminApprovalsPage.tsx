@@ -23,10 +23,7 @@ export function AdminApprovalsPage() {
             <Users size={16} /> Employee changes
           </Link>
         )}
-        <Link
-          className={type === 'leave' ? 'active' : undefined}
-          to="/admin/approvals?type=leave"
-        >
+        <Link className={type === 'leave' ? 'active' : undefined} to="/admin/approvals?type=leave">
           <CalendarDays size={16} /> Leave requests &amp; Approvals
         </Link>
       </nav>

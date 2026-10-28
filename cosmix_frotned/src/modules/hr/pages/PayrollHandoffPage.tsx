@@ -59,8 +59,19 @@ export function PayrollHandoffPage() {
   const tabs = [
     ...(access.can(permissions.read) ? [{ id: 'preview', label: 'Preview and prepare' }] : []),
     ...(access.can(permissions.read) ? [{ id: 'batches', label: 'Batches' }] : []),
-    ...(access.can('attendance.payroll-salary.read') ? [{ id: 'sources', label: 'Salary sources and rules' }] : []),
-    ...(access.can('attendance.payroll-salary.request') ? [{ id: 'import', label: 'Import salary sheet' }] : []),
+    ...(access.can('attendance.payroll-salary.read')
+      ? [{ id: 'sources', label: 'Salary sources and rules' }]
+      : []),
+    ...([
+      'attendance.payroll-imports.read',
+      'attendance.payroll-imports.submit',
+      'attendance.payroll-salary.read',
+      'attendance.payroll-salary.request',
+      'hr.employees.compensation.read',
+      'hr.employees.compensation.request',
+    ].every((permission) => access.can(permission))
+      ? [{ id: 'import', label: 'Import salary sheet' }]
+      : []),
   ];
   const [tab, setTab] = useState(tabs[0]?.id ?? '');
 
@@ -309,8 +320,19 @@ function PayrollPreviewPanel({
       <QueryState query={preview}>
         {activePreview && (
           <>
-            <FinanceNotice>{activePreview.calculationVersion === 'salary-v2' && activePreview.salaryComplete ? 'Complete salary projection from approved sources.' : 'Adjustment projection; this is not a complete salary run.'}</FinanceNotice>
-            {activePreview.employeeTotals && <SalaryPayslips batchId="" currency={activePreview.currency} employees={activePreview.employeeTotals} available={false} />}
+            <FinanceNotice>
+              {activePreview.calculationVersion === 'salary-v2' && activePreview.salaryComplete
+                ? 'Complete salary projection from approved sources.'
+                : 'Adjustment projection; this is not a complete salary run.'}
+            </FinanceNotice>
+            {activePreview.employeeTotals && (
+              <SalaryPayslips
+                batchId=""
+                currency={activePreview.currency}
+                employees={activePreview.employeeTotals}
+                available={false}
+              />
+            )}
             {/* KPI Summary Cards */}
             <div className="payroll-kpi-grid">
               <div className="payroll-kpi-card">
@@ -611,7 +633,7 @@ function PayrollBatches({
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
   async function downloadAdvice(batch: PayrollBatch) {
-    if (downloading || batch.state !== 'locked') return;
+    if (downloading || !['locked', 'finance_handed_off'].includes(batch.state)) return;
     const signal = lifetime();
     setDownloading(true);
     setDownloadError(null);
@@ -654,11 +676,7 @@ function PayrollBatches({
 
   async function process(event: FormEvent) {
     event.preventDefault();
-    if (
-      !selectedBatch ||
-      !canProcessBatch(selectedBatch)
-    )
-      return;
+    if (!selectedBatch || !canProcessBatch(selectedBatch)) return;
     const result = await action.run(
       `/payroll-handoff/batches/${selectedBatch.id}/processing`,
       { externalProcessingReference: processingReference, reason: processingReason },
@@ -677,20 +695,52 @@ function PayrollBatches({
     return Boolean(accountId && batch.preparedByUserId === accountId);
   }
   function canLockBatch(batch: PayrollBatch) {
-    return !isPreparer(batch) && (batch.calculationVersion === 'salary-v2' ? batch.state === 'hr_approved' && batch.hrApprovedByUserId !== accountId && batch.salaryComplete === true : batch.state === 'prepared');
+    return (
+      !isPreparer(batch) &&
+      (batch.calculationVersion === 'salary-v2'
+        ? batch.state === 'hr_approved' &&
+          batch.hrApprovedByUserId !== accountId &&
+          batch.salaryComplete === true
+        : batch.state === 'prepared')
+    );
   }
   function canProcessBatch(batch: PayrollBatch) {
-    return batch.state === 'locked' && (batch.calculationVersion === 'salary-v2' ? batch.lockedByUserId !== accountId && batch.hrApprovedByUserId !== accountId && !isPreparer(batch) : batch.lockedByUserId === accountId);
+    return (
+      batch.state === 'locked' &&
+      (batch.calculationVersion === 'salary-v2'
+        ? batch.lockedByUserId !== accountId &&
+          batch.hrApprovedByUserId !== accountId &&
+          !isPreparer(batch)
+        : batch.lockedByUserId === accountId)
+    );
   }
   async function reviewBatch(decision: number) {
     if (!selectedBatch || isPreparer(selectedBatch)) return;
-    const result = await action.run(`/payroll-handoff/batches/${selectedBatch.id}/hr-review`, { expectedVersion: selectedBatch.version, decision, reason: reviewReason }, 'POST', payrollBatchDetail);
-    if (result) { setReviewReason(''); void detailQuery.refetch(); void batchesQuery.refetch(); }
+    const result = await action.run(
+      `/payroll-handoff/batches/${selectedBatch.id}/hr-review`,
+      { expectedVersion: selectedBatch.version, decision, reason: reviewReason },
+      'POST',
+      payrollBatchDetail,
+    );
+    if (result) {
+      setReviewReason('');
+      void detailQuery.refetch();
+      void batchesQuery.refetch();
+    }
   }
   async function cancelBatch() {
     if (!selectedBatch || !isPreparer(selectedBatch)) return;
-    const result = await action.run(`/payroll-handoff/batches/${selectedBatch.id}/cancel`, { expectedVersion: selectedBatch.version, reason: reviewReason }, 'POST', payrollBatchDetail);
-    if (result) { setReviewReason(''); void detailQuery.refetch(); void batchesQuery.refetch(); }
+    const result = await action.run(
+      `/payroll-handoff/batches/${selectedBatch.id}/cancel`,
+      { expectedVersion: selectedBatch.version, reason: reviewReason },
+      'POST',
+      payrollBatchDetail,
+    );
+    if (result) {
+      setReviewReason('');
+      void detailQuery.refetch();
+      void batchesQuery.refetch();
+    }
   }
 
   return (
@@ -785,7 +835,9 @@ function PayrollBatches({
                               <Button
                                 variant="secondary"
                                 disabled={
-                                  downloading || batch.state !== 'locked' || detailQuery.isFetching
+                                  downloading ||
+                                  !['locked', 'finance_handed_off'].includes(batch.state) ||
+                                  detailQuery.isFetching
                                 }
                                 onClick={() => void downloadAdvice(batch)}
                               >
@@ -867,10 +919,59 @@ function PayrollBatches({
                             )}
 
                             {/* Dual-Control Approval & Lock Form */}
-                            {batch.calculationVersion === 'salary-v2' && <>
-                              <SalaryPayslips batchId={batch.id} currency={batch.currency} employees={batch.employeeTotals ?? []} available={batch.salaryComplete === true && ['locked', 'finance_handed_off'].includes(batch.state)} />
-                              {batch.state === 'prepared' && <div><TextAreaField label="HR review / cancellation reason" value={reviewReason} onChange={setReviewReason} required />{canReview && !isPreparer(batch) && <><Button disabled={action.pending || !reviewReason.trim() || !batch.salaryComplete} onClick={() => void reviewBatch(1)}>HR approve salary</Button><Button variant="secondary" disabled={action.pending || !reviewReason.trim()} onClick={() => void reviewBatch(3)}>Reject salary run</Button></>}{isPreparer(batch) && <Button variant="secondary" disabled={action.pending || !reviewReason.trim()} onClick={() => void cancelBatch()}>Cancel unapproved run</Button>}</div>}
-                            </>}
+                            {batch.calculationVersion === 'salary-v2' && (
+                              <>
+                                <SalaryPayslips
+                                  batchId={batch.id}
+                                  currency={batch.currency}
+                                  employees={batch.employeeTotals ?? []}
+                                  available={
+                                    batch.salaryComplete === true &&
+                                    ['locked', 'finance_handed_off'].includes(batch.state)
+                                  }
+                                />
+                                {batch.state === 'prepared' && (
+                                  <div>
+                                    <TextAreaField
+                                      label="HR review / cancellation reason"
+                                      value={reviewReason}
+                                      onChange={setReviewReason}
+                                      required
+                                    />
+                                    {canReview && !isPreparer(batch) && (
+                                      <>
+                                        <Button
+                                          disabled={
+                                            action.pending ||
+                                            !reviewReason.trim() ||
+                                            !batch.salaryComplete
+                                          }
+                                          onClick={() => void reviewBatch(1)}
+                                        >
+                                          HR approve salary
+                                        </Button>
+                                        <Button
+                                          variant="secondary"
+                                          disabled={action.pending || !reviewReason.trim()}
+                                          onClick={() => void reviewBatch(3)}
+                                        >
+                                          Reject salary run
+                                        </Button>
+                                      </>
+                                    )}
+                                    {isPreparer(batch) && (
+                                      <Button
+                                        variant="secondary"
+                                        disabled={action.pending || !reviewReason.trim()}
+                                        onClick={() => void cancelBatch()}
+                                      >
+                                        Cancel unapproved run
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
+                              </>
+                            )}
                             {canLock && canLockBatch(batch) && (
                               <form
                                 style={{
@@ -936,78 +1037,76 @@ function PayrollBatches({
 
                             {/* Accounts Recording Form */}
                             {canProcess && canProcessBatch(batch) && (
-                                <form
+                              <form
+                                style={{
+                                  marginTop: '20px',
+                                  padding: '16px',
+                                  background: '#f8fafc',
+                                  borderRadius: '8px',
+                                  border: '1px solid #e2e8f0',
+                                }}
+                                onSubmit={(event) => void process(event)}
+                              >
+                                <h4
                                   style={{
-                                    marginTop: '20px',
-                                    padding: '16px',
-                                    background: '#f8fafc',
-                                    borderRadius: '8px',
-                                    border: '1px solid #e2e8f0',
+                                    fontSize: '13.5px',
+                                    fontWeight: 700,
+                                    color: '#0f172a',
+                                    margin: '0 0 6px',
                                   }}
-                                  onSubmit={(event) => void process(event)}
                                 >
-                                  <h4
+                                  <Building
+                                    size={16}
                                     style={{
-                                      fontSize: '13.5px',
-                                      fontWeight: 700,
-                                      color: '#0f172a',
-                                      margin: '0 0 6px',
+                                      display: 'inline',
+                                      color: '#059669',
+                                      marginRight: '6px',
                                     }}
+                                  />
+                                  Record Accounts Confirmation Evidence
+                                </h4>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '12px',
+                                  }}
+                                >
+                                  <TextInput
+                                    label="External Processing Reference"
+                                    required
+                                    maxLength={150}
+                                    value={processingReference}
+                                    onChange={(event) => setProcessingReference(event.target.value)}
+                                  />
+                                  <TextAreaField
+                                    label="Processing Reason / Memo"
+                                    required
+                                    value={processingReason}
+                                    onChange={setProcessingReason}
+                                    disabled={action.pending}
+                                  />
+                                </div>
+                                <div
+                                  style={{
+                                    marginTop: '14px',
+                                    display: 'flex',
+                                    justifyContent: 'flex-end',
+                                  }}
+                                >
+                                  <Button
+                                    type="submit"
+                                    disabled={
+                                      action.pending ||
+                                      !processingReference.trim() ||
+                                      !processingReason.trim()
+                                    }
                                   >
-                                    <Building
-                                      size={16}
-                                      style={{
-                                        display: 'inline',
-                                        color: '#059669',
-                                        marginRight: '6px',
-                                      }}
-                                    />
-                                    Record Accounts Confirmation Evidence
-                                  </h4>
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      flexDirection: 'column',
-                                      gap: '12px',
-                                    }}
-                                  >
-                                    <TextInput
-                                      label="External Processing Reference"
-                                      required
-                                      maxLength={150}
-                                      value={processingReference}
-                                      onChange={(event) =>
-                                        setProcessingReference(event.target.value)
-                                      }
-                                    />
-                                    <TextAreaField
-                                      label="Processing Reason / Memo"
-                                      required
-                                      value={processingReason}
-                                      onChange={setProcessingReason}
-                                      disabled={action.pending}
-                                    />
-                                  </div>
-                                  <div
-                                    style={{
-                                      marginTop: '14px',
-                                      display: 'flex',
-                                      justifyContent: 'flex-end',
-                                    }}
-                                  >
-                                    <Button
-                                      type="submit"
-                                      disabled={
-                                        action.pending ||
-                                        !processingReference.trim() ||
-                                        !processingReason.trim()
-                                      }
-                                    >
-                                      {action.pending ? 'Saving...' : 'Record Processing Evidence'}
-                                    </Button>
-                                  </div>
-                                </form>
-                              )}
+                                    {action.pending ? 'Saving...' : 'Record Processing Evidence'}
+                                  </Button>
+                                </div>
+                              </form>
+                            )}
                           </div>
                         )}
                       </QueryState>

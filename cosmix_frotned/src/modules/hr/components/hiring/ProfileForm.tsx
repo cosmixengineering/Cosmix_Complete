@@ -242,7 +242,8 @@ function validateProfile(data: Profile, isOfficeCategory: boolean): Record<strin
 const SERVER_ERROR_TO_FIELD: Record<string, { field: string; message: string }> = {
   ineligible_reporting_manager: {
     field: 'reportingManagerEmployeeId',
-    message: 'Selected reporting manager is ineligible. Please select an active and approved manager (e.g. Engr. Imran Saeed).',
+    message:
+      'Selected reporting manager is ineligible. Please select an active and approved manager (e.g. Engr. Imran Saeed).',
   },
   invalid_employee_phone: {
     field: 'personalPhone',
@@ -250,7 +251,8 @@ const SERVER_ERROR_TO_FIELD: Record<string, { field: string; message: string }> 
   },
   invalid_employee_identity_document: {
     field: 'identityDocumentNumber',
-    message: 'Identity document number format is invalid (CNIC must be 13 digits, Passport min 6 chars).',
+    message:
+      'Identity document number format is invalid (CNIC must be 13 digits, Passport min 6 chars).',
   },
   invalid_employee_date_of_birth: {
     field: 'dateOfBirth',
@@ -330,7 +332,9 @@ function scrollToField(fieldKey: string) {
 
     if (!target && fieldKey.includes('.')) {
       const parts = fieldKey.split('.');
-      target = document.querySelector(`[data-field="${fieldKey}"], [name="${parts[1]}"]`) as HTMLElement | null;
+      target = document.querySelector(
+        `[data-field="${fieldKey}"], [name="${parts[1]}"]`,
+      ) as HTMLElement | null;
     }
 
     if (!target) {
@@ -338,7 +342,9 @@ function scrollToField(fieldKey: string) {
     }
 
     if (!target) {
-      target = document.querySelector('[aria-invalid="true"], [data-invalid="true"]') as HTMLElement | null;
+      target = document.querySelector(
+        '[aria-invalid="true"], [data-invalid="true"]',
+      ) as HTMLElement | null;
     }
 
     if (target) {
@@ -394,7 +400,9 @@ export function ProfileForm({
       }
     }
     setTimeout(() => {
-      document.getElementById('profile-top-alert')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document
+        .getElementById('profile-top-alert')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 50);
   };
   const action = useHrAction();
@@ -734,7 +742,11 @@ export function ProfileForm({
           subtitle="Specify whether this employee will be based in a registered office branch or deployed to active field/construction sites."
           id="placement"
         >
-          <div className="workplace-placement-grid" data-field="staffCategoryId" style={{ gridColumn: '1 / -1' }}>
+          <div
+            className="workplace-placement-grid"
+            data-field="staffCategoryId"
+            style={{ gridColumn: '1 / -1' }}
+          >
             <div
               className={`placement-card ${isOffice ? 'is-selected' : ''}`}
               role="button"

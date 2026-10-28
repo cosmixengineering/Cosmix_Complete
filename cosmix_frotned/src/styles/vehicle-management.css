@@ -687,7 +687,9 @@
   color: #0f172a !important;
   width: 100% !important;
   box-sizing: border-box !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease !important;
 }
 
 .veh-monthly-filter-grid .field input:focus {

@@ -1124,16 +1124,22 @@
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 12px !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02) !important;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    0 1px 2px -1px rgba(0, 0, 0, 0.02) !important;
   margin-bottom: 24px !important;
   overflow: hidden !important;
   padding: 0 !important;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease !important;
 }
 
 .hr-form-section:focus-within {
   border-color: #cbd5e1 !important;
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -2px rgba(0, 0, 0, 0.03) !important;
+  box-shadow:
+    0 4px 12px -2px rgba(0, 0, 0, 0.05),
+    0 2px 6px -2px rgba(0, 0, 0, 0.03) !important;
 }
 
 .hr-form-section:last-of-type {
@@ -1181,11 +1187,11 @@
   margin-left: 2px !important;
 }
 
-.field input[type="text"],
-.field input[type="date"],
-.field input[type="tel"],
-.field input[type="email"],
-.field input[type="number"],
+.field input[type='text'],
+.field input[type='date'],
+.field input[type='tel'],
+.field input[type='email'],
+.field input[type='number'],
 .field input:not([type]),
 .field textarea {
   border: 1.5px solid #d5dae2 !important;
@@ -1199,7 +1205,9 @@
   height: 44px !important;
   box-sizing: border-box !important;
   box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.04) !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease !important;
 }
 
 .field .hr-search input,
@@ -1212,18 +1220,18 @@
   padding: 0 !important;
 }
 
-.field input[type="date"] {
+.field input[type='date'] {
   font-family: inherit !important;
   cursor: pointer !important;
 }
 
-.field input[type="date"]::-webkit-calendar-picker-indicator {
+.field input[type='date']::-webkit-calendar-picker-indicator {
   cursor: pointer !important;
   opacity: 0.6 !important;
   transition: opacity 0.15s ease !important;
 }
 
-.field input[type="date"]::-webkit-calendar-picker-indicator:hover {
+.field input[type='date']::-webkit-calendar-picker-indicator:hover {
   opacity: 1 !important;
 }
 
@@ -1254,8 +1262,8 @@
   box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.14) !important;
 }
 
-.field input[aria-invalid="true"],
-.field textarea[aria-invalid="true"] {
+.field input[aria-invalid='true'],
+.field textarea[aria-invalid='true'] {
   border-color: #ef4444 !important;
   box-shadow: 0 0 0 3.5px rgba(239, 68, 68, 0.14) !important;
   background-color: #ffffff !important;
@@ -1278,7 +1286,9 @@
   box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.04) !important;
   background: #ffffff !important;
   overflow: hidden !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease !important;
   width: 100% !important;
   box-sizing: border-box !important;
 }
@@ -1563,7 +1573,9 @@
   font-size: 14px !important;
   color: #0f172a !important;
   user-select: none !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease !important;
 }
 
 .custom-select-trigger:hover {
@@ -1623,7 +1635,9 @@
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.04);
   z-index: 1050;
   overflow: hidden;
   animation: dropdownPop 0.15s ease-out;
@@ -1721,5 +1735,3 @@
   color: #94a3b8;
   text-align: center;
 }
-
-

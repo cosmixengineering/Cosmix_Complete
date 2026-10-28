@@ -3,6 +3,37 @@ import { errorMessage } from '../utils/messages';
 // Server conflict/validation codes for allowances, advances, vehicles and payroll handoff.
 // Anything unknown still falls back to the shared status-based message.
 const codes: Record<string, string> = {
+  salary_import_source_already_uploaded:
+    'This file is already retained. Open Retained imports to resume its mapping or view its submission receipt.',
+  salary_import_already_submitted:
+    'This source has already been submitted. Review its retained submission receipt.',
+  salary_import_preview_changed:
+    'The approved source records changed. Validate the mapped rows again before submitting.',
+  salary_import_validation_failed:
+    'The import contains validation issues. Correct the source or column mapping and validate again.',
+  salary_import_mapping_invalid: 'Map every required target to one distinct source column.',
+  salary_import_mapping_unknown_column:
+    'A mapped column is missing from this worksheet. Review the mapping.',
+  salary_import_file_size: 'Choose a nonempty source file of at most 4 MiB.',
+  salary_import_file_invalid:
+    'The source file could not be read as a supported CSV or XLSX document.',
+  salary_import_source_unavailable:
+    'The retained source is unavailable. Contact support with its source reference.',
+  salary_policy_month_boundary_required:
+    'The salary policy must start on the first day of a month.',
+  salary_policy_source_changed:
+    'The previous policy changed. Refresh the policy history before proposing a replacement.',
+  salary_component_source_changed:
+    'The previous component changed. Refresh the employee components before proposing a replacement.',
+  salary_component_request_pending:
+    'A component request is already pending. Review that request first.',
+  payroll_accounting_period_not_open:
+    'The posting date must fall within an independently approved open period for this currency.',
+  payroll_accounting_period_overlap:
+    'This financial period overlaps an existing period. Check the saved periods.',
+  payslip_not_found: 'No approved payslip is available for this employee and run.',
+  payslip_totals_invalid:
+    'The retained payslip totals could not be verified. Contact support; no document was downloaded.',
   // Shared write-path codes
   concurrent_change_retry:
     'This record changed while you were editing it. Reload the record and repeat the action with the latest values.',
@@ -165,7 +196,7 @@ const codes: Record<string, string> = {
   payroll_handoff_self_lock_forbidden:
     'The preparer cannot lock their own batch. A separate approver must lock it.',
   payroll_handoff_processing_actor_forbidden:
-    'Only the approver who locked this batch can record processing evidence.',
+    'This account cannot record processing evidence for this run. Review the required Finance role and separation of duties.',
   payroll_handoff_processing_reference_exists:
     'This external processing reference has already been recorded for this batch.',
   invalid_payroll_handoff_request:
