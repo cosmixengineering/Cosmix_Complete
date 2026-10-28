@@ -48,6 +48,7 @@ import { EmployeeAccessSetup } from '../components/approvals/EmployeeAccessSetup
 import { EmployeeSiteAssignments } from '../components/employee/EmployeeSiteAssignments';
 import { EmployeeMapTracking } from '../components/employee/EmployeeMapTracking';
 import { EmployeeProfileHeader } from '../components/employee/EmployeeProfileHeader';
+import '@/styles/hr-dashboard.css';
 import { EmployeeBiometricSection } from '../components/employee/EmployeeBiometricSection';
 
 export function EmployeeDetailPage() {

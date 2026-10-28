@@ -10,6 +10,7 @@ import type { Section } from '../../types/updates';
 import { labelDate } from '../../utils/messages';
 import { QueryState } from '../Feedback';
 import { RecordView } from '../RecordView';
+import '@/styles/hr-dashboard.css';
 
 export function ChangeHistory({ employeeId, section }: { employeeId: string; section: Section }) {
   const [page, setPage] = useState(1);
@@ -36,30 +37,48 @@ export function ChangeHistory({ employeeId, section }: { employeeId: string; sec
 
   if (!isApproved) {
     return (
-      <div className="emp-card" style={{ marginTop: '16px' }}>
-        <div className="emp-card-header simple">
-          <div className="emp-card-title">
-            <History size={17} className="emp-card-title-icon" />
+      <div
+        className="emp-card"
+        style={{
+          marginTop: '18px',
+          padding: '20px 24px',
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '10px',
+        }}
+      >
+        <div className="emp-card-header simple" style={{ marginBottom: '10px' }}>
+          <div className="emp-card-title" style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
+            <History size={16} className="emp-card-title-icon" style={{ color: '#2563eb' }} />
             <span>Change history</span>
           </div>
         </div>
-        <p className="muted" style={{ margin: 0, fontSize: '13px' }}>
+        <p className="muted" style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
           Change history is activated once the employee onboarding has been approved.
         </p>
       </div>
     );
   }
   return (
-    <div className="emp-card" style={{ marginTop: '16px' }}>
-      <div className="emp-card-header simple">
-        <div className="emp-card-title">
-          <History size={17} className="emp-card-title-icon" />
+    <div
+      className="emp-card"
+      style={{
+        marginTop: '18px',
+        padding: '20px 24px',
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '10px',
+      }}
+    >
+      <div className="emp-card-header simple" style={{ marginBottom: '10px' }}>
+        <div className="emp-card-title" style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
+          <History size={16} className="emp-card-title-icon" style={{ color: '#2563eb' }} />
           <span>Change history</span>
         </div>
       </div>
       <QueryState query={query}>
         {(!query.data?.items || query.data.items.length === 0) && (
-          <p className="muted" style={{ margin: 0, fontSize: '13px' }}>
+          <p className="muted" style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
             No changes have been recorded for this section yet.
           </p>
         )}

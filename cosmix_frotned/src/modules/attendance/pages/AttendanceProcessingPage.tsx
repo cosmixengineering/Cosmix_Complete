@@ -625,8 +625,7 @@ export function AttendanceProcessingPage() {
           <div className="att-stat-info">
             <span className="att-stat-label">Workers Present</span>
             <div className="att-stat-value">
-              {presentCount}{' '}
-              <span className="att-stat-sub-val green">/ {totalCount}</span>
+              {presentCount} <span className="att-stat-sub-val green">/ {totalCount}</span>
             </div>
             <span className="att-stat-trend green">
               <CheckCircle2 size={11} /> {turnoutPercent}% Turnout
@@ -658,8 +657,7 @@ export function AttendanceProcessingPage() {
           <div className="att-stat-info">
             <span className="att-stat-label text-orange">Exceptions Reqd</span>
             <div className="att-stat-value">
-              {exceptionCount} Cases{' '}
-              <span className="att-stat-sub-val orange">Unresolved</span>
+              {exceptionCount} Cases <span className="att-stat-sub-val orange">Unresolved</span>
             </div>
             <span className="att-stat-trend orange">Late &amp; radius alerts</span>
           </div>
@@ -710,7 +708,11 @@ export function AttendanceProcessingPage() {
 
         {/* Right: Excel / PDF / Import Actions */}
         <div className="att-toolbar-right">
-          <Link to="/hr/shifts" className="btn-tool-outline border-indigo" title="Configure Shift Rules">
+          <Link
+            to="/hr/shifts"
+            className="btn-tool-outline border-indigo"
+            title="Configure Shift Rules"
+          >
             <Clock size={13} style={{ color: '#4f46e5' }} /> Manage Shifts
           </Link>
           <button
@@ -1011,7 +1013,10 @@ export function AttendanceProcessingPage() {
                                   setMatrixEmployees((prev) =>
                                     prev.map((e) =>
                                       e.id === emp.id
-                                        ? { ...e, pattern: { ...e.pattern, 7: 'P', 1: 'P', 3: 'P' } }
+                                        ? {
+                                            ...e,
+                                            pattern: { ...e.pattern, 7: 'P', 1: 'P', 3: 'P' },
+                                          }
                                         : e,
                                     ),
                                   );
@@ -1030,10 +1035,7 @@ export function AttendanceProcessingPage() {
                                 <Download size={12} /> Download Report
                               </button>
                               <div className="att-dropdown-divider" />
-                              <Link
-                                to={`/hr/employees/${emp.id}`}
-                                className="att-dropdown-item"
-                              >
+                              <Link to={`/hr/employees/${emp.id}`} className="att-dropdown-item">
                                 <ExternalLink size={12} /> View Profile
                               </Link>
                               <button
@@ -1100,7 +1102,9 @@ export function AttendanceProcessingPage() {
         <div className="att-card-header">
           <div className="att-header-left">
             <span className="live-pulse-dot-red" />
-            <h3 className="att-card-title">Live Exceptions &amp; Daily Log (07 Sep, 2026 &ndash; Today)</h3>
+            <h3 className="att-card-title">
+              Live Exceptions &amp; Daily Log (07 Sep, 2026 &ndash; Today)
+            </h3>
           </div>
           <div className="att-header-controls">
             <div className="att-search-box wide">
@@ -1198,13 +1202,26 @@ export function AttendanceProcessingPage() {
                     <span
                       style={{
                         fontWeight: 700,
-                        color: log.varianceType === 'late' ? '#dc2626' : log.varianceType === 'ontime' ? '#15803d' : '#1e293b',
+                        color:
+                          log.varianceType === 'late'
+                            ? '#dc2626'
+                            : log.varianceType === 'ontime'
+                              ? '#15803d'
+                              : '#1e293b',
                         display: 'block',
                       }}
                     >
                       {log.punchIn}
                     </span>
-                    <span style={{ fontSize: '8.5px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <span
+                      style={{
+                        fontSize: '8.5px',
+                        color: '#64748b',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                      }}
+                    >
                       {log.punchInType === 'Biometric' ? (
                         <>
                           <Fingerprint size={10} style={{ color: '#2563eb' }} /> Biometric
@@ -1220,7 +1237,15 @@ export function AttendanceProcessingPage() {
                   {/* Punch-Out */}
                   <td>
                     {log.isPunchOutMissing ? (
-                      <span style={{ color: '#dc2626', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <span
+                        style={{
+                          color: '#dc2626',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
                         <XCircle size={11} /> Missing Punch
                       </span>
                     ) : log.isInProgress ? (
@@ -1231,7 +1256,12 @@ export function AttendanceProcessingPage() {
                   </td>
 
                   {/* Work Hours */}
-                  <td style={{ fontWeight: 600, color: log.isPunchOutMissing ? '#94a3b8' : '#1e293b' }}>
+                  <td
+                    style={{
+                      fontWeight: 600,
+                      color: log.isPunchOutMissing ? '#94a3b8' : '#1e293b',
+                    }}
+                  >
                     {log.workHours}
                   </td>
 
@@ -1256,11 +1286,29 @@ export function AttendanceProcessingPage() {
                   {/* GPS Geofence */}
                   <td>
                     {log.geofenceStatus === 'outside' ? (
-                      <span style={{ color: '#dc2626', fontWeight: 700, fontSize: '9px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      <span
+                        style={{
+                          color: '#dc2626',
+                          fontWeight: 700,
+                          fontSize: '9px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                        }}
+                      >
                         <MapPin size={10} /> {log.geofence}
                       </span>
                     ) : (
-                      <span style={{ color: '#16a34a', fontWeight: 700, fontSize: '9px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      <span
+                        style={{
+                          color: '#16a34a',
+                          fontWeight: 700,
+                          fontSize: '9px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                        }}
+                      >
                         <CheckCircle2 size={10} /> {log.geofence}
                       </span>
                     )}
@@ -1485,7 +1533,8 @@ export function AttendanceProcessingPage() {
           <Info size={14} style={{ color: '#242b5f' }} />
           <span>
             Click on any date tile in the <strong>Attendance Calendar</strong> above to execute{' '}
-            <strong>Direct Actions</strong> (Mark Present, Waive Lates, Add Overtime, Declare Holiday).
+            <strong>Direct Actions</strong> (Mark Present, Waive Lates, Add Overtime, Declare
+            Holiday).
           </span>
         </div>
         <div className="att-bottom-right">
@@ -1506,7 +1555,9 @@ export function AttendanceProcessingPage() {
         <div className="att-modal-backdrop" onClick={() => setModalType(null)}>
           <div className="att-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="att-modal-header">
-              <h4 className="att-modal-title">Confirm Mark All Present &mdash; {selectedDay} Sep 2026</h4>
+              <h4 className="att-modal-title">
+                Confirm Mark All Present &mdash; {selectedDay} Sep 2026
+              </h4>
               <button
                 type="button"
                 className="att-modal-close-btn"
@@ -1551,23 +1602,51 @@ export function AttendanceProcessingPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      color: '#334155',
+                      marginBottom: '4px',
+                    }}
+                  >
                     Standard Punch-In Time
                   </label>
                   <input
                     type="text"
                     defaultValue="09:00 AM"
-                    style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '12px' }}
+                    style={{
+                      width: '100%',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      padding: '6px 10px',
+                      fontSize: '12px',
+                    }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      color: '#334155',
+                      marginBottom: '4px',
+                    }}
+                  >
                     Standard Punch-Out Time
                   </label>
                   <input
                     type="text"
                     defaultValue="06:00 PM"
-                    style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '12px' }}
+                    style={{
+                      width: '100%',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      padding: '6px 10px',
+                      fontSize: '12px',
+                    }}
                   />
                 </div>
               </div>
@@ -1584,22 +1663,22 @@ export function AttendanceProcessingPage() {
                   fontSize: '11px',
                 }}
               >
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <label
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                >
                   <input type="checkbox" defaultChecked />
                   <span>Auto-resolve missing check-ins and late arrival flags</span>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <label
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                >
                   <input type="checkbox" defaultChecked />
                   <span>Sync with payroll engine (Full daily wage credited)</span>
                 </label>
               </div>
             </div>
             <div className="att-modal-footer">
-              <button
-                type="button"
-                className="btn-modal-cancel"
-                onClick={() => setModalType(null)}
-              >
+              <button type="button" className="btn-modal-cancel" onClick={() => setModalType(null)}>
                 Cancel
               </button>
               <button
@@ -1619,7 +1698,9 @@ export function AttendanceProcessingPage() {
         <div className="att-modal-backdrop" onClick={() => setModalType(null)}>
           <div className="att-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="att-modal-header">
-              <h4 className="att-modal-title">Waive Late Penalties &mdash; {selectedDay} Sep 2026</h4>
+              <h4 className="att-modal-title">
+                Waive Late Penalties &mdash; {selectedDay} Sep 2026
+              </h4>
               <button
                 type="button"
                 className="att-modal-close-btn"
@@ -1641,18 +1722,33 @@ export function AttendanceProcessingPage() {
                   Waive Exceptions for {selectedDay} Sep 2026
                 </p>
                 <p style={{ fontSize: '10px', color: '#64748b', margin: '2px 0 0 0' }}>
-                  Pending Cases: 3 (Ali Khan +60m, Usman Tariq missing punch, Sara Ahmed radius alert)
+                  Pending Cases: 3 (Ali Khan +60m, Usman Tariq missing punch, Sara Ahmed radius
+                  alert)
                 </p>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   Reason for HR Waiver
                 </label>
                 <select
                   value={waiverReason}
                   onChange={(e) => setWaiverReason(e.target.value)}
-                  style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '12px' }}
+                  style={{
+                    width: '100%',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                  }}
                 >
                   <option>Severe Road Traffic / Monsoon Rain Delay</option>
                   <option>Approved Direct Client Emergency Dispatch</option>
@@ -1662,13 +1758,27 @@ export function AttendanceProcessingPage() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   HR Officer Remarks
                 </label>
                 <input
                   type="text"
                   defaultValue="Approved grace waiver for transit delay"
-                  style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '12px' }}
+                  style={{
+                    width: '100%',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                  }}
                 />
               </div>
 
@@ -1685,22 +1795,15 @@ export function AttendanceProcessingPage() {
                   gap: '6px',
                 }}
               >
-                <CheckCircle2 size={13} /> Penalties reversed. Full 9h shift will be counted in payroll.
+                <CheckCircle2 size={13} /> Penalties reversed. Full 9h shift will be counted in
+                payroll.
               </div>
             </div>
             <div className="att-modal-footer">
-              <button
-                type="button"
-                className="btn-modal-cancel"
-                onClick={() => setModalType(null)}
-              >
+              <button type="button" className="btn-modal-cancel" onClick={() => setModalType(null)}>
                 Cancel
               </button>
-              <button
-                type="button"
-                className="btn-modal-confirm"
-                onClick={handleWaiveLatesConfirm}
-              >
+              <button type="button" className="btn-modal-confirm" onClick={handleWaiveLatesConfirm}>
                 Waive All Lates
               </button>
             </div>
@@ -1713,7 +1816,9 @@ export function AttendanceProcessingPage() {
         <div className="att-modal-backdrop" onClick={() => setModalType(null)}>
           <div className="att-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="att-modal-header">
-              <h4 className="att-modal-title">Declare Gazetted Holiday &mdash; {selectedDay} Sep 2026</h4>
+              <h4 className="att-modal-title">
+                Declare Gazetted Holiday &mdash; {selectedDay} Sep 2026
+              </h4>
               <button
                 type="button"
                 className="att-modal-close-btn"
@@ -1724,19 +1829,43 @@ export function AttendanceProcessingPage() {
             </div>
             <div className="att-modal-body">
               <div>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   Date
                 </label>
                 <input
                   type="text"
                   value={`${selectedDay} September 2026`}
                   readOnly
-                  style={{ width: '100%', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}
+                  style={{
+                    width: '100%',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   Holiday Title / Occasion
                 </label>
                 <input
@@ -1744,15 +1873,37 @@ export function AttendanceProcessingPage() {
                   value={holidayName}
                   onChange={(e) => setHolidayName(e.target.value)}
                   placeholder="e.g. Eid Milad-un-Nabi"
-                  style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '12px' }}
+                  style={{
+                    width: '100%',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   Applicable Scope
                 </label>
-                <select style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '12px' }}>
+                <select
+                  style={{
+                    width: '100%',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                  }}
+                >
                   <option>Full Organization (All 8 Sites &amp; HQ Staff)</option>
                   <option>Site Technicians Only</option>
                   <option>Lahore Head Office Only</option>
@@ -1772,15 +1923,12 @@ export function AttendanceProcessingPage() {
                   gap: '6px',
                 }}
               >
-                <Palmtree size={13} /> Matrix will mark all workers with Paid Gazetted Holiday status.
+                <Palmtree size={13} /> Matrix will mark all workers with Paid Gazetted Holiday
+                status.
               </div>
             </div>
             <div className="att-modal-footer">
-              <button
-                type="button"
-                className="btn-modal-cancel"
-                onClick={() => setModalType(null)}
-              >
+              <button type="button" className="btn-modal-cancel" onClick={() => setModalType(null)}>
                 Cancel
               </button>
               <button
@@ -1845,7 +1993,9 @@ export function AttendanceProcessingPage() {
                       {selectedDay} September 2026
                     </p>
                     <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>
-                      {selectedEmp ? `Selected: ${selectedEmp.name} (${selectedEmp.empId})` : 'All 8 Sites &bull; 150 Workers'}
+                      {selectedEmp
+                        ? `Selected: ${selectedEmp.name} (${selectedEmp.empId})`
+                        : 'All 8 Sites &bull; 150 Workers'}
                     </p>
                   </div>
                 </div>
@@ -1864,7 +2014,16 @@ export function AttendanceProcessingPage() {
                 </span>
               </div>
 
-              <p style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '4px 0' }}>
+              <p
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  color: '#94a3b8',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  margin: '4px 0',
+                }}
+              >
                 Choose Direct Action:
               </p>
 
@@ -1881,7 +2040,17 @@ export function AttendanceProcessingPage() {
                   }}
                   onClick={() => setModalType('markAllPresent')}
                 >
-                  <p style={{ fontSize: '11.5px', fontWeight: 700, color: '#15803d', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <p
+                    style={{
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      color: '#15803d',
+                      margin: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
                     <CheckCheck size={13} /> Mark All Present
                   </p>
                   <p style={{ fontSize: '9.5px', color: '#94a3b8', margin: '2px 0 0 0' }}>
@@ -1901,7 +2070,17 @@ export function AttendanceProcessingPage() {
                   }}
                   onClick={() => setModalType('waiveLates')}
                 >
-                  <p style={{ fontSize: '11.5px', fontWeight: 700, color: '#2563eb', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <p
+                    style={{
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      color: '#2563eb',
+                      margin: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
                     <HeartHandshake size={13} /> Waive All Lates
                   </p>
                   <p style={{ fontSize: '9.5px', color: '#94a3b8', margin: '2px 0 0 0' }}>
@@ -1921,7 +2100,17 @@ export function AttendanceProcessingPage() {
                   }}
                   onClick={() => setModalType('declareHoliday')}
                 >
-                  <p style={{ fontSize: '11.5px', fontWeight: 700, color: '#7e22ce', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <p
+                    style={{
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      color: '#7e22ce',
+                      margin: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
                     <Palmtree size={13} /> Declare Holiday
                   </p>
                   <p style={{ fontSize: '9.5px', color: '#94a3b8', margin: '2px 0 0 0' }}>
@@ -1941,7 +2130,17 @@ export function AttendanceProcessingPage() {
                   }}
                   onClick={handleDeclareHalfDayConfirm}
                 >
-                  <p style={{ fontSize: '11.5px', fontWeight: 700, color: '#ea580c', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <p
+                    style={{
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      color: '#ea580c',
+                      margin: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
                     <Clock size={13} /> Declare Half-Day
                   </p>
                   <p style={{ fontSize: '9.5px', color: '#94a3b8', margin: '2px 0 0 0' }}>
@@ -1961,7 +2160,17 @@ export function AttendanceProcessingPage() {
                   }}
                   onClick={() => setModalType('addOvertime')}
                 >
-                  <p style={{ fontSize: '11.5px', fontWeight: 700, color: '#4f46e5', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <p
+                    style={{
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      color: '#4f46e5',
+                      margin: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
                     <Briefcase size={13} /> Add Overtime (+2h)
                   </p>
                   <p style={{ fontSize: '9.5px', color: '#94a3b8', margin: '2px 0 0 0' }}>
@@ -1984,7 +2193,17 @@ export function AttendanceProcessingPage() {
                     showToast(`Loaded daily punch records for ${selectedDay} September 2026.`);
                   }}
                 >
-                  <p style={{ fontSize: '11.5px', fontWeight: 700, color: '#475569', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <p
+                    style={{
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      color: '#475569',
+                      margin: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
                     <List size={13} /> View Date Punch Log
                   </p>
                   <p style={{ fontSize: '9.5px', color: '#94a3b8', margin: '2px 0 0 0' }}>
@@ -1994,11 +2213,7 @@ export function AttendanceProcessingPage() {
               </div>
             </div>
             <div className="att-modal-footer">
-              <button
-                type="button"
-                className="btn-modal-cancel"
-                onClick={() => setModalType(null)}
-              >
+              <button type="button" className="btn-modal-cancel" onClick={() => setModalType(null)}>
                 Close
               </button>
             </div>
@@ -2011,7 +2226,9 @@ export function AttendanceProcessingPage() {
         <div className="att-modal-backdrop" onClick={() => setModalType(null)}>
           <div className="att-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="att-modal-header">
-              <h4 className="att-modal-title">Authorize Bulk Overtime &mdash; {selectedDay} Sep 2026</h4>
+              <h4 className="att-modal-title">
+                Authorize Bulk Overtime &mdash; {selectedDay} Sep 2026
+              </h4>
               <button
                 type="button"
                 className="att-modal-close-btn"
@@ -2022,26 +2239,56 @@ export function AttendanceProcessingPage() {
             </div>
             <div className="att-modal-body">
               <div>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   Date
                 </label>
                 <input
                   type="text"
                   value={`${selectedDay} September 2026`}
                   readOnly
-                  style={{ width: '100%', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}
+                  style={{
+                    width: '100%',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      color: '#334155',
+                      marginBottom: '4px',
+                    }}
+                  >
                     Overtime Duration
                   </label>
                   <select
                     value={otHours}
                     onChange={(e) => setOtHours(e.target.value)}
-                    style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '12px' }}
+                    style={{
+                      width: '100%',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      padding: '6px 10px',
+                      fontSize: '12px',
+                    }}
                   >
                     <option value="2.0">+2.0 Hours (1.5x Standard Rate)</option>
                     <option value="3.0">+3.0 Hours (1.5x Standard Rate)</option>
@@ -2049,10 +2296,26 @@ export function AttendanceProcessingPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      color: '#334155',
+                      marginBottom: '4px',
+                    }}
+                  >
                     Target Sites
                   </label>
-                  <select style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '12px' }}>
+                  <select
+                    style={{
+                      width: '100%',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      padding: '6px 10px',
+                      fontSize: '12px',
+                    }}
+                  >
                     <option>All 8 Sites (48 Technicians)</option>
                     <option>Karachi High-Rise Site Only (16 workers)</option>
                     <option>Islamabad Govt Complex (20 workers)</option>
@@ -2062,13 +2325,27 @@ export function AttendanceProcessingPage() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   Project Justification
                 </label>
                 <input
                   type="text"
                   defaultValue="Night Chiller Pressure Testing & Ducting Work"
-                  style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '12px' }}
+                  style={{
+                    width: '100%',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                  }}
                 />
               </div>
 
@@ -2090,11 +2367,7 @@ export function AttendanceProcessingPage() {
               </div>
             </div>
             <div className="att-modal-footer">
-              <button
-                type="button"
-                className="btn-modal-cancel"
-                onClick={() => setModalType(null)}
-              >
+              <button type="button" className="btn-modal-cancel" onClick={() => setModalType(null)}>
                 Cancel
               </button>
               <button
@@ -2117,7 +2390,12 @@ export function AttendanceProcessingPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div
                   className="att-emp-avatar"
-                  style={{ backgroundColor: selectedEmp.avatarBg, color: selectedEmp.avatarColor, width: '28px', height: '28px' }}
+                  style={{
+                    backgroundColor: selectedEmp.avatarBg,
+                    color: selectedEmp.avatarColor,
+                    width: '28px',
+                    height: '28px',
+                  }}
                 >
                   {selectedEmp.initials}
                 </div>
@@ -2139,28 +2417,151 @@ export function AttendanceProcessingPage() {
             <div className="att-modal-body">
               {/* Summary KPIs */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                <div style={{ background: '#f0fdf4', padding: '8px', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
-                  <span style={{ fontSize: '9px', fontWeight: 700, color: '#15803d', textTransform: 'uppercase' }}>Present Days</span>
-                  <p style={{ fontSize: '16px', fontWeight: 800, margin: '2px 0 0 0', color: '#166534' }}>22 Days</p>
+                <div
+                  style={{
+                    background: '#f0fdf4',
+                    padding: '8px',
+                    borderRadius: '6px',
+                    border: '1px solid #bbf7d0',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '9px',
+                      fontWeight: 700,
+                      color: '#15803d',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Present Days
+                  </span>
+                  <p
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 800,
+                      margin: '2px 0 0 0',
+                      color: '#166534',
+                    }}
+                  >
+                    22 Days
+                  </p>
                 </div>
-                <div style={{ background: '#fff7ed', padding: '8px', borderRadius: '6px', border: '1px solid #fed7aa' }}>
-                  <span style={{ fontSize: '9px', fontWeight: 700, color: '#c2410c', textTransform: 'uppercase' }}>Late Arrivals</span>
-                  <p style={{ fontSize: '16px', fontWeight: 800, margin: '2px 0 0 0', color: '#9a3412' }}>1 Case</p>
+                <div
+                  style={{
+                    background: '#fff7ed',
+                    padding: '8px',
+                    borderRadius: '6px',
+                    border: '1px solid #fed7aa',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '9px',
+                      fontWeight: 700,
+                      color: '#c2410c',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Late Arrivals
+                  </span>
+                  <p
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 800,
+                      margin: '2px 0 0 0',
+                      color: '#9a3412',
+                    }}
+                  >
+                    1 Case
+                  </p>
                 </div>
-                <div style={{ background: '#fef2f2', padding: '8px', borderRadius: '6px', border: '1px solid #fecaca' }}>
-                  <span style={{ fontSize: '9px', fontWeight: 700, color: '#b91c1c', textTransform: 'uppercase' }}>Absences</span>
-                  <p style={{ fontSize: '16px', fontWeight: 800, margin: '2px 0 0 0', color: '#991b1b' }}>0 Days</p>
+                <div
+                  style={{
+                    background: '#fef2f2',
+                    padding: '8px',
+                    borderRadius: '6px',
+                    border: '1px solid #fecaca',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '9px',
+                      fontWeight: 700,
+                      color: '#b91c1c',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Absences
+                  </span>
+                  <p
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 800,
+                      margin: '2px 0 0 0',
+                      color: '#991b1b',
+                    }}
+                  >
+                    0 Days
+                  </p>
                 </div>
-                <div style={{ background: '#faf5ff', padding: '8px', borderRadius: '6px', border: '1px solid #e9d5ff' }}>
-                  <span style={{ fontSize: '9px', fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase' }}>Approved OT</span>
-                  <p style={{ fontSize: '16px', fontWeight: 800, margin: '2px 0 0 0', color: '#6b21a8' }}>+4.0 Hrs</p>
+                <div
+                  style={{
+                    background: '#faf5ff',
+                    padding: '8px',
+                    borderRadius: '6px',
+                    border: '1px solid #e9d5ff',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '9px',
+                      fontWeight: 700,
+                      color: '#7e22ce',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Approved OT
+                  </span>
+                  <p
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 800,
+                      margin: '2px 0 0 0',
+                      color: '#6b21a8',
+                    }}
+                  >
+                    +4.0 Hrs
+                  </p>
                 </div>
               </div>
 
               {/* Day Punch Mini-Log */}
-              <div style={{ maxHeight: '280px', overflowY: 'auto', border: '1px solid #f1f5f9', borderRadius: '6px' }}>
-                <table style={{ width: '100%', fontSize: '11px', textAlign: 'left', borderCollapse: 'collapse' }}>
-                  <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '9.5px', textTransform: 'uppercase', fontWeight: 700 }}>
+              <div
+                style={{
+                  maxHeight: '280px',
+                  overflowY: 'auto',
+                  border: '1px solid #f1f5f9',
+                  borderRadius: '6px',
+                }}
+              >
+                <table
+                  style={{
+                    width: '100%',
+                    fontSize: '11px',
+                    textAlign: 'left',
+                    borderCollapse: 'collapse',
+                  }}
+                >
+                  <thead
+                    style={{
+                      background: '#f8fafc',
+                      borderBottom: '1px solid #e2e8f0',
+                      color: '#64748b',
+                      fontSize: '9.5px',
+                      textTransform: 'uppercase',
+                      fontWeight: 700,
+                    }}
+                  >
                     <tr>
                       <th style={{ padding: '6px 10px' }}>Date</th>
                       <th style={{ padding: '6px 10px' }}>Punch-In</th>
@@ -2172,20 +2573,79 @@ export function AttendanceProcessingPage() {
                   </thead>
                   <tbody>
                     {[
-                      { date: '07 Sep 2026', in: '10:00 AM', out: 'In-Progress', h: '7h 15m', v: '+60m Late', s: 'Late Arrival', cls: 'orange' },
-                      { date: '05 Sep 2026', in: '08:55 AM', out: '06:05 PM', h: '9h 10m', v: 'On-Time', s: 'Present', cls: 'green' },
-                      { date: '04 Sep 2026', in: '09:00 AM', out: '06:00 PM', h: '9h 00m', v: 'On-Time', s: 'Present', cls: 'green' },
-                      { date: '03 Sep 2026', in: '09:12 AM', out: '06:05 PM', h: '8h 53m', v: '+12m Late', s: 'Late Arrival', cls: 'orange' },
-                      { date: '02 Sep 2026', in: '08:58 AM', out: '06:02 PM', h: '9h 04m', v: 'On-Time', s: 'Present', cls: 'green' },
-                      { date: '01 Sep 2026', in: '08:50 AM', out: '06:00 PM', h: '9h 10m', v: 'On-Time', s: 'Present', cls: 'green' },
+                      {
+                        date: '07 Sep 2026',
+                        in: '10:00 AM',
+                        out: 'In-Progress',
+                        h: '7h 15m',
+                        v: '+60m Late',
+                        s: 'Late Arrival',
+                        cls: 'orange',
+                      },
+                      {
+                        date: '05 Sep 2026',
+                        in: '08:55 AM',
+                        out: '06:05 PM',
+                        h: '9h 10m',
+                        v: 'On-Time',
+                        s: 'Present',
+                        cls: 'green',
+                      },
+                      {
+                        date: '04 Sep 2026',
+                        in: '09:00 AM',
+                        out: '06:00 PM',
+                        h: '9h 00m',
+                        v: 'On-Time',
+                        s: 'Present',
+                        cls: 'green',
+                      },
+                      {
+                        date: '03 Sep 2026',
+                        in: '09:12 AM',
+                        out: '06:05 PM',
+                        h: '8h 53m',
+                        v: '+12m Late',
+                        s: 'Late Arrival',
+                        cls: 'orange',
+                      },
+                      {
+                        date: '02 Sep 2026',
+                        in: '08:58 AM',
+                        out: '06:02 PM',
+                        h: '9h 04m',
+                        v: 'On-Time',
+                        s: 'Present',
+                        cls: 'green',
+                      },
+                      {
+                        date: '01 Sep 2026',
+                        in: '08:50 AM',
+                        out: '06:00 PM',
+                        h: '9h 10m',
+                        v: 'On-Time',
+                        s: 'Present',
+                        cls: 'green',
+                      },
                     ].map((row, i) => (
                       <tr key={i} style={{ borderBottom: '1px solid #f8fafc' }}>
                         <td style={{ padding: '6px 10px', fontWeight: 600 }}>{row.date}</td>
                         <td style={{ padding: '6px 10px' }}>{row.in}</td>
-                        <td style={{ padding: '6px 10px', color: row.out === 'In-Progress' ? '#94a3b8' : '#1e293b' }}>{row.out}</td>
+                        <td
+                          style={{
+                            padding: '6px 10px',
+                            color: row.out === 'In-Progress' ? '#94a3b8' : '#1e293b',
+                          }}
+                        >
+                          {row.out}
+                        </td>
                         <td style={{ padding: '6px 10px', fontWeight: 600 }}>{row.h}</td>
                         <td style={{ padding: '6px 10px' }}>
-                          <span className={`badge-variance ${row.v.includes('Late') ? 'late' : 'ontime'}`}>{row.v}</span>
+                          <span
+                            className={`badge-variance ${row.v.includes('Late') ? 'late' : 'ontime'}`}
+                          >
+                            {row.v}
+                          </span>
                         </td>
                         <td style={{ padding: '6px 10px' }}>
                           <span className={`badge-exception-alert ${row.cls}`}>{row.s}</span>
@@ -2197,11 +2657,7 @@ export function AttendanceProcessingPage() {
               </div>
             </div>
             <div className="att-modal-footer">
-              <button
-                type="button"
-                className="btn-modal-cancel"
-                onClick={() => setModalType(null)}
-              >
+              <button type="button" className="btn-modal-cancel" onClick={() => setModalType(null)}>
                 Close
               </button>
               <button
@@ -2235,10 +2691,26 @@ export function AttendanceProcessingPage() {
             </div>
             <div className="att-modal-body">
               <div>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   Target Site / Biometric Machine
                 </label>
-                <select style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '12px' }}>
+                <select
+                  style={{
+                    width: '100%',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                  }}
+                >
                   <option>Karachi High-Rise &bull; Main Gate ZKTeco #1</option>
                   <option>Islamabad Complex &bull; Central Biometric #2</option>
                   <option>Lahore Head Office &bull; Floor 3 Face Scanner</option>
@@ -2247,12 +2719,27 @@ export function AttendanceProcessingPage() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   Upload Log File (.DAT / .CSV / .XLSX)
                 </label>
                 <input
                   type="file"
-                  style={{ width: '100%', border: '1px dashed #cbd5e1', borderRadius: '6px', padding: '12px', fontSize: '12px', background: '#f8fafc' }}
+                  style={{
+                    width: '100%',
+                    border: '1px dashed #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '12px',
+                    fontSize: '12px',
+                    background: '#f8fafc',
+                  }}
                 />
               </div>
 
@@ -2266,18 +2753,17 @@ export function AttendanceProcessingPage() {
                   color: '#475569',
                 }}
               >
-                <p style={{ margin: '0 0 4px 0', fontWeight: 700 }}>Auto-Deduplication &amp; Geofence Verification</p>
+                <p style={{ margin: '0 0 4px 0', fontWeight: 700 }}>
+                  Auto-Deduplication &amp; Geofence Verification
+                </p>
                 <p style={{ margin: 0, fontSize: '10px', color: '#94a3b8' }}>
-                  Incoming timestamps will be automatically aligned with assigned roster shift windows.
+                  Incoming timestamps will be automatically aligned with assigned roster shift
+                  windows.
                 </p>
               </div>
             </div>
             <div className="att-modal-footer">
-              <button
-                type="button"
-                className="btn-modal-cancel"
-                onClick={() => setModalType(null)}
-              >
+              <button type="button" className="btn-modal-cancel" onClick={() => setModalType(null)}>
                 Cancel
               </button>
               <button
@@ -2311,7 +2797,8 @@ export function AttendanceProcessingPage() {
             </div>
             <div className="att-modal-body">
               <p style={{ fontSize: '12px', color: '#334155', margin: 0 }}>
-                Force pull latest check-ins from all <strong>8 site fingerprint biometric machines</strong> and mobile GPS logs?
+                Force pull latest check-ins from all{' '}
+                <strong>8 site fingerprint biometric machines</strong> and mobile GPS logs?
               </p>
               <div
                 style={{
@@ -2330,18 +2817,10 @@ export function AttendanceProcessingPage() {
               </div>
             </div>
             <div className="att-modal-footer">
-              <button
-                type="button"
-                className="btn-modal-cancel"
-                onClick={() => setModalType(null)}
-              >
+              <button type="button" className="btn-modal-cancel" onClick={() => setModalType(null)}>
                 Cancel
               </button>
-              <button
-                type="button"
-                className="btn-modal-confirm"
-                onClick={handleSyncAllConfirm}
-              >
+              <button type="button" className="btn-modal-confirm" onClick={handleSyncAllConfirm}>
                 Sync Now
               </button>
             </div>
