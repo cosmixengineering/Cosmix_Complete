@@ -48,8 +48,11 @@ export function ChangeHistory({ employeeId, section }: { employeeId: string; sec
         }}
       >
         <div className="emp-card-header simple" style={{ marginBottom: '10px' }}>
-          <div className="emp-card-title" style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
-            <History size={16} className="emp-card-title-icon" style={{ color: '#2563eb' }} />
+          <div
+            className="emp-card-title"
+            style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}
+          >
+            <History size={16} className="emp-card-title-icon" style={{ color: '#334155' }} />
             <span>Change history</span>
           </div>
         </div>
@@ -71,8 +74,11 @@ export function ChangeHistory({ employeeId, section }: { employeeId: string; sec
       }}
     >
       <div className="emp-card-header simple" style={{ marginBottom: '10px' }}>
-        <div className="emp-card-title" style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
-          <History size={16} className="emp-card-title-icon" style={{ color: '#2563eb' }} />
+        <div
+          className="emp-card-title"
+          style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}
+        >
+          <History size={16} className="emp-card-title-icon" style={{ color: '#334155' }} />
           <span>Change history</span>
         </div>
       </div>
@@ -102,7 +108,7 @@ export function ChangeHistory({ employeeId, section }: { employeeId: string; sec
                     className="hr-text-button"
                     style={{
                       fontWeight: 600,
-                      color: '#2563eb',
+                      color: '#0f172a',
                       fontSize: '13px',
                       cursor: 'pointer',
                       padding: 0,
