@@ -10,6 +10,7 @@ import {
   FileText,
   Plus,
   AlertCircle,
+  Calendar,
 } from 'lucide-react';
 import { TextInput } from '@/components/forms/TextInput';
 import { SelectInput } from '@/components/forms/SelectInput';
@@ -76,6 +77,14 @@ export function getMasterMeta(kind: string) {
         codePlaceholder: 'e.g. SITE-01',
         namePlaceholder: 'e.g. North Industrial Plant',
         icon: MapPin,
+      };
+    case 'holiday-calendars':
+      return {
+        singular: 'calendar',
+        title: 'Holiday Calendar',
+        codePlaceholder: 'e.g. CAL-2027',
+        namePlaceholder: 'e.g. National Holidays 2027',
+        icon: Calendar,
       };
     default:
       return {

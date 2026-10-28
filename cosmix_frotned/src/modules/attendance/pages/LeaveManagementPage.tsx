@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Calendar,
@@ -98,7 +98,7 @@ const INITIAL_APPLICATIONS: LeaveAppItem[] = [
     docName: 'Medical_Prescription_Dr_Asim.pdf',
     status: 'APPROVED',
     approvalStage: 'HR Verified & Approved',
-    auditTrail: 'Approved by HR Operations Desk • 07 Sep 2026',
+    auditTrail: 'Approved by HR Operations Desk � 07 Sep 2026',
     appliedOn: '2026-09-07',
   },
   {
@@ -154,7 +154,7 @@ const INITIAL_APPLICATIONS: LeaveAppItem[] = [
     reason: 'Urgent Passport Office Documentation',
     status: 'APPROVED',
     approvalStage: 'Approved by Site PM',
-    auditTrail: 'Approved by Site Project Manager • 04 Sep 2026',
+    auditTrail: 'Approved by Site Project Manager � 04 Sep 2026',
     appliedOn: '2026-09-04',
   },
   {
@@ -182,7 +182,7 @@ const INITIAL_APPLICATIONS: LeaveAppItem[] = [
     reason: 'Family Emergency / Hospital Routine Checkup',
     status: 'PENDING_PM',
     approvalStage: 'Pending Site PM Review',
-    auditTrail: 'Submitted via Mobile App • Awaiting Site PM Sign-off',
+    auditTrail: 'Submitted via Mobile App � Awaiting Site PM Sign-off',
     appliedOn: '2026-09-08',
   },
 ];
@@ -192,7 +192,7 @@ const INITIAL_APPLICATIONS: LeaveAppItem[] = [
 export function LeaveManagementPage() {
   const { user } = useAuth();
   const isAdmin = Boolean(
-    user?.roles?.some((r: string) => {
+    ((user as any)?.roles || (user as any)?.account?.roles)?.some((r: string) => {
       const lower = r.toLowerCase();
       return (
         lower.includes('admin') ||
@@ -420,7 +420,7 @@ export function LeaveManagementPage() {
       docName: hasMedicalFile ? 'Medical_Doctor_Cert.pdf' : undefined,
       status: isLong ? 'PENDING_CEO' : 'PENDING',
       approvalStage: isLong ? 'Forwarded to CEO (Long Leave)' : 'Pending HR Verification',
-      auditTrail: 'Directly logged via HR Portal • Pending review',
+      auditTrail: 'Directly logged via HR Portal � Pending review',
       appliedOn: new Date().toISOString().slice(0, 10),
     };
 
@@ -497,7 +497,7 @@ export function LeaveManagementPage() {
               {counts.pending} <span className="leave-v4-kpi-tag">Need Review</span>
             </div>
             <span className="leave-v4-kpi-sub">
-              2 Site PM • 2 CEO Level
+              2 Site PM � 2 CEO Level
             </span>
           </div>
           <div className="leave-v4-kpi-icon">
@@ -551,7 +551,7 @@ export function LeaveManagementPage() {
               3 <span className="leave-v4-kpi-tag">Workers Away</span>
             </div>
             <span className="leave-v4-kpi-sub">
-              1 HVAC Engr • 2 Techs
+              1 HVAC Engr � 2 Techs
             </span>
           </div>
           <div className="leave-v4-kpi-icon">
@@ -790,7 +790,7 @@ export function LeaveManagementPage() {
                         <div>
                           <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '11.5px' }}>{app.empName}</div>
                           <div style={{ fontSize: '10px', color: '#64748b' }}>
-                            {app.empId} • {app.role} ({app.site})
+                            {app.empId} � {app.role} ({app.site})
                           </div>
                         </div>
                       </div>
@@ -947,7 +947,7 @@ export function LeaveManagementPage() {
                   {selectedApp.appCode}: {selectedApp.leaveTypeLabel}
                 </h3>
                 <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0 0' }}>
-                  Applicant: <strong>{selectedApp.empName}</strong> ({selectedApp.empId}) • {selectedApp.role}
+                  Applicant: <strong>{selectedApp.empName}</strong> ({selectedApp.empId}) � {selectedApp.role}
                 </p>
               </div>
               <button
@@ -968,7 +968,7 @@ export function LeaveManagementPage() {
                 <div>
                   <div style={{ fontWeight: 750, color: '#0f172a', fontSize: '13px' }}>{selectedApp.empName}</div>
                   <div style={{ fontSize: '11px', color: '#64748b' }}>
-                    {selectedApp.role} • {selectedApp.dept} • Site: <strong>{selectedApp.site}</strong>
+                    {selectedApp.role} � {selectedApp.dept} � Site: <strong>{selectedApp.site}</strong>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>

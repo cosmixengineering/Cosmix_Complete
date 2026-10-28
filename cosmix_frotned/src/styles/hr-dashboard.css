@@ -3467,35 +3467,37 @@
 }
 
 .org-modal-fields .field label {
-  font-size: 13px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
-  color: #334155 !important;
-  margin-bottom: 6px !important;
+  color: #475569 !important;
+  margin-bottom: 4px !important;
   display: block !important;
 }
 
 .org-modal-fields .field input,
 .org-modal-fields .field select {
-  height: 42px !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 8px !important;
-  padding: 0 14px !important;
-  font-size: 13.5px !important;
+  height: 36px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 0 11px !important;
+  font-size: 12.5px !important;
   color: #0f172a !important;
   transition: all 0.15s ease !important;
   background: #ffffff !important;
   width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .org-modal-fields .field input:focus,
 .org-modal-fields .field select:focus {
   border-color: #2563eb !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12) !important;
   outline: none !important;
 }
 
 .org-modal-fields .field input::placeholder {
   color: #94a3b8 !important;
+  font-size: 12.5px !important;
 }
 
 .org-modal-status-alert {
@@ -3504,9 +3506,9 @@
   gap: 10px !important;
   background: #eff6ff !important;
   border: 1px solid #dbeafe !important;
-  padding: 12px 14px !important;
-  border-radius: 8px !important;
-  font-size: 13px !important;
+  padding: 10px 12px !important;
+  border-radius: 6px !important;
+  font-size: 12.5px !important;
   color: #1e40af !important;
 }
 
@@ -3521,7 +3523,7 @@
   padding: 2px 8px !important;
   border-radius: 9999px !important;
   font-weight: 600 !important;
-  font-size: 12px !important;
+  font-size: 11.5px !important;
 }
 
 .org-status-pill-inactive {
@@ -3530,44 +3532,49 @@
   padding: 2px 8px !important;
   border-radius: 9999px !important;
   font-weight: 600 !important;
-  font-size: 12px !important;
+  font-size: 11.5px !important;
 }
 
 .org-modal-footer {
   display: flex !important;
   align-items: center !important;
   justify-content: flex-end !important;
-  gap: 10px !important;
-  margin-top: 24px !important;
-  padding-top: 14px !important;
+  gap: 8px !important;
+  margin-top: 18px !important;
+  padding-top: 12px !important;
   border-top: 1px solid #f1f5f9 !important;
 }
 
 .org-btn-cancel {
   background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #1e293b !important;
-  font-size: 13px !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  font-size: 12.5px !important;
   font-weight: 500 !important;
-  padding: 9px 18px !important;
-  border-radius: 7px !important;
+  padding: 0 14px !important;
+  height: 34px !important;
+  border-radius: 6px !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .org-btn-cancel:hover:not(:disabled) {
   background: #f8fafc !important;
-  border-color: #cbd5e1 !important;
+  border-color: #94a3b8 !important;
 }
 
 .org-btn-submit {
   background: #0b1a3d !important;
   border: 1px solid #0b1a3d !important;
   color: #ffffff !important;
-  font-size: 13px !important;
+  font-size: 12.5px !important;
   font-weight: 600 !important;
-  padding: 9px 20px !important;
-  border-radius: 7px !important;
+  padding: 0 16px !important;
+  height: 34px !important;
+  border-radius: 6px !important;
   cursor: pointer !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -3584,6 +3591,202 @@
 .org-btn-cancel:disabled {
   opacity: 0.6 !important;
   cursor: not-allowed !important;
+}
+
+/* Wide Modal for Holiday Calendars and multi-field forms */
+.org-modal-wide {
+  width: min(700px, calc(100% - 32px)) !important;
+  max-height: min(90vh, 760px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 20px 24px !important;
+  overflow: hidden !important;
+}
+
+.org-modal-body-scroll {
+  overflow-y: auto !important;
+  padding-right: 4px !important;
+  max-height: calc(90vh - 160px) !important;
+}
+
+/* 2-column Grid for Modal fields */
+.org-modal-grid-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px 14px !important;
+}
+
+.org-modal-col-full {
+  grid-column: 1 / -1 !important;
+}
+
+/* Holidays repeat list inside modal */
+.cal-holidays-section {
+  margin-top: 14px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+.cal-holidays-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 8px !important;
+}
+
+.cal-holidays-title-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+
+.cal-holidays-title {
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+}
+
+.cal-count-badge {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 1px 7px !important;
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.cal-add-holiday-btn {
+  height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.cal-add-holiday-btn:hover:not(:disabled) {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+}
+
+.cal-holidays-scroll-box {
+  max-height: 210px !important;
+  overflow-y: auto !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 7px !important;
+  background: #f8fafc !important;
+  padding: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 7px !important;
+}
+
+.cal-holiday-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #ffffff !important;
+  padding: 5px 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+
+.cal-holiday-input-date {
+  width: 135px !important;
+  flex-shrink: 0 !important;
+  height: 32px !important;
+  font-size: 11.5px !important;
+  padding: 0 8px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 5px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.cal-holiday-input-text {
+  flex: 1 !important;
+  min-width: 0 !important;
+  height: 32px !important;
+  font-size: 12px !important;
+  padding: 0 9px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 5px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.cal-holiday-del-btn {
+  width: 32px !important;
+  height: 32px !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: #94a3b8 !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.cal-holiday-del-btn:hover {
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #dc2626 !important;
+}
+
+.cal-empty-holidays {
+  padding: 20px 12px !important;
+  text-align: center !important;
+  color: #64748b !important;
+  font-size: 12px !important;
+}
+
+.cal-detail-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.cal-detail-summary {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px 14px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 12px 14px !important;
+}
+
+.cal-detail-item {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.cal-detail-label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+}
+
+.cal-detail-value {
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
 }
 
 /* ==========================================================================
