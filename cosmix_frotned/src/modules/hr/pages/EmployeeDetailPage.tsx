@@ -29,13 +29,8 @@ import { useHrAccess } from '../hooks/use-hr-access';
 import { useHrQuery } from '../hooks/use-hr-queries';
 import { id, pageOf } from '../schemas/contracts';
 import { masterSchema } from '../schemas/organization';
-import { profileResponse, bankSchema } from '../schemas/hiring';
-import {
-  currentUpdateSchema,
-  basicSchema,
-  identitySchema,
-  employmentSchema,
-} from '../schemas/updates';
+import { profileResponse } from '../schemas/hiring';
+import { currentUpdateSchema, basicSchema, identitySchema } from '../schemas/updates';
 import { sections, type Section } from '../types/updates';
 import { labelDate } from '../utils/messages';
 import { formatCnic } from '../utils/identity';
@@ -202,7 +197,7 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
     : null;
 
   const currentDate = labelDate(new Date().toISOString());
-  const effectiveDate = profile?.joinedOn ? labelDate(profile.joinedOn) : '15 Jan 2026';
+  const effectiveDate = profile?.joinedOn ? labelDate(profile.joinedOn) : 'Not provided';
 
   return (
     <div className="emp-overview-container">
@@ -457,7 +452,7 @@ function StructuredSectionDisplay({
   departments?: { id: string; name: string }[];
   designations?: { id: string; name: string }[];
   branches?: { id: string; name: string }[];
-  profile?: Record<string, any>;
+  profile?: z.infer<typeof profileResponse>['profile'];
 }) {
   if (!data && !profile) {
     return (
@@ -663,7 +658,7 @@ function StructuredSectionDisplay({
 
   if (section.name === 'employment') {
     const rawEmp = data && !('status' in data) ? data : {};
-    const empData: Record<string, any> = {
+    const empData: Partial<z.infer<typeof profileResponse>['profile']> = {
       ...profile,
       ...rawEmp,
     };
@@ -671,15 +666,13 @@ function StructuredSectionDisplay({
     const deptName =
       departments?.find((d) => d.id === empData.departmentId)?.name ||
       empData.departmentId ||
-      'Engineering';
+      'Not provided';
     const desigName =
       designations?.find((d) => d.id === empData.designationId)?.name ||
       empData.designationId ||
-      'Staff Executive';
+      'Not provided';
     const branchName =
-      branches?.find((b) => b.id === empData.branchId)?.name ||
-      empData.branchId ||
-      'Head Office';
+      branches?.find((b) => b.id === empData.branchId)?.name || empData.branchId || 'Not provided';
 
     return (
       <div className="emp-card" style={{ marginTop: '14px', padding: '20px 24px' }}>
@@ -712,31 +705,27 @@ function StructuredSectionDisplay({
           <div className="emp-kv-item">
             <span className="emp-kv-label">Reporting Manager</span>
             <span className="emp-kv-value">
-              {empData.reportingManagerEmployeeId || 'Direct / Head of Dept'}
+              {empData.reportingManagerEmployeeId || 'Not provided'}
             </span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">Employment Type</span>
-            <span className="emp-kv-value">
-              {empData.employmentTypeId || 'Permanent (Full-time)'}
-            </span>
+            <span className="emp-kv-value">{empData.employmentTypeId || 'Not provided'}</span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">Staff Category</span>
-            <span className="emp-kv-value">
-              {empData.staffCategoryId || 'Regular Operations'}
-            </span>
+            <span className="emp-kv-value">{empData.staffCategoryId || 'Not provided'}</span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">Joining Date</span>
             <span className="emp-kv-value">
-              {empData.joinedOn ? labelDate(empData.joinedOn) : '15 Jan 2026'}
+              {empData.joinedOn ? labelDate(empData.joinedOn) : 'Not provided'}
             </span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">Probation Period</span>
             <span className="emp-kv-value">
-              {empData.probationEndsOn ? labelDate(empData.probationEndsOn) : 'Standard / Completed'}
+              {empData.probationEndsOn ? labelDate(empData.probationEndsOn) : 'Not provided'}
             </span>
           </div>
         </div>
@@ -745,11 +734,11 @@ function StructuredSectionDisplay({
   }
 
   if (section.name === 'bank') {
-    const rawBank = data && !('status' in data) ? data : {};
-    const bank: Record<string, any> = {
-      ...profile?.financial?.bank,
+    const rawBank = (data && !('status' in data) ? data : {}) as Record<string, unknown>;
+    const bank = {
+      ...(profile?.financial?.bank ?? {}),
       ...rawBank,
-    };
+    } as Record<string, string | undefined>;
     return (
       <div className="emp-card" style={{ marginTop: '14px', padding: '20px 24px' }}>
         <div className="emp-card-header" style={{ marginBottom: '14px' }}>
@@ -790,7 +779,9 @@ function StructuredSectionDisplay({
   }
 
   // Generic fallback for any other sections
-  const entries = Object.entries(data).filter(([k]) => !['id', 'version', 'cityId'].includes(k));
+  const entries = Object.entries(
+    (data && typeof data === 'object' ? data : {}) as Record<string, unknown>,
+  ).filter(([k]) => !['id', 'version', 'cityId'].includes(k));
   return (
     <div className="emp-card" style={{ marginTop: '14px' }}>
       <div className="emp-card-header">
@@ -956,15 +947,43 @@ function CurrentSection({
 
   return (
     <div className="emp-section-wrapper" style={{ marginTop: '16px' }}>
-      <div className="hr-repeat-heading">
-        <h2>{section.label}</h2>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+          marginBottom: '16px',
+        }}
+      >
+        <div>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
+            {section.label} Records
+          </h2>
+          {query.data && (
+            <p className="muted" style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748b' }}>
+              Current as of {query.data.asOf} &middot; Effective from {query.data.current.effectiveFrom}
+            </p>
+          )}
+        </div>
         <Button
-          variant="ghost"
+          variant="outline"
+          size="sm"
           title="Reload current section"
           aria-label="Reload current section"
           onClick={() => void query.refetch()}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '12.5px',
+            height: '34px',
+            borderColor: '#e2e8f0',
+          }}
         >
-          <RefreshCw size={16} />
+          <RefreshCw size={13} />
+          Reload
         </Button>
       </div>
       {saved && (
@@ -975,11 +994,6 @@ function CurrentSection({
       <QueryState query={query}>
         {query.data && (
           <>
-            <p className="muted" style={{ marginBottom: '6px', fontSize: '13px' }}>
-              Current as of {query.data.asOf} &middot; Effective from{' '}
-              {query.data.current.effectiveFrom}
-            </p>
-
             <StructuredSectionDisplay
               section={section}
               data={query.data.current.data[section.name]}
@@ -992,22 +1006,24 @@ function CurrentSection({
             />
 
             {query.data.current.bankVerified !== null && (
-              <div style={{ marginTop: '12px' }}>
+              <div style={{ marginTop: '14px' }}>
                 <span
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
-                    padding: '4px 10px',
-                    borderRadius: '6px',
+                    padding: '5px 12px',
+                    borderRadius: '20px',
                     fontSize: '12px',
                     fontWeight: 600,
                     background: query.data.current.bankVerified ? '#dcfce7' : '#fef3c7',
                     color: query.data.current.bankVerified ? '#15803d' : '#b45309',
+                    border: `1px solid ${query.data.current.bankVerified ? '#bbf7d0' : '#fde68a'}`,
                   }}
                 >
                   <ShieldCheck size={14} />
-                  Bank verification: {query.data.current.bankVerified ? 'Verified' : 'Not verified'}
+                  Bank Account Status:{' '}
+                  {query.data.current.bankVerified ? 'Verified by Finance' : 'Verification In Review'}
                 </span>
               </div>
             )}
@@ -1015,7 +1031,7 @@ function CurrentSection({
             {query.data.scheduled && (
               <div
                 className="emp-card"
-                style={{ marginTop: '16px', borderLeft: '4px solid #2563eb' }}
+                style={{ marginTop: '16px', borderLeft: '4px solid #0f172a' }}
               >
                 <div className="emp-card-header simple">
                   <div className="emp-card-title">
