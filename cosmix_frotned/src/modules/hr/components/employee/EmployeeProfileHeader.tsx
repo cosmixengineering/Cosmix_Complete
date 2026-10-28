@@ -192,7 +192,7 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
               className="emp-avatar-cam-btn"
               title="Change profile picture"
             >
-              <Camera size={13} />
+              <Camera size={10} />
             </button>
           )}
         </div>
@@ -207,9 +207,10 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
             </span>
             <span className="emp-badge-onboarding">{onboardingLabel}</span>
             <span className="emp-badge-ot">
-              <Clock size={12} />
+              <Clock size={11} />
               <span>OT: {isOvertimeActive ? 'ON' : 'OFF'}</span>
             </span>
+            {desigName && <span className="emp-badge-desig">{desigName}</span>}
           </div>
         </div>
       </div>
@@ -217,11 +218,11 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
       {/* Right Action Buttons */}
       <div className="emp-header-actions">
         <Link to="?section=basic&edit=1" className="emp-btn-primary">
-          <Pencil size={15} />
-          Edit personal details
+          <Pencil size={12} />
+          Edit details
         </Link>
         <Link to="?section=tracking" className="emp-btn-secondary">
-          <Navigation size={15} />
+          <Navigation size={12} />
           Live map
         </Link>
         <button
@@ -235,7 +236,7 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
             onRefresh?.();
           }}
         >
-          <MoreHorizontal size={18} />
+          <MoreHorizontal size={15} />
         </button>
       </div>
 
