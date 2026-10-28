@@ -84,7 +84,7 @@ function PayrollObligations() {
   const canIngest =
     batch?.calculationVersion === 'salary-v2' &&
     batch.salaryComplete === true &&
-    ['locked', 'finance_handed_off'].includes(batch.state) &&
+    batch.state === 'finance_handed_off' &&
     Boolean(batch.frozenFingerprint);
   async function ingest() {
     if (!canIngest || !batch) return;
@@ -118,23 +118,23 @@ function PayrollObligations() {
   return (
     <>
       <section className="payroll-section-card">
-        <h2>Import locked salary run</h2>
+        <h2>Import Finance handoff</h2>
         <FinanceNotice>
-          Gross earnings, deductions and net salary are derived from the selected immutable run.
-          Missing source, policy or account configuration blocks posting.
+          A separate Finance actor must record the handoff after Management locks the salary run.
+          Gross earnings, deductions and net salary are derived from that immutable run. Missing
+          source, policy or account configuration blocks posting.
         </FinanceNotice>
         <TextAreaField label="Accounting reason" value={reason} onChange={setReason} required />
         {access.can('attendance.payroll-handoff.read') ? (
           <FinanceQueryState query={batches}>
             <PayrollSelect
-              label="Approved locked salary run"
+              label="Salary run handed off to Finance"
               value={batchId}
               onChange={setBatchId}
               options={(batches.data?.items ?? [])
                 .filter(
                   (item) =>
-                    item.calculationVersion === 'salary-v2' &&
-                    ['locked', 'finance_handed_off'].includes(item.state),
+                    item.calculationVersion === 'salary-v2' && item.state === 'finance_handed_off',
                 )
                 .map((item) => ({
                   value: item.id,

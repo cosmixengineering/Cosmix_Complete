@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   FileText,
   Fingerprint,
   HeartPulse,
+  History,
   Home,
   Landmark,
   Mail,
@@ -17,21 +18,28 @@ import {
   Navigation,
   Pencil,
   RefreshCw,
+  Receipt,
   User,
   Users,
   ShieldCheck,
 } from 'lucide-react';
+import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { useHrAccess } from '../hooks/use-hr-access';
 import { useHrQuery } from '../hooks/use-hr-queries';
 import { id } from '../schemas/contracts';
-import { profileResponse } from '../schemas/hiring';
-import { currentUpdateSchema } from '../schemas/updates';
+import { profileResponse, bankSchema } from '../schemas/hiring';
+import {
+  currentUpdateSchema,
+  basicSchema,
+  identitySchema,
+  employmentSchema,
+} from '../schemas/updates';
 import { sections, type Section } from '../types/updates';
 import { labelDate } from '../utils/messages';
+import { formatCnic } from '../utils/identity';
 import { Denied, QueryState } from '../components/Feedback';
-import { RecordView } from '../components/RecordView';
-import { ChangeForm } from '../components/employee/ChangeForm';
+import { ChangeFormModal } from '../components/employee/ChangeForm';
 import { ChangeHistory } from '../components/employee/ChangeHistory';
 import { ChangeRequests } from '../components/requests/ChangeRequests';
 import { EmployeeDocuments } from '../components/documents/EmployeeDocuments';
@@ -99,6 +107,15 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
           <Landmark size={15} />
           Bank details
         </Link>
+        {access.can('hr.employees.compensation.read') && (
+          <Link
+            to="?section=compensation"
+            className={`emp-nav-tab ${name === 'compensation' ? 'active' : ''}`}
+          >
+            <Receipt size={15} />
+            Salary
+          </Link>
+        )}
         <Link
           to="?section=files"
           className={`emp-nav-tab ${name === 'files' || name === 'medical-files' ? 'active' : ''}`}
@@ -428,7 +445,7 @@ function StructuredSectionDisplay({
   onEdit,
 }: {
   section: Section;
-  data: Record<string, any> | null | undefined;
+  data: Record<string, unknown> | null | undefined;
   canWrite: boolean;
   onEdit: () => void;
 }) {
@@ -726,7 +743,7 @@ function StructuredSectionDisplay({
         {canWrite && (
           <button type="button" className="emp-card-edit-btn" onClick={onEdit}>
             <Pencil size={13} />
-            {section.name === 'basic' ? 'Edit details' : 'Propose change'}
+            {(section.name as string) === 'basic' ? 'Edit details' : 'Propose change'}
           </button>
         )}
       </div>
@@ -914,8 +931,7 @@ function CurrentSection({
                   }}
                 >
                   <ShieldCheck size={14} />
-                  Bank verification:{' '}
-                  {query.data.current.bankVerified ? 'Verified' : 'Not verified'}
+                  Bank verification: {query.data.current.bankVerified ? 'Verified' : 'Not verified'}
                 </span>
               </div>
             )}

@@ -16,6 +16,27 @@ import { FinanceQueryState } from './FinanceQueryState';
 import { FinanceNotice, TextAreaField } from './FinanceChrome';
 import { PayrollSelect } from './PayrollFields';
 const root = '/payroll-accounting';
+const deductionKinds: Record<string, string[]> = {
+  AttendanceDeduction: ['Expense'],
+  LoanRepayment: ['Asset'],
+  TaxDeduction: ['Liability'],
+  LeaveAdjustment: ['Expense', 'Asset', 'Liability'],
+  SalaryAdjustment: ['Expense', 'Asset', 'Liability'],
+  OtherApprovedAdjustment: ['Expense', 'Asset', 'Liability'],
+};
+const deductionComponents = [
+  'BaseCompensation',
+  'AttendanceDeduction',
+  'Overtime',
+  'Allowance',
+  'LeaveAdjustment',
+  'LoanRepayment',
+  'FuelClaim',
+  'OtherApprovedAdjustment',
+  'FixedAllowance',
+  'TaxDeduction',
+  'SalaryAdjustment',
+];
 export function PayrollAccountingSetup() {
   const access = useFinanceAccess();
   const action = useFinanceAction();
@@ -46,6 +67,15 @@ export function PayrollAccountingSetup() {
     (data.data?.accounts ?? [])
       .filter((item) => item.isActive && item.kind === accountKind)
       .map((item) => ({ value: item.code, label: `${item.code} · ${item.name}` }));
+  const deductionChoices = (component: string) =>
+    (data.data?.accounts ?? [])
+      .filter(
+        (item) =>
+          item.isActive &&
+          (deductionKinds[component] ?? ['Liability', 'Asset']).includes(item.kind) &&
+          ![expense.toLowerCase(), payable.toLowerCase()].includes(item.code.toLowerCase()),
+      )
+      .map((item) => ({ value: item.code, label: `${item.code} · ${item.name} (${item.kind})` }));
   async function write(path: string, body: unknown) {
     const result = await action.run(
       `${root}/${path}`,
@@ -274,16 +304,25 @@ export function PayrollAccountingSetup() {
                 options={choices('Liability')}
               />
             </div>
+            <p>
+              Attendance deductions credit a separate Expense account; loan repayments credit an
+              Asset account; tax deductions credit a Liability account. Adjustment mappings use the
+              approved Expense, Asset or Liability account. Deduction accounts must differ from
+              salary expense and net salary payable.
+            </p>
             {deductions.map((line, index) => (
               <div className="hr-form-grid" key={index}>
-                <TextInput
+                <PayrollSelect
                   label="Deduction component name"
-                  required
                   value={line.component}
-                  onChange={(event) =>
+                  options={deductionComponents.map((value) => ({
+                    value,
+                    label: value.replace(/([a-z])([A-Z])/g, '$1 $2'),
+                  }))}
+                  onChange={(value) =>
                     setDeductions((rows) =>
                       rows.map((row, i) =>
-                        i === index ? { ...row, component: event.target.value } : row,
+                        i === index ? { ...row, component: value, creditAccountCode: '' } : row,
                       ),
                     )
                   }
@@ -291,7 +330,7 @@ export function PayrollAccountingSetup() {
                 <PayrollSelect
                   label="Deduction account"
                   value={line.creditAccountCode}
-                  options={choices('Liability')}
+                  options={deductionChoices(line.component)}
                   onChange={(value) =>
                     setDeductions((rows) =>
                       rows.map((row, i) =>
@@ -345,7 +384,9 @@ export function PayrollAccountingSetup() {
                 <PayrollSelect
                   label="Scheme payable"
                   value={line.payableAccountCode}
-                  options={choices('Liability')}
+                  options={choices('Liability').filter(
+                    (item) => item.value.toLowerCase() !== payable.toLowerCase(),
+                  )}
                   onChange={(value) =>
                     setStatutory((rows) =>
                       rows.map((row, i) =>
