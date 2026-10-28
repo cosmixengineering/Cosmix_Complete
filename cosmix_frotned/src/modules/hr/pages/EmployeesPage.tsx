@@ -204,12 +204,6 @@ export function EmployeesPage() {
                       to={`${basePath}/employees/${r.id}${r.onboardingStatus === 2 ? '' : '/hiring'}`}
                       style={{ textDecoration: 'none' }}
                     >
-                      <span className="hr-avatar">
-                        {(r.name && r.name.trim().length > 0
-                          ? r.name.trim().slice(0, 1)
-                          : 'E'
-                        ).toUpperCase()}
-                      </span>
                       <div>
                         <strong
                           style={{
