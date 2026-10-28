@@ -147,6 +147,34 @@ export function ChangeRequests({
     }
   };
 
+  if (employeeId && !items.length) {
+    return (
+      <div
+        className="emp-card"
+        style={{
+          marginTop: '18px',
+          padding: '20px 24px',
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '10px',
+        }}
+      >
+        <div className="emp-card-header simple" style={{ marginBottom: '8px' }}>
+          <div
+            className="emp-card-title"
+            style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}
+          >
+            <FileText size={16} className="emp-card-title-icon" style={{ color: '#2563eb' }} />
+            <span>Pending {section.label.toLowerCase()} requests</span>
+          </div>
+        </div>
+        <p className="muted" style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
+          No pending change requests for this employee.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <section className="hr-requests-container">
       <div className="hr-requests-count-summary">

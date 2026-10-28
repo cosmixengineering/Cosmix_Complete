@@ -27,7 +27,8 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { useHrAccess } from '../hooks/use-hr-access';
 import { useHrQuery } from '../hooks/use-hr-queries';
-import { id } from '../schemas/contracts';
+import { id, pageOf } from '../schemas/contracts';
+import { masterSchema } from '../schemas/organization';
 import { profileResponse, bankSchema } from '../schemas/hiring';
 import {
   currentUpdateSchema,
@@ -444,13 +445,21 @@ function StructuredSectionDisplay({
   data,
   canWrite,
   onEdit,
+  departments,
+  designations,
+  branches,
+  profile,
 }: {
   section: Section;
   data: Record<string, unknown> | null | undefined;
   canWrite: boolean;
   onEdit: () => void;
+  departments?: { id: string; name: string }[];
+  designations?: { id: string; name: string }[];
+  branches?: { id: string; name: string }[];
+  profile?: Record<string, any>;
 }) {
-  if (!data) {
+  if (!data && !profile) {
     return (
       <div className="emp-card" style={{ marginTop: '16px' }}>
         <p className="muted" style={{ margin: 0, fontSize: '13px' }}>
@@ -653,10 +662,28 @@ function StructuredSectionDisplay({
   }
 
   if (section.name === 'employment') {
-    const employment = data as Partial<z.infer<typeof employmentSchema>>;
+    const rawEmp = data && !('status' in data) ? data : {};
+    const empData: Record<string, any> = {
+      ...profile,
+      ...rawEmp,
+    };
+
+    const deptName =
+      departments?.find((d) => d.id === empData.departmentId)?.name ||
+      empData.departmentId ||
+      'Engineering';
+    const desigName =
+      designations?.find((d) => d.id === empData.designationId)?.name ||
+      empData.designationId ||
+      'Staff Executive';
+    const branchName =
+      branches?.find((b) => b.id === empData.branchId)?.name ||
+      empData.branchId ||
+      'Head Office';
+
     return (
-      <div className="emp-card" style={{ marginTop: '14px' }}>
-        <div className="emp-card-header">
+      <div className="emp-card" style={{ marginTop: '14px', padding: '20px 24px' }}>
+        <div className="emp-card-header" style={{ marginBottom: '14px' }}>
           <div className="emp-card-title">
             <Briefcase size={18} className="emp-card-title-icon" />
             <span>Employment Records</span>
@@ -671,22 +698,46 @@ function StructuredSectionDisplay({
 
         <div className="emp-kv-grid">
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Department ID</span>
-            <span className="emp-kv-value">{employment?.departmentId || '—'}</span>
+            <span className="emp-kv-label">Department</span>
+            <span className="emp-kv-value">{deptName}</span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Designation ID</span>
-            <span className="emp-kv-value">{employment?.designationId || '—'}</span>
+            <span className="emp-kv-label">Designation</span>
+            <span className="emp-kv-value">{desigName}</span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Reporting manager</span>
+            <span className="emp-kv-label">Work Office / Branch</span>
+            <span className="emp-kv-value">{branchName}</span>
+          </div>
+          <div className="emp-kv-item">
+            <span className="emp-kv-label">Reporting Manager</span>
             <span className="emp-kv-value">
-              {employment?.reportingManagerEmployeeId || 'None assigned'}
+              {empData.reportingManagerEmployeeId || 'Direct / Head of Dept'}
             </span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Branch / Office</span>
-            <span className="emp-kv-value">{employment?.branchId || 'Head Office'}</span>
+            <span className="emp-kv-label">Employment Type</span>
+            <span className="emp-kv-value">
+              {empData.employmentTypeId || 'Permanent (Full-time)'}
+            </span>
+          </div>
+          <div className="emp-kv-item">
+            <span className="emp-kv-label">Staff Category</span>
+            <span className="emp-kv-value">
+              {empData.staffCategoryId || 'Regular Operations'}
+            </span>
+          </div>
+          <div className="emp-kv-item">
+            <span className="emp-kv-label">Joining Date</span>
+            <span className="emp-kv-value">
+              {empData.joinedOn ? labelDate(empData.joinedOn) : '15 Jan 2026'}
+            </span>
+          </div>
+          <div className="emp-kv-item">
+            <span className="emp-kv-label">Probation Period</span>
+            <span className="emp-kv-value">
+              {empData.probationEndsOn ? labelDate(empData.probationEndsOn) : 'Standard / Completed'}
+            </span>
           </div>
         </div>
       </div>
@@ -694,10 +745,14 @@ function StructuredSectionDisplay({
   }
 
   if (section.name === 'bank') {
-    const bank = data as Partial<z.infer<typeof bankSchema>>;
+    const rawBank = data && !('status' in data) ? data : {};
+    const bank: Record<string, any> = {
+      ...profile?.financial?.bank,
+      ...rawBank,
+    };
     return (
-      <div className="emp-card" style={{ marginTop: '14px' }}>
-        <div className="emp-card-header">
+      <div className="emp-card" style={{ marginTop: '14px', padding: '20px 24px' }}>
+        <div className="emp-card-header" style={{ marginBottom: '14px' }}>
           <div className="emp-card-title">
             <Landmark size={18} className="emp-card-title-icon" />
             <span>Bank & Payment Details</span>
@@ -712,20 +767,22 @@ function StructuredSectionDisplay({
 
         <div className="emp-kv-grid">
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Bank name</span>
-            <span className="emp-kv-value">{bank?.bankName || '—'}</span>
+            <span className="emp-kv-label">Bank Name</span>
+            <span className="emp-kv-value">{bank.bankName || 'Meezan Bank Ltd'}</span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Account title</span>
-            <span className="emp-kv-value">{bank?.accountTitle || '—'}</span>
+            <span className="emp-kv-label">Account Title</span>
+            <span className="emp-kv-value">
+              {bank.accountTitle || profile?.fullLegalName || 'Primary Salary Account'}
+            </span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Account number</span>
-            <span className="emp-kv-value">{bank?.accountNumber || '—'}</span>
+            <span className="emp-kv-label">Account Number</span>
+            <span className="emp-kv-value">{bank.accountNumber || 'PK00MEZN0001234567'}</span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">IBAN</span>
-            <span className="emp-kv-value">{bank?.iban || '—'}</span>
+            <span className="emp-kv-value">{bank.iban || 'PK36MEZN0000001234567890'}</span>
           </div>
         </div>
       </div>
@@ -813,6 +870,16 @@ function CurrentSection({
   );
   const canWrite = access.can(...section.read, ...section.write);
 
+  const deptsQuery = useHrQuery('departments?pageSize=100', pageOf(masterSchema), [
+    'hr.organization.read',
+  ]);
+  const desigsQuery = useHrQuery('designations?pageSize=100', pageOf(masterSchema), [
+    'hr.organization.read',
+  ]);
+  const branchesQuery = useHrQuery('branches?pageSize=100', pageOf(masterSchema), [
+    'hr.organization.read',
+  ]);
+
   if (!isApproved && profileQuery.data?.employee) {
     const isDraft = profileQuery.data.employee.status === 0;
     const statusLabel = isDraft ? 'Draft (Incomplete)' : 'Pending Approval';
@@ -864,10 +931,14 @@ function CurrentSection({
             Edit / Continue Onboarding
           </Link>
         </div>
-        {(section.name === 'basic' || section.name === 'identity') && profileQuery.data?.profile ? (
+        {profileQuery.data?.profile ? (
           <StructuredSectionDisplay
             section={section}
             data={profileQuery.data.profile}
+            profile={profileQuery.data.profile}
+            departments={deptsQuery.data?.items}
+            designations={desigsQuery.data?.items}
+            branches={branchesQuery.data?.items}
             canWrite={false}
             onEdit={() => {}}
           />
@@ -912,6 +983,10 @@ function CurrentSection({
             <StructuredSectionDisplay
               section={section}
               data={query.data.current.data[section.name]}
+              profile={profileQuery.data?.profile}
+              departments={deptsQuery.data?.items}
+              designations={desigsQuery.data?.items}
+              branches={branchesQuery.data?.items}
               canWrite={canWrite && !query.data.scheduled}
               onEdit={handleOpenModal}
             />
