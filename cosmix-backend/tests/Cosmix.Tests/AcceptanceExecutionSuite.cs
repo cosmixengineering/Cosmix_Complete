@@ -154,7 +154,7 @@ public class AcceptanceExecutionSuite
         });
         builder.WebHost.UseTestServer();
 
-        var signingKey = "c6u3/sDBnBQLHCRysd71q4kIu58PBwzXjzLjwHkOvJXnUlWW6ZcdJS5UKO+SNG8j";
+        var signingKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
         var inMemoryConfig = new Dictionary<string, string?>
         {
             ["Jwt:Issuer"] = "Cosmix.TestHost",
@@ -589,7 +589,9 @@ public class AcceptanceExecutionSuite
             var accExpenseEobi = new PayrollLedgerAccount("5020", "Employer EOBI Expense", PayrollAccountKind.Expense);
             var accExpensePessi = new PayrollLedgerAccount("5030", "Employer PESSI Expense", PayrollAccountKind.Expense);
             var accStaffLoans = new PayrollLedgerAccount("1050", "Staff Loans Recoverable", PayrollAccountKind.Asset);
-            var accBank = new PayrollLedgerAccount("1010", "Corporate Bank Account", PayrollAccountKind.Asset);
+            var accBank = new PayrollLedgerAccount("1010", "Corporate Bank Account", PayrollAccountKind.Bank);
+            var accOfficeEquip = new PayrollLedgerAccount("1090", "Office Equipment", PayrollAccountKind.Asset);
+            var accFakeBank = new PayrollLedgerAccount("1095", "Bank of America Clearing", PayrollAccountKind.Asset);
             financeRepo.Add(accExpenseSalaries);
             financeRepo.Add(accPayableSalaries);
             financeRepo.Add(accPayableEobi);
@@ -598,6 +600,8 @@ public class AcceptanceExecutionSuite
             financeRepo.Add(accExpensePessi);
             financeRepo.Add(accStaffLoans);
             financeRepo.Add(accBank);
+            financeRepo.Add(accOfficeEquip);
+            financeRepo.Add(accFakeBank);
 
             var postingPeriod = new PayrollAccountingPeriod(new DateOnly(2026, 10, 1), new DateOnly(2026, 11, 1), "PKR", "fin-maker", now);
             postingPeriod.Approve("fin-checker", now.AddMinutes(1));
@@ -806,8 +810,9 @@ public class AcceptanceExecutionSuite
 
             // 4. Validate Payroll Finalization Against Approved Source
             batch = await db.PayrollHandoffBatches.Include(b => b.Lines).FirstAsync(b => b.Id == batch.Id);
-            var fakeFingerprint = $"fp-frozen-{Guid.NewGuid():N}";
-            batch.SetSalaryEvidence($"prev-{Guid.NewGuid():N}", fakeFingerprint, $"calc-ref-{Guid.NewGuid():N}");
+            var fakeFingerprint = new string('F', 64);
+            var fakePreview = new string('P', 64);
+            batch.SetSalaryEvidence(fakePreview, fakeFingerprint, $"calc-ref-{Guid.NewGuid():N}");
             await db.SaveChangesAsync();
 
             // Attempting to finalize an UNAPPROVED/UNLOCKED batch is rejected
@@ -873,7 +878,29 @@ public class AcceptanceExecutionSuite
             var exUnlinkedPost = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 statutoryApproverService.PostAsync(dummyDraft.Id, approverAuthContext, default));
             Assert.Contains("must be explicitly linked to an approved payroll obligation", exUnlinkedPost.Message);
+
+            // Verify unlinked contribution cannot be posted via PayrollAccountingService (silent binding during posting is prohibited)
+            var exUnlinkedPayrollPost = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                servicePreparer.PostStatutoryJournalAsync(new PostStatutoryJournalRequest(
+                    obligation.Id,
+                    StatutoryContributionId: dummyDraft.Id,
+                    Amount: 500m,
+                    PostingProfileId: postingProfile.Id,
+                    PostingDate: new DateOnly(2026, 10, 31)), authContext, default));
+            Assert.Contains("must be explicitly linked to an approved payroll obligation", exUnlinkedPayrollPost.Message);
             db.StatutoryContributions.Remove(dummyDraft);
+            await db.SaveChangesAsync();
+
+            // Verify period mismatch between statutory contribution month and linked obligation period is rejected
+            var novMismatch = new StatutoryContribution(StatutoryScheme.EOBI, new DateOnly(2026, 11, 1), 100m, 500m, "PKR", "user1", now, "2020");
+            novMismatch.Approve("approver2", now.AddMinutes(1));
+            novMismatch.BindObligation(obligation.Id);
+            db.StatutoryContributions.Add(novMismatch);
+            await db.SaveChangesAsync();
+            var exPeriodMismatch = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                statutoryApproverService.PostAsync(novMismatch.Id, approverAuthContext, default));
+            Assert.Contains("does not correspond to linked payroll obligation period", exPeriodMismatch.Message);
+            db.StatutoryContributions.Remove(novMismatch);
             await db.SaveChangesAsync();
 
             // Bind approved statutory contributions to the exact finalized obligation
@@ -936,6 +963,67 @@ public class AcceptanceExecutionSuite
                     PostingProfileId: postingProfile.Id,
                     PostingDate: new DateOnly(2026, 10, 31)), authContext, default));
             Assert.Contains("Direct account bypass is prohibited", exDirectBypass.Message);
+
+            // Negative tests: Explicit deduction tampering via direct API requests
+            var exDeductionDebitSub = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                servicePreparer.PostAccrualJournalAsync(new PostAccrualJournalRequest(
+                    obligation.Id,
+                    "5010",
+                    "2010",
+                    "Unauthorized debit substitution attempt",
+                    Deductions: [
+                        new PayrollDeductionItem("9999", "2020", 1800.20m, "EOBI"),
+                        new PayrollDeductionItem("5010", "2030", 900.10m, "PESSI"),
+                        new PayrollDeductionItem("5010", "1050", 3500.00m, "Loan")
+                    ],
+                    PostingProfileId: postingProfile.Id,
+                    PostingDate: new DateOnly(2026, 10, 31)), authContext, default));
+            Assert.Contains("Unauthorized deduction debit account substitution", exDeductionDebitSub.Message);
+
+            var exDeductionCreditSub = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                servicePreparer.PostAccrualJournalAsync(new PostAccrualJournalRequest(
+                    obligation.Id,
+                    "5010",
+                    "2010",
+                    "Unauthorized credit account attempt",
+                    Deductions: [
+                        new PayrollDeductionItem("5010", "2099", 1800.20m, "Unknown"),
+                        new PayrollDeductionItem("5010", "2030", 900.10m, "PESSI"),
+                        new PayrollDeductionItem("5010", "1050", 3500.00m, "Loan")
+                    ],
+                    PostingProfileId: postingProfile.Id,
+                    PostingDate: new DateOnly(2026, 10, 31)), authContext, default));
+            Assert.Contains("Unauthorized or unknown deduction credit account", exDeductionCreditSub.Message);
+
+            var exDeductionAmountMismatch = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                servicePreparer.PostAccrualJournalAsync(new PostAccrualJournalRequest(
+                    obligation.Id,
+                    "5010",
+                    "2010",
+                    "Mismatched deduction amount attempt",
+                    Deductions: [
+                        new PayrollDeductionItem("5010", "2020", 1000.00m, "EOBI"),
+                        new PayrollDeductionItem("5010", "2030", 1700.30m, "PESSI"),
+                        new PayrollDeductionItem("5010", "1050", 3500.00m, "Loan")
+                    ],
+                    PostingProfileId: postingProfile.Id,
+                    PostingDate: new DateOnly(2026, 10, 31)), authContext, default));
+            Assert.Contains("does not reconcile with approved frozen payroll component amount", exDeductionAmountMismatch.Message);
+
+            var exDeductionDuplicateCredit = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                servicePreparer.PostAccrualJournalAsync(new PostAccrualJournalRequest(
+                    obligation.Id,
+                    "5010",
+                    "2010",
+                    "Duplicate credit accounts attempt",
+                    Deductions: [
+                        new PayrollDeductionItem("5010", "2020", 900.10m, "EOBI 1"),
+                        new PayrollDeductionItem("5010", "2020", 900.10m, "EOBI 2"),
+                        new PayrollDeductionItem("5010", "1050", 3500.00m, "Loan")
+                    ],
+                    PostingProfileId: postingProfile.Id,
+                    PostingDate: new DateOnly(2026, 10, 31)), authContext, default));
+            Assert.Contains("Duplicate deduction credit accounts detected", exDeductionDuplicateCredit.Message);
 
             var accrualJournal = await servicePreparer.PostAccrualJournalAsync(new PostAccrualJournalRequest(
                 obligation.Id,
@@ -1112,6 +1200,32 @@ public class AcceptanceExecutionSuite
                     EmployeeId: employeeAId,
                     PostingDate: new DateOnly(2026, 10, 31)), authContext, default));
             Assert.Contains("payroll_account_invalid_or_inactive", exInvalidBank.Message, StringComparison.OrdinalIgnoreCase);
+
+            // 7e. Reject Unrelated Asset Account as Corporate Bank (e.g. Office Equipment 1090)
+            var exUnrelatedAssetBank = await Assert.ThrowsAsync<AuthenticationFailure>(() =>
+                servicePreparer.RecordSalaryPaymentAsync(new RecordSalaryPaymentRequest(
+                    obligation.Id,
+                    accrualJournal.Id,
+                    "PAY-UNRELATED-ASSET-FAIL",
+                    "2010",
+                    "1090",
+                    Amount: 100.00m,
+                    EmployeeId: employeeAId,
+                    PostingDate: new DateOnly(2026, 10, 31)), authContext, default));
+            Assert.Contains("payroll_account_not_approved_disbursement", exUnrelatedAssetBank.Message, StringComparison.OrdinalIgnoreCase);
+
+            // 7f. Reject Fabricated Bank-Name Account with Asset Kind (e.g. Bank of America Clearing 1095)
+            var exFakeBankName = await Assert.ThrowsAsync<AuthenticationFailure>(() =>
+                servicePreparer.RecordSalaryPaymentAsync(new RecordSalaryPaymentRequest(
+                    obligation.Id,
+                    accrualJournal.Id,
+                    "PAY-FAKE-BANK-NAME-FAIL",
+                    "2010",
+                    "1095",
+                    Amount: 100.00m,
+                    EmployeeId: employeeAId,
+                    PostingDate: new DateOnly(2026, 10, 31)), authContext, default));
+            Assert.Contains("payroll_account_not_approved_disbursement", exFakeBankName.Message, StringComparison.OrdinalIgnoreCase);
 
             // 8. Case A: Reject Employee A payment of 100,000.00 against 96,500.00 net
             var paymentsBeforeCount = await db.SalaryPayments.CountAsync(p => p.ObligationId == obligation.Id);
@@ -1567,6 +1681,8 @@ public class AcceptanceExecutionSuite
         }
         public Task AcquirePaymentLockAsync(Guid obligationId, Guid employeeId, CancellationToken ct) => inner.AcquirePaymentLockAsync(obligationId, employeeId, ct);
         public Task AcquireStatutoryPostingLockAsync(Guid contributionId, CancellationToken ct) => inner.AcquireStatutoryPostingLockAsync(contributionId, ct);
+        public Task<IReadOnlyList<Cosmix.Domain.HR.StatutoryContributions.StatutoryEmployeePosting>> ContributionPostingsAsync(Guid contributionId, CancellationToken ct) => inner.ContributionPostingsAsync(contributionId, ct);
+        public Task AddContributionPostingAsync(Cosmix.Domain.HR.StatutoryContributions.StatutoryEmployeePosting row, CancellationToken ct) => inner.AddContributionPostingAsync(row, ct);
         public Task SaveChangesAsync(CancellationToken ct) => inner.SaveChangesAsync(ct);
     }
 
@@ -1972,13 +2088,23 @@ public class AcceptanceExecutionSuite
                 // Step B: Now apply the target upgrade migration: 20261026193000_PersistStatutoryEmployeeItemsAndJournalLinks
                 await migrator.MigrateAsync("20261026193000_PersistStatutoryEmployeeItemsAndJournalLinks");
 
-                // Verify pre-upgrade record survived with defaults
-                var preRecord = await db.StatutoryContributions.FindAsync(preUpgradeId);
-                Assert.NotNull(preRecord);
-                Assert.Equal(1500.00m, preRecord.EmployeeContributionAmount);
-                Assert.Null(preRecord.JournalEntryId);
-                Assert.Null(preRecord.EmployeeItemsJson);
-                Assert.False(preRecord.HasEmployeeEntries);
+                // Verify pre-upgrade record survived with defaults using raw SQL on intermediate migration schema
+                await using (var checkCmd = db.Database.GetDbConnection().CreateCommand())
+                {
+                    if (checkCmd.Connection!.State != System.Data.ConnectionState.Open)
+                        await checkCmd.Connection.OpenAsync();
+                    checkCmd.CommandText = "SELECT EmployeeContributionAmount, JournalEntryId, EmployeeItemsJson, HasEmployeeEntries FROM hr.StatutoryContributions WHERE Id = @id";
+                    var p = checkCmd.CreateParameter();
+                    p.ParameterName = "@id";
+                    p.Value = preUpgradeId;
+                    checkCmd.Parameters.Add(p);
+                    await using var rdr = await checkCmd.ExecuteReaderAsync();
+                    Assert.True(await rdr.ReadAsync());
+                    Assert.Equal(1500.00m, rdr.GetDecimal(0));
+                    Assert.True(rdr.IsDBNull(1));
+                    Assert.True(rdr.IsDBNull(2));
+                    Assert.False(rdr.GetBoolean(3));
+                }
 
                 // Step C: Verify new columns exist in sys.columns
                 await using (var colCmd = db.Database.GetDbConnection().CreateCommand())
@@ -2111,6 +2237,9 @@ public class AcceptanceExecutionSuite
                 Assert.Contains("PayrollAccountingPeriods", verifiedFinanceTables);
                 Assert.Contains("PayrollPostingProfiles", verifiedFinanceTables);
                 Assert.Contains("EmployeeStatutoryCoverages", verifiedFinanceTables);
+
+                // Step D4: Apply migration 20261028071931_CompleteSalaryRunAndStatutoryEntries
+                await migrator.MigrateAsync("20261028071931_CompleteSalaryRunAndStatutoryEntries");
             }
 
             // Step E: Create, reload across disposed DbContext, approve, post, and export statutory contribution
@@ -2204,7 +2333,7 @@ public class AcceptanceExecutionSuite
             {
                 DisposableDatabaseName = disposableDbName,
                 IsolationConfirmed = true,
-                MigrationsTested = new[] { "20261022133924_AddComplianceWorkstreams", "20261026193000_PersistStatutoryEmployeeItemsAndJournalLinks", "20261027120000_PersistFinancialPostingMetadataAndEntitlements", "20261027133000_PersistPayrollFinanceSetupTables" },
+                MigrationsTested = new[] { "20261022133924_AddComplianceWorkstreams", "20261026193000_PersistStatutoryEmployeeItemsAndJournalLinks", "20261027120000_PersistFinancialPostingMetadataAndEntitlements", "20261027133000_PersistPayrollFinanceSetupTables", "20261028071931_CompleteSalaryRunAndStatutoryEntries" },
                 VerifiedColumns = verifiedColumns,
                 VerifiedIndexes = verifiedIndexes,
                 DataPreservationVerified = true,

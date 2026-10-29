@@ -64,11 +64,8 @@ export function PayrollHandoffPage() {
       : []),
     ...([
       'attendance.payroll-imports.read',
-      'attendance.payroll-imports.submit',
       'attendance.payroll-salary.read',
-      'attendance.payroll-salary.request',
       'hr.employees.compensation.read',
-      'hr.employees.compensation.request',
     ].every((permission) => access.can(permission))
       ? [{ id: 'import', label: 'Import salary sheet' }]
       : []),
@@ -137,10 +134,12 @@ export function PayrollHandoffPage() {
       )}
       {active === 'batches' && (
         <PayrollBatches
+          canPrepare={access.can(permissions.prepare)}
           canLock={access.can(permissions.lock)}
           canProcess={access.can(permissions.process)}
           canReview={access.can('attendance.payroll-handoff.hr-review')}
           accountId={access.user?.account?.accountId ?? ''}
+          employeeId={access.employeeId}
           employeeMap={employeeMap}
         />
       )}
@@ -174,6 +173,8 @@ function PayrollPreviewPanel({
 
   const [searchFilter, setSearchFilter] = useState('');
   const [componentFilter, setComponentFilter] = useState('all');
+  const [groupMode, setGroupMode] = useState(false);
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [reason, setReason] = useState(
     `Payroll Settlement for Attendance Period ${String(lastMonth).padStart(2, '0')}/${lastMonthYear}`,
   );
@@ -188,6 +189,13 @@ function PayrollPreviewPanel({
   );
 
   const activePreview = !preview.isError ? preview.data : undefined;
+  const groupEmployees = activePreview?.employeeTotals ?? [];
+  const selectionValid =
+    !groupMode ||
+    (selectedEmployees.length > 0 &&
+      selectedEmployees.every((id) =>
+        groupEmployees.some((employee) => employee.employeeId === id),
+      ));
 
   // Filter lines by search and component
   const filteredLines = useMemo(() => {
@@ -219,6 +227,7 @@ function PayrollPreviewPanel({
   }, [activePreview?.lines, employeeMap, searchFilter, componentFilter]);
 
   function handleSelectMonth(targetYear: string, targetMonth: string) {
+    setSelectedEmployees([]);
     setYear(targetYear);
     setMonth(targetMonth);
     if (
@@ -239,7 +248,8 @@ function PayrollPreviewPanel({
 
   async function prepare(event: FormEvent) {
     event.preventDefault();
-    if (!activePreview || preview.isFetching || !activePreview.lines.length) return;
+    if (!activePreview || preview.isFetching || !activePreview.lines.length || !selectionValid)
+      return;
 
     const result = await action.run(
       '/payroll-handoff/batches',
@@ -247,6 +257,7 @@ function PayrollPreviewPanel({
         year: Number(loaded.year),
         month: Number(loaded.month),
         expectedPreviewFingerprint: activePreview.previewFingerprint,
+        ...(groupMode ? { employeeIds: selectedEmployees } : {}),
         reason,
       },
       'POST',
@@ -554,6 +565,64 @@ function PayrollPreviewPanel({
                     immutable payroll batch for Accounts review. Preparation does not approve or pay
                     this batch.
                   </p>
+                  <fieldset
+                    disabled={action.pending}
+                    style={{
+                      border: '1px solid #cbd5e1',
+                      borderRadius: 8,
+                      padding: 16,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <legend>Employees in this batch</legend>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={groupMode}
+                        onChange={(event) => {
+                          setGroupMode(event.target.checked);
+                          setSelectedEmployees([]);
+                        }}
+                      />{' '}
+                      Prepare a selected employee group
+                    </label>
+                    <p>
+                      Place approvers’ salaries in a separate group for independent review. An
+                      employee can belong to only one active payroll batch for this month. Each
+                      group needs its own HR, Management and Finance approvals.
+                    </p>
+                    {groupMode && (
+                      <div style={{ maxHeight: 260, overflowY: 'auto', display: 'grid', gap: 8 }}>
+                        {groupEmployees.map((employee) => (
+                          <label
+                            key={employee.employeeId}
+                            style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedEmployees.includes(employee.employeeId)}
+                              onChange={(event) => {
+                                setSelectedEmployees((current) =>
+                                  event.target.checked
+                                    ? [...current, employee.employeeId]
+                                    : current.filter((id) => id !== employee.employeeId),
+                                );
+                              }}
+                            />
+                            {employeeMap.get(employee.employeeId.toLowerCase())?.name ??
+                              employee.employeeId}
+                            {' — '}
+                            {money(employee.netPay, activePreview.currency)}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    <p>
+                      {groupMode ? selectedEmployees.length : groupEmployees.length} employees
+                      selected. Other employees remain outside this batch and require separate
+                      preparation.
+                    </p>
+                  </fieldset>
                   <TextAreaField
                     label="Preparation Reason / Memo"
                     required
@@ -575,6 +644,7 @@ function PayrollPreviewPanel({
                         action.pending ||
                         preview.isFetching ||
                         !activePreview.lines.length ||
+                        !selectionValid ||
                         !reason.trim()
                       }
                     >
@@ -593,16 +663,20 @@ function PayrollPreviewPanel({
 }
 
 function PayrollBatches({
+  canPrepare,
   canLock,
   canProcess,
   canReview,
   accountId,
+  employeeId,
   employeeMap,
 }: {
+  canPrepare: boolean;
   canLock: boolean;
   canProcess: boolean;
   canReview: boolean;
   accountId: string;
+  employeeId: string | null;
   employeeMap: Map<string, { name: string; code: string; initials: string }>;
 }) {
   const [page, setPage] = useState(1);
@@ -633,7 +707,7 @@ function PayrollBatches({
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
   async function downloadAdvice(batch: PayrollBatch) {
-    if (downloading || !['locked', 'finance_handed_off'].includes(batch.state)) return;
+    if (downloading || !canDownloadSalary(batch)) return;
     const signal = lifetime();
     setDownloading(true);
     setDownloadError(null);
@@ -660,7 +734,7 @@ function PayrollBatches({
 
   async function lock(event: FormEvent) {
     event.preventDefault();
-    if (!selectedBatch || !canLockBatch(selectedBatch)) return;
+    if (!canLock || !selectedBatch || !canLockBatch(selectedBatch)) return;
     const result = await action.run(
       `/payroll-handoff/batches/${selectedBatch.id}/lock`,
       { expectedVersion: selectedBatch.version, reason: lockReason },
@@ -676,7 +750,7 @@ function PayrollBatches({
 
   async function process(event: FormEvent) {
     event.preventDefault();
-    if (!selectedBatch || !canProcessBatch(selectedBatch)) return;
+    if (!canProcess || !selectedBatch || !canProcessBatch(selectedBatch)) return;
     const result = await action.run(
       `/payroll-handoff/batches/${selectedBatch.id}/processing`,
       { externalProcessingReference: processingReference, reason: processingReason },
@@ -694,28 +768,49 @@ function PayrollBatches({
   function isPreparer(batch: PayrollBatch) {
     return Boolean(accountId && batch.preparedByUserId === accountId);
   }
+  function includesOwnSalary(batch: PayrollBatch) {
+    return Boolean(
+      employeeId &&
+      detailQuery.data?.batch.id === batch.id &&
+      detailQuery.data.lines.some((line) => line.employeeId === employeeId),
+    );
+  }
+  function canDownloadSalary(batch: PayrollBatch) {
+    return (
+      batch.calculationVersion === 'salary-v2' &&
+      batch.salaryComplete === true &&
+      ['locked', 'finance_handed_off'].includes(batch.state)
+    );
+  }
   function canLockBatch(batch: PayrollBatch) {
     return (
       !isPreparer(batch) &&
-      (batch.calculationVersion === 'salary-v2'
-        ? batch.state === 'hr_approved' &&
-          batch.hrApprovedByUserId !== accountId &&
-          batch.salaryComplete === true
-        : batch.state === 'prepared')
+      !includesOwnSalary(batch) &&
+      batch.calculationVersion === 'salary-v2' &&
+      batch.state === 'hr_approved' &&
+      batch.hrApprovedByUserId !== accountId &&
+      batch.salaryComplete === true
     );
   }
   function canProcessBatch(batch: PayrollBatch) {
     return (
       batch.state === 'locked' &&
-      (batch.calculationVersion === 'salary-v2'
-        ? batch.lockedByUserId !== accountId &&
-          batch.hrApprovedByUserId !== accountId &&
-          !isPreparer(batch)
-        : batch.lockedByUserId === accountId)
+      batch.calculationVersion === 'salary-v2' &&
+      batch.salaryComplete === true &&
+      batch.lockedByUserId !== accountId &&
+      batch.hrApprovedByUserId !== accountId &&
+      !isPreparer(batch) &&
+      !includesOwnSalary(batch)
     );
   }
   async function reviewBatch(decision: number) {
-    if (!selectedBatch || isPreparer(selectedBatch)) return;
+    if (
+      !canReview ||
+      !selectedBatch ||
+      isPreparer(selectedBatch) ||
+      includesOwnSalary(selectedBatch)
+    )
+      return;
     const result = await action.run(
       `/payroll-handoff/batches/${selectedBatch.id}/hr-review`,
       { expectedVersion: selectedBatch.version, decision, reason: reviewReason },
@@ -729,9 +824,30 @@ function PayrollBatches({
     }
   }
   async function cancelBatch() {
-    if (!selectedBatch || !isPreparer(selectedBatch)) return;
+    if (!canPrepare || !selectedBatch || !isPreparer(selectedBatch)) return;
     const result = await action.run(
       `/payroll-handoff/batches/${selectedBatch.id}/cancel`,
+      { expectedVersion: selectedBatch.version, reason: reviewReason },
+      'POST',
+      payrollBatchDetail,
+    );
+    if (result) {
+      setReviewReason('');
+      void detailQuery.refetch();
+      void batchesQuery.refetch();
+    }
+  }
+
+  async function returnBatch() {
+    if (
+      !canReview ||
+      !selectedBatch ||
+      selectedBatch.state !== 'hr_approved' ||
+      isPreparer(selectedBatch)
+    )
+      return;
+    const result = await action.run(
+      `/payroll-handoff/batches/${selectedBatch.id}/return-for-correction`,
       { expectedVersion: selectedBatch.version, reason: reviewReason },
       'POST',
       payrollBatchDetail,
@@ -835,9 +951,7 @@ function PayrollBatches({
                               <Button
                                 variant="secondary"
                                 disabled={
-                                  downloading ||
-                                  !['locked', 'finance_handed_off'].includes(batch.state) ||
-                                  detailQuery.isFetching
+                                  downloading || !canDownloadSalary(batch) || detailQuery.isFetching
                                 }
                                 onClick={() => void downloadAdvice(batch)}
                               >
@@ -925,11 +1039,38 @@ function PayrollBatches({
                                   batchId={batch.id}
                                   currency={batch.currency}
                                   employees={batch.employeeTotals ?? []}
-                                  available={
-                                    batch.salaryComplete === true &&
-                                    ['locked', 'finance_handed_off'].includes(batch.state)
-                                  }
+                                  available={canDownloadSalary(batch)}
                                 />
+                                {batch.state === 'returned' && (
+                                  <FinanceNotice>
+                                    Returned for correction. Original salary and approval history
+                                    are retained. Correct the source records, refresh the month
+                                    preview and prepare a new run for fresh approvals.
+                                  </FinanceNotice>
+                                )}
+                                {batch.state === 'hr_approved' &&
+                                  canReview &&
+                                  !isPreparer(batch) && (
+                                    <section aria-label="Return payroll for correction">
+                                      <TextAreaField
+                                        label="Reason for returning payroll"
+                                        value={reviewReason}
+                                        onChange={setReviewReason}
+                                        required
+                                      />
+                                      <Button
+                                        variant="secondary"
+                                        disabled={action.pending || !reviewReason.trim()}
+                                        onClick={() => void returnBatch()}
+                                      >
+                                        Return for correction
+                                      </Button>
+                                      <p>
+                                        The current run will be retired. A new run will require
+                                        fresh HR and Management approvals.
+                                      </p>
+                                    </section>
+                                  )}
                                 {batch.state === 'prepared' && (
                                   <div>
                                     <TextAreaField
@@ -938,28 +1079,30 @@ function PayrollBatches({
                                       onChange={setReviewReason}
                                       required
                                     />
-                                    {canReview && !isPreparer(batch) && (
-                                      <>
-                                        <Button
-                                          disabled={
-                                            action.pending ||
-                                            !reviewReason.trim() ||
-                                            !batch.salaryComplete
-                                          }
-                                          onClick={() => void reviewBatch(1)}
-                                        >
-                                          HR approve salary
-                                        </Button>
-                                        <Button
-                                          variant="secondary"
-                                          disabled={action.pending || !reviewReason.trim()}
-                                          onClick={() => void reviewBatch(3)}
-                                        >
-                                          Reject salary run
-                                        </Button>
-                                      </>
-                                    )}
-                                    {isPreparer(batch) && (
+                                    {canReview &&
+                                      !isPreparer(batch) &&
+                                      !includesOwnSalary(batch) && (
+                                        <>
+                                          <Button
+                                            disabled={
+                                              action.pending ||
+                                              !reviewReason.trim() ||
+                                              !batch.salaryComplete
+                                            }
+                                            onClick={() => void reviewBatch(1)}
+                                          >
+                                            HR approve salary
+                                          </Button>
+                                          <Button
+                                            variant="secondary"
+                                            disabled={action.pending || !reviewReason.trim()}
+                                            onClick={() => void reviewBatch(3)}
+                                          >
+                                            Reject salary run
+                                          </Button>
+                                        </>
+                                      )}
+                                    {canPrepare && isPreparer(batch) && (
                                       <Button
                                         variant="secondary"
                                         disabled={action.pending || !reviewReason.trim()}

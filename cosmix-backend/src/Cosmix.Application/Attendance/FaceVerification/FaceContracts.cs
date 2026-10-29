@@ -67,6 +67,7 @@ public sealed record VerifyFaceRequest([Required, StringLength(128)] string Chal
     [Required, StringLength(12, MinimumLength = 12)] string ExpectedVersion);
 public sealed record FaceEnrollmentResponse(Guid Id, Guid EmployeeId, string Provider, string ProviderVersion,
     DateTimeOffset EnrolledAtUtc, bool IsActive, DateTimeOffset? RevokedAtUtc, Guid? ReplacesEnrollmentId, string Version);
+public sealed record CurrentFaceEnrollmentResponse(FaceEnrollmentResponse? Enrollment);
 public sealed record FaceChallengeResponse(Guid Id, string Challenge, DateTimeOffset ExpiresAtUtc, string Version);
 public sealed record FaceVerificationResponse(Guid Id, string Outcome, string ReasonCode, DateTimeOffset ExpiresAtUtc,
     bool CanSubmitCheckIn, string Version);
@@ -77,10 +78,13 @@ public sealed record FaceCapabilityResponse(bool Available, string ReasonCode, b
     bool CheckOutRequiresFace = false, bool EnrollmentCompatible = false, bool CheckInFaceReady = false,
     string AvailabilityKind = "configuration_only");
 public sealed record FaceEmployeeDevice(UserAccount Account, RegisteredDevice Device);
+public sealed record FaceEnrollmentDeviceResponse(Guid Id, string DisplayName, string Platform, DateTimeOffset VerifiedAtUtc);
 
 public interface IFaceRepository
 {
     Task<FaceEmployeeDevice> EmployeeDeviceAsync(Guid employeeId, Guid deviceId, CancellationToken ct);
+    Task<PagedResult<FaceEnrollmentDeviceResponse>> DevicesAsync(Guid employeeId, int page, int pageSize, CancellationToken ct) =>
+        throw new Cosmix.Application.Authentication.AuthenticationFailure("face_device_listing_unavailable", 503);
     Task<IReadOnlyList<AccessResource>> ResourcesAsync(Guid employeeId, DateOnly date, CancellationToken ct);
     Task<FaceEnrollment?> ActiveAsync(Guid employeeId, CancellationToken ct);
     Task<FaceEnrollment?> EnrollmentAsync(Guid employeeId, Guid id, CancellationToken ct);

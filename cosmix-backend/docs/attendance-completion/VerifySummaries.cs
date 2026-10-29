@@ -82,6 +82,13 @@ f.Sessions.Clear(); f.Roster=f.Roster with {ShiftVersionId=Guid.NewGuid()};
 var frozen=await service.DayAsync(f.EmployeeId,f.Date,f.Context,ct);
 Check(frozen.IsLocked&&frozen.Facts.WorkedMinutes==75&&frozen.LatestSavedRevision?.Id==second.Id,"locked reads use pinned private snapshot");
 Check(f.SessionReads==sessionsReads&&f.RosterReads==rosterReads&&f.PolicyReads==policyReads,"locked read never resolves mutable facts/roster/policy");
+var partialCalendar = await service.ReadCalendarAvailabilityAsync(f.EmployeeId, new(f.Date, f.Date.AddDays(1)), f.Context, ct);
+Check(partialCalendar.Count == 2 && partialCalendar[0].Facts?.WorkedMinutes == 75 && partialCalendar[0].UnavailableReason is null,
+    "HR calendar retains a verified frozen day when another day has no frozen membership");
+Check(partialCalendar[1].IsLocked && partialCalendar[1].UnavailableReason == "locked_attendance_summary_unavailable" &&
+    partialCalendar[1].Facts is null && partialCalendar[1].Roster is null && partialCalendar[1].Policy is null && partialCalendar[1].ExceptionCount is null,
+    "missing locked calendar day has explicit availability, never invented zero time or pay");
+Check(f.SessionReads==sessionsReads&&f.RosterReads==rosterReads&&f.PolicyReads==policyReads,"unavailable HR read never falls back to live calculations");
 await Fails(()=>service.RecalculateAsync(f.EmployeeId,request with {ExpectedRevision=2},"locked-change",f.Context,ct),"attendance_period_locked");
 var latest=f.Summaries[^1];
 var reference=JsonSerializer.Deserialize<PrivateFileReference>(latest.InputEvidenceReference!)!;
@@ -90,11 +97,23 @@ var snapshot=JsonSerializer.Deserialize<AttendanceDayResponse>(original.Bytes)!;
 // Synthetic corruption simulates the wrong otherwise valid same-purpose snapshot reference.
 f.Stored[reference.StorageKey]=(original.Purpose,JsonSerializer.SerializeToUtf8Bytes(snapshot with {Facts=snapshot.Facts with {WorkedMinutes=999}}));
 await Fails(()=>service.DayAsync(f.EmployeeId,f.Date,f.Context,ct),"attendance_summary_evidence_conflict");
+await Fails(()=>service.ReadDayAvailabilityAsync(f.EmployeeId,f.Date,f.Context,ct),"attendance_summary_evidence_conflict");
 f.Stored[reference.StorageKey]=(original.Purpose,JsonSerializer.SerializeToUtf8Bytes(snapshot with {EmployeeId=Guid.NewGuid()}));
 await Fails(()=>service.DayAsync(f.EmployeeId,f.Date,f.Context,ct),"attendance_summary_identity_conflict");
 f.Stored[reference.StorageKey]=original;
 f.Summaries.Clear();
 await Fails(()=>service.DayAsync(f.EmployeeId,f.Date,f.Context,ct),"locked_attendance_summary_unavailable");
+var missingDay = await service.ReadDayAvailabilityAsync(f.EmployeeId, f.Date, f.Context, ct);
+Check(missingDay.UnavailableReason == "locked_attendance_summary_unavailable" && missingDay.Facts is null,
+    "HR daily read returns expected missing evidence without throwing");
+var missingMonth = await service.ReadCalendarAvailabilityAsync(f.EmployeeId, new(f.Date, f.Date.AddDays(30)), f.Context, ct);
+Check(missingMonth.Count == 31 && missingMonth.All(x => x.UnavailableReason is not null && x.ExceptionCount is null),
+    "31-day HR register remains readable even when frozen coverage is missing");
+await Fails(()=>service.ReadCalendarAvailabilityAsync(f.EmployeeId,new(f.Date,f.Date.AddDays(31)),f.Context,ct),"attendance_range_limit",400);
+f.Grants.RemoveAll(x=>x.Permission==AttendanceSummaryPermissions.Read);
+await Fails(()=>service.ReadDayAvailabilityAsync(f.EmployeeId,f.Date,f.Context,ct),"access_denied",403);
+await Fails(()=>service.ReadCalendarAvailabilityAsync(f.EmployeeId,new(f.Date,f.Date),f.Context,ct),"access_denied",403);
+f.Grant(AttendanceSummaryPermissions.Read,f.SiteId);
 
 var g=new Fixture(); var gs=g.Service(); g.Web(); g.Grant(AttendanceSummaryPermissions.Read,g.SiteId); g.Grant(AttendanceSummaryPermissions.Calculate,g.SiteId);
 var good=new AttendancePolicyResult("calculated",Guid.NewGuid(),"approved-policy-v1",60,0,0,AttendanceDayStatus.Present,["Confirmed policy adapter result in synthetic harness."]);
@@ -162,6 +181,31 @@ async Task<AttendanceReplay<string>> LegacyReplay()=>await legacyOp.TryReplayAsy
 await Fails(async()=>{await LegacyReplay();},"access_denied",403);
 legacy.Grant(AttendanceSummaryPermissions.Calculate,secondSite);
 Check((await LegacyReplay()).Result=="retained"&&writes==1,"v1 original flat requirements reauthorized without repeating mutation");
+// HR reads must explain missing setup without dropping an otherwise authorized month.
+// Strict calculation/self contracts must continue to reject the same missing input.
+var setup=new Fixture(); setup.Web(); setup.Grant(AttendanceSummaryPermissions.Read,setup.SiteId);
+setup.Grant(AttendanceSummaryPermissions.Calculate,setup.SiteId);
+setup.RosterFailure="employee_assignment_unavailable"; var setupService=setup.Service();
+var setupDay=await setupService.ReadDayAvailabilityAsync(setup.EmployeeId,setup.Date,setup.Context,ct);
+Check(setupDay.Policy?.Status=="schedule_configuration_required" && setupDay.Roster?.Status=="employee_assignment_unavailable",
+    "HR read identifies missing employment setup");
+Check(setupDay.Facts?.WorkedMinutes==60 && setupDay.Policy?.DayStatus is null && setupDay.Policy?.PayableMinutes is null,
+    "existing accepted facts retained without invented attendance classification/pay");
+Check(setup.PolicyReads==0 && setup.Summaries.Count==0,"missing setup neither evaluates monetary policy nor saves a summary");
+setup.Sessions.Clear();
+var setupMonth=await setupService.ReadCalendarAvailabilityAsync(setup.EmployeeId,new(setup.Date,setup.Date.AddDays(30)),setup.Context,ct);
+Check(setupMonth.Count==31 && setupMonth.All(x=>x.FactualStatus=="no_accepted_session_evidence" && x.Policy?.DayStatus is null),
+    "missing setup is readable across the month without fake Present/Absent");
+await Fails(()=>setupService.DayAsync(setup.EmployeeId,setup.Date,setup.Context,ct),"employee_assignment_unavailable");
+await Fails(()=>setupService.RecalculateAsync(setup.EmployeeId,new(setup.Date,0,"No fabricated assignment"),"missing-setup",setup.Context,ct),"employee_assignment_unavailable");
+setup.RosterFailure="employee_assignment_history_conflict";
+await Fails(()=>setupService.ReadDayAvailabilityAsync(setup.EmployeeId,setup.Date,setup.Context,ct),"employee_assignment_history_conflict");
+setup.RosterFailure="employee_assignment_unavailable"; setup.Grants.Clear();
+await Fails(()=>setupService.ReadCalendarAvailabilityAsync(setup.EmployeeId,new(setup.Date,setup.Date),setup.Context,ct),"access_denied",403);
+setup.Grant(AttendanceSummaryPermissions.Read,setup.SiteId); setup.Locked=true;
+var setupLocked=await setupService.ReadDayAvailabilityAsync(setup.EmployeeId,setup.Date,setup.Context,ct);
+Check(setupLocked.IsLocked && setupLocked.UnavailableReason=="locked_attendance_summary_unavailable" && setupLocked.Roster is null,
+    "missing frozen evidence never falls back to live setup");
 Console.WriteLine($"PASS: {checks} summary service/authorization/snapshot checks (synthetic adapters; no SQL, real policy integration or genuine login).");
 
 sealed class Fixture:ICurrentAuthentication,IAccountAccessReader,ISchedulingJournalRepository,IAttendanceSummaryRepository,
@@ -174,6 +218,7 @@ sealed class Fixture:ICurrentAuthentication,IAccountAccessReader,ISchedulingJour
     public AuthenticatedAccount Identity;
     public EffectiveRosterResponse Roster;
     public AttendancePolicyResult? Policy;
+    public string? RosterFailure;
     public Guid? ExtraSite,QueriedEmployee;
     public bool Current=true,Locked;
     public int FileReads,SessionReads,RosterReads,PolicyReads;
@@ -189,7 +234,8 @@ sealed class Fixture:ICurrentAuthentication,IAccountAccessReader,ISchedulingJour
     public Fixture()
     {
         Identity=new(Guid.NewGuid(),EmployeeId,Guid.NewGuid(),1,SessionClient.Mobile,false);
-        Grants.Add(new(AttendanceSummaryPermissions.Self,false,RoleId,AccessScopeKind.Self,EmployeeId));
+        Grants.Add(new(AttendanceSummaryPermissions.Self,false,RoleId,AccessScopeKind.Self,EmployeeId)
+            { AuthorityTimingKnown=true, ValidFromUtc=Now.AddDays(-1) });
         Roster=new(EmployeeId,Date,"scheduled","Asia/Karachi",SiteId,Guid.NewGuid(),Guid.NewGuid(),ShiftVersionId,1,Now.AddHours(-2),Now.AddHours(7),540,0,0);
         Sessions.Add(new(Guid.NewGuid(),1,EmployeeId,Date,Now.AddHours(-1),Now,ShiftVersionId,null,Now,null,correctionId:Guid.NewGuid(),siteId:SiteId));
     }
@@ -211,8 +257,10 @@ sealed class Fixture:ICurrentAuthentication,IAccountAccessReader,ISchedulingJour
         try{return await action(ct);}finally{TransactionDepth--;}
     }
     public void Web()=>Identity=Identity with {Client=SessionClient.Web,MfaSatisfied=true};
-    public void Grant(string permission,Guid site)=>Grants.Add(new(permission,false,RoleId,AccessScopeKind.Site,site));
-    public void GrantScope(string permission,AccessScopeKind kind,Guid? id)=>Grants.Add(new(permission,false,RoleId,kind,id));
+    public void Grant(string permission,Guid site)=>Grants.Add(new(permission,false,RoleId,AccessScopeKind.Site,site)
+        { AuthorityTimingKnown=true, ValidFromUtc=Now.AddDays(-1) });
+    public void GrantScope(string permission,AccessScopeKind kind,Guid? id)=>Grants.Add(new(permission,false,RoleId,kind,id)
+        { AuthorityTimingKnown=true, ValidFromUtc=Now.AddDays(-1) });
     public AuthenticatedAccount Require()=>Identity;
     public Task<IReadOnlyList<PermissionGrant>> GetGrantsAsync(Guid id,DateTimeOffset at,CancellationToken ct)=>Task.FromResult<IReadOnlyList<PermissionGrant>>(Grants);
     public Task<bool> IsCurrentSessionAsync(AuthenticatedAccount a,CancellationToken ct)=>Task.FromResult(Current);
@@ -226,10 +274,17 @@ sealed class Fixture:ICurrentAuthentication,IAccountAccessReader,ISchedulingJour
     public Task<IReadOnlyList<WorkSession>> SessionsAsync(Guid e,DateOnly d,CancellationToken ct){QueriedEmployee=e;SessionReads++;return Task.FromResult<IReadOnlyList<WorkSession>>(Sessions.Where(x=>x.EmployeeId==e&&x.AttendanceDate==d).ToArray());}
     public Task<int> ExceptionCountAsync(Guid e,DateOnly d,CancellationToken ct)=>Task.FromResult(0);
     public Task<bool> IsLockedAsync(DateOnly d,CancellationToken ct)=>Task.FromResult(Locked);
-    public Task<DailyAttendanceSummary?> LatestAsync(Guid e,DateOnly d,CancellationToken ct)=>Task.FromResult(Summaries.Where(x=>x.EmployeeId==e&&x.AttendanceDate==d).MaxBy(x=>x.Revision));
+    public Task<AttendanceSummaryLookup> LookupAsync(Guid e,DateOnly d,CancellationToken ct)=>
+        Task.FromResult(new AttendanceSummaryLookup(Locked,Summaries.Where(x=>x.EmployeeId==e&&x.AttendanceDate==d).MaxBy(x=>x.Revision)));
+    public async Task<DailyAttendanceSummary?> LatestAsync(Guid e,DateOnly d,CancellationToken ct)
+    {
+        var result=await LookupAsync(e,d,ct);
+        if(result.IsLocked&&result.Summary is null)throw AttendanceOperation.Conflict("locked_attendance_summary_unavailable");
+        return result.Summary;
+    }
     public Task<PagedResult<DailyAttendanceSummary>> HistoryAsync(Guid e,DateOnly d,int page,int size,CancellationToken ct)=>Task.FromResult(new PagedResult<DailyAttendanceSummary>(Summaries.Where(x=>x.EmployeeId==e&&x.AttendanceDate==d).OrderByDescending(x=>x.Revision).Skip((page-1)*size).Take(size).ToArray(),Summaries.Count,page,size));
     public void Add(DailyAttendanceSummary row,IReadOnlyList<AttendanceSummarySession> links){Summaries.Add(row);Links.AddRange(links);}
-    public Task<EffectiveRosterResponse> ResolveAsync(Guid e,DateOnly d,CancellationToken ct){RosterReads++;return Task.FromResult(Roster with {EmployeeId=e,BusinessDate=d});}
+    public Task<EffectiveRosterResponse> ResolveAsync(Guid e,DateOnly d,CancellationToken ct){RosterReads++;if(RosterFailure is not null)throw AttendanceOperation.Conflict(RosterFailure);return Task.FromResult(Roster with {EmployeeId=e,BusinessDate=d});}
     public Task<AttendancePolicyResult> CalculateAsync(Guid e,DateOnly d,FactualAttendance facts,EffectiveRosterResponse roster,CancellationToken ct)
     { PolicyReads++; return Policy is null ? new UnavailableAttendancePolicyCalculator().CalculateAsync(e,d,facts,roster,ct):Task.FromResult(Policy); }
     public Task<PrivateFileReference> WriteAsync(byte[] bytes,string purpose,CancellationToken ct)

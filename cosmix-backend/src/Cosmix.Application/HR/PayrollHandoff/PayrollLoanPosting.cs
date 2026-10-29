@@ -7,6 +7,7 @@ using Cosmix.Application.Attendance.PayrollInputs;
 using Cosmix.Application.Authentication;
 using Cosmix.Application.Authentication.Access;
 using Cosmix.Application.HR.AdvancesLoans;
+using Cosmix.Application.HR.PayrollSalary;
 using Cosmix.Domain.Attendance.PayrollInputs;
 using Cosmix.Domain.Common.Approvals;
 using Cosmix.Domain.HR.AdvancesLoans;
@@ -172,6 +173,8 @@ public sealed partial class PayrollHandoffService
         if (batch.Id != batchId || batch.LockedAt is null || batch.ApprovalRequestId is null || batch.Currency != Currency ||
             request.PostedAtUtc < batch.LockedAt || request.PostedAtUtc > actor.Now)
             throw AttendanceOperation.Conflict("payroll_loan_posting_batch_not_ready");
+        if (batch.CalculationVersion == "salary-v2")
+            await PayrollFrozenBatchReader.ValidateAsync(batch, repository, files, true, ct);
         var line = batch.Lines.SingleOrDefault(x => x.Id == lineId)
             ?? throw AttendanceOperation.Missing("payroll_handoff_line_not_found");
         if (line.PayrollHandoffBatchId != batchId || line.Component != PayrollComponentKind.LoanRepayment ||

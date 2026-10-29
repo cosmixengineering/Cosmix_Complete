@@ -1,5 +1,5 @@
-Applied Migrations count: 29
-Latest: 20261027133000_PersistPayrollFinanceSetupTables
+Applied Migrations count: 30
+Latest: 20261028071931_CompleteSalaryRunAndStatutoryEntries
 All Migrations:
 20261005075444_InitialFoundation
 20261005113807_AddInitialHrAttendanceModels
@@ -30,3 +30,4 @@ All Migrations:
 20261026193000_PersistStatutoryEmployeeItemsAndJournalLinks
 20261027120000_PersistFinancialPostingMetadataAndEntitlements
 20261027133000_PersistPayrollFinanceSetupTables
+20261028071931_CompleteSalaryRunAndStatutoryEntries

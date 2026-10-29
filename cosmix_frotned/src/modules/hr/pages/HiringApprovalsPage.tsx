@@ -2,9 +2,6 @@ import { useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   ClipboardCheck,
-  Users,
-  Calendar,
-  Coins,
   Search,
   RefreshCw,
   Eye,
@@ -17,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { Pagination } from '@/components/data-display/Pagination';
 import { useHrAccess } from '../hooks/use-hr-access';
 import { useHrQuery } from '../hooks/use-hr-queries';
 import { pageOf, employeeSchema } from '../schemas/contracts';
@@ -24,13 +22,13 @@ import { submissionSummarySchema, type SubmissionSummary } from '../schemas/appr
 import { labelDate } from '../utils/messages';
 import { HiringSubmissionReview } from '../components/approvals/HiringSubmissionReview';
 import { EmployeeAccessSetup } from '../components/approvals/EmployeeAccessSetup';
+import { Denied, QueryState } from '../components/Feedback';
 import '../components/approvals/hiring-review.css';
 import '@/styles/hr-requests.css';
 import '@/styles/hr-dashboard.css';
 
 interface GenericApprovalItem {
   id: string;
-  category: 'onboarding' | 'leave' | 'advance' | 'update';
   categoryLabel: string;
   employeeId: string;
   employeeName: string;
@@ -54,7 +52,6 @@ export function HiringApprovalsPage() {
   const basePath = location.pathname.startsWith('/admin') ? '/admin' : '/hr';
   const isAdminReviewer = access.can('hr.employees.submissions.review');
 
-  const [activeTab, setActiveTab] = useState<'all' | 'onboarding' | 'leave' | 'advance'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState<GenericApprovalItem | null>(null);
 
@@ -63,20 +60,26 @@ export function HiringApprovalsPage() {
   const [reviewDirty, setReviewDirty] = useState(false);
   const [reviewBusy, setReviewBusy] = useState(false);
   const [adminMessage, setAdminMessage] = useState('');
+  const [draftPage, setDraftPage] = useState(1);
+  const [submissionPage, setSubmissionPage] = useState(1);
+  const [accessDirty, setAccessDirty] = useState(false);
+  const [accessBusy, setAccessBusy] = useState(false);
   const [accessEmployee, setAccessEmployee] = useState<{
     id: string;
     name: string;
     number: number;
   } | null>(null);
 
-  // 1. Fetch Draft Employees (14 drafts awaiting onboarding review/completion)
-  const draftsQuery = useHrQuery('employees?status=0&pageSize=50&page=1', pageOf(employeeSchema), [
-    'hr.employees.read',
-  ]);
+  // Drafts still need completion and submission before they can be reviewed.
+  const draftsQuery = useHrQuery(
+    `employees?status=0&pageSize=50&page=${draftPage}`,
+    pageOf(employeeSchema),
+    ['hr.employees.read'],
+  );
 
   // 2. Fetch Formal Hiring Submissions (if permitted)
   const submissionsQuery = useHrQuery(
-    'employees/submissions?pageSize=50&page=1&status=1',
+    `employees/submissions?pageSize=50&page=${submissionPage}&status=1`,
     pageOf(submissionSummarySchema),
     ['hr.employees.read', 'hr.employees.submissions.review'],
   );
@@ -102,7 +105,6 @@ export function HiringApprovalsPage() {
 
         list.push({
           id: `sub-${s.id}`,
-          category: 'onboarding',
           categoryLabel: 'Hiring Submission',
           employeeId: s.employeeId,
           employeeName: empName,
@@ -137,7 +139,6 @@ export function HiringApprovalsPage() {
 
         list.push({
           id: `draft-${emp.id}`,
-          category: 'onboarding',
           categoryLabel: 'Onboarding Draft',
           employeeId: emp.id,
           employeeName: empName,
@@ -146,9 +147,9 @@ export function HiringApprovalsPage() {
           requestType: 'New Hire Onboarding Setup',
           details: `CNIC: ${emp.identityNumber || 'Pending'} • Phone: ${emp.phone || 'Pending'} • Documents & verification queued`,
           submittedAt: emp.createdAt ? labelDate(emp.createdAt) : 'Recently created',
-          statusText: 'Pending Admin Approval',
-          statusVariant: 'pending',
-          approverRole: 'System Administrator',
+          statusText: 'Draft — not submitted',
+          statusVariant: 'draft',
+          approverRole: 'Not yet submitted for review',
           phone: emp.phone,
           identityNumber: emp.identityNumber,
           email: emp.email,
@@ -161,16 +162,10 @@ export function HiringApprovalsPage() {
 
   // Counts
   const totalCount = approvalItems.length;
-  const onboardingCount = approvalItems.filter((i) => i.category === 'onboarding').length;
-  const leaveCount = approvalItems.filter((i) => i.category === 'leave').length;
-  const advanceCount = approvalItems.filter((i) => i.category === 'advance').length;
 
   // Filtered List
   const filteredItems = useMemo(() => {
     return approvalItems.filter((item) => {
-      // Category filter
-      if (activeTab !== 'all' && item.category !== activeTab) return false;
-
       // Search term
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
@@ -183,7 +178,9 @@ export function HiringApprovalsPage() {
 
       return true;
     });
-  }, [approvalItems, activeTab, searchTerm]);
+  }, [approvalItems, searchTerm]);
+
+  if (!access.can('hr.employees.read')) return <Denied />;
 
   return (
     <div className="hr-requests-shell">
@@ -194,7 +191,7 @@ export function HiringApprovalsPage() {
           <span>/</span>
           <span>Human Resources</span>
           <span>/</span>
-          <span style={{ color: '#0f172a', fontWeight: 600 }}>Pending Approvals</span>
+          <span style={{ color: '#0f172a', fontWeight: 600 }}>Hiring Submissions &amp; Drafts</span>
         </div>
 
         <div className="hr-requests-header-main">
@@ -204,10 +201,9 @@ export function HiringApprovalsPage() {
             </div>
             <div>
               <span className="hr-requests-tagline">HR Operations • Approvals Queue</span>
-              <h1 className="hr-requests-title">Pending Approvals</h1>
+              <h1 className="hr-requests-title">Hiring Submissions &amp; Drafts</h1>
               <p className="hr-requests-subtitle">
-                Comprehensive tracking list of onboarding, leave, and request submissions awaiting
-                management review.
+                Onboarding drafts and submitted hiring requests awaiting management review.
               </p>
             </div>
           </div>
@@ -241,151 +237,11 @@ export function HiringApprovalsPage() {
           {adminMessage}
         </div>
       )}
+      <QueryState query={draftsQuery}>{null}</QueryState>
+      {isAdminReviewer && <QueryState query={submissionsQuery}>{null}</QueryState>}
 
-      {/* 2. Top KPI Cards Grid */}
-      <div className="hr-requests-kpi-grid">
-        <div
-          className={`hr-requests-kpi-card ${activeTab === 'all' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          <div className="hr-requests-kpi-icon">
-            <ClipboardCheck size={14} />
-          </div>
-          <div className="hr-requests-kpi-content">
-            <span
-              style={{
-                fontSize: '9.5px',
-                fontWeight: 600,
-                color: '#64748b',
-                textTransform: 'uppercase',
-              }}
-            >
-              TOTAL PENDING
-            </span>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>
-              {totalCount}
-            </div>
-            <span style={{ fontSize: '10px', color: '#64748b' }}>Across all categories</span>
-          </div>
-        </div>
-
-        <div
-          className={`hr-requests-kpi-card ${activeTab === 'onboarding' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('onboarding')}
-        >
-          <div className="hr-requests-kpi-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
-            <Users size={14} />
-          </div>
-          <div className="hr-requests-kpi-content">
-            <span
-              style={{
-                fontSize: '9.5px',
-                fontWeight: 600,
-                color: '#64748b',
-                textTransform: 'uppercase',
-              }}
-            >
-              ONBOARDING &amp; HIRING
-            </span>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>
-              {onboardingCount}
-            </div>
-            <span style={{ fontSize: '10px', color: '#64748b' }}>
-              New hire submissions &amp; drafts
-            </span>
-          </div>
-        </div>
-
-        <div
-          className={`hr-requests-kpi-card ${activeTab === 'leave' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('leave')}
-        >
-          <div className="hr-requests-kpi-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>
-            <Calendar size={14} />
-          </div>
-          <div className="hr-requests-kpi-content">
-            <span
-              style={{
-                fontSize: '9.5px',
-                fontWeight: 600,
-                color: '#64748b',
-                textTransform: 'uppercase',
-              }}
-            >
-              LEAVE APPLICATIONS
-            </span>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>
-              {leaveCount}
-            </div>
-            <span style={{ fontSize: '10px', color: '#64748b' }}>Awaiting manager action</span>
-          </div>
-        </div>
-
-        <div
-          className={`hr-requests-kpi-card ${activeTab === 'advance' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('advance')}
-        >
-          <div className="hr-requests-kpi-icon" style={{ background: '#faf5ff', color: '#9333ea' }}>
-            <Coins size={14} />
-          </div>
-          <div className="hr-requests-kpi-content">
-            <span
-              style={{
-                fontSize: '9.5px',
-                fontWeight: 600,
-                color: '#64748b',
-                textTransform: 'uppercase',
-              }}
-            >
-              CLAIMS &amp; ADVANCES
-            </span>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>
-              {advanceCount}
-            </div>
-            <span style={{ fontSize: '10px', color: '#64748b' }}>
-              Salary advance &amp; expenses
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Filter Bar & Search */}
+      {/* Search the loaded hiring submissions and drafts. */}
       <div className="hr-requests-filter-row">
-        <div className="hr-requests-status-pills">
-          <button
-            type="button"
-            className={`hr-requests-pill-btn ${activeTab === 'all' ? 'is-active' : ''}`}
-            onClick={() => setActiveTab('all')}
-          >
-            <span>All Requests</span>
-            <span style={{ opacity: 0.8, fontSize: '11px' }}>({totalCount})</span>
-          </button>
-          <button
-            type="button"
-            className={`hr-requests-pill-btn ${activeTab === 'onboarding' ? 'is-active' : ''}`}
-            onClick={() => setActiveTab('onboarding')}
-          >
-            <span>Onboarding &amp; Hiring</span>
-            <span style={{ opacity: 0.8, fontSize: '11px' }}>({onboardingCount})</span>
-          </button>
-          <button
-            type="button"
-            className={`hr-requests-pill-btn ${activeTab === 'leave' ? 'is-active' : ''}`}
-            onClick={() => setActiveTab('leave')}
-          >
-            <span>Leave Requests</span>
-            <span style={{ opacity: 0.8, fontSize: '11px' }}>({leaveCount})</span>
-          </button>
-          <button
-            type="button"
-            className={`hr-requests-pill-btn ${activeTab === 'advance' ? 'is-active' : ''}`}
-            onClick={() => setActiveTab('advance')}
-          >
-            <span>Claims &amp; Advances</span>
-            <span style={{ opacity: 0.8, fontSize: '11px' }}>({advanceCount})</span>
-          </button>
-        </div>
-
         <div className="hr-requests-search-box">
           <Search size={15} className="hr-requests-search-icon" />
           <input
@@ -402,14 +258,18 @@ export function HiringApprovalsPage() {
       <div className="hr-requests-container">
         <div className="hr-requests-count-summary">
           <span>
-            Showing {filteredItems.length} of {totalCount} pending approvals
+            Showing {filteredItems.length} of {totalCount} records on the loaded pages
           </span>
           <span style={{ fontSize: '11.5px', color: '#94a3b8' }}>
-            Sorted by most recent submission
+            Hiring submissions and onboarding drafts
           </span>
         </div>
 
-        {filteredItems.length === 0 ? (
+        {draftsQuery.isPending ||
+        draftsQuery.isError ||
+        (isAdminReviewer &&
+          (submissionsQuery.isPending ||
+            submissionsQuery.isError)) ? null : filteredItems.length === 0 ? (
           <div className="hr-requests-empty">
             <div
               className="hr-requests-empty-icon"
@@ -425,7 +285,7 @@ export function HiringApprovalsPage() {
               <Inbox size={26} color="#94a3b8" />
             </div>
             <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 4px' }}>
-              No pending approvals found
+              No hiring records on these pages
             </h3>
             <p
               style={{
@@ -437,7 +297,7 @@ export function HiringApprovalsPage() {
             >
               {searchTerm
                 ? 'No requests match your current search query. Try clearing the search filter.'
-                : 'All requests in this category have been processed or none are currently pending review.'}
+                : 'No hiring submissions or onboarding drafts were returned for these pages.'}
             </p>
             {searchTerm && (
               <Button variant="secondary" onClick={() => setSearchTerm('')}>
@@ -463,8 +323,8 @@ export function HiringApprovalsPage() {
                       style={{
                         fontSize: '9.5px',
                         fontWeight: 600,
-                        color: '#2563eb',
-                        background: '#eff6ff',
+                        color: '#0f172a',
+                        background: '#f1f5f9',
                         padding: '1px 5px',
                         borderRadius: '3px',
                       }}
@@ -510,7 +370,7 @@ export function HiringApprovalsPage() {
 
                 {/* Direct Link to Employee Profile */}
                 <Link
-                  to={`${basePath}/employees/${item.employeeId}`}
+                  to={`${basePath}/employees/${item.employeeId}${item.statusVariant === 'draft' ? '/hiring' : ''}`}
                   className="hr-request-action-btn hr-request-action-btn--outline"
                   title="Open employee profile"
                 >
@@ -519,7 +379,7 @@ export function HiringApprovalsPage() {
                 </Link>
 
                 {/* Roles & Access Setup button (Admin or reviewer) */}
-                {item.category === 'onboarding' &&
+                {item.submissionRef?.status === 2 &&
                   access.can('hr.employees.submissions.review', 'access.accounts.read') && (
                     <Button
                       variant="secondary"
@@ -562,6 +422,28 @@ export function HiringApprovalsPage() {
           ))
         )}
       </div>
+      {draftsQuery.data && (
+        <div aria-label="Onboarding draft pages">
+          <p className="muted">Onboarding drafts · search filters the loaded pages only.</p>
+          <Pagination
+            page={draftPage}
+            pageSize={50}
+            total={draftsQuery.data.totalCount}
+            onChange={setDraftPage}
+          />
+        </div>
+      )}
+      {isAdminReviewer && submissionsQuery.data && (
+        <div aria-label="Hiring submission pages">
+          <p className="muted">Pending hiring submissions</p>
+          <Pagination
+            page={submissionPage}
+            pageSize={50}
+            total={submissionsQuery.data.totalCount}
+            onChange={setSubmissionPage}
+          />
+        </div>
+      )}
 
       {/* 5. HR Read-Only Details Dialog */}
       <Dialog
@@ -590,7 +472,7 @@ export function HiringApprovalsPage() {
                 color: '#475569',
               }}
             >
-              <Shield size={16} color="#2563eb" style={{ flexShrink: 0 }} />
+              <Shield size={16} color="#0f172a" style={{ flexShrink: 0 }} />
               <div>
                 <strong>HR Notice:</strong> As HR Desk, this view is read-only. Final authorization
                 decision is handled by <strong>{selectedItem.approverRole}</strong>.
@@ -716,7 +598,7 @@ export function HiringApprovalsPage() {
               <Button variant="secondary" onClick={() => setSelectedItem(null)}>
                 Close
               </Button>
-              {selectedItem.category === 'onboarding' &&
+              {selectedItem.submissionRef?.status === 2 &&
                 access.can('hr.employees.submissions.review', 'access.accounts.read') && (
                   <Button
                     variant="primary"
@@ -781,7 +663,7 @@ export function HiringApprovalsPage() {
               submission={adminSubmission}
               onDirty={setReviewDirty}
               onBusy={setReviewBusy}
-              onSaved={(decision) => {
+              onSaved={(decision, result) => {
                 setReviewDirty(false);
                 setAdminMessage(`Decision recorded: ${decision}.`);
                 const approvedEmp = adminSubmission
@@ -794,7 +676,11 @@ export function HiringApprovalsPage() {
                 setAdminSubmission(null);
                 void draftsQuery.refetch();
                 void submissionsQuery.refetch();
-                if (decision.toLowerCase().includes('approve') && approvedEmp) {
+                if (
+                  result.status === 2 &&
+                  approvedEmp &&
+                  access.can('hr.employees.submissions.review', 'access.accounts.read')
+                ) {
                   setAccessEmployee(approvedEmp);
                 }
               }}
@@ -807,7 +693,12 @@ export function HiringApprovalsPage() {
       <Dialog
         open={!!accessEmployee}
         onOpenChange={(open) => {
-          if (!open) setAccessEmployee(null);
+          if (
+            !open &&
+            !accessBusy &&
+            (!accessDirty || window.confirm('Discard unsaved access setup changes?'))
+          )
+            setAccessEmployee(null);
         }}
         title="Employee Roles &amp; System Access Setup"
         description={
@@ -821,6 +712,8 @@ export function HiringApprovalsPage() {
             <EmployeeAccessSetup
               employeeId={accessEmployee.id}
               approved
+              onDirty={setAccessDirty}
+              onBusy={setAccessBusy}
               onSaved={() => {
                 void draftsQuery.refetch();
                 if (isAdminReviewer) void submissionsQuery.refetch();

@@ -18,10 +18,10 @@ import {
   Plus,
   Send,
   User,
-  Fingerprint,
   Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useHrAccess } from '../hooks/use-hr-access';
 import { useHrAction, useHrQuery } from '../hooks/use-hr-queries';
 import { profileResponse } from '../schemas/hiring';
@@ -35,7 +35,6 @@ import { ProfileForm } from '../components/hiring/ProfileForm';
 import { SensitiveSection } from '../components/hiring/SensitiveForms';
 import { EmployeeDocuments } from '../components/documents/EmployeeDocuments';
 import { SubmissionReview } from '../components/hiring/SubmissionReview';
-import { EmployeeBiometricSection } from '../components/employee/EmployeeBiometricSection';
 import '@/styles/onboarding-stepper.css';
 
 export function isStep1Complete(p: Profile | null | undefined): boolean {
@@ -111,21 +110,11 @@ const ONBOARDING_STEPS = [
     icon: FileCheck,
   },
   {
-    key: 'biometrics',
+    key: 'submission',
     stepNumber: 6,
     stepTag: 'STEP 06',
-    title: 'Biometrics & Live Face ID',
-    shortTitle: '6. Biometrics',
-    description:
-      'Open web camera, align employee face inside the guide frame, and enroll active facial recognition template.',
-    icon: Fingerprint,
-  },
-  {
-    key: 'submission',
-    stepNumber: 7,
-    stepTag: 'STEP 07',
     title: 'Review & Send for Admin Approval',
-    shortTitle: '7. Review & Submit',
+    shortTitle: '6. Review & Submit',
     description:
       'Review complete employee portfolio, audit required attachments, and transmit draft to Admin for final authorization.',
     icon: Send,
@@ -175,9 +164,7 @@ export function NewEmployeePage() {
           {action.pending ? 'Opening...' : 'Retry opening employee form'}
         </Button>
       ) : (
-        <div className="loading-state">
-          <p>Preparing employee form...</p>
-        </div>
+        <CardSkeleton />
       )}
     </>
   );
@@ -196,7 +183,7 @@ function HiringWorkspace({ employeeId }: { employeeId: string }) {
   const location = useLocation();
   const basePath = location.pathname.startsWith('/admin') ? '/admin' : '/hr';
   const [params] = useSearchParams();
-  const tab = params.get('tab') ?? 'profile';
+  const tab = params.get('tab') === 'biometrics' ? 'submission' : (params.get('tab') ?? 'profile');
   const [saved, setSaved] = useState(false);
   const needsStatusCheck = !access.can('hr.employees.identity.read');
   const current = useHrQuery(
@@ -240,7 +227,6 @@ function HiringWorkspace({ employeeId }: { employeeId: string }) {
       label: 'Medical documents',
       allowed: access.can('hr.employees.documents.read', 'hr.employees.medical.read'),
     },
-    { key: 'biometrics', label: 'Biometrics & Face ID', allowed: true },
     { key: 'submission', label: 'Submission', allowed: true },
   ];
   const onSaved = (nextTab?: string) => {
@@ -381,51 +367,6 @@ function HiringWorkspace({ employeeId }: { employeeId: string }) {
                         editable={editable}
                         medical={tab === 'medical-documents'}
                         onSaved={() => onSaved()}
-                      />
-                      <div className="stepper-nav-footer">
-                        <div>
-                          {prevStep && (
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              onClick={() => {
-                                setSaved(false);
-                                navigate(`?tab=${prevStep.key}`);
-                              }}
-                            >
-                              <ChevronLeft size={16} />
-                              <span>
-                                Previous: Step {prevStep.stepNumber} - {prevStep.shortTitle}
-                              </span>
-                            </Button>
-                          )}
-                        </div>
-                        <div className="stepper-nav-right">
-                          {nextStep && (
-                            <Button
-                              type="button"
-                              variant="success"
-                              onClick={() => {
-                                setSaved(false);
-                                navigate(`?tab=${nextStep.key}`);
-                              }}
-                            >
-                              <span>
-                                Continue to Step {nextStep.stepNumber}: {nextStep.shortTitle}
-                              </span>
-                              <ChevronRight size={16} />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  ) : tab === 'biometrics' ? (
-                    <>
-                      <EmployeeBiometricSection
-                        key={employeeId}
-                        employeeId={employeeId}
-                        compact
-                        onEnrolled={() => onSaved('submission')}
                       />
                       <div className="stepper-nav-footer">
                         <div>

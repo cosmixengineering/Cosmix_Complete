@@ -43,6 +43,19 @@ public sealed class FaceVerificationController(FaceService service, FaceCaptureS
 [ProducesResponseType<ProblemDetails>(409), ProducesResponseType<ProblemDetails>(503)]
 public sealed class FaceEnrollmentsController(FaceService service, FaceEnrollmentHistoryService historyService, FaceCaptureService captures) : ControllerBase
 {
+    [HttpGet("devices"), ProducesResponseType<PagedResult<FaceEnrollmentDeviceResponse>>(200)]
+    [ProducesResponseType<ProblemDetails>(404)]
+    [EndpointSummary("List an employee's eligible registered devices for face enrollment")]
+    [EndpointDescription("attendance.face.manage; current web MFA and explicit Employee/Site/All scope. The employee account must be active, approved and eligible. Returns only verified, nonrevoked devices belonging to that account, with verification no later than now. No device identifier hashes, secrets, biometric evidence or provider readiness are returned.")]
+    public Task<PagedResult<FaceEnrollmentDeviceResponse>> Devices(Guid employeeId, CancellationToken ct,
+        [FromQuery, Range(1, 1000000)] int page = 1, [FromQuery, Range(1, 100)] int pageSize = 25) =>
+        service.DevicesAsync(employeeId, page, pageSize, Context(), ct);
+    [HttpGet("current"), ProducesResponseType<CurrentFaceEnrollmentResponse>(200)]
+    [ProducesResponseType<ProblemDetails>(404)]
+    [EndpointSummary("Read the employee's current face enrollment for replacement")]
+    [EndpointDescription("attendance.face.read; current web MFA and explicit Employee/Site/All scope, matching enrollment history. Returns enrollment metadata with its exact ID/version, or enrollment: null when none is active. No history paging, biometric evidence or provider readiness evaluation.")]
+    public Task<CurrentFaceEnrollmentResponse> Current(Guid employeeId, CancellationToken ct) =>
+        service.CurrentAsync(employeeId, Context(), ct);
     [HttpGet, ProducesResponseType<PagedResult<FaceEnrollmentResponse>>(200)]
     [EndpointSummary("Read scoped face enrollment metadata without template access")]
     [EndpointDescription("attendance.face.read; current web MFA and explicit Employee/Site/All scope. No templates, thresholds or capture images are returned.")]

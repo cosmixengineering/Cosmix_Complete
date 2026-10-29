@@ -1,5 +1,5 @@
 {
-  "ObligationId": "182742f9-439c-46fd-9e13-517b699aedb9",
+  "ObligationId": "8dae045b-05f7-4ed1-ac1a-2abda3ad3c09",
   "TotalGrossObligation": 180000.40,
   "TotalNetObligation": 173800.10,
   "TotalDisbursed": 173800.10,
@@ -29,141 +29,141 @@
   "ConfirmedPaymentsCount": 3,
   "PersistedSalaryPayments": [
     {
-      "Id": "cacb39c1-d005-4f95-a97a-24ca30cc2ac9",
-      "EmployeeId": "cc8c747d-92b6-4925-bd46-79faaf6ce3e8",
-      "PaymentReference": "PAY-B-202610-PART2",
-      "Amount": 37300.10,
-      "State": 3,
-      "ConfirmedAt": "2026-10-27T09:33:31.0423335+00:00",
-      "ConfirmedByUserId": "ed960f42-2c31-4b10-801e-2fe41c1c849b"
-    },
-    {
-      "Id": "9c04f8a0-c2b1-4ecf-ae61-8346a37a2a8c",
-      "EmployeeId": "cc8c747d-92b6-4925-bd46-79faaf6ce3e8",
-      "PaymentReference": "PAY-B-202610-PART1",
-      "Amount": 40000.00,
-      "State": 3,
-      "ConfirmedAt": "2026-10-27T09:33:31.0305339+00:00",
-      "ConfirmedByUserId": "ed960f42-2c31-4b10-801e-2fe41c1c849b"
-    },
-    {
-      "Id": "db20c589-d472-4fc2-bd3f-db61474a13df",
-      "EmployeeId": "75cb9f21-883f-4811-807d-0f15c0dd4c91",
+      "Id": "a1b08a4b-1c8d-4757-98a6-83abc782193d",
+      "EmployeeId": "630ac0a3-8eac-46ed-86d6-30586c3625fa",
       "PaymentReference": "PAY-A-202610-01",
       "Amount": 96500.00,
       "State": 3,
-      "ConfirmedAt": "2026-10-27T09:33:30.9645417+00:00",
-      "ConfirmedByUserId": "ed960f42-2c31-4b10-801e-2fe41c1c849b"
+      "ConfirmedAt": "2026-10-28T06:47:15.8408391+00:00",
+      "ConfirmedByUserId": "497265f6-5016-47ba-a0ad-bc5643d14412"
+    },
+    {
+      "Id": "12f660bc-a739-4082-9fb4-927d142a5955",
+      "EmployeeId": "f3bbdb7d-6e59-40e6-bd5d-95b8777fc292",
+      "PaymentReference": "PAY-B-202610-PART2",
+      "Amount": 37300.10,
+      "State": 3,
+      "ConfirmedAt": "2026-10-28T06:47:15.9353523+00:00",
+      "ConfirmedByUserId": "497265f6-5016-47ba-a0ad-bc5643d14412"
+    },
+    {
+      "Id": "ef1215f1-471b-48fd-992e-ebd27ca20e21",
+      "EmployeeId": "f3bbdb7d-6e59-40e6-bd5d-95b8777fc292",
+      "PaymentReference": "PAY-B-202610-PART1",
+      "Amount": 40000.00,
+      "State": 3,
+      "ConfirmedAt": "2026-10-28T06:47:15.9168423+00:00",
+      "ConfirmedByUserId": "497265f6-5016-47ba-a0ad-bc5643d14412"
     }
   ],
   "PersistedJournalEntries": [
     {
-      "Id": "cd5e9402-69bd-4a27-9315-18f1f4c9ac4e",
+      "Id": "522fb1ee-471f-4d8c-bca1-1e6ccbfae41e",
       "Kind": 3,
       "DebitAccountCode": "5020",
       "CreditAccountCode": "2020",
       "Amount": 9000.30,
-      "Description": "Employer EOBI contribution for 2026-10 [Ref:c6e92c29-00f3-4076-8e1c-7bcf464b4854]",
+      "Description": "Employer EOBI contribution for 2026-10 [Ref:53e0420e-05e4-4820-8f10-d4fac0cbcc3c]",
       "PostingDate": "2026-10-01",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "STATUTORY-EOBI-c6e92c2900f340768e1c7bcf464b4854"
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "STATUTORY-EOBI-53e0420e05e448208f10d4fac0cbcc3c"
     },
     {
-      "Id": "c697e54c-b085-42e5-a6fc-301403bc1627",
-      "Kind": 1,
-      "DebitAccountCode": "5010",
-      "CreditAccountCode": "2020",
-      "Amount": 1800.20,
-      "Description": "Employee EOBI deduction for 2026-10",
-      "PostingDate": "2026-10-31",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "ACCRUAL-EOBI-182742f9439c46fd9e13517b699aedb9"
-    },
-    {
-      "Id": "79ba9369-32ac-4d3a-a972-4a4125fe0bee",
-      "Kind": 1,
-      "DebitAccountCode": "5010",
-      "CreditAccountCode": "1050",
-      "Amount": 3500.00,
-      "Description": "Staff loan principal recoveries for 2026-10",
-      "PostingDate": "2026-10-31",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "ACCRUAL-LOAN-182742f9439c46fd9e13517b699aedb9"
-    },
-    {
-      "Id": "0526878f-8c17-4904-a997-4b2beac7b08d",
-      "Kind": 1,
-      "DebitAccountCode": "5010",
-      "CreditAccountCode": "2010",
-      "Amount": 173800.10,
-      "Description": "Monthly salary accrual for October 2026",
-      "PostingDate": "2026-10-31",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "ACCRUAL-SALARY-182742f9439c46fd9e13517b699aedb9"
-    },
-    {
-      "Id": "dda605d2-4f15-459d-ae30-8324d5a7acc2",
+      "Id": "63513265-e846-4e05-b17b-653a9a5c19d2",
       "Kind": 2,
       "DebitAccountCode": "2010",
       "CreditAccountCode": "1010",
       "Amount": 37300.10,
       "Description": "Salary disbursement payment ref: PAY-B-202610-PART2",
       "PostingDate": "2026-10-31",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "PAYMENT-182742f9439c46fd9e13517b699aedb9-cacb39c1d0054f95a97a24ca30cc2ac9"
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "PAYMENT-8dae045b05f74ed1ac1a2abda3ad3c09-12f660bca73940829fb4927d142a5955"
     },
     {
-      "Id": "9c612729-1077-4703-9cdf-ad413d2241db",
-      "Kind": 1,
-      "DebitAccountCode": "5010",
-      "CreditAccountCode": "2030",
-      "Amount": 900.10,
-      "Description": "Employee Social Security deduction for 2026-10",
-      "PostingDate": "2026-10-31",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "ACCRUAL-SS-182742f9439c46fd9e13517b699aedb9"
-    },
-    {
-      "Id": "78cf5ffe-8723-4ca5-b1f0-d769aba74ea9",
+      "Id": "fe280db9-3a33-456a-b3f4-76c1b314c62e",
       "Kind": 2,
       "DebitAccountCode": "2010",
       "CreditAccountCode": "1010",
       "Amount": 96500.00,
       "Description": "Salary disbursement payment ref: PAY-A-202610-01",
       "PostingDate": "2026-10-31",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "PAYMENT-182742f9439c46fd9e13517b699aedb9-db20c589d4724fc2bd3fdb61474a13df"
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "PAYMENT-8dae045b05f74ed1ac1a2abda3ad3c09-a1b08a4b1c8d475798a683abc782193d"
     },
     {
-      "Id": "c87e59a3-4cfb-4b98-a98b-dfd87652f9ad",
+      "Id": "f814b5eb-ca99-4638-b78d-b4892c557eaf",
+      "Kind": 1,
+      "DebitAccountCode": "5010",
+      "CreditAccountCode": "2020",
+      "Amount": 1800.20,
+      "Description": "Employee EOBI deduction for 2026-10",
+      "PostingDate": "2026-10-31",
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "ACCRUAL-EOBI-8dae045b05f74ed1ac1a2abda3ad3c09"
+    },
+    {
+      "Id": "ff544512-68ec-472a-b95b-bc319cd05c65",
+      "Kind": 1,
+      "DebitAccountCode": "5010",
+      "CreditAccountCode": "2030",
+      "Amount": 900.10,
+      "Description": "Employee Social Security deduction for 2026-10",
+      "PostingDate": "2026-10-31",
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "ACCRUAL-PESSI-8dae045b05f74ed1ac1a2abda3ad3c09"
+    },
+    {
+      "Id": "253b89ac-a19e-47a9-abcb-dbd79c618260",
+      "Kind": 1,
+      "DebitAccountCode": "5010",
+      "CreditAccountCode": "1050",
+      "Amount": 3500.00,
+      "Description": "Staff loan principal recoveries for 2026-10",
+      "PostingDate": "2026-10-31",
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "ACCRUAL-1050-8dae045b05f74ed1ac1a2abda3ad3c09"
+    },
+    {
+      "Id": "10529a70-1d73-48b2-9634-eca23ad382fc",
+      "Kind": 3,
+      "DebitAccountCode": "5030",
+      "CreditAccountCode": "2030",
+      "Amount": 5400.30,
+      "Description": "Employer PESSI contribution for 2026-10 [Ref:60f33b9a-c7c6-4d59-b742-9a85fc4b8f5d]",
+      "PostingDate": "2026-10-01",
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "STATUTORY-PESSI-60f33b9ac7c64d59b7429a85fc4b8f5d"
+    },
+    {
+      "Id": "575f42cc-2261-4d4d-9d1f-f344d276b442",
+      "Kind": 1,
+      "DebitAccountCode": "5010",
+      "CreditAccountCode": "2010",
+      "Amount": 173800.10,
+      "Description": "Monthly salary accrual for October 2026",
+      "PostingDate": "2026-10-31",
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "ACCRUAL-SALARY-8dae045b05f74ed1ac1a2abda3ad3c09"
+    },
+    {
+      "Id": "4ca46b7d-a108-47fb-9bd9-fefc8e9a1f87",
       "Kind": 2,
       "DebitAccountCode": "2010",
       "CreditAccountCode": "1010",
       "Amount": 40000.00,
       "Description": "Salary disbursement payment ref: PAY-B-202610-PART1",
       "PostingDate": "2026-10-31",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "PAYMENT-182742f9439c46fd9e13517b699aedb9-9c04f8a0c2b14ecfae618346a37a2a8c"
-    },
-    {
-      "Id": "f9864bd3-7b29-4790-9efa-e607afbbb52c",
-      "Kind": 3,
-      "DebitAccountCode": "5030",
-      "CreditAccountCode": "2030",
-      "Amount": 5400.30,
-      "Description": "Employer PESSI contribution for 2026-10 [Ref:893303f3-42fd-4f8c-954f-a819cac673fe]",
-      "PostingDate": "2026-10-01",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "STATUTORY-PESSI-893303f342fd4f8c954fa819cac673fe"
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "PAYMENT-8dae045b05f74ed1ac1a2abda3ad3c09-ef1215f1471b48fd992eebd27ca20e21"
     }
   ]
 }

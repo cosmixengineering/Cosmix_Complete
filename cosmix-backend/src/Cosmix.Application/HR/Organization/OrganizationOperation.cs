@@ -16,8 +16,8 @@ public sealed class OrganizationOperation(ICurrentAuthentication current, IAccou
     IAccessManagementRepository authorization, IOrganizationRepository repository, TimeProvider clock)
 {
     public Task<T> ReadAsync<T>(string permission, Func<CancellationToken, Task<T>> action, CancellationToken ct,
-        bool requireSystemAdministrator = false, bool requireSuperAdministrator = false) =>
-        AuthorizedAsync(permission, (_, token) => action(token), ct, requireSystemAdministrator, requireSuperAdministrator);
+        bool requireSystemAdministrator = false, bool requireSuperAdministrator = false, bool concurrentRead = false) =>
+        AuthorizedAsync(permission, (_, token) => action(token), ct, requireSystemAdministrator, requireSuperAdministrator, concurrentRead);
 
     public Task<T> WriteAsync<T>(string permission, string resource, string operation, string key,
         object payload, string reason, AuthRequestContext context,
@@ -59,11 +59,13 @@ public sealed class OrganizationOperation(ICurrentAuthentication current, IAccou
         }, ct, requireSystemAdministrator, requireSuperAdministrator);
 
     private Task<T> AuthorizedAsync<T>(string permission, Func<Actor, CancellationToken, Task<T>> action, CancellationToken ct,
-        bool requireSystemAdministrator, bool requireSuperAdministrator)
+        bool requireSystemAdministrator, bool requireSuperAdministrator, bool concurrentRead = false)
     {
         var actor = current.Require();
         if (actor.Client != SessionClient.Web || !actor.MfaSatisfied) throw new AuthenticationFailure("access_denied", 403);
-        return authorization.InTransactionAsync(async token =>
+        Func<Func<CancellationToken, Task<T>>, CancellationToken, Task<T>> transaction = concurrentRead
+            ? (work, token) => authorization.InReadTransactionAsync(work, token) : authorization.InTransactionAsync;
+        return transaction(async token =>
         {
             var now = clock.GetUtcNow();
             if (!await authorization.IsCurrentAdministratorAsync(actor, now, token)) throw new AuthenticationFailure("access_denied", 403);

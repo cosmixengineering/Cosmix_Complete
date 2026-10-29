@@ -55,6 +55,8 @@ public interface IPayrollSalaryRepository
     Task<PayrollSalaryPolicy?> PolicyAsync(Guid id,bool tracked,CancellationToken ct);
     Task<IReadOnlyList<ApprovalDecision>> DecisionsAsync(Guid approvalRequestId,CancellationToken ct);
     Task<bool> HasPreparedPeriodAsync(DateOnly from,DateOnly? until,CancellationToken ct);
+    Task<bool> HasPreparedEmployeePeriodAsync(Guid employeeId,DateOnly from,DateOnly? until,CancellationToken ct)
+        => HasPreparedPeriodAsync(from,until,ct);
     void Add(PayrollSalaryComponent row,ApprovalRequest approval);
     void Add(PayrollSalaryPolicy row,ApprovalRequest approval);
     void Add(ApprovalDecision decision);

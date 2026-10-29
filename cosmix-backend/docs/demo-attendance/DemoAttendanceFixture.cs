@@ -1,0 +1,102 @@
+#:project ../../src/Cosmix.Infrastructure/Cosmix.Infrastructure.csproj
+#:property PublishAot=false
+#:property RestorePackagesWithLockFile=false
+using System.Data;
+using System.Text;
+using System.Text.Json;
+using System.Security.Cryptography;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Cosmix.Infrastructure.Database;
+using Cosmix.Infrastructure.Authentication.Bootstrap;
+using Cosmix.Domain.HR.Employees;
+using Cosmix.Domain.Common.Approvals;
+using Cosmix.Domain.HR.Onboarding;
+using Cosmix.Domain.HR.Departments;
+using Cosmix.Domain.HR.Designations;
+using Cosmix.Domain.HR.EmploymentTypes;
+using Cosmix.Domain.HR.EmployeeAssignments;
+using Cosmix.Domain.Attendance.Sites;
+using Cosmix.Domain.Attendance.Shifts;
+using Cosmix.Domain.Attendance.Rosters;
+
+const string label = "TEST ONLY DEMO ATTENDANCE 20261028";
+const string code = "DEMO-ATT-20261028";
+const string connection = @"Server=np:\\.\pipe\LOCALDB#36E7B148\tsql\query;Database=Cosmix_Testing;Integrated Security=true;Encrypt=true;TrustServerCertificate=true;Connect Timeout=15";
+var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Cosmix", "LocalTesting", "DemoAttendance20261028");
+Directory.CreateDirectory(root);
+PrivateBootstrapSnapshotStore.RequirePrivatePath(root, true);
+var manifestPath = Path.Combine(root,"fixture.json");
+if (args.Length != 1 || args[0] is not ("prepare" or "verify")) throw new Exception("Use prepare or verify.");
+await using var db = new CosmixDbContext(new DbContextOptionsBuilder<CosmixDbContext>().UseSqlServer(connection).Options);
+await db.Database.OpenConnectionAsync();
+await using (var cmd = db.Database.GetDbConnection().CreateCommand()) {
+ cmd.CommandText = "SELECT DB_NAME(),SUSER_SNAME(owner_sid),family_guid,database_guid FROM sys.databases d JOIN sys.database_recovery_status r ON d.database_id=r.database_id WHERE d.database_id=DB_ID()";
+ await using var r = await cmd.ExecuteReaderAsync(); await r.ReadAsync();
+ Require(r.GetString(0)=="Cosmix_Testing" && r.GetString(1)==@"COSMIXRND\Huma.Khan" && r.GetGuid(2)==Guid.Parse("D9C34627-18A2-41CF-A804-821E39516303") && r.GetGuid(3)==Guid.Parse("631714B1-1CB2-43CA-9A04-4B2C04E3D1A7"),"Target identity mismatch");
+}
+Require((await db.Database.GetAppliedMigrationsAsync()).Count()==31,"Migration count changed");
+if(args[0]=="verify") {
+ using var saved=JsonDocument.Parse(await File.ReadAllTextAsync(manifestPath));
+ var id=saved.RootElement.GetProperty("EmployeeId").GetGuid();
+ var employee=await db.Employees.AsNoTracking().SingleAsync(x=>x.Id==id);
+ var sessions=await db.WorkSessions.AsNoTracking().Where(x=>x.EmployeeId==id).ToArrayAsync();
+ var summaries=await db.DailyAttendanceSummaries.AsNoTracking().Where(x=>x.EmployeeId==id).ToArrayAsync();
+ var corrections=await db.AttendanceCorrections.AsNoTracking().Where(x=>x.EmployeeId==id).ToArrayAsync();
+ Require(employee.FullLegalName==label,"Wrong demo employee");
+ Require(sessions.Length==1 && sessions[0].CheckInPunchId==null && sessions[0].CheckOutPunchId==null && sessions[0].CorrectionId!=null,"Manual session provenance missing");
+ Require((sessions[0].EndsAtUtc-sessions[0].StartsAtUtc)?.TotalMinutes==480,"Wrong duty minutes");
+ Require(summaries.Length==1 && corrections.Length==1,"Expected exactly one summary/correction");
+ Require(summaries[0].WorkedMinutes==480 && summaries[0].PayableMinutes==null && summaries[0].LateMinutes==null && summaries[0].OvertimeMinutes==null && summaries[0].PolicyVersionId==null,"Factual-only summary changed");
+ var link=await db.AttendanceSummarySessions.AsNoTracking().SingleAsync(x=>x.EmployeeId==id);
+ Require(link.DailyAttendanceSummaryId==summaries[0].Id && link.WorkSessionId==sessions[0].Id && link.AllocatedMinutes==480 && sessions[0].CorrectionId==corrections[0].Id,"Exact correction/session/summary linkage failed");
+ var approval=await db.ApprovalRequests.AsNoTracking().SingleAsync(x=>x.Id==corrections[0].ApprovalRequestId);
+ var decisionRow=await db.ApprovalDecisions.AsNoTracking().SingleAsync(x=>x.ApprovalRequestId==approval.Id);
+ var adminId=await db.UserAccounts.AsNoTracking().Where(x=>x.LoginName=="admin@example.invalid").Select(x=>x.Id).SingleAsync();
+ var hrId=await db.UserAccounts.AsNoTracking().Where(x=>x.LoginName=="hr@example.invalid").Select(x=>x.Id).SingleAsync();
+ Require(approval.State==ApprovalState.Approved && decisionRow.Decision==ApprovalState.Approved && approval.RequesterUserId==adminId.ToString() && decisionRow.ActorUserId==hrId.ToString() && adminId!=hrId && decisionRow.Reason!.Contains("TEST ONLY"),"Actual distinct authenticated reviewer provenance failed");
+ using var response=JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(root,"approved-correction.json")));
+ Require(response.RootElement.GetProperty("decisionId").GetGuid()==decisionRow.Id && response.RootElement.GetProperty("appliedSessionRevisionId").GetGuid()==sessions[0].Id && response.RootElement.GetProperty("appliedSummaryRevisionId").GetGuid()==summaries[0].Id,"HTTP versus independent SQL mismatch");
+ Require(!await db.RawPunchEvents.AnyAsync(x=>x.EmployeeId==id) && !await db.FaceVerificationAttempts.AnyAsync(x=>x.EmployeeId==id),"Unexpected raw/face evidence");
+ var original=JsonSerializer.Deserialize<Dictionary<Guid,string>>(await File.ReadAllTextAsync(Path.Combine(root,"existing-employee-versions.json")))!;
+ var current=await db.Employees.AsNoTracking().Where(x=>x.Id!=id).Select(x=>new{x.Id,x.RowVersion}).ToArrayAsync();
+ Require(current.Length==original.Count && current.All(x=>original.TryGetValue(x.Id,out var v)&&v==Convert.ToHexString(x.RowVersion)),"Existing employees changed");
+ var result=new { EmployeeId=id,employee.EmployeeNumber,employee.FullLegalName,ExistingEmployeesUnchanged=true,ActualDistinctAdminHrDecision=true,ApprovalId=approval.Id,DecisionId=decisionRow.Id,SummaryLinkId=link.Id,RawPunches=0,FaceAttempts=0,Sessions=sessions,Summaries=summaries,Corrections=corrections };
+ await File.WriteAllTextAsync(Path.Combine(root,"sql-verification.json"),JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));
+ Console.WriteLine(JsonSerializer.Serialize(new { employee.EmployeeNumber,EmployeeId=id,SessionId=sessions[0].Id,SummaryId=summaries[0].Id,Minutes=480,ExistingEmployeesUnchanged=true,RawPunches=0,FaceAttempts=0 })); return;
+}
+Require(!File.Exists(manifestPath) && !File.Exists(manifestPath+".pending"),"Fixture manifest exists; do not create twice");
+await using var tx=await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+Require(!await db.Employees.AnyAsync(x=>x.FullLegalName==label) && !await db.Sites.AnyAsync(x=>x.Code==code) && !await db.Shifts.AnyAsync(x=>x.Code==code),"Fixture already exists");
+var originals=await db.Employees.AsNoTracking().Select(x=>new{x.Id,x.RowVersion}).ToArrayAsync();
+Require(originals.Length==32,"Employee baseline changed");
+await File.WriteAllTextAsync(Path.Combine(root,"existing-employee-versions.json"),JsonSerializer.Serialize(originals.ToDictionary(x=>x.Id,x=>Convert.ToHexString(x.RowVersion))));
+var category=await db.StaffCategories.AsNoTracking().SingleAsync(x=>x.Code=="SITE" && x.IsActive);
+var role=await db.Roles.AsNoTracking().SingleAsync(x=>x.Code=="ADMIN");
+var now=DateTimeOffset.UtcNow; var date=new DateOnly(2026,10,27);var end=new DateOnly(2026,10,29);
+var employeeNew=new Employee(now,"TEST-ONLY-FIXTURE-DEMO-ATT-20261028");
+employeeNew.UpdateDraft(new EmployeeDraftDetails {FullLegalName=label, IdentityDocumentType=IdentityDocumentType.Passport,IdentityDocumentNumber="TEST-ONLY-DEMO-ATT-20261028", PersonalPhone="+12025550194", JoinedOn=date,PersonalEmail="demo.attendance.20261028@example.invalid"});
+var department=new Department(code,label);var designation=new Designation(code,label);var employment=new EmploymentType(code,label);
+var site=new Site(code,label,startsOn:date,endsOn:end);var shift=new Shift(code,label);
+var version=new ShiftVersion(shift.Id,1,date,new TimeOnly(9,0),new TimeOnly(17,0),0,480,0,0,ShiftWeekdays.All);
+var membership=new EmployeeAssignment(employeeNew.Id,department.Id,designation.Id,category.Id,employment.Id,null,site.Id,null,date,end,"TEST-ONLY-FIXTURE-DEMO-ATT-20261028",now);
+var roster=ShiftPopulationAssignment.CreateDirect(shift.Id,ShiftPopulationKind.Site,date,end,siteId:site.Id);
+db.AddRange(employeeNew,department,designation,employment,site,shift,version,membership,roster);
+await db.SaveChangesAsync();
+var fixtureRequester=Guid.NewGuid();var fixtureReviewer=Guid.NewGuid();
+var snapshot=JsonSerializer.SerializeToUtf8Bytes(new {Label=label,FixtureOnly=true,NotRealHiringApproval=true,EmployeeId=employeeNew.Id,SyntheticRequester=fixtureRequester,SyntheticReviewer=fixtureReviewer,Scope="User-authorized isolated attendance eligibility fixture; no account or authority created"});
+var key=RandomNumberGenerator.GetBytes(32);var nonce=RandomNumberGenerator.GetBytes(12);var tag=new byte[16];var ciphertext=new byte[snapshot.Length];using(var aes=new AesGcm(key,16))aes.Encrypt(nonce,snapshot,ciphertext,tag);
+await File.WriteAllBytesAsync(Path.Combine(root,"fixture-snapshot.key"),key);
+await File.WriteAllBytesAsync(Path.Combine(root,"fixture-snapshot.aesgcm"),nonce.Concat(tag).Concat(ciphertext).ToArray());
+var submission=employeeNew.SubmitForApproval(fixtureRequester,now,"TEST-ONLY-FIXTURE/DemoAttendance20261028/fixture-snapshot.aesgcm","TEST-ONLY-v1",Convert.ToHexString(SHA256.HashData(snapshot)),"TEST-ONLY-LOCAL-FIXTURE-KEY",1);
+db.Add(submission);await db.SaveChangesAsync();
+var decision=employeeNew.DecideSubmission(submission,OnboardingDecision.Approve,fixtureReviewer,role.Id,"TEST ONLY synthetic eligibility fixture. NOT real hiring approval; no authenticated hiring acceptance claimed. User explicitly authorized new demo fixture only.",now);
+db.Add(decision);await db.SaveChangesAsync();
+Require(db.ChangeTracker.Entries().All(e=>e.State==EntityState.Unchanged),"Unexpected pending change");
+var after=await db.Employees.AsNoTracking().Where(x=>x.Id!=employeeNew.Id).Select(x=>new{x.Id,x.RowVersion}).ToArrayAsync();
+Require(after.Length==originals.Length && after.All(x=>originals.Any(y=>y.Id==x.Id&&y.RowVersion.SequenceEqual(x.RowVersion))),"Existing employee mutation");
+var manifest=new {Label=label,EmployeeId=employeeNew.Id,employeeNew.EmployeeNumber,SiteId=site.Id,ShiftId=shift.Id,ShiftVersionId=version.Id,EmployeeAssignmentId=membership.Id,SiteRosterId=roster.Id,DepartmentId=department.Id,DesignationId=designation.Id,EmploymentTypeId=employment.Id,StaffCategoryId=category.Id,SubmissionId=submission.Id,SyntheticDecisionId=decision.Id,FixtureRequester=fixtureRequester,FixtureReviewer=fixtureReviewer,BusinessDate=date,FixtureOnly=true,NotRealHiringApproval=true};
+await File.WriteAllTextAsync(manifestPath+".pending",JsonSerializer.Serialize(manifest,new JsonSerializerOptions{WriteIndented=true}));
+await tx.CommitAsync();File.Move(manifestPath+".pending",manifestPath);
+Console.WriteLine(JsonSerializer.Serialize(manifest));
+static void Require(bool value,string message){if(!value)throw new InvalidOperationException(message);}

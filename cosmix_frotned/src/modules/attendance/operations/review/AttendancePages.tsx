@@ -14,9 +14,41 @@ import {
 } from '../../components/SchedulingUi';
 import { queryString } from '../../api/attendance-api';
 import { canEmployee, canSelf, type Scope } from './access';
-import { calendar, day, pageOf, recalculateInput, summaryRevision, type Day } from './contracts';
+import {
+  calendar,
+  readDay,
+  pageOf,
+  recalculateInput,
+  summaryRevision,
+  type Day,
+} from './contracts';
 import { EmployeeWorkspace, EvidenceField, NumberedControls, SourceFacts } from './ReviewUi';
 import { formatTime, monthRange, today } from './helpers';
+import {
+  AttendanceEmployeeQueryState,
+  AttendanceSetupNotice,
+} from '../../components/AttendanceEmployeeSetup';
+import { needsAttendanceSetup } from '../../schemas/employee-selection';
+import '@/styles/attendance-register.css';
+
+const missingSummaryMessage =
+  'Locked period: the retained attendance summary is unavailable for this date. HR must review the historical records. Time, absence and pay have not been inferred.';
+
+function duration(minutes: number | null | undefined) {
+  if (minutes == null) return 'Unavailable';
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+function readableStatus(status: string) {
+  return status.replace(/[_-]/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+function dateLabel(date: string) {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    weekday: 'short',
+    timeZone: 'UTC',
+  }).format(new Date(`${date}T12:00:00Z`));
+}
 
 export function AttendanceDailyPage() {
   return <AttendancePage mode="daily" />;
@@ -44,15 +76,19 @@ function AttendancePage({
   self?: boolean;
 }) {
   return (
-    <EmployeeWorkspace
-      permission="attendance.summaries.read"
-      title={`${self ? 'My ' : ''}attendance ${mode}`}
-      self={self}
-    >
-      {(employeeId, scope) => (
-        <AttendanceView employeeId={employeeId} scope={scope} mode={mode} self={self} />
-      )}
-    </EmployeeWorkspace>
+    <div className="att-register-page">
+      <EmployeeWorkspace
+        permission="attendance.summaries.read"
+        title={`${self ? 'My ' : ''}attendance ${mode}`}
+        self={self}
+        compact={!self}
+        approvedOnly={!self}
+      >
+        {(employeeId, scope) => (
+          <AttendanceView employeeId={employeeId} scope={scope} mode={mode} self={self} />
+        )}
+      </EmployeeWorkspace>
+    </div>
   );
 }
 function AttendanceView({
@@ -104,9 +140,13 @@ function AttendanceView({
     );
   return (
     <>
-      <div className="attendance-commands">
+      <div className="att-register-toolbar">
+        <div className="att-register-toolbar-title">
+          <h2>Attendance register</h2>
+          <p>Select a date to view its attendance details.</p>
+        </div>
         <TextInput
-          label="Business month"
+          label="Month"
           type="month"
           value={month}
           onChange={(e) => {
@@ -114,33 +154,48 @@ function AttendanceView({
             setSelected(null);
           }}
         />
-        <IconButton
-          label="Register view"
-          aria-pressed={layout === 'register'}
-          onClick={() => setLayout('register')}
-        >
-          <List size={16} />
-        </IconButton>
-        <IconButton
-          label="Calendar view"
-          aria-pressed={layout === 'calendar'}
-          onClick={() => setLayout('calendar')}
-        >
-          <CalendarDays size={16} />
-        </IconButton>
+        <div className="att-register-view-toggle" role="group" aria-label="Register layout">
+          <IconButton
+            label="Register view"
+            aria-pressed={layout === 'register'}
+            onClick={() => setLayout('register')}
+          >
+            <List size={16} />
+          </IconButton>
+          <IconButton
+            label="Calendar view"
+            aria-pressed={layout === 'calendar'}
+            onClick={() => setLayout('calendar')}
+          >
+            <CalendarDays size={16} />
+          </IconButton>
+        </div>
         <Command
           icon={RefreshCw}
           variant="secondary"
           disabled={query.isFetching || !range}
           onClick={() => void query.refetch()}
         >
-          Reload month
+          Refresh
         </Command>
       </div>
       {!range ? (
         <p role="alert">Select a valid calendar month.</p>
       ) : (
-        <QueryState query={query} empty={query.data?.length === 0} />
+        <AttendanceEmployeeQueryState
+          employeeId={employeeId}
+          query={query}
+          empty={query.data?.length === 0}
+        />
+      )}
+      {!query.isError && query.data?.some(needsAttendanceSetup) && (
+        <AttendanceSetupNotice employeeId={employeeId} />
+      )}
+      {!query.isError && query.data?.some((row) => row.unavailableReason) && (
+        <p className="att-register-notice" role="status">
+          Some locked dates have no saved attendance record. These dates are marked unavailable;
+          they are not counted as absence or zero hours.
+        </p>
       )}
       {!query.isError &&
         query.data &&
@@ -170,57 +225,94 @@ function AttendanceView({
                 }}
               >
                 <strong>{row.businessDate}</strong>
-                <p>{row.factualStatus}</p>
-                <p>
-                  {row.facts.workedMinutes} factual minutes
-                  <br />
-                  {row.exceptionCount} exceptions
-                  <br />
-                  {row.isLocked ? 'Locked' : 'Unlocked'}
-                </p>
+                {row.unavailableReason ? (
+                  <p>Locked · Record unavailable</p>
+                ) : (
+                  <>
+                    <p>
+                      {needsAttendanceSetup(row)
+                        ? 'Attendance setup required'
+                        : readableStatus(row.factualStatus)}
+                    </p>
+                    <p>
+                      {duration(row.facts.workedMinutes)} worked
+                      <br />
+                      {row.exceptionCount} exceptions
+                      <br />
+                      {row.isLocked ? 'Locked' : 'Unlocked'}
+                    </p>
+                  </>
+                )}
               </button>
             ))}
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="attendance-table">
-              <caption>Server daily values for {month}; no monthly totals</caption>
+          <div className="att-register-table-wrap">
+            <table className="attendance-table att-register-table">
+              <caption>Daily attendance · {month}</caption>
               <thead>
                 <tr>
-                  <th scope="col">Business date / zone</th>
-                  <th scope="col">Factual status</th>
-                  <th scope="col">Scheduled / factual minutes</th>
-                  <th scope="col">Policy / payable / late / OT minutes</th>
-                  <th scope="col">Exceptions / lock</th>
+                  <th scope="col">Date</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Scheduled</th>
+                  <th scope="col">Worked</th>
+                  <th scope="col">Late</th>
+                  <th scope="col">Overtime</th>
+                  <th scope="col">Record</th>
                 </tr>
               </thead>
               <tbody>
-                {query.data.map((row) => (
-                  <tr key={row.businessDate}>
-                    <td>
-                      <button type="button" onClick={() => setSelected(row.businessDate)}>
-                        {row.businessDate}
-                      </button>
-                      <br />
-                      {row.timeZone}
-                    </td>
-                    <td>{row.factualStatus}</td>
-                    <td>
-                      {row.roster.configuredScheduledMinutes ?? 'Unavailable'} /{' '}
-                      {row.facts.workedMinutes}
-                    </td>
-                    <td>
-                      {row.policy.status}
-                      <br />
-                      {row.policy.payableMinutes ?? 'Unavailable'} /{' '}
-                      {row.policy.lateMinutes ?? 'Unavailable'} /{' '}
-                      {row.policy.overtimeMinutes ?? 'Unavailable'}
-                    </td>
-                    <td>
-                      {row.exceptionCount} / {row.isLocked ? 'Locked' : 'Unlocked'}
-                    </td>
-                  </tr>
-                ))}
+                {query.data.map((row) =>
+                  row.unavailableReason ? (
+                    <tr
+                      key={row.businessDate}
+                      className={selected === row.businessDate ? 'is-selected' : undefined}
+                    >
+                      <td>
+                        <button type="button" onClick={() => setSelected(row.businessDate)}>
+                          {dateLabel(row.businessDate)}
+                        </button>
+                      </td>
+                      <td>
+                        <span className="att-register-status">Unavailable</span>
+                      </td>
+                      <td colSpan={4} className="att-register-muted">
+                        Saved attendance record is missing
+                      </td>
+                      <td>Locked</td>
+                    </tr>
+                  ) : (
+                    <tr
+                      key={row.businessDate}
+                      className={selected === row.businessDate ? 'is-selected' : undefined}
+                    >
+                      <td>
+                        <button type="button" onClick={() => setSelected(row.businessDate)}>
+                          {dateLabel(row.businessDate)}
+                        </button>
+                      </td>
+                      <td>
+                        <span className="att-register-status">
+                          {needsAttendanceSetup(row)
+                            ? 'Attendance setup required'
+                            : readableStatus(row.factualStatus)}
+                        </span>
+                      </td>
+                      <td>{duration(row.roster.configuredScheduledMinutes)}</td>
+                      <td>{duration(row.facts.workedMinutes)}</td>
+                      <td>{duration(row.policy.lateMinutes)}</td>
+                      <td>{duration(row.policy.overtimeMinutes)}</td>
+                      <td>
+                        {row.isLocked ? 'Locked' : 'Open'}
+                        {row.exceptionCount > 0 && (
+                          <small>
+                            {row.exceptionCount} exception{row.exceptionCount === 1 ? '' : 's'}
+                          </small>
+                        )}
+                      </td>
+                    </tr>
+                  ),
+                )}
               </tbody>
             </table>
           </div>
@@ -257,25 +349,26 @@ function DailyDetail({
   const access = useAttendanceAccess();
   const query = useAttendanceQuery(
     base + '/daily' + queryString({ businessDate }),
-    day,
+    readDay,
     allowed && z.iso.date().safeParse(businessDate).success,
   );
   const [page, setPage] = useState(1);
   const history = useAttendanceQuery(
     base + '/daily/history' + queryString({ businessDate, page, pageSize: 25 }),
     pageOf(summaryRevision),
-    allowed && Boolean(query.data) && !query.isError,
+    allowed && Boolean(query.data) && !query.data?.unavailableReason && !query.isError,
   );
   const [editing, setEditing] = useState(false);
   const [reason, setReason] = useState('');
   const [notice, setNotice] = useState('');
-  const value = !query.isError ? query.data : undefined;
+  const value = !query.isError && !query.data?.unavailableReason ? query.data : undefined;
   async function reload() {
     setEditing(false);
     setReason('');
     setNotice('');
-    await query.refetch();
-    await history.refetch();
+    const updated = await query.refetch();
+    if (updated.data && !updated.data.unavailableReason && !updated.isError)
+      await history.refetch();
   }
   const calculate =
     !self &&
@@ -289,9 +382,13 @@ function DailyDetail({
   if (!z.iso.date().safeParse(businessDate).success)
     return <p role="alert">Select a valid business date.</p>;
   return (
-    <section className="attendance-section">
-      <h2>{businessDate}</h2>
-      <QueryState query={query} />
+    <section className="attendance-section att-register-day">
+      <h2>Daily details · {dateLabel(businessDate)}</h2>
+      <AttendanceEmployeeQueryState employeeId={employeeId} query={query} />
+      {needsAttendanceSetup(value) && <AttendanceSetupNotice employeeId={employeeId} />}
+      {!query.isError && query.data?.unavailableReason && (
+        <p role="status">{missingSummaryMessage}</p>
+      )}
       <SavedNotice message={notice} />
       {!editing && (
         <Command
@@ -318,7 +415,12 @@ function DailyDetail({
           {calculate && !editing && (
             <Command
               icon={RefreshCw}
-              disabled={value.isLocked || query.isFetching || history.isFetching}
+              disabled={
+                value.isLocked ||
+                needsAttendanceSetup(value) ||
+                query.isFetching ||
+                history.isFetching
+              }
               onClick={() => {
                 setNotice('');
                 setEditing(true);
@@ -330,7 +432,9 @@ function DailyDetail({
           {editing && (
             <MutationForm
               title="Recalculate unlocked attendance"
-              disabled={!calculate || value.isLocked || query.isFetching}
+              disabled={
+                !calculate || value.isLocked || needsAttendanceSetup(value) || query.isFetching
+              }
               build={() => ({
                 path: base + '/daily/recalculate',
                 method: 'POST',
@@ -355,7 +459,7 @@ function DailyDetail({
               <EvidenceField label="Reason" max={1000} value={reason} onChange={setReason} />
             </MutationForm>
           )}
-          <h3>Immutable calculation history</h3>
+          <h3>Saved calculation history</h3>
           <QueryState query={history} empty={history.data?.items.length === 0} />
           {!history.isError && history.data && (
             <>
@@ -382,34 +486,58 @@ function DailyDetail({
 function DayFacts({ value }: { value: Day }) {
   return (
     <>
-      <dl className="attendance-record">
-        <dt>Timezone</dt>
-        <dd>{value.timeZone}</dd>
-        <dt>Factual status</dt>
-        <dd>{value.factualStatus}</dd>
-        <dt>Worked minutes / open sessions</dt>
-        <dd>
-          {value.facts.workedMinutes} / {value.facts.openSessions}
-        </dd>
-        <dt>Roster / scheduled window</dt>
-        <dd>
-          {value.roster.status}
-          <br />
-          {formatTime(value.roster.startsAt, value.timeZone)} to{' '}
-          {formatTime(value.roster.endsAt, value.timeZone)}
-        </dd>
-        <dt>Policy state</dt>
-        <dd>{value.policy.status}</dd>
-        <dt>Payable / late / OT minutes</dt>
-        <dd>
-          {value.policy.payableMinutes ?? 'Unavailable'} /{' '}
-          {value.policy.lateMinutes ?? 'Unavailable'} /{' '}
-          {value.policy.overtimeMinutes ?? 'Unavailable'}
-        </dd>
-        <dt>Exceptions / lock</dt>
-        <dd>
-          {value.exceptionCount} / {value.isLocked ? 'Locked' : 'Unlocked'}
-        </dd>
+      <dl className="att-register-day-facts">
+        <div>
+          <dt>Attendance status</dt>
+          <dd>
+            {needsAttendanceSetup(value)
+              ? 'Attendance setup required'
+              : readableStatus(value.factualStatus)}
+          </dd>
+        </div>
+        <div>
+          <dt>Hours worked</dt>
+          <dd>{duration(value.facts.workedMinutes)}</dd>
+        </div>
+        <div>
+          <dt>Late time</dt>
+          <dd>{duration(value.policy.lateMinutes)}</dd>
+        </div>
+        <div>
+          <dt>Overtime</dt>
+          <dd>{duration(value.policy.overtimeMinutes)}</dd>
+        </div>
+        <div>
+          <dt>Scheduled shift</dt>
+          <dd>
+            {formatTime(value.roster.startsAt, value.timeZone)} –{' '}
+            {formatTime(value.roster.endsAt, value.timeZone)}
+          </dd>
+        </div>
+        <div>
+          <dt>Time zone</dt>
+          <dd>{value.timeZone}</dd>
+        </div>
+        <div>
+          <dt>Open sessions</dt>
+          <dd>{value.facts.openSessions}</dd>
+        </div>
+        <div>
+          <dt>Exceptions</dt>
+          <dd>{value.exceptionCount}</dd>
+        </div>
+        <div>
+          <dt>Payable time</dt>
+          <dd>{duration(value.policy.payableMinutes)}</dd>
+        </div>
+        <div>
+          <dt>Calculation status</dt>
+          <dd>{readableStatus(value.policy.status)}</dd>
+        </div>
+        <div>
+          <dt>Record status</dt>
+          <dd>{value.isLocked ? 'Locked' : 'Open'}</dd>
+        </div>
       </dl>
       {value.policy.explanations.map((explanation, i) => (
         <p key={i}>{explanation}</p>

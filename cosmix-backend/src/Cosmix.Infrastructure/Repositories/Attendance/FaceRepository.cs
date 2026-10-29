@@ -16,6 +16,26 @@ public sealed class FaceRepository(CosmixDbContext db, TimeProvider clock) : IFa
 {
     public async Task<FaceEmployeeDevice> EmployeeDeviceAsync(Guid employeeId, Guid deviceId, CancellationToken ct)
     {
+        var (account, now) = await EligibleEmployeeAccountAsync(employeeId, ct);
+        var device = await db.RegisteredDevices.SingleOrDefaultAsync(x => x.Id == deviceId && x.UserAccountId == account.Id, ct);
+        if (device is null || device.RevokedAt.HasValue || !device.VerifiedAt.HasValue || device.VerifiedAt > now)
+            throw new AuthenticationFailure("face_device_ineligible", 409);
+        return new(account, device);
+    }
+    public async Task<PagedResult<FaceEnrollmentDeviceResponse>> DevicesAsync(Guid employeeId, int page, int pageSize, CancellationToken ct)
+    {
+        var (account, now) = await EligibleEmployeeAccountAsync(employeeId, ct);
+        var query = db.RegisteredDevices.AsNoTracking().Where(x => x.UserAccountId == account.Id &&
+            x.RevokedAt == null && x.VerifiedAt != null && x.VerifiedAt <= now);
+        var count = await query.CountAsync(ct);
+        var rows = await query.OrderByDescending(x => x.VerifiedAt).ThenBy(x => x.Id)
+            .Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(x => new FaceEnrollmentDeviceResponse(x.Id, x.DisplayName, x.Platform, x.VerifiedAt!.Value))
+            .ToArrayAsync(ct);
+        return new(rows, count, page, pageSize);
+    }
+    private async Task<(UserAccount Account, DateTimeOffset Now)> EligibleEmployeeAccountAsync(Guid employeeId, CancellationToken ct)
+    {
         var account = await db.UserAccounts.Include(x => x.Employee).SingleOrDefaultAsync(x => x.EmployeeId == employeeId, ct);
         var now = clock.GetUtcNow();
         var history = await db.Set<EmployeeStatusChange>().AsNoTracking().Where(x => x.EmployeeId == employeeId && x.EffectiveAt <= now)
@@ -25,10 +45,7 @@ public sealed class FaceRepository(CosmixDbContext db, TimeProvider clock) : IFa
             history.Length > 0 && history[0].NewStatus != EmployeeStatus.Active ||
             history.Length > 1 && history[0].EffectiveAt == history[1].EffectiveAt)
             throw new AuthenticationFailure("face_employee_ineligible", 409);
-        var device = await db.RegisteredDevices.SingleOrDefaultAsync(x => x.Id == deviceId && x.UserAccountId == account.Id, ct);
-        if (device is null || device.RevokedAt.HasValue || !device.VerifiedAt.HasValue || device.VerifiedAt > now)
-            throw new AuthenticationFailure("face_device_ineligible", 409);
-        return new(account, device);
+        return (account, now);
     }
     public async Task<IReadOnlyList<AccessResource>> ResourcesAsync(Guid employeeId, DateOnly date, CancellationToken ct)
     {

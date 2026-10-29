@@ -18,7 +18,7 @@ public sealed class AccessManagementService(IAccessManagementRepository reposito
     public async Task<IReadOnlyList<PermissionGrant>> GetCurrentPermissionsAsync(AuthRequestContext context, CancellationToken cancellationToken)
     {
         var actor = current.Require();
-        return await repository.InTransactionAsync(async token =>
+        return await repository.InReadTransactionAsync(async token =>
         {
             var now = timeProvider.GetUtcNow();
             var account = await repository.FindAccountAsync(actor.AccountId, token);
@@ -493,7 +493,7 @@ public sealed class AccessManagementService(IAccessManagementRepository reposito
 
     private static AccessAccountResponse AccountResponse(UserAccount account) => new(account.Id, account.EmployeeId,
         account.Status, account.MobileAccessEnabled, account.WebAccessEnabled, account.MfaRequired,
-        Convert.ToBase64String(account.RowVersion));
+        Convert.ToBase64String(account.RowVersion), account.AuthenticatorRequired);
 
     private static AuthenticationFailure Invalid(string code = "invalid_access_request") => new(code, 400);
     private static AuthenticationFailure Missing() => new("access_resource_not_found", 404);

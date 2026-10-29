@@ -21,7 +21,7 @@ public sealed class EmployeeStatutoryCoverageConfiguration : IEntityTypeConfigur
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.ApprovedByUserId).HasMaxLength(200);
         builder.Property(x => x.ApprovedAt);
-        builder.Property(x => x.RowVersion).IsRowVersion();
+        builder.Property(x => x.RowVersion).IsRowVersion().IsRequired(false);
 
         builder.HasIndex(x => new { x.EmployeeId, x.EffectiveFrom });
     }

@@ -20,7 +20,7 @@ public sealed class PayrollAccountingPeriodConfiguration : IEntityTypeConfigurat
         builder.Property(x => x.ApprovedAt);
         builder.Property(x => x.ClosedByUserId).HasMaxLength(200);
         builder.Property(x => x.ClosedAt);
-        builder.Property(x => x.RowVersion).IsRowVersion();
+        builder.Property(x => x.RowVersion).IsRowVersion().IsRequired(false);
 
         builder.HasIndex(x => new { x.Currency, x.PeriodStart, x.PeriodEndExclusive });
         builder.HasIndex(x => x.State);

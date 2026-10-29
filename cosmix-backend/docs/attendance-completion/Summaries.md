@@ -5,6 +5,13 @@ calculation revisions/history and configured daily time interpretation using rea
 readers. See [the current continuation](Policy-Leave-Implementation.md) for verification and limits.
 No branch was fetched or merged. Ordinary financial payroll calculation remains separate.
 
+HR day/calendar reads tolerate only missing employment assignment as an explicit
+setup-required read state: `roster.status=employee_assignment_unavailable` and
+`policy.status=schedule_configuration_required`, retaining factual sessions and
+null classified/payable values. This does not activate attendance or payroll and
+does not change strict recalculation/self APIs. See the
+[28 October follow-up](HR-Read-Availability-20261028.md).
+
 | Route | Permission / scope |
 |---|---|
 | GET `/api/v1/me/attendance/daily?businessDate=YYYY-MM-DD` | `attendance.summaries.self`; session employee only |

@@ -13,7 +13,7 @@ import { documentTypes } from '../../types/hiring';
 import { downloadFile } from '../../api/hr-api';
 import { errorMessage, labelDate } from '../../utils/messages';
 import { ActionMessage, Denied, QueryState } from '../Feedback';
-import { EnumField, Field, LongField } from '../hiring/FormFields';
+import { EnumField, Field } from '../hiring/FormFields';
 import { DocumentCompleteness, DocumentHistory } from './DocumentEvidence';
 
 export function EmployeeDocuments({
@@ -116,7 +116,10 @@ export function EmployeeDocuments({
     }
   }
   return (
-    <div className="emp-documents-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div
+      className="emp-documents-container"
+      style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
+    >
       {/* Top Header */}
       <div
         style={{
@@ -131,13 +134,15 @@ export function EmployeeDocuments({
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
             {medical ? 'Private Medical Documents' : 'Employee Documents & Evidence'}
           </h2>
-          <p className="muted" style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748b' }}>
+          <p
+            className="muted"
+            style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748b' }}
+          >
             Upload, verify, and maintain official employee verification files and records.
           </p>
         </div>
         <Button
-          variant="outline"
-          size="sm"
+          variant="secondary"
           title="Reload documents"
           onClick={() => void query.refetch()}
           style={{
@@ -253,7 +258,9 @@ export function EmployeeDocuments({
                 </div>
               </div>
 
-              <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}
+              >
                 <Button
                   type="submit"
                   variant="primary"
@@ -367,7 +374,10 @@ export function EmployeeDocuments({
         <QueryState query={query}>
           {!query.data?.length ? (
             <div style={{ textAlign: 'center', padding: '36px 16px', color: '#64748b' }}>
-              <Download size={32} style={{ margin: '0 auto 10px auto', opacity: 0.35, display: 'block' }} />
+              <Download
+                size={32}
+                style={{ margin: '0 auto 10px auto', opacity: 0.35, display: 'block' }}
+              />
               <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#334155' }}>
                 No documents uploaded yet
               </p>
@@ -392,7 +402,14 @@ export function EmployeeDocuments({
                     background: '#f8fafc',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', maxWidth: '65%' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '12px',
+                      maxWidth: '65%',
+                    }}
+                  >
                     <div
                       style={{
                         width: '38px',
@@ -469,10 +486,11 @@ export function EmployeeDocuments({
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}
+                  >
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant="secondary"
                       disabled={!d.isAvailable || downloadPending}
                       onClick={() => void download(d.id, d.fileName, false)}
                       style={{ height: '32px', fontSize: '12px', gap: '5px' }}
@@ -482,9 +500,10 @@ export function EmployeeDocuments({
                     </Button>
                     {manage && (
                       <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={action.pending || !!file || !reason?.trim() || d.lifecycleStatus !== 0}
+                        variant="secondary"
+                        disabled={
+                          action.pending || !!file || !reason?.trim() || d.lifecycleStatus !== 0
+                        }
                         onClick={() =>
                           void action
                             .run(
@@ -508,8 +527,7 @@ export function EmployeeDocuments({
                     {verify && (
                       <>
                         <Button
-                          variant="outline"
-                          size="sm"
+                          variant="secondary"
                           disabled={
                             d.scanStatus !== 1 ||
                             d.isScanInProgress ||
@@ -524,7 +542,6 @@ export function EmployeeDocuments({
                         </Button>
                         <Button
                           variant="primary"
-                          size="sm"
                           disabled={
                             action.pending ||
                             d.scanStatus !== 1 ||
@@ -553,8 +570,7 @@ export function EmployeeDocuments({
                           Verify
                         </Button>
                         <Button
-                          variant="destructive"
-                          size="sm"
+                          variant="danger"
                           disabled={
                             action.pending ||
                             !reason?.trim() ||
@@ -588,7 +604,6 @@ export function EmployeeDocuments({
                       <Button
                         key={operation}
                         variant="ghost"
-                        size="sm"
                         disabled={
                           action.pending ||
                           !!file ||
@@ -631,6 +646,5 @@ export function EmployeeDocuments({
       {/* Card 3: Completeness & Compliance Audit (Placed cleanly at the bottom) */}
       {!medical && <DocumentCompleteness key={employeeId} employeeId={employeeId} />}
     </div>
-  );
   );
 }

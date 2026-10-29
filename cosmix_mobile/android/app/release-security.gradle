@@ -1,0 +1,101 @@
+import groovy.json.JsonSlurper
+import java.security.KeyStore
+import java.security.MessageDigest
+import java.security.PrivateKey
+import java.security.Signature
+import java.security.interfaces.RSAPublicKey
+import java.security.interfaces.ECPublicKey
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.process.ExecOperations
+import org.gradle.api.tasks.Optional
+import javax.inject.Inject
+
+abstract class GenerateCosmixNetworkPolicy extends DefaultTask {
+    @InputFile @Optional abstract RegularFileProperty getReleaseConfiguration()
+    @InputFile abstract RegularFileProperty getGeneratorScript()
+    @Input abstract Property<String> getNodeBinary()
+    @OutputDirectory abstract DirectoryProperty getOutputDirectory()
+    @Inject abstract ExecOperations getExecOperations()
+    @TaskAction void generate() {
+        if (!releaseConfiguration.present) throw new GradleException("Set COSMIX_ANDROID_RELEASE_CONFIG to the approved private configuration path.")
+        execOperations.exec {
+            environment "COSMIX_ANDROID_RELEASE_CONFIG", releaseConfiguration.get().asFile.absolutePath
+            commandLine nodeBinary.get(), generatorScript.get().asFile.absolutePath, "--resources", outputDirectory.get().asFile.absolutePath
+        }.assertNormalExitValue()
+    }
+}
+
+def nodeBinary = System.getenv("COSMIX_NODE_BINARY") ?: "node"
+def script = rootProject.file("../scripts/release-config.mjs")
+def configPath = System.getenv("COSMIX_ANDROID_RELEASE_CONFIG")
+def approved = [:]
+if (configPath) {
+    // Only public origin, pins, version and certificate fingerprint are returned.
+    def output = providers.exec {
+        commandLine nodeBinary, script.absolutePath, "--json"
+    }.standardOutput.asText.get()
+    approved = new JsonSlurper().parseText(output)
+}
+ext.cosmixReleaseConfig = approved
+
+def generated = layout.buildDirectory.dir("generated/cosmixRelease/res")
+def policy = tasks.register("generateCosmixReleaseNetworkPolicy", GenerateCosmixNetworkPolicy) {
+    generatorScript.set(script)
+    getNodeBinary().set(nodeBinary)
+    if (configPath) releaseConfiguration.set(file(configPath))
+    outputDirectory.set(generated)
+    // Revalidate external configuration for every release; a stale generated policy is never authority.
+    outputs.upToDateWhen { false }
+}
+androidComponents.onVariants(androidComponents.selector().withBuildType("release")) { variant ->
+    variant.sources.res.addGeneratedSourceDirectory(policy, { task -> task.outputDirectory })
+}
+def guard = tasks.register("verifyCosmixReleaseSigning") {
+    dependsOn(policy)
+    doLast {
+        if (!approved) throw new GradleException("Approved Android release configuration is required.")
+        def required = { String key ->
+            def value = System.getenv(key)
+            if (!value) throw new GradleException("Missing Android signing setting: " + key)
+            value
+        }
+        def keystoreFile = file(required("COSMIX_ANDROID_KEYSTORE")).canonicalFile
+        def repository = rootProject.projectDir.parentFile.canonicalFile.toPath()
+        if (!keystoreFile.isFile() || keystoreFile.toPath().startsWith(repository))
+            throw new GradleException("The release keystore must be an existing private file outside the mobile checkout.")
+        def storePassword = required("COSMIX_ANDROID_STORE_PASSWORD").toCharArray()
+        def keyPassword = required("COSMIX_ANDROID_KEY_PASSWORD").toCharArray()
+        try {
+            def store = KeyStore.getInstance(keystoreFile, storePassword)
+            def alias = required("COSMIX_ANDROID_KEY_ALIAS")
+            if (!store.isKeyEntry(alias)) throw new GradleException("The approved signing key alias is unavailable.")
+            def certificate = store.getCertificate(alias)
+            if (!(certificate instanceof java.security.cert.X509Certificate)) throw new GradleException("An X.509 signing identity is required.")
+            certificate.checkValidity()
+            if (certificate.subjectX500Principal.name.toLowerCase(Locale.ROOT).contains("android debug"))
+                throw new GradleException("A debug signing identity cannot sign a production release.")
+            def fingerprint = MessageDigest.getInstance("SHA-256").digest(certificate.encoded).encodeHex().toString().toUpperCase(Locale.ROOT)
+            if (fingerprint != approved.signingCertificateSha256) throw new GradleException("Signing certificate does not match the approved fingerprint.")
+            def publicKey = certificate.publicKey
+            if (!((publicKey instanceof RSAPublicKey && publicKey.modulus.bitLength() >= 2048) ||
+                  (publicKey instanceof ECPublicKey && publicKey.params.curve.field.fieldSize >= 256)))
+                throw new GradleException("The signing key must use RSA 2048+ or EC 256+.")
+            def key = store.getKey(alias, keyPassword)
+            if (!(key instanceof PrivateKey)) throw new GradleException("A private signing key is required.")
+            def algorithm = publicKey.algorithm == "RSA" ? "SHA256withRSA" : "SHA256withECDSA"
+            def proof = "Cosmix release signing validation".getBytes("UTF-8")
+            def signer = Signature.getInstance(algorithm); signer.initSign(key); signer.update(proof)
+            def signed = signer.sign()
+            def verifier = Signature.getInstance(algorithm); verifier.initVerify(publicKey); verifier.update(proof)
+            if (!verifier.verify(signed)) throw new GradleException("Signing key and certificate do not match.")
+            logger.lifecycle("Approved release signing identity verified.")
+        } finally {
+            Arrays.fill(storePassword, (char) 0); Arrays.fill(keyPassword, (char) 0)
+        }
+    }
+}
+tasks.matching { it.name == "preReleaseBuild" || it.name == "validateSigningRelease" }.configureEach {
+    dependsOn(guard)
+}

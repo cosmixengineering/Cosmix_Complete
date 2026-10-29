@@ -1,9 +1,9 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, LoaderCircle, ShieldCheck, Zap } from 'lucide-react';
-import { z } from 'zod';
+import { ArrowLeft, ArrowRight, LoaderCircle, ShieldCheck } from 'lucide-react';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { Button } from '@/components/ui/Button';
+import { LoadingState } from '@/components/feedback/LoadingState';
 import { TextInput } from '@/components/forms/TextInput';
 import { PasswordInput } from '@/components/forms/PasswordInput';
 import { useAuth } from '@/auth/use-auth';
@@ -12,33 +12,14 @@ import { authErrorMessage } from '@/auth/messages';
 import { useChallengeTime } from '@/auth/ChallengeStatus';
 import { type OtpChallenge, isSystemAdmin } from '@/auth/contracts';
 import { LocalTestOtp } from '@/auth/LocalTestOtp';
-import { request } from '@/services/api/http-client';
 import logo from '@/assets/images/cosmix-logo.png';
-
-const DEV_ACCOUNTS = [
-  {
-    role: '🛠️ Admin',
-    email: 'admin@example.invalid',
-    password: 'NLYHRfEtjUognTNLlURukM/Epgu0495W',
-    badge: 'Operations & Fleet Admin',
-  },
-  {
-    role: '👤 HR Lead',
-    email: 'hr@example.invalid',
-    password: 'zgHnMw/CY810kKKCBbhMkJUnZlP4h75J',
-    badge: 'Human Resources Lead',
-  },
-  {
-    role: '👑 SuperAdmin',
-    email: 'superadmin@example.invalid',
-    password: 'C2zMGSQj1CMIBpt7o5qe9Cpbxg6Q4Oei',
-    badge: 'Full SuperAdmin Authority',
-  },
-] as const;
 
 export function SignInPage() {
   const { user, status, sessionError, completeSignIn, retrySession } = useAuth();
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [authenticator, setAuthenticator] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState(false);
   const [challenge, setChallenge] = useState<OtpChallenge | null>(null);
   const [resending, setResending] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -58,7 +39,11 @@ export function SignInPage() {
     try {
       if (!challenge) {
         const address = String(data.get('email')).trim();
-        const result = await authAdapter.login(address, String(data.get('password')));
+        const result = await authAdapter.login(
+          address,
+          String(data.get('password')),
+          authenticator,
+        );
         setEmail(address);
         setChallenge(result);
       } else if (resending) {
@@ -70,7 +55,13 @@ export function SignInPage() {
         setChallenge(result);
         setResending(false);
       } else {
-        await authAdapter.verify(challenge.challengeId, String(data.get('code')));
+        if (challenge.nextStep === 'enter_authenticator')
+          await authAdapter.verifyAuthenticator(
+            challenge.challengeId,
+            String(data.get('code')),
+            recoveryCode,
+          );
+        else await authAdapter.verify(challenge.challengeId, String(data.get('code')));
         setVerified(true);
         setChallenge(null);
         await completeSignIn();
@@ -78,6 +69,7 @@ export function SignInPage() {
     } catch (failure) {
       setError(authErrorMessage(failure));
     } finally {
+      setCode('');
       // Clear credentials on success and failure; they are never persisted in React/query storage.
       form
         .querySelectorAll<HTMLInputElement>(
@@ -91,43 +83,14 @@ export function SignInPage() {
     }
   }
 
-  async function devQuickSignIn(acc: (typeof DEV_ACCOUNTS)[number]) {
-    if (pending.current) return;
-    pending.current = true;
-    setBusy(true);
-    setError(null);
-    try {
-      setEmail(acc.email);
-      // 1. Send Login
-      const chal = await authAdapter.login(acc.email, acc.password);
-      setChallenge(chal);
-
-      // 2. Fetch OTP from local testing inbox
-      const result = await request('/auth/web/local-testing/otp', {
-        method: 'POST',
-        anonymous: true,
-        body: { challengeId: chal.challengeId },
-      });
-      const parsed = z.object({ code: z.string().regex(/^\d{6}$/) }).parse(result);
-
-      // 3. Verify OTP immediately
-      await authAdapter.verify(chal.challengeId, parsed.code);
-      setVerified(true);
-      setChallenge(null);
-      await completeSignIn();
-    } catch (failure) {
-      setError(authErrorMessage(failure));
-    } finally {
-      pending.current = false;
-      setBusy(false);
-    }
-  }
-
   const isAdmin = isSystemAdmin(user);
   if (status === 'authenticated') {
     return <Navigate to={isAdmin ? '/admin/dashboard' : '/hr/dashboard'} replace />;
   }
-  const loading = status === 'loading';
+  if (status === 'loading') {
+    return <LoadingState fullscreen message="Verifying secure enterprise session..." />;
+  }
+  const loading = false;
   return (
     <AuthLayout variant="split">
       <section className="auth-content" aria-labelledby="sign-in-title">
@@ -149,7 +112,9 @@ export function SignInPage() {
               ? 'Loading your account.'
               : 'Your account session could not be confirmed.'
             : challenge
-              ? 'If your details are eligible, a code will arrive on your registered mobile number.'
+              ? challenge.nextStep === 'enter_authenticator'
+                ? 'Enter a code from your enrolled authenticator, or use one of your saved recovery codes.'
+                : 'If your details are eligible, a code will arrive on your registered mobile number.'
               : 'Welcome back to Cosmix Engineering.'}
         </p>
         {(error || (!challenge && sessionError)) && (
@@ -203,71 +168,24 @@ export function SignInPage() {
                     required
                     maxLength={1024}
                   />
+                  <label className="hr-field">
+                    Verification method
+                    <select
+                      value={authenticator ? 'authenticator' : 'sms'}
+                      onChange={(event) => {
+                        setAuthenticator(event.target.value === 'authenticator');
+                        setRecoveryCode(false);
+                      }}
+                    >
+                      <option value="sms">SMS code</option>
+                      <option value="authenticator">Authenticator / recovery code</option>
+                    </select>
+                  </label>
                   <div className="auth-form-link">
                     <Link className="text-link" to="/forgot-password">
                       Forgot password?
                     </Link>
                   </div>
-
-                  {import.meta.env.DEV && (
-                    <div
-                      style={{
-                        marginTop: '0.875rem',
-                        padding: '0.625rem 0.75rem',
-                        background: '#f8fafc',
-                        borderRadius: '8px',
-                        border: '1px dashed #cbd5e1',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          marginBottom: '0.4rem',
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            color: '#1e293b',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.3rem',
-                          }}
-                        >
-                          <Zap size={14} color="#f59e0b" fill="#f59e0b" />
-                          1-Click Instant Sign In (Dev Testing):
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                        {DEV_ACCOUNTS.map((acc) => (
-                          <button
-                            key={acc.email}
-                            type="button"
-                            className="btn btn--outline"
-                            title={`Instant 1-click sign in as ${acc.email}`}
-                            disabled={busy || loading}
-                            style={{
-                              fontSize: '0.75rem',
-                              padding: '0.3rem 0.6rem',
-                              cursor: 'pointer',
-                              background: '#fff',
-                              borderColor: '#94a3b8',
-                              fontWeight: 600,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
-                            }}
-                            onClick={() => void devQuickSignIn(acc)}
-                          >
-                            <span>{acc.role}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </>
               ) : resending ? (
                 <>
@@ -285,25 +203,47 @@ export function SignInPage() {
                   <p className="auth-account-email">{email}</p>
                   <TextInput
                     key={`otp-input:${challenge.challengeId}`}
-                    label="SMS verification code"
+                    label={
+                      challenge.nextStep === 'enter_authenticator'
+                        ? recoveryCode
+                          ? 'Recovery code'
+                          : 'Authenticator code'
+                        : 'SMS verification code'
+                    }
                     name="code"
+                    value={code}
+                    onChange={(event) => setCode(event.target.value)}
                     className="otp-input"
-                    inputMode="numeric"
+                    inputMode={recoveryCode ? 'text' : 'numeric'}
                     autoComplete="one-time-code"
-                    pattern="[0-9]{6}"
-                    minLength={6}
-                    maxLength={6}
+                    pattern={recoveryCode ? '[A-Fa-f0-9-]{32,39}' : '[0-9]{6}'}
+                    minLength={recoveryCode ? 32 : 6}
+                    maxLength={recoveryCode ? 39 : 6}
                     required
                   />
+                  {challenge.nextStep === 'enter_authenticator' && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setRecoveryCode(!recoveryCode);
+                        setCode('');
+                      }}
+                    >
+                      {recoveryCode ? 'Use authenticator code' : 'Use a recovery code'}
+                    </Button>
+                  )}
                   {time.expired && (
                     <p className="auth-message auth-message--warning" role="status">
-                      This code has expired. Request a new code.
+                      This sign-in request has expired. Return to sign in to start again.
                     </p>
                   )}
-                  {import.meta.env.DEV && (
+                  {import.meta.env.DEV && challenge.nextStep === 'enter_otp' && (
                     <LocalTestOtp
                       key={`local-otp:${challenge.challengeId}`}
                       challengeId={challenge.challengeId}
+                      onCode={setCode}
+                      expired={time.expired}
+                      resendIn={time.resendIn}
                       onAutoVerify={async (otpCode) => {
                         if (pending.current) return;
                         pending.current = true;
@@ -322,16 +262,9 @@ export function SignInPage() {
                         }
                       }}
                       onReset={() => {
-                        const matching = DEV_ACCOUNTS.find(
-                          (a) => a.email.toLowerCase() === email.toLowerCase(),
-                        );
-                        if (matching) {
-                          void devQuickSignIn(matching);
-                        } else {
-                          setChallenge(null);
-                          setResending(false);
-                          setError(null);
-                        }
+                        setCode('');
+                        setResending(true);
+                        setError(null);
                       }}
                     />
                   )}
@@ -359,7 +292,7 @@ export function SignInPage() {
               </Button>
               {challenge && (
                 <div className="auth-secondary-actions">
-                  {!resending && (
+                  {!resending && challenge.nextStep === 'enter_otp' && (
                     <Button
                       variant="ghost"
                       disabled={time.resendIn > 0}

@@ -1,5 +1,28 @@
 # Attendance Continuation Verification - Updated 19 October 2026
 
+## 28 October 2026 — disposable October fixture repair committed
+
+The user explicitly authorized execution after the bounded plan. A full COPY_ONLY
+backup passed checksum/header/file-list verification; exactly 778 selected rows
+were removed in one serializable transaction. All 173 tables' remaining-content
+fingerprints and schema checks passed. All 32 employees, 94 raw punches, audit,
+approvals and 31 applied migrations were preserved. No October lock remains.
+The SELECT-only actual EF/repository verifier passed 105 checks, including strict
+latest-summary reads across October 1–31 without the locked-summary exception.
+See [execution evidence](October-Test-Data-Repair-Execution-20261028.md).
+The reported employee still has no employment assignment or saved attendance;
+this repair does not invent those facts or establish full live acceptance.
+
+## 28 October 2026 — invalid test lock diagnosis and prevention
+
+See [the current locked-summary investigation](Locked-Summary-Diagnosis-20261028.md)
+for the existing database finding, the production write-guard fix, Release build
+and 254 passing standalone checks. These checks do not repair the historical
+October fixture or constitute authenticated SQL acceptance. The user confirmed
+the history is disposable and requested [an exact repair plan](October-Test-Data-Repair-Plan-20261028.md).
+Its read-only dependency manifest identifies 778 rows, including two indirect
+statutory references. No repair, backup, migration or SQL write was executed.
+
 ## Latest HR-Only Continuation - 19 October 2026
 
 The later [correction and management follow-up](../hr-srs-remediation/HR-Followup-Verification-20261019.md)

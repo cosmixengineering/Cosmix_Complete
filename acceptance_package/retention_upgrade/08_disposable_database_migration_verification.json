@@ -1,5 +1,5 @@
 {
-  "DisposableDatabaseName": "Cosmix_Disposable_c3cac8d39a69411aab606e34ff4c7deb",
+  "DisposableDatabaseName": "Cosmix_Disposable_9ae77a3ba69041f6bd338eb2c72c5456",
   "IsolationConfirmed": true,
   "MigrationsTested": [
     "20261022133924_AddComplianceWorkstreams",
@@ -34,6 +34,6 @@
   "DataPreservationVerified": true,
   "ReloadAcrossDisposedContext": true,
   "Lifecycle": "Created -\u003E Disposed -\u003E Reloaded -\u003E Approved -\u003E Posted -\u003E Exported",
-  "ExportedCsvSample": "Scheme,ContributionMonth,EmployerRegistrationNumber,EmployeeId,RegistrationNumber,EmployeeContribution,EmployerContribution,TotalContribution,Currency,State\r\nEOBI,2026-11-01,EMPLOYER-REG-999,a8421317-97a7-4eb1-b827-42d05525b9f3,REG-A-DISP,1200.00,6000.00,7200.00,PKR,Posted\r\nEOBI,2026-11-01,EMPLOYER-REG-999,4042c788-bbd1-442b-89d1-e3b9be18e99c,REG-B-DISP,800.00,4000.00,4800.00,PKR,Posted\r\nTOTAL,2026-11-01,EMPLOYER-REG-999,COMPANY_TOTAL,,2000.00,10000.00,12000.00,PKR,Posted\r\n",
+  "ExportedCsvSample": "Scheme,ContributionMonth,EmployerRegistrationNumber,EmployeeId,RegistrationNumber,EmployeeContribution,EmployerContribution,TotalContribution,Currency,State\r\nEOBI,2026-11-01,EMPLOYER-REG-999,36423852-21a8-4ce0-8da7-5448de28ac67,REG-A-DISP,1200.00,6000.00,7200.00,PKR,Posted\r\nEOBI,2026-11-01,EMPLOYER-REG-999,51555969-33af-47ac-ac04-457a1d8480df,REG-B-DISP,800.00,4000.00,4800.00,PKR,Posted\r\nTOTAL,2026-11-01,EMPLOYER-REG-999,COMPANY_TOTAL,,2000.00,10000.00,12000.00,PKR,Posted\r\n",
   "Status": "VERIFIED_SAFE_ISOLATED_MIGRATION"
 }

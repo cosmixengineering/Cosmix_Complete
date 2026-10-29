@@ -1,7 +1,7 @@
-name: Backend build
+name: Backend verification
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, 'codex/**']
   pull_request:
     branches: [main, develop]
 permissions:
@@ -15,6 +15,49 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Restore locked dependencies
-        run: dotnet restore Cosmix.Backend.sln --locked-mode
+        run: dotnet restore tests/Cosmix.Tests/Cosmix.Tests.csproj --locked-mode
       - name: Build
-        run: dotnet build Cosmix.Backend.sln --configuration Release --no-restore
+        run: dotnet build tests/Cosmix.Tests/Cosmix.Tests.csproj --configuration Release --no-restore
+      - name: Safe regression (no local/company databases)
+        run: >-
+          dotnet test tests/Cosmix.Tests/Cosmix.Tests.csproj -c Release --no-build --no-restore
+          --filter 'Category!=SqlIntegration&FullyQualifiedName!~AcceptanceExecutionSuite&FullyQualifiedName!~PayrollMonthAcceptanceTests&FullyQualifiedName!~PayrollPaymentsAcceptanceTests'
+          --logger 'trx;LogFileName=regression.trx' --results-directory TestResults
+      - name: Dependency advisories
+        shell: pwsh
+        run: ./scripts/Test-DependencyAudit.ps1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-verification
+          path: TestResults/
+          retention-days: 14
+  sql-schema:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Start disposable LocalDB
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ('MSSQLLocalDB' -notin @(& SqlLocalDB info)) { & SqlLocalDB create MSSQLLocalDB; if ($LASTEXITCODE -ne 0) { throw 'LocalDB creation failed.' } }
+          & SqlLocalDB start MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { throw 'LocalDB start failed.' }
+          "COSMIX_CI_SQL_CONNECTION=Server=(localdb)\MSSQLLocalDB;Database=Cosmix_Payroll_CI_${env:GITHUB_RUN_ID}_${env:GITHUB_RUN_ATTEMPT};Integrated Security=true;TrustServerCertificate=true" >> $env:GITHUB_ENV
+      - name: Restore locked tests
+        run: dotnet restore tests/Cosmix.Tests/Cosmix.Tests.csproj --locked-mode
+      - name: Empty-database migration and SQL boundary checks
+        run: >-
+          dotnet test tests/Cosmix.Tests/Cosmix.Tests.csproj -c Release --no-restore
+          --filter FullyQualifiedName~CiSqlSchemaTests
+          --logger 'trx;LogFileName=sql-schema.trx' --results-directory TestResults
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-sql-schema
+          path: TestResults/
+          retention-days: 14

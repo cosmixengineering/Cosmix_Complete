@@ -64,8 +64,8 @@ public static class DependencyInjection
                 sql.MigrationsAssembly(typeof(CosmixDbContext).Assembly.FullName);
                 sql.CommandTimeout(30);
             });
-            options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
+        services.AddSingleton<Cosmix.Application.Common.BackgroundJobs.WorkerHealth>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<CosmixDbContext>());
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -86,6 +86,10 @@ public static class DependencyInjection
         services.AddAttendanceOvertimeInfrastructure();
         services.AddAllowancesInfrastructure();
         services.AddScoped<PayrollHandoffRepository>();
+        services.AddScoped<Cosmix.Application.HR.PayrollSalary.IPayrollSalaryRepository, PayrollSalaryRepository>();
+        services.AddScoped<Cosmix.Application.HR.PayrollImports.IPayrollImportRepository, PayrollImportRepository>();
+        services.AddScoped<Cosmix.Application.HR.Payslips.IPayslipRepository, PayslipRepository>();
+        services.AddScoped<Cosmix.Application.HR.PayrollSalary.IPayrollStatutorySourceReader, PayrollStatutorySourceReader>();
         services.AddScoped<IPayrollHandoffRepository>(provider => provider.GetRequiredService<PayrollHandoffRepository>());
         services.AddScoped<Cosmix.Application.HR.Allowances.IAllowanceSettlementStore>(provider =>
             provider.GetRequiredService<PayrollHandoffRepository>());
@@ -149,6 +153,8 @@ public static class DependencyInjection
         services.AddScoped<IPhoneRecoveryRepository, PhoneRecoveryRepository>();
         services.AddScoped<IOtpDeliveryRepository, OtpDeliveryRepository>();
         services.AddScoped<IWebAuthenticationRepository, WebAuthenticationRepository>();
+        services.AddScoped<IWebMfaRepository, WebMfaRepository>();
+        services.AddSingleton<ITotpProvider, TotpProvider>();
         services.AddScoped<IWebPasswordRecoveryRepository, WebPasswordRecoveryRepository>();
         services.AddSingleton<PasswordHasher<UserAccount>>();
         services.AddSingleton<MicrosoftWebPasswordVerifier>();
@@ -180,6 +186,13 @@ public static class DependencyInjection
         services.AddScoped<PayrollFinanceSetupService>();
         services.AddScoped<IPayrollAccountingRepository, PayrollAccountingRepository>();
         services.AddScoped<PayrollAccountingService>();
+        services.AddScoped<Cosmix.Application.Finance.Ledger.IFinanceLedgerRepository, Cosmix.Infrastructure.Finance.FinanceLedgerRepository>();
+        services.AddScoped<Cosmix.Application.Finance.Ledger.FinanceLedgerService>();
+        services.AddScoped<Cosmix.Application.Finance.Costing.IPayrollCostRepository, Cosmix.Infrastructure.Finance.PayrollCostRepository>();
+        services.AddScoped<Cosmix.Application.Finance.Reconciliation.IBankReconciliationRepository, Cosmix.Infrastructure.Finance.BankReconciliationRepository>();
+        services.AddScoped<Cosmix.Application.Finance.Reconciliation.BankReconciliationService>();
+        services.AddScoped<Cosmix.Application.Finance.Costing.PayrollCostSourceReader>();
+        services.AddScoped<Cosmix.Application.Finance.Costing.PayrollCostService>();
         services.AddScoped<IStatutoryContributionRepository, StatutoryContributionRepository>();
         services.AddScoped<StatutoryContributionService>();
 

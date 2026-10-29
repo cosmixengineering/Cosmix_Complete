@@ -300,7 +300,9 @@ internal static class LocalTesting
         //     throw new InvalidOperationException("The local-testing EF model differs from its migration snapshot. Add and review the missing migration before upgrading Cosmix_Testing.");
         var pendingMigrations = (await db.Database.GetPendingMigrationsAsync()).ToArray();
         if (pendingMigrations.Length != 0)
-            throw new InvalidOperationException($"Cosmix_Testing is missing migrations: {string.Join(", ", pendingMigrations)}. Apply the reviewed pending migrations to this existing database, then restart. setup-local-testing does not upgrade existing databases.");
+        {
+            throw new InvalidOperationException("Local testing has pending migrations. Startup never applies migrations; review the database upgrade separately.");
+        }
         var accounts = await db.UserAccounts.AsNoTracking().Include(a => a.Employee).ToListAsync();
         if (accounts.Count != Accounts.Length || accounts.Any(a => !Accounts.Any(f =>
                 f.Email == a.LoginName && f.Phone == a.Employee.ApprovedLoginPhoneNumber &&
@@ -330,41 +332,42 @@ internal static class LocalTesting
             CosmixDbContext db, IOtpProtector crypto, LocalOtpInbox inbox, CancellationToken ct) =>
         {
             context.Response.Headers.CacheControl = "no-store";
-            if (!IsLocal(context)) return Results.NotFound();
-            var challenge = input.ChallengeId != Guid.Empty
-                ? await db.Set<MobileOtpChallenge>().AsNoTracking().Include(c => c.PhoneBinding).SingleOrDefaultAsync(c => c.Id == input.ChallengeId, ct)
-                : null;
-            if (challenge is null || challenge.ConsumedAt != null || challenge.ExpiresAt <= DateTimeOffset.UtcNow)
-            {
-                challenge = await db.Set<MobileOtpChallenge>().AsNoTracking().Include(c => c.PhoneBinding)
-                    .Where(c => c.ConsumedAt == null && c.ExpiresAt > DateTimeOffset.UtcNow)
-                    .OrderByDescending(c => c.IssuedAt).FirstOrDefaultAsync(ct);
-            }
-            if (challenge is null) return Results.NotFound();
+            if (!IsLocal(context) || input.ChallengeId == Guid.Empty || !crypto.IsConfigured ||
+                context.Request.Cookies[WebSessionCookies.Browser] is not { Length: 43 } browser)
+                return Results.NotFound();
+            var challenge = await db.Set<MobileOtpChallenge>().AsNoTracking().Include(c => c.PhoneBinding)
+                .SingleOrDefaultAsync(c => c.Id == input.ChallengeId, ct);
+            if (challenge is null || !challenge.IsUsableAt(DateTimeOffset.UtcNow) ||
+                challenge.Purpose is not ("WebLogin" or "WebPasswordReset") ||
+                challenge.DeviceHash != crypto.Digest("browser:" + browser) ||
+                challenge.PhoneBinding.RevokedAt.HasValue ||
+                !Accounts.Any(a => a.Phone == challenge.PhoneBinding.PhoneNumber))
+                return Results.NotFound();
 
             string? code = null;
             for (var attempt = 0; attempt < 10; attempt++)
             {
+                ct.ThrowIfCancellationRequested();
+                // A host restart loses this in-memory inbox. Request a new challenge in that case;
+                // never reconstruct a code from its verifier or substitute another login's code.
                 var delivery = await db.Set<OtpDelivery>().AsNoTracking().SingleOrDefaultAsync(d =>
-                    d.ChallengeId == challenge.Id && d.Status == OtpDeliveryStatus.Submitted, ct);
-                if (delivery is not null && (code = inbox.Read(delivery.Id, challenge.PhoneBinding.PhoneNumber)) is not null)
+                    d.ChallengeId == challenge.Id, ct);
+                if (delivery is null || delivery.Status is OtpDeliveryStatus.Failed or OtpDeliveryStatus.Expired)
+                    return Results.NotFound();
+                if (delivery.Status == OtpDeliveryStatus.Submitted &&
+                    (code = inbox.Read(delivery.Id, challenge.PhoneBinding.PhoneNumber)) is not null)
                     break;
                 if (attempt < 9) await Task.Delay(400, ct);
             }
-            if (code is null)
-            {
-                // Parallel search for the 6-digit code matching this challenge verifier
-                System.Threading.Tasks.Parallel.For(0, 1000000, (i, state) =>
-                {
-                    var candidate = i.ToString("D6");
-                    if (crypto.Verify(challenge.Id, candidate, challenge.Verifier))
-                    {
-                        code = candidate;
-                        state.Stop();
-                    }
-                });
-            }
-            return code is null ? Results.NotFound() : Results.Ok(new { code, expiresAt = challenge.ExpiresAt });
+            if (code is null) return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "Local test OTP is not available in this host's inbox.",
+                detail: "Check the OTP delivery worker. After restarting the API, request a fresh login code.");
+            // Recheck the challenge after waiting for dispatch. Reading the inbox never consumes proof;
+            // the normal verify endpoint still owns eligibility, attempt limits and session issuance.
+            var current = await db.Set<MobileOtpChallenge>().AsNoTracking()
+                .SingleOrDefaultAsync(c => c.Id == input.ChallengeId, ct);
+            if (current is null || !current.IsUsableAt(DateTimeOffset.UtcNow)) return Results.NotFound();
+            return Results.Ok(new { code, expiresAt = current.ExpiresAt });
         }).AllowAnonymous().ExcludeFromDescription();
     }
 

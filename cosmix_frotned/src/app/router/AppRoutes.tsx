@@ -21,6 +21,7 @@ import {
   OfficeRostersPage,
   OfficeBoundariesPage,
   AttendanceProcessingPage,
+  AttendanceTrackingPage,
   EmployeeAttendanceDetailPage,
   LeaveManagementPage,
   LeaveEncashmentPage,
@@ -33,6 +34,7 @@ import {
   DocumentExpiryPage,
   OrganizationPage,
   EmployeeHiringPage,
+  BiometricRegistrationPage,
   NewEmployeePage,
   EmployeeDetailPage,
   HrRequestsPage,
@@ -52,7 +54,9 @@ import { HrReportsPage } from '@/modules/reports';
 
 function RootRedirect() {
   const { user, status } = useAuth();
-  if (status === 'loading') return null;
+  if (status === 'loading') {
+    return <LoadingState fullscreen message="Starting Cosmix ERP..." />;
+  }
   if (status !== 'authenticated') return <Navigate to="/sign-in" replace />;
   const isAdmin = isSystemAdmin(user);
   return <Navigate to={isAdmin ? '/admin/dashboard' : '/hr/dashboard'} replace />;
@@ -70,6 +74,7 @@ export function AppRoutes() {
           <Route path="/self-service" element={<Navigate to="/hr/dashboard" replace />} />
           <Route path="/hr/dashboard" element={<HrDashboardPage />} />
           <Route path="/hr/employees" element={<EmployeesPage />} />
+          <Route path="/hr/biometrics" element={<BiometricRegistrationPage />} />
           <Route path="/hr/reports/document-expiry" element={<DocumentExpiryPage />} />
           <Route path="/hr/reports/hr" element={<HrReportsPage />} />
           <Route path="/hr/employees/new" element={<NewEmployeePage />} />
@@ -93,6 +98,7 @@ export function AppRoutes() {
             ),
           )}
           <Route path="/hr/attendance" element={<AttendanceProcessingPage />} />
+          <Route path="/hr/attendance/tracking" element={<AttendanceTrackingPage />} />
           <Route path="/hr/attendance/processing" element={<AttendanceProcessingPage />} />
           <Route path="/hr/leaves" element={<LeaveManagementPage />} />
           <Route path="/hr/leave-management" element={<LeaveManagementPage />} />
@@ -119,7 +125,9 @@ export function AppRoutes() {
               key={path}
               path={path}
               element={
-                <Suspense fallback={<LoadingState />}>
+                <Suspense
+                  fallback={<LoadingState fullscreen message="Loading enterprise module..." />}
+                >
                   <Page />
                 </Suspense>
               }

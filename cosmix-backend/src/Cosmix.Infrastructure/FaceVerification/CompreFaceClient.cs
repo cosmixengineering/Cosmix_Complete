@@ -3,6 +3,9 @@ using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Diagnostics;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Cosmix.Application.Authentication;
 
 namespace Cosmix.Infrastructure.FaceVerification;
@@ -32,18 +35,20 @@ public sealed class CompreFaceClient : IDisposable
 {
     private readonly CompreFaceOptions options;
     private readonly HttpClient http;
+    private readonly ILogger<CompreFaceClient> logger = NullLogger<CompreFaceClient>.Instance;
     public string DeploymentVersion => options.DeploymentVersion;
     public double MinimumDetectionProbability => options.MinimumDetectionProbability!.Value;
 
     public CompreFaceClient(CompreFaceOptions options) : this(options, CreateTransport(options)) { }
 
     /// <summary>Composition supplies a named factory client with this adapter's private transport.</summary>
-    public CompreFaceClient(CompreFaceOptions options, HttpClient client)
+    public CompreFaceClient(CompreFaceOptions options, HttpClient client, ILogger<CompreFaceClient>? logger = null)
     {
         ValidateOptions(options);
         this.options = options;
         http = client ?? throw new ArgumentNullException(nameof(client));
         http.Timeout = Timeout.InfiniteTimeSpan;
+        this.logger = logger ?? NullLogger<CompreFaceClient>.Instance;
     }
 
     // Harness uses reflection to inject transport doubles. Production composition uses the public constructor.
@@ -100,6 +105,8 @@ public sealed class CompreFaceClient : IDisposable
 
     private async Task<JsonDocument> SendAsync(string path, string key, MultipartFormDataContent body, CancellationToken ct)
     {
+        var started = Stopwatch.GetTimestamp();
+        var outcome = "invalid-response";
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
         deadline.CancelAfter(TimeSpan.FromSeconds(options.TimeoutSeconds));
         var uri = new Uri(options.BaseUri!, path + "?limit=0&det_prob_threshold=0&face_plugins=&status=false");
@@ -139,16 +146,26 @@ public sealed class CompreFaceClient : IDisposable
                     RejectDuplicateKeys(json.RootElement);
                     deadline.Token.ThrowIfCancellationRequested();
                     if (response.StatusCode != HttpStatusCode.OK) throw ServiceFailure(json.RootElement);
+                    outcome = "response-received";
                     return json;
                 }
                 catch { json.Dispose(); throw; }
             }
             finally { CryptographicOperations.ZeroMemory(buffer); }
         }
-        catch (OperationCanceledException) when (!ct.IsCancellationRequested) { throw new AuthenticationFailure("face_provider_timeout", 503); }
-        catch (HttpRequestException) { throw new AuthenticationFailure("face_provider_unavailable", 503); }
-        catch (IOException) { throw new AuthenticationFailure("face_provider_unavailable", 503); }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        { outcome = "timeout"; throw new AuthenticationFailure("face_provider_timeout", 503); }
+        catch (OperationCanceledException) { outcome = "cancelled"; throw; }
+        catch (HttpRequestException) { outcome = "unavailable"; throw new AuthenticationFailure("face_provider_unavailable", 503); }
+        catch (IOException) { outcome = "unavailable"; throw new AuthenticationFailure("face_provider_unavailable", 503); }
         catch (JsonException) { throw Invalid(); }
+        finally
+        {
+            // Constant operation/outcome labels only. Never log endpoint, headers, body, key or employee identifiers.
+            logger.LogInformation("Face transport {Operation} completed {Outcome} in {ElapsedMs} ms.",
+                path == "api/v1/detection/detect" ? "detection" : "verification", outcome,
+                (long)Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+        }
     }
 
     private static AuthenticationFailure ServiceFailure(JsonElement root)

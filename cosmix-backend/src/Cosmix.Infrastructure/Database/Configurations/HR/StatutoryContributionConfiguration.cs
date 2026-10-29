@@ -27,8 +27,8 @@ public sealed class StatutoryContributionConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.EmployeeItemsJson);
         builder.Property(x => x.HasEmployeeEntries).IsRequired();
         builder.Property(x => x.ObligationId);
-        builder.Ignore(x => x.Entries);
-        builder.Ignore(x => x.RowVersion);
+        builder.HasMany(x => x.Entries).WithOne(x => x.Contribution).HasForeignKey(x => x.ContributionId).OnDelete(DeleteBehavior.Restrict);
+        builder.Property(x => x.RowVersion).IsRowVersion();
 
         builder.HasIndex(x => new { x.Scheme, x.ContributionMonth }).IsUnique();
         builder.HasIndex(x => x.State);

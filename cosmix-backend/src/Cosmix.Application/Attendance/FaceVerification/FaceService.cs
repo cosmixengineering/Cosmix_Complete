@@ -29,6 +29,23 @@ public sealed class FaceService(AttendanceOperation operation, IFaceRepository r
                     EnrollmentCompatible: ready.EnrollmentCompatible, CheckInFaceReady: ready.CheckInFaceReady);
             }, ct, self: true);
 
+    public Task<PagedResult<FaceEnrollmentDeviceResponse>> DevicesAsync(Guid employeeId, int page, int size,
+        AuthRequestContext context, CancellationToken ct)
+    {
+        Page(page, size);
+        return operation.ReadAsync(AttendanceCapturePermissions.FaceManage, "attendance.face.enrollment.devices", employeeId, context,
+            (_, token) => repository.DevicesAsync(employeeId, page, size, token), ct,
+            resources: (a, t) => repository.ResourcesAsync(employeeId, RosterSchedule.Today(a.Now), t));
+    }
+
+    public Task<CurrentFaceEnrollmentResponse> CurrentAsync(Guid employeeId, AuthRequestContext context, CancellationToken ct) =>
+        operation.ReadAsync(AttendanceCapturePermissions.FaceRead, "attendance.face.enrollment.current", employeeId, context,
+            async (_, token) =>
+            {
+                var enrollment = await repository.ActiveAsync(employeeId, token);
+                return new CurrentFaceEnrollmentResponse(enrollment is null ? null : Map(enrollment));
+            }, ct, resources: (a, t) => repository.ResourcesAsync(employeeId, RosterSchedule.Today(a.Now), t));
+
     public Task<PagedResult<FaceEnrollmentResponse>> HistoryAsync(Guid employeeId, int page, int size,
         AuthRequestContext context, CancellationToken ct)
     {

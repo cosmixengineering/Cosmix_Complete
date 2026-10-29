@@ -73,6 +73,92 @@ void DenyPeriod(Action<CosmixDbContext, AttendancePeriodLock> change, string lab
 DenyPeriod((context, period) => context.Remove(period), "locked period deletion permitted");
 DenyPeriod((_, period) => typeof(AttendancePeriodLock).GetProperty("IsLocked")!.SetValue(period, false), "locked period reopened through EF");
 DenyPeriod((_, period) => typeof(AttendancePeriodLock).GetProperty("PeriodStart")!.SetValue(period, new DateOnly(2026, 8, 1)), "locked dates moved through EF");
+DenyPeriod((_, period) => typeof(AttendancePeriodLock).GetProperty("Revision")!.SetValue(period, 2), "locked revision changed through EF");
+void Set(object row, string name, object value) => row.GetType().GetProperty(name)!.SetValue(row, value);
+DailyAttendanceSummary Summary(Guid? employee = null, DateOnly? date = null) => new(employee ?? Guid.NewGuid(),
+    date ?? new DateOnly(2026, 9, 1), 1, AttendanceDayStatus.Present, Guid.NewGuid(), null,
+    "synthetic-policy", new string('A', 64), 480, 480, 480, 0, 0, 0, DateTimeOffset.UtcNow,
+    inputEvidenceReference: "synthetic-summary-proof");
+void DenyNewLock(string label, Action<CosmixDbContext, AttendancePeriodLock, AttendancePeriodLockEvent,
+    DailyAttendanceSummary, AttendancePeriodSummary> change, bool legacy = false)
+{
+    using var context = new CosmixDbContext(options);
+    var period = new AttendancePeriodLock(new(2026, 9, 1), new(2026, 10, 1));
+    var item = legacy
+        ? period.RecordDecision(true, Guid.NewGuid(), "admin", "Lock period for payroll", DateTimeOffset.UtcNow)
+        : period.RecordDirectLock(Guid.NewGuid(), "synthetic", "direct reason", DateTimeOffset.UtcNow, "private-reference");
+    var summary = Summary();
+    var link = new AttendancePeriodSummary(period, item, summary);
+    change(context, period, item, summary, link);
+    context.Add(period); context.Add(item);
+    // Mutate before tracking so the rejection must come from the production write guard,
+    // rather than EF refusing an attempted primary/alternate-key mutation.
+    context.Attach(summary);
+    try { ValidateWrites(context); }
+    catch (TargetInvocationException exception) when (exception.InnerException is InvalidOperationException)
+    {
+        Check(context.Database.GetDbConnection().State == ConnectionState.Closed, label + " without SQL");
+        return;
+    }
+    throw new Exception(label);
+}
+DenyNewLock("legacy payroll fixture accepted", (_, _, _, _, _) => { }, legacy: true);
+DenyNewLock("legacy event accepted even with membership", (c, _, _, _, link) => c.Add(link), legacy: true);
+DenyNewLock("bare direct lock accepted", (_, _, _, _, _) => { });
+DenyNewLock("blank manifest accepted", (c, _, item, _, link) =>
+{ Set(item, "ProtectedEvidenceReference", " "); c.Add(link); });
+DenyNewLock("mixed approval and direct provenance accepted", (c, _, item, _, link) =>
+{ Set(item, "ApprovalRequestId", Guid.NewGuid()); c.Add(link); });
+DenyNewLock("wrong event membership accepted", (c, _, _, _, link) =>
+{ Set(link, "AttendancePeriodLockEventId", Guid.NewGuid()); c.Add(link); });
+DenyNewLock("empty summary reference accepted", (c, _, _, _, link) =>
+{ Set(link, "DailyAttendanceSummaryId", Guid.Empty); c.Add(link); });
+DenyNewLock("empty employee reference accepted", (c, _, _, _, link) =>
+{ Set(link, "EmployeeId", Guid.Empty); c.Add(link); });
+DenyNewLock("mismatched summary employee accepted", (c, _, _, _, link) =>
+{ Set(link, "EmployeeId", Guid.NewGuid()); c.Add(link); });
+DenyNewLock("mismatched summary date accepted", (c, _, _, _, link) =>
+{ Set(link, "AttendanceDate", new DateOnly(2026, 9, 2)); c.Add(link); });
+foreach (var outside in new[] { new DateOnly(2026, 8, 31), new DateOnly(2026, 10, 1) })
+    DenyNewLock("out-of-period membership accepted", (c, _, _, summary, link) =>
+    { Set(summary, "AttendanceDate", outside); Set(link, "AttendanceDate", outside); c.Add(link); });
+DenyNewLock("duplicate summary membership accepted", (c, period, item, summary, link) =>
+{ c.Add(link); c.Add(new AttendancePeriodSummary(period, item, summary)); });
+DenyNewLock("duplicate employee/day revisions accepted", (c, period, item, summary, link) =>
+{
+    var other = Summary(summary.EmployeeId, summary.AttendanceDate);
+    c.Attach(other); c.Add(link); c.Add(new AttendancePeriodSummary(period, item, other));
+});
+foreach (var tracked in new[] { false, true })
+{
+    using var context = new CosmixDbContext(options);
+    var period = new AttendancePeriodLock(new(2026, 9, 1), new(2026, 10, 1));
+    // Also exercise finalization of a previously saved open period.
+    if (tracked) context.Attach(period);
+    var item = period.RecordDirectLock(Guid.NewGuid(), "synthetic", "valid direct lock", DateTimeOffset.UtcNow, "private-reference");
+    var summary = Summary();
+    if (!tracked) context.Add(period);
+    else context.Attach(summary);
+    context.Add(item); context.Add(new AttendancePeriodSummary(period, item, summary));
+    ValidateWrites(context); checks++;
+    Check(context.Database.GetDbConnection().State == ConnectionState.Closed, "valid lock guard does not query SQL");
+}
+// No-tracking summary reads are intentional in MonthLockRepository. Persisted identity
+// is enforced by this composite FK when the target is absent from the change tracker.
+var membership = db.Model.FindEntityType(typeof(AttendancePeriodSummary))!;
+Check(membership.GetForeignKeys().Any(x => x.PrincipalEntityType.ClrType == typeof(DailyAttendanceSummary) &&
+    x.Properties.Select(p => p.Name).SequenceEqual(new[] { "EmployeeId", "AttendanceDate", "DailyAttendanceSummaryId" }) &&
+    x.PrincipalKey.Properties.Select(p => p.Name).SequenceEqual(new[] { "EmployeeId", "AttendanceDate", "Id" }) &&
+    x.DeleteBehavior == DeleteBehavior.Restrict), "untracked summary identity has restrictive composite FK");
+using (var context = new CosmixDbContext(options))
+{
+    var period = new AttendancePeriodLock(new(2026, 9, 1), new(2026, 10, 1));
+    var legacy = period.RecordDecision(true, Guid.NewGuid(), "admin", "retained legacy", DateTimeOffset.UtcNow);
+    context.Attach(period); context.Attach(legacy);
+    ValidateWrites(context); checks++;
+    Check(context.Entry(period).State == EntityState.Unchanged && context.Entry(legacy).State == EntityState.Unchanged,
+        "reading legacy rows does not modify or reject their history");
+}
 using (var context = new CosmixDbContext(options))
 {
     var period = new AttendancePeriodLock(new(2026, 9, 1), new(2026, 10, 1));

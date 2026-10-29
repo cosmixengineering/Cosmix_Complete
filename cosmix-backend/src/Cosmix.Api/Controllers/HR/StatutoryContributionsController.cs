@@ -2,13 +2,14 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Cosmix.Application.Authentication;
 using Cosmix.Application.HR.StatutoryContributions;
+using Cosmix.Application.HR.PayrollAccounting;
 using Cosmix.Domain.HR.StatutoryContributions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cosmix.Api.Controllers.HR;
 
-[ApiController]
+[ApiController, TypeFilter(typeof(PayrollFinanceExceptionFilter))]
 [Authorize]
 [Route("api/v1/statutory-contributions")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
@@ -41,27 +42,27 @@ public sealed class StatutoryContributionsController(
     [Authorize(Policy = "statutory.contributions.manage")]
     [EndpointSummary("Create a new draft statutory contribution entry")]
     [ProducesResponseType<ContributionResponse>(200)]
-    public Task<ContributionResponse> Create(CreateContributionRequest request, CancellationToken ct)
+    public Task<ContributionResponse> Create(CreateContributionRequest request, [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct)
     {
-        return service.CreateAsync(request, Context(), ct);
+        return service.CreateAsync(request, key, Context(), ct);
     }
 
     [HttpPost("{id:guid}/approve")]
     [Authorize(Policy = "statutory.contributions.approve")]
     [EndpointSummary("Approve a draft statutory contribution entry (second-person approval enforced)")]
     [ProducesResponseType<ContributionResponse>(200)]
-    public Task<ContributionResponse> Approve(Guid id, CancellationToken ct)
+    public Task<ContributionResponse> Approve(Guid id, FinancialDecisionRequest request, [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct)
     {
-        return service.ApproveAsync(id, Context(), ct);
+        return service.ApproveAsync(id, request, key, Context(), ct);
     }
 
     [HttpPost("{id:guid}/post")]
-    [Authorize(Policy = "statutory.contributions.approve")]
+    [Authorize(Policy = "payroll.accounting.accrue")]
     [EndpointSummary("Post an approved statutory contribution to accounting")]
     [ProducesResponseType<ContributionResponse>(200)]
-    public Task<ContributionResponse> Post(Guid id, CancellationToken ct)
+    public Task<ContributionResponse> Post(Guid id, PostContributionRequest request, [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct)
     {
-        return service.PostAsync(id, Context(), ct);
+        return service.PostAsync(id, request, key, Context(), ct);
     }
 
     [HttpGet("{id:guid}/export")]
@@ -77,7 +78,23 @@ public sealed class StatutoryContributionsController(
     }
 }
 
-[ApiController]
+[ApiController, Authorize, TypeFilter(typeof(PayrollFinanceExceptionFilter))]
+[Route("api/v1/employees/{employeeId:guid}/statutory-coverage")]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+public sealed class EmployeeStatutoryCoverageController(StatutoryContributionService service) : ControllerBase
+{
+    private AuthRequestContext Context() => new(HttpContext.Connection.RemoteIpAddress?.ToString() ?? "", HttpContext.TraceIdentifier);
+    [HttpGet, Authorize(Policy = "statutory.contributions.manage")]
+    public Task<IReadOnlyList<StatutoryCoverageResponse>> Get(Guid employeeId, CancellationToken ct) => service.GetCoverageAsync(employeeId, Context(), ct);
+    [HttpPost, Authorize(Policy = "statutory.contributions.manage")]
+    public Task<StatutoryCoverageResponse> Create(Guid employeeId, StatutoryCoverageRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct) => service.CreateCoverageAsync(employeeId, request, key, Context(), ct);
+    [HttpPost("{id:guid}/approve"), Authorize(Policy = "statutory.contributions.approve")]
+    public Task<StatutoryCoverageResponse> Approve(Guid employeeId, Guid id, FinancialDecisionRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct) => service.ApproveCoverageAsync(employeeId, id, request, key, Context(), ct);
+}
+
+[ApiController, TypeFilter(typeof(PayrollFinanceExceptionFilter))]
 [Authorize]
 [Route("api/v1/employees/{employeeId:guid}/statutory-registrations")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
@@ -98,8 +115,9 @@ public sealed class EmployeeStatutoryRegistrationsController(
     [Authorize(Policy = "statutory.contributions.manage")]
     [EndpointSummary("Add a statutory scheme registration for an employee")]
     [ProducesResponseType<RegistrationResponse>(200)]
-    public Task<RegistrationResponse> AddRegistration(Guid employeeId, AddRegistrationRequest request, CancellationToken ct)
+    public Task<RegistrationResponse> AddRegistration(Guid employeeId, AddRegistrationRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct)
     {
-        return service.AddRegistrationAsync(employeeId, request, Context(), ct);
+        return service.AddRegistrationAsync(employeeId, request, key, Context(), ct);
     }
 }

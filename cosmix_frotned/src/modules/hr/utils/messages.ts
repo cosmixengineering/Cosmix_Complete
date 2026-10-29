@@ -6,6 +6,26 @@ export function errorMessage(error: unknown): string {
     return 'The response could not be validated. Reload or contact support.';
   if (error instanceof ApiError) {
     const known: Record<string, string> = {
+      face_employee_ineligible:
+        'This employee needs approved hiring, active employment, a valid joining date and an active account before biometric registration.',
+      face_device_ineligible:
+        'Choose a verified, non-revoked mobile device registered to this employee.',
+      face_capture_not_configured:
+        'Camera enrollment is not enabled on the server. The approved biometric configuration must be completed first.',
+      face_policy_not_confirmed:
+        'The company biometric authority and retention configuration have not been confirmed on the server.',
+      face_provider_not_configured:
+        'The self-hosted face provider is not configured for enrollment.',
+      face_provider_unavailable:
+        'The face provider could not complete registration. Restore provider connectivity, then check enrollment status and take a new capture.',
+      face_template_storage_unavailable:
+        'Private biometric storage is unavailable. The face registration has not been confirmed.',
+      face_capture_expired:
+        'The protected capture expired. Check enrollment history, then start a new capture.',
+      face_enrollment_version_conflict:
+        'This employee’s enrollment changed. Check the latest enrollment before replacing it.',
+      face_enrollment_reconciliation_pending:
+        'The server is still reconciling this registration. Check enrollment history before starting another request.',
       ineligible_reporting_manager:
         'The selected Reporting Manager is ineligible. Please select an active and approved employee (e.g. Engr. Imran Saeed or Engr. Tariq Mehmood).',
       invalid_employee_phone:

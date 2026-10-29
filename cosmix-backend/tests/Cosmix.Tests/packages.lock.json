@@ -283,6 +283,11 @@
         "resolved": "4.13.0.20260627",
         "contentHash": "POIxR+CTpwHJIdam6wd8U2fprWv5QnIUw50jw79WEGb37He3T1h11SdtwSj9p2PLSfrzonMjO2t71wqi5uFsoQ=="
       },
+      "Otp.NET": {
+        "type": "Transitive",
+        "resolved": "1.4.1",
+        "contentHash": "UXjZ80T6BfVACJWmEcz4UFZ93hwX3STKojKvVpPk3qUhubjnLwIiZMsI4Hh91HhYxC0JlatNdNrVK2wkv4O9/Q=="
+      },
       "PdfPig": {
         "type": "Transitive",
         "resolved": "0.1.16",
@@ -330,8 +335,8 @@
       },
       "System.Security.Cryptography.Pkcs": {
         "type": "Transitive",
-        "resolved": "9.0.11",
-        "contentHash": "YS2YqtN6fFjlTDIQI+ucjbbrEvwMn796r+VLTQRr/5Oy6g+i+m7nIou83KnJCnAcKna2I+5eVJRks6SoHSpetQ=="
+        "resolved": "9.0.21",
+        "contentHash": "KD+oHoYIxwNCajjVe58WVwq9cRpum+Pg3tRveDRtkcaw6w3oc7sNBoMRtb5P5OehI3bgv1ucMpgjf8lpj5J96A=="
       },
       "System.Security.Cryptography.ProtectedData": {
         "type": "Transitive",
@@ -405,7 +410,9 @@
           "Microsoft.ML.OnnxRuntime": "[1.24.3, )",
           "OpenCvSharp4": "[4.13.0.20260627, )",
           "OpenCvSharp4.runtime.win": "[4.13.0.20260627, )",
+          "Otp.NET": "[1.4.1, )",
           "PdfPig": "[0.1.16, )",
+          "System.Security.Cryptography.Pkcs": "[9.0.21, )",
           "libphonenumber-csharp": "[9.0.40, )"
         }
       }

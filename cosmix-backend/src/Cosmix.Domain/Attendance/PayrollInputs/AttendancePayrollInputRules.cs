@@ -168,7 +168,10 @@ public static class AttendancePayrollInputRules
     {
         var fraction = OrdinaryFraction(day, rules, out var missing);
         if (missing is not null) { issues.Add(new(missing, day.BusinessDate)); return; }
-        if (fraction <= 0) return;
+        // Daily/hourly entitlement already excludes unpaid time even when the configured
+        // monthly absence charge is zero. Retain that lost entitlement for late overlap.
+        var wageEarnedFromTime = day.Compensation?.WageBasis is WageBasis.Daily or WageBasis.Hourly;
+        if (fraction <= 0 && !wageEarnedFromTime || day.Time?.DayStatus is AttendanceDayStatus.RestDay or AttendanceDayStatus.Holiday) return;
         if (!Salary(day, issues)) return;
         var scheduled = day.TimeInput!.ScheduledMinutes * TimeSpan.TicksPerMinute;
         var capacity = scheduled - (day.Rules!.PaidTime!.BreakTreatment == AttendanceBreakTreatment.DeductScheduledUnpaidBreak

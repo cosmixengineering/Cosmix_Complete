@@ -30,6 +30,21 @@ public sealed record AttendanceDayResponse(Guid EmployeeId, DateOnly BusinessDat
     string FactualStatus, FactualAttendance Facts, EffectiveRosterResponse Roster,
     AttendancePolicyResult Policy, int ExceptionCount, bool IsLocked,
     AttendanceSummaryRevision? LatestSavedRevision);
+
+/// <summary>HR read projection. Missing frozen evidence is explicitly unavailable, never a zero-time
+/// or absent day. Calculation and financial consumers continue to use the strict AttendanceDayResponse.</summary>
+public sealed record AttendanceDayReadResponse(Guid EmployeeId, DateOnly BusinessDate, string? TimeZone,
+    string FactualStatus, FactualAttendance? Facts, EffectiveRosterResponse? Roster,
+    AttendancePolicyResult? Policy, int? ExceptionCount, bool IsLocked,
+    AttendanceSummaryRevision? LatestSavedRevision, string? UnavailableReason)
+{
+    public static AttendanceDayReadResponse Available(AttendanceDayResponse day) => new(day.EmployeeId,
+        day.BusinessDate, day.TimeZone, day.FactualStatus, day.Facts, day.Roster, day.Policy,
+        day.ExceptionCount, day.IsLocked, day.LatestSavedRevision, null);
+    public static AttendanceDayReadResponse MissingLockedSummary(Guid employeeId, DateOnly date) =>
+        new(employeeId, date, null, "unavailable", null, null, null, null, true, null,
+            "locked_attendance_summary_unavailable");
+}
 public sealed record AttendanceSummaryRevision(Guid Id, int Revision, string Status, Guid? PolicyVersionId,
     Guid? ShiftVersionId, int WorkedMinutes, int? PayableMinutes, int? LateMinutes, int? OvertimeMinutes,
     string CalculationVersion, string InputFingerprint, DateTimeOffset CalculatedAtUtc);
@@ -54,6 +69,9 @@ public sealed class UnavailableAttendancePolicyCalculator : IAttendancePolicyCal
             ["Approved policy configuration and calculation rules are not integrated in this local checkout. Factual time is not payable time."]));
 }
 
+/// <summary>Read coverage, not permission to recalculate or use incomplete frozen evidence.</summary>
+public sealed record AttendanceSummaryLookup(bool IsLocked, DailyAttendanceSummary? Summary);
+
 public interface IAttendanceSummaryRepository
 {
     Task<IReadOnlyList<AccessResource>> ResourcesAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken ct);
@@ -65,6 +83,10 @@ public interface IAttendanceSummaryRepository
     Task<int> ExceptionCountAsync(Guid employeeId, DateOnly date, CancellationToken ct);
     Task<bool> IsLockedAsync(DateOnly date, CancellationToken ct);
     Task<DailyAttendanceSummary?> LatestAsync(Guid employeeId, DateOnly date, CancellationToken ct);
+    /// <summary>Dashboard coverage lookup. Locked + null means missing/ambiguous frozen membership;
+    /// consumers must report unavailable and must not substitute live attendance. Legacy adapters remain strict.</summary>
+    async Task<AttendanceSummaryLookup> LookupAsync(Guid employeeId, DateOnly date, CancellationToken ct) =>
+        new(await IsLockedAsync(date, ct), await LatestAsync(employeeId, date, ct));
     Task<PagedResult<DailyAttendanceSummary>> HistoryAsync(Guid employeeId, DateOnly date, int page, int pageSize, CancellationToken ct);
     void Add(DailyAttendanceSummary summary, IReadOnlyList<AttendanceSummarySession> sessions);
 }

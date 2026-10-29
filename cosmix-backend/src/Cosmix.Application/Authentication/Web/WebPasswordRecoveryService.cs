@@ -11,7 +11,7 @@ public sealed class WebPasswordRecoveryService(
     IWebPasswordRecoveryRepository recoveryRepository, WebAuthenticationService webAuthentication,
     ICurrentAuthentication current, IWebPasswordVerifier passwords, IWebPasswordHasher hasher,
     IOtpProtector secrets, IOtpSmsSender sender, WebAuthenticationOptions options,
-    MobileAuthenticationOptions commonOptions, TimeProvider clock)
+    MobileAuthenticationOptions commonOptions, TimeProvider clock, IWebMfaRepository? mfaRepository = null)
 {
     public Task<OtpRequestResponse> RequestAsync(WebForgotPasswordRequest request, AuthRequestContext context,
         CancellationToken ct) => RequestCoreAsync(request, null, context, ct);
@@ -113,7 +113,7 @@ public sealed class WebPasswordRecoveryService(
 
     public async Task ChangeAsync(WebChangePasswordRequest request, AuthRequestContext context, CancellationToken ct)
     {
-        EnsureConfigured();
+        EnsureConfigured(requireSms: false);
         ValidateNewPassword(request.NewPassword);
         var actor = current.Require();
         if (actor.Client != SessionClient.Web || !actor.MfaSatisfied || !ValidBrowser(request.BrowserSecret))
@@ -148,9 +148,19 @@ public sealed class WebPasswordRecoveryService(
                 if (!Eligible(state, now) || await webAuthentication.ValidateBrowserSessionAsync(actor.AccountId, actor.SessionId,
                     actor.SecurityVersion, request.BrowserSecret, token) is null) return Failure();
                 var session = await repository.GetSessionAsync(actor.SessionId, token);
-                var proof = session?.SmsOtpChallengeId is { } proofId ? await repository.GetChallengeAsync(proofId, token) : null;
-                if (session is null || proof is null) return Failure();
-                state.Account.ChangeWebPassword(session, proof, state.Phone!, hash, WebPasswordFormats.IdentityV3, now);
+                if (session is null) return Failure();
+                if (session.MfaChallengeId is { } mfaId && mfaRepository is not null)
+                {
+                    var proof = await mfaRepository.ChallengeAsync(mfaId, token);
+                    if (proof is null) return Failure();
+                    state.Account.ChangeWebPassword(session, proof, state.Phone!, hash, WebPasswordFormats.IdentityV3, now);
+                }
+                else
+                {
+                    var proof = session.SmsOtpChallengeId is { } proofId ? await repository.GetChallengeAsync(proofId, token) : null;
+                    if (proof is null) return Failure();
+                    state.Account.ChangeWebPassword(session, proof, state.Phone!, hash, WebPasswordFormats.IdentityV3, now);
+                }
                 await RevokeAsync(state.Account.Id, "web-password-changed", now, token);
                 Audit("web.password.changed", state.Account.Id, now, context, state.Account.Id);
                 return new AuthenticationResult<bool>(true);
@@ -215,10 +225,10 @@ public sealed class WebPasswordRecoveryService(
             eventType.StartsWith("web.password_reset.", StringComparison.Ordinal) ? "otp-challenge" : "account",
             target.ToString(), now, context.CorrelationId, ipAddress: context.IpAddress));
 
-    private void EnsureConfigured()
+    private void EnsureConfigured(bool requireSms = true)
     {
         if (!options.Enabled || !options.IsValid() || !commonOptions.Enabled || !commonOptions.IsValid() ||
-            !secrets.IsConfigured || !sender.IsConfigured) throw new AuthenticationFailure("authentication_unavailable", 503);
+            !secrets.IsConfigured || (requireSms && !sender.IsConfigured)) throw new AuthenticationFailure("authentication_unavailable", 503);
         if (!PasswordPolicyConfigured()) throw new AuthenticationFailure("web_password_policy_not_configured", 503);
     }
 

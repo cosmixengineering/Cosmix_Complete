@@ -16,7 +16,11 @@ export function useHrQuery<T extends z.ZodType>(
   const access = useHrAccess();
   return useQuery({
     queryKey: ['hr', access.subject, path],
-    queryFn: ({ signal }) => hrGet(path, schema, signal),
+    queryFn: ({ signal }) => {
+      if (!access.ready) throw new ApiError(401);
+      if (!access.can(...permissions)) throw new ApiError(403);
+      return hrGet(path, schema, signal);
+    },
     enabled: enabled && access.can(...permissions),
     gcTime: 0,
     retry: false,

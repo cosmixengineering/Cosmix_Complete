@@ -15,15 +15,25 @@ public sealed class PayrollFinanceSetupService(IPayrollFinanceRepository reposit
     private readonly PayrollFinanceOperation writes = writes!;
     public const string Configure = "payroll.accounting.configure";
     public const string Approve = "payroll.accounting.configure.approve";
-    public Task<PayrollFinanceSetupResponse> GetAsync(AuthRequestContext context, CancellationToken ct) =>
-        operation.ExecuteAsync("payroll.accounting.accrue", "FinanceSetupRead", "PayrollFinanceSetup", "all", context,
-            async (_, token) => new PayrollFinanceSetupResponse((await repository.AccountsAsync(token)).Select(Map).ToArray(),
-                (await repository.PeriodsAsync(token)).Select(Map).ToArray(), (await repository.ProfilesAsync(token)).Select(Map).ToArray()), ct);
+    public async Task<PayrollFinanceSetupResponse> GetAsync(AuthRequestContext context, CancellationToken ct)
+    {
+        foreach (var permission in new[] { "payroll.accounting.accrue", Configure, Approve })
+        {
+            try
+            {
+                return await operation.ExecuteAsync(permission, "FinanceSetupRead", "PayrollFinanceSetup", "all", context,
+                    async (_, token) => new PayrollFinanceSetupResponse((await repository.AccountsAsync(token)).Select(Map).ToArray(),
+                        (await repository.PeriodsAsync(token)).Select(Map).ToArray(), (await repository.ProfilesAsync(token)).Select(Map).ToArray()), ct);
+            }
+            catch (AuthenticationFailure) when (permission != Approve) { }
+        }
+        throw new AuthenticationFailure("access_denied", 403);
+    }
 
     public Task<AccountResponse> CreateAccountAsync(AccountRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
         writes.WriteAsync(Configure, "payroll.account.create", "accounts", key, request, request.Reason, context, async (_, token) =>
         {
-            var account = new PayrollLedgerAccount(request.Code, request.Name, request.Kind);
+            var account = PayrollFinanceErrors.Run(() => new PayrollLedgerAccount(request.Code, request.Name, request.Kind));
             if (await repository.AccountAsync(account.Code, token) is not null) throw Conflict("payroll_account_exists");
             repository.Add(account); await repository.SaveChangesAsync(token); return Map(account);
         }, ct);
@@ -39,7 +49,7 @@ public sealed class PayrollFinanceSetupService(IPayrollFinanceRepository reposit
     public Task<AccountingPeriodResponse> CreatePeriodAsync(AccountingPeriodRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
         writes.WriteAsync(Configure, "payroll.period.create", "periods", key, request, request.Reason, context, async (actor, token) =>
         {
-            var period = new PayrollAccountingPeriod(request.PeriodStart, request.PeriodEndExclusive, request.Currency, actor.AccountId.ToString(), clock.GetUtcNow());
+            var period = PayrollFinanceErrors.Run(() => new PayrollAccountingPeriod(request.PeriodStart, request.PeriodEndExclusive, request.Currency, actor.AccountId.ToString(), clock.GetUtcNow()));
             if (await repository.PeriodOverlapAsync(period.PeriodStart, period.PeriodEndExclusive, period.Currency, token)) throw Conflict("payroll_accounting_period_overlap");
             repository.Add(period); await repository.SaveChangesAsync(token); return Map(period);
         }, ct);
@@ -49,7 +59,7 @@ public sealed class PayrollFinanceSetupService(IPayrollFinanceRepository reposit
         {
             var period = await repository.PeriodAsync(id, token) ?? throw Missing();
             ExpectVersion(repository, period, period.RowVersion, request.ExpectedVersion);
-            if (close) period.Close(actor.AccountId.ToString(), clock.GetUtcNow()); else period.Approve(actor.AccountId.ToString(), clock.GetUtcNow());
+            PayrollFinanceErrors.Run(() => { if (close) period.Close(actor.AccountId.ToString(), clock.GetUtcNow()); else period.Approve(actor.AccountId.ToString(), clock.GetUtcNow()); });
             await repository.SaveChangesAsync(token); return Map(period);
         }, ct);
 
@@ -58,8 +68,8 @@ public sealed class PayrollFinanceSetupService(IPayrollFinanceRepository reposit
         {
             var rules = new PayrollPostingRules(request.SalaryExpenseAccountCode, request.SalaryPayableAccountCode, request.Deductions, request.Statutory);
             await ValidateRulesAsync(rules, token);
-            var profile = new PayrollPostingProfile(request.Name, request.Currency, request.EffectiveFrom, request.EffectiveToExclusive,
-                JsonSerializer.Serialize(rules), actor.AccountId.ToString(), clock.GetUtcNow());
+            var profile = PayrollFinanceErrors.Run(() => new PayrollPostingProfile(request.Name, request.Currency, request.EffectiveFrom, request.EffectiveToExclusive,
+                JsonSerializer.Serialize(rules), actor.AccountId.ToString(), clock.GetUtcNow()));
             repository.Add(profile); await repository.SaveChangesAsync(token); return Map(profile);
         }, ct);
 
@@ -68,7 +78,7 @@ public sealed class PayrollFinanceSetupService(IPayrollFinanceRepository reposit
         {
             var profile = await repository.ProfileAsync(id, token) ?? throw Missing();
             ExpectVersion(repository, profile, profile.RowVersion, request.ExpectedVersion);
-            await ValidateRulesAsync(Rules(profile), token); profile.Approve(actor.AccountId.ToString(), clock.GetUtcNow());
+            await ValidateRulesAsync(Rules(profile), token); PayrollFinanceErrors.Run(() => profile.Approve(actor.AccountId.ToString(), clock.GetUtcNow()));
             await repository.SaveChangesAsync(token); return Map(profile);
         }, ct);
 
@@ -79,7 +89,7 @@ public sealed class PayrollFinanceSetupService(IPayrollFinanceRepository reposit
         var period = await RequirePeriodAsync(postingDate.Value, currency, ct);
         if (sourceStart < period.PeriodStart || sourceEnd > period.PeriodEndExclusive) throw Conflict("payroll_source_outside_accounting_period");
         var profile = await repository.ProfileAsync(profileId.Value, ct) ?? throw Missing();
-        if (profile.State != PayrollFinanceApprovalState.Approved || profile.ApprovedByUserId == profile.CreatedByUserId ||
+        if (sourceEnd <= sourceStart || profile.State != PayrollFinanceApprovalState.Approved || profile.ApprovedAt is null || string.IsNullOrWhiteSpace(profile.ApprovedByUserId) || profile.ApprovedByUserId == profile.CreatedByUserId ||
             profile.Currency != currency || profile.EffectiveFrom > sourceStart ||
             (profile.EffectiveToExclusive.HasValue && profile.EffectiveToExclusive.Value < sourceEnd)) throw Conflict("payroll_posting_profile_not_applicable");
         var rules = Rules(profile); await ValidateRulesAsync(rules, ct);
@@ -100,6 +110,14 @@ public sealed class PayrollFinanceSetupService(IPayrollFinanceRepository reposit
         if (account is null || !account.IsActive || !kinds.Contains(account.Kind)) throw Conflict("payroll_account_invalid_or_inactive");
     }
 
+    public async Task RequireDisbursementAccountAsync(string code, CancellationToken ct)
+    {
+        var account = await repository.AccountAsync(code, ct);
+        if (account is null || !account.IsActive) throw Conflict("payroll_account_invalid_or_inactive");
+        bool isApprovedDisbursement = account.Kind == PayrollAccountKind.Bank;
+        if (!isApprovedDisbursement) throw Conflict("payroll_account_not_approved_disbursement");
+    }
+
     private async Task ValidateRulesAsync(PayrollPostingRules rules, CancellationToken ct)
     {
         if (rules.Deductions is null || rules.Statutory is null || rules.Deductions.Count > 30 || rules.Statutory.Count > 3 ||
@@ -109,17 +127,27 @@ public sealed class PayrollFinanceSetupService(IPayrollFinanceRepository reposit
         await RequireAccountAsync(rules.SalaryPayableAccountCode, ct, PayrollAccountKind.Liability);
         foreach (var row in rules.Deductions)
         {
-            if (!Enum.TryParse<PayrollComponentKind>(row.Component, out var component) || !Enum.IsDefined(component) || row.Component == "StatutoryEmployeeDeduction")
+            if (!Enum.TryParse<PayrollComponentKind>(row.Component, out var component) || !Enum.IsDefined(component) || component.ToString() != row.Component || row.Component == "StatutoryEmployeeDeduction")
                 throw Conflict("payroll_deduction_mapping_invalid");
-            await RequireAccountAsync(row.CreditAccountCode, ct, PayrollAccountKind.Liability, PayrollAccountKind.Asset);
-            if (row.CreditAccountCode == rules.SalaryPayableAccountCode) throw Conflict("payroll_deduction_must_not_credit_salary_payable");
+            var kinds = component switch
+            {
+                PayrollComponentKind.AttendanceDeduction => new[] { PayrollAccountKind.Expense },
+                PayrollComponentKind.LoanRepayment => [PayrollAccountKind.Asset],
+                PayrollComponentKind.TaxDeduction => [PayrollAccountKind.Liability],
+                PayrollComponentKind.LeaveAdjustment or PayrollComponentKind.SalaryAdjustment or PayrollComponentKind.OtherApprovedAdjustment =>
+                    [PayrollAccountKind.Expense, PayrollAccountKind.Asset, PayrollAccountKind.Liability],
+                _ => [PayrollAccountKind.Liability, PayrollAccountKind.Asset]
+            };
+            await RequireAccountAsync(row.CreditAccountCode, ct, kinds);
+            if (string.Equals(row.CreditAccountCode, rules.SalaryExpenseAccountCode, StringComparison.OrdinalIgnoreCase)) throw Conflict("payroll_contra_expense_must_use_distinct_account");
+            if (string.Equals(row.CreditAccountCode, rules.SalaryPayableAccountCode, StringComparison.OrdinalIgnoreCase)) throw Conflict("payroll_deduction_must_not_credit_salary_payable");
         }
         foreach (var row in rules.Statutory)
         {
             if (!Enum.IsDefined(row.Scheme)) throw Conflict("payroll_statutory_mapping_invalid");
             await RequireAccountAsync(row.EmployerExpenseAccountCode, ct, PayrollAccountKind.Expense);
             await RequireAccountAsync(row.PayableAccountCode, ct, PayrollAccountKind.Liability);
-            if (row.PayableAccountCode == rules.SalaryPayableAccountCode) throw Conflict("payroll_statutory_must_not_credit_salary_payable");
+            if (string.Equals(row.PayableAccountCode, rules.SalaryPayableAccountCode, StringComparison.OrdinalIgnoreCase)) throw Conflict("payroll_statutory_must_not_credit_salary_payable");
         }
     }
 

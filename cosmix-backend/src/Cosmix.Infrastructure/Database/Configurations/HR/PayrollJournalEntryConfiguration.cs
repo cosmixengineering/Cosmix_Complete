@@ -8,7 +8,7 @@ public sealed class PayrollJournalEntryConfiguration : IEntityTypeConfiguration<
 {
     public void Configure(EntityTypeBuilder<PayrollJournalEntry> builder)
     {
-        builder.ToTable("PayrollJournalEntries", "hr");
+        builder.ToTable("PayrollJournalEntries", "hr", table => table.HasTrigger("TR_PayrollJournal_ClosedBankMonth"));
         builder.HasKey(x => x.Id);
         builder.Property(x => x.ObligationId).IsRequired();
         builder.Property(x => x.DebitAccountCode).HasMaxLength(50).IsRequired();
@@ -35,6 +35,6 @@ public sealed class PayrollJournalEntryConfiguration : IEntityTypeConfiguration<
         builder.HasIndex(x => x.PostingDate);
         builder.HasIndex(x => x.AccountingPeriodId);
         builder.HasIndex(x => x.PostingProfileId);
-        builder.HasIndex(x => x.SourceKey);
+        builder.HasIndex(x => x.SourceKey).IsUnique().HasFilter("[SourceKey] IS NOT NULL");
     }
 }

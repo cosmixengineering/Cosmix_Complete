@@ -11,7 +11,7 @@ public sealed record HrDashboardAttendanceSummary(DateTimeOffset GeneratedAtUtc,
     string Coverage, int ActiveEmployees, int WithAcceptedSessionEvidence, int OpenSessionEmployees,
     int ClosedSessionOnlyEmployees, int NoAcceptedSessionEvidenceEmployees, int ClassifiedEmployees,
     int NotYetClassifiedEmployees, IReadOnlyDictionary<string, int> ClassifiedStatusCounts,
-    int CurrentSavedSummaryEmployees, int UnsavedOrStaleSummaryEmployees);
+    int CurrentSavedSummaryEmployees, int UnsavedOrStaleSummaryEmployees, int UnavailableSummaryEmployees = 0);
 
 /// <summary>Live factual turnout and explicit policy classifications for verified active employment.
 /// Missing accepted session evidence is never inferred to be absence.</summary>
@@ -28,33 +28,51 @@ public sealed class HrDashboardAttendanceService(AttendanceOperation operation,
                 if (employees is null || employees.Count > HrDashboardPopulationRules.MaximumEmployees ||
                     employees.Any(x => x == Guid.Empty) || employees.Distinct().Count() != employees.Count)
                     throw AttendanceOperation.Conflict("hr_dashboard_population_conflict");
-                var statuses = Enum.GetValues<AttendanceDayStatus>()
-                    .Where(x => x is not (AttendanceDayStatus.Unverified or AttendanceDayStatus.Incomplete))
-                    .ToDictionary(x => x.ToString(), _ => 0, StringComparer.Ordinal);
-                var withEvidence = 0;
-                var open = 0;
-                var classified = 0;
-                var saved = 0;
-                foreach (var employee in employees.Order())
-                {
-                    token.ThrowIfCancellationRequested();
-                    // The encompassing All-scope operation already authorizes all employee/source scopes.
-                    var day = await summaries.LoadAuthorizedDashboardDayAsync(employee, date, token);
-                    if (day.EmployeeId != employee || day.BusinessDate != date || day.TimeZone != RosterSchedule.TimeZoneId)
-                        throw AttendanceOperation.Conflict("hr_dashboard_attendance_identity_conflict");
-                    if (day.Facts.SessionIds.Count > 0) withEvidence++;
-                    if (day.Facts.OpenSessions > 0) open++;
-                    if (day.Policy.Status == "calculated" && day.Policy.DayStatus.HasValue &&
-                        statuses.ContainsKey(day.Policy.DayStatus.Value.ToString()))
-                    {
-                        statuses[day.Policy.DayStatus.Value.ToString()]++;
-                        classified++;
-                    }
-                    if (AttendanceSummaryService.IsSavedRevisionCurrent(day)) saved++;
-                }
-                return new HrDashboardAttendanceSummary(actor.Now.ToUniversalTime(), date, RosterSchedule.TimeZoneId,
-                    "all_verified_active_employees", employees.Count, withEvidence, open, withEvidence - open,
-                    employees.Count - withEvidence, classified, employees.Count - classified, statuses,
-                    saved, employees.Count - saved);
-            }, ct);
+                return await SummarizeAsync(actor.Now, date, employees, summaries.LoadAuthorizedDashboardDayAsync, token);
+            // Policy evidence can read audit ranges before appending the read audit. An Update
+            // application lock serializes these reports while remaining compatible with ordinary reads.
+            }, ct, concurrentRead: true, serializeReaders: true);
+
+    internal static async Task<HrDashboardAttendanceSummary> SummarizeAsync(DateTimeOffset now, DateOnly date,
+        IReadOnlyList<Guid> employees, Func<Guid, DateOnly, CancellationToken, Task<AttendanceDayResponse?>> loadDay,
+        CancellationToken token)
+    {
+        var statuses = Enum.GetValues<AttendanceDayStatus>()
+            .Where(x => x is not (AttendanceDayStatus.Unverified or AttendanceDayStatus.Incomplete))
+            .ToDictionary(x => x.ToString(), _ => 0, StringComparer.Ordinal);
+        var withEvidence = 0;
+        var open = 0;
+        var classified = 0;
+        var saved = 0;
+        var unavailable = 0;
+        foreach (var employee in employees.Order())
+        {
+            token.ThrowIfCancellationRequested();
+            var day = await loadDay(employee, date, token);
+            if (day is null)
+            {
+                // Dashboard coverage is not payroll authority. Keep missing/ambiguous frozen evidence
+                // explicit, without substituting mutable data or counting the employee absent.
+                unavailable++;
+                continue;
+            }
+            if (day.EmployeeId != employee || day.BusinessDate != date || day.TimeZone != RosterSchedule.TimeZoneId)
+                throw AttendanceOperation.Conflict("hr_dashboard_attendance_identity_conflict");
+            if (day.Facts.SessionIds.Count > 0) withEvidence++;
+            if (day.Facts.OpenSessions > 0) open++;
+            if (day.Policy.Status == "calculated" && day.Policy.DayStatus.HasValue &&
+                statuses.ContainsKey(day.Policy.DayStatus.Value.ToString()))
+            {
+                statuses[day.Policy.DayStatus.Value.ToString()]++;
+                classified++;
+            }
+            if (AttendanceSummaryService.IsSavedRevisionCurrent(day)) saved++;
+        }
+        var available = employees.Count - unavailable;
+        return new HrDashboardAttendanceSummary(now.ToUniversalTime(), date, RosterSchedule.TimeZoneId,
+            unavailable == 0 ? "all_verified_active_employees" : "partial_locked_evidence_unavailable",
+            employees.Count, withEvidence, open, withEvidence - open,
+            available - withEvidence, classified, available - classified, statuses,
+            saved, available - saved, unavailable);
+    }
 }

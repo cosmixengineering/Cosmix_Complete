@@ -97,6 +97,13 @@ export const employeeServices: readonly ServiceDefinition[] = [
     permissions: [['ess.finances.read']],
   },
   {
+    key: 'payments',
+    title: 'Payment history',
+    description: 'Salary entitlement, recorded payments and remaining balance',
+    mark: 'PM',
+    permissions: [['ess.finances.read']],
+  },
+  {
     key: 'encashment',
     title: 'Leave encashment',
     description: 'Request and track leave valuation',
@@ -155,6 +162,7 @@ export const historyCategories: readonly { key: ServiceKey; title: string }[] =
     { key: 'corrections', title: 'Attendance requests' },
     { key: 'calendar', title: 'Monthly attendance' },
     { key: 'payroll', title: 'Payroll' },
+    { key: 'payments', title: 'Payments' },
     { key: 'encashment', title: 'Leave encashment' },
     { key: 'vehicles', title: 'Vehicle & fuel' },
     { key: 'resignation', title: 'Resignation' },

@@ -32,11 +32,145 @@ using Cosmix.Domain.Common.Idempotency;
 // Synthetic preverified proof is a fixture, not a biometric provider simulation or acceptance.
 var checks = 0;
 void Check(bool valid, string name) { checks++; if (!valid) throw new Exception(name); }
+Check(typeof(FaceService).GetMethod("DevicesAsync") is not null,
+    "HR face enrollment exposes a separate scoped device read");
+Check(typeof(FaceService).GetMethod("CurrentAsync") is not null,
+    "HR replacement can read the exact current enrollment without paging history");
 async Task Deny(Func<Task> action, string code)
 {
     checks++;
     try { await action(); } catch (AuthenticationFailure e) when (e.Code == code) { return; }
     throw new Exception("Expected " + code);
+}
+var currentSnapshot = new FaceFixture { ForbidBiometricAccess = true };
+var snapshotEmployee = Guid.NewGuid();
+currentSnapshot.Base.Grants.Clear();
+currentSnapshot.Base.Grants.Add(new(AttendanceCapturePermissions.FaceRead, true, Guid.NewGuid(), AccessScopeKind.Employee, snapshotEmployee)
+    { AuthorityTimingKnown = true, ValidFromUtc = currentSnapshot.Base.Clock.Now.AddDays(-1) });
+Task<CurrentFaceEnrollmentResponse> ReadCurrentSnapshot(Guid? employeeId = null) =>
+    currentSnapshot.Service.CurrentAsync(employeeId ?? snapshotEmployee, currentSnapshot.Base.Context, default);
+var noCurrentEnrollment = await ReadCurrentSnapshot();
+Check(noCurrentEnrollment.Enrollment is null &&
+    JsonSerializer.Serialize(noCurrentEnrollment, new JsonSerializerOptions(JsonSerializerDefaults.Web)) == "{\"enrollment\":null}",
+    "no active enrollment returns an explicit null snapshot without scanning history");
+var snapshotId = Guid.Parse("11111111-1111-4111-8111-111111111111");
+var replacedSnapshotId = Guid.Parse("22222222-2222-4222-8222-222222222222");
+var snapshotTime = new DateTimeOffset(2026, 10, 8, 10, 0, 0, TimeSpan.Zero);
+currentSnapshot.Active = new(snapshotEmployee, "private-template", "private-key", "recorded-provider", "recorded-version",
+    "synthetic-actor", "synthetic-device", "Synthetic", snapshotTime, "synthetic", replacedSnapshotId);
+Fixture.Set(currentSnapshot.Active, "Id", snapshotId);
+Fixture.Set(currentSnapshot.Active, "RowVersion", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+var exactCurrentEnrollment = await ReadCurrentSnapshot();
+Check(exactCurrentEnrollment.Enrollment == new FaceEnrollmentResponse(snapshotId, snapshotEmployee, "recorded-provider", "recorded-version",
+    snapshotTime, true, null, replacedSnapshotId, "AQIDBAUGBwg=") && currentSnapshot.ActiveQueryEmployee == snapshotEmployee,
+    "current snapshot returns exact persisted employee/ID/version/provider/replacement metadata, not actor or newest-page assumptions");
+using (var snapshotJson = JsonDocument.Parse(JsonSerializer.Serialize(exactCurrentEnrollment, new JsonSerializerOptions(JsonSerializerDefaults.Web))))
+{
+    Check(snapshotJson.RootElement.EnumerateObject().Single().Name == "enrollment" &&
+        snapshotJson.RootElement.GetProperty("enrollment").EnumerateObject().Select(x => x.Name).Order().SequenceEqual(new[]
+        { "employeeId", "enrolledAtUtc", "id", "isActive", "provider", "providerVersion", "replacesEnrollmentId", "revokedAtUtc", "version" }),
+        "current snapshot exposes only existing enrollment metadata, never template/key references or readiness");
+}
+var snapshotReadsBeforeDenial = currentSnapshot.ActiveQueryCount;
+await Deny(() => ReadCurrentSnapshot(Guid.NewGuid()), "access_denied");
+Check(currentSnapshot.ActiveQueryCount == snapshotReadsBeforeDenial, "out-of-scope current enrollment is denied before metadata lookup");
+currentSnapshot.Base.Actor = currentSnapshot.Base.Actor with { MfaSatisfied = false };
+await Deny(() => ReadCurrentSnapshot(), "access_denied");
+currentSnapshot.Base.Actor = currentSnapshot.Base.Actor with { MfaSatisfied = true, Client = SessionClient.Mobile };
+await Deny(() => ReadCurrentSnapshot(), "access_denied");
+currentSnapshot.Base.Actor = currentSnapshot.Base.Actor with { Client = SessionClient.Web };
+var snapshotReadGrant = currentSnapshot.Base.Grants.Single();
+foreach (var wrongSnapshotPermission in new[] { AttendanceCapturePermissions.FaceManage, AttendanceCapturePermissions.FaceSelf })
+{
+    currentSnapshot.Base.Grants[0] = snapshotReadGrant with { Permission = wrongSnapshotPermission };
+    await Deny(() => ReadCurrentSnapshot(), "access_denied");
+}
+currentSnapshot.DeviceSiteId = Guid.NewGuid();
+currentSnapshot.Base.Grants[0] = snapshotReadGrant with { ScopeKind = AccessScopeKind.Site, TargetId = currentSnapshot.DeviceSiteId };
+Check((await ReadCurrentSnapshot()).Enrollment == exactCurrentEnrollment.Enrollment, "current employee site scope can read exact enrollment");
+currentSnapshot.DeviceSiteId = Guid.NewGuid();
+await Deny(() => ReadCurrentSnapshot(), "access_denied");
+currentSnapshot.Base.Grants[0] = snapshotReadGrant with { ScopeKind = AccessScopeKind.All, TargetId = null };
+Check((await ReadCurrentSnapshot()).Enrollment == exactCurrentEnrollment.Enrollment, "explicit All scope can read current enrollment");
+Check(currentSnapshot.ProviderCalls == 0 && currentSnapshot.TemplateWrites == 0 && currentSnapshot.Base.Files.Count == 0,
+    "current snapshot never evaluates readiness or performs biometric IO");
+var devices = new FaceFixture { ForbidBiometricAccess = true };
+var targetEmployee = Guid.NewGuid();
+devices.Base.Grants.Clear();
+devices.Base.Grants.Add(new(AttendanceCapturePermissions.FaceManage, true, Guid.NewGuid(), AccessScopeKind.Employee, targetEmployee)
+    { AuthorityTimingKnown = true, ValidFromUtc = devices.Base.Clock.Now.AddDays(-1) });
+var devicePage = await devices.Service.DevicesAsync(targetEmployee, 2, 100, devices.Base.Context, default);
+Check(devicePage.Page == 2 && devicePage.PageSize == 100 && devicePage.TotalCount == 101 &&
+    devicePage.Items.Single().Id == devices.Base.Device.Id && devices.DeviceQuery == (targetEmployee, 2, 100),
+    "HR device read uses the requested employee and bounded page, not the acting HR employee");
+using (var deviceJson = JsonDocument.Parse(JsonSerializer.Serialize(devicePage, new JsonSerializerOptions(JsonSerializerDefaults.Web))))
+{
+    Check(deviceJson.RootElement.EnumerateObject().Select(x => x.Name).Order().SequenceEqual(new[] { "items", "page", "pageSize", "totalCount" }),
+        "device page has only the agreed pagination contract");
+    Check(deviceJson.RootElement.GetProperty("items")[0].EnumerateObject().Select(x => x.Name).Order()
+        .SequenceEqual(new[] { "displayName", "id", "platform", "verifiedAtUtc" }),
+        "device item exposes only safe display metadata, never account secrets or identifier hashes");
+}
+Check(devices.Active is null && devices.ProviderCalls == 0 && devices.TemplateWrites == 0 && devices.Base.Files.Count == 0,
+    "device lookup never creates enrollment or calls biometric IO");
+foreach (var bounds in new[] { (0, 25), (1000001, 25), (1, 0), (1, 101) })
+    await Deny(() => devices.Service.DevicesAsync(targetEmployee, bounds.Item1, bounds.Item2, devices.Base.Context, default), "invalid_attendance_request");
+await Deny(() => devices.Service.DevicesAsync(Guid.NewGuid(), 1, 25, devices.Base.Context, default), "access_denied");
+foreach (var permission in new[] { AttendanceCapturePermissions.FaceRead, AttendanceCapturePermissions.FaceSelf })
+{
+    var forbidden = new FaceFixture(); forbidden.Base.Grants.Clear();
+    forbidden.Base.Grants.Add(new(permission, true, Guid.NewGuid(), AccessScopeKind.All, null)
+        { AuthorityTimingKnown = true, ValidFromUtc = forbidden.Base.Clock.Now.AddDays(-1) });
+    await Deny(() => forbidden.Devices(), "access_denied");
+    Check(forbidden.DeviceQuery is null, "read/self permission cannot list HR devices");
+}
+var noMfaDevices = new FaceFixture(); noMfaDevices.Base.Actor = noMfaDevices.Base.Actor with { MfaSatisfied = false };
+await Deny(() => noMfaDevices.Devices(), "access_denied");
+var mobileDevices = new FaceFixture(); mobileDevices.Base.Actor = mobileDevices.Base.Actor with { Client = SessionClient.Mobile };
+await Deny(() => mobileDevices.Devices(), "access_denied");
+var expiredDevices = new FaceFixture(); expiredDevices.Base.Current = false;
+await Deny(() => expiredDevices.Devices(), "invalid_authentication");
+var revokedDuringDevices = new FaceFixture(); revokedDuringDevices.OnDeviceRead = () => revokedDuringDevices.Base.Current = false;
+await Deny(() => revokedDuringDevices.Devices(), "invalid_authentication");
+var deniedDuringDevices = new FaceFixture(); deniedDuringDevices.OnDeviceRead = () => deniedDuringDevices.Base.Grants.Clear();
+await Deny(() => deniedDuringDevices.Devices(), "access_denied");
+var siteDevices = new FaceFixture { DeviceSiteId = Guid.NewGuid(), ForbidBiometricAccess = true };
+siteDevices.Base.Grants.Clear();
+siteDevices.Base.Grants.Add(new(AttendanceCapturePermissions.FaceManage, true, Guid.NewGuid(), AccessScopeKind.Site, siteDevices.DeviceSiteId)
+    { AuthorityTimingKnown = true, ValidFromUtc = siteDevices.Base.Clock.Now.AddDays(-1) });
+Check((await siteDevices.Devices()).Items.Count == 1, "current site-scoped manager can read devices");
+siteDevices.DeviceSiteId = Guid.NewGuid();
+await Deny(() => siteDevices.Devices(), "access_denied");
+var allDevices = new FaceFixture { ForbidBiometricAccess = true }; allDevices.Base.Grants.Clear();
+allDevices.Base.Grants.Add(new(AttendanceCapturePermissions.FaceManage, true, Guid.NewGuid(), AccessScopeKind.All, null)
+    { AuthorityTimingKnown = true, ValidFromUtc = allDevices.Base.Clock.Now.AddDays(-1) });
+Check((await allDevices.Devices()).Items.Count == 1, "explicit All-scope manager can read devices");
+var emptyDevices = new FaceFixture { NoDevices = true, ForbidBiometricAccess = true };
+var emptyDevicePage = await emptyDevices.Devices();
+Check(emptyDevicePage.Items.Count == 0 && emptyDevicePage.TotalCount == 0 && emptyDevicePage.Page == 1 && emptyDevicePage.PageSize == 25,
+    "eligible employee with no available devices returns an empty page, not enrollment success or fabricated devices");
+var ineligibleDevices = new FaceFixture { ForbidBiometricAccess = true };
+ineligibleDevices.OnDeviceRead = () => throw new AuthenticationFailure("face_employee_ineligible", 409);
+try { await ineligibleDevices.Devices(); Check(false, "ineligible employee must be rejected"); }
+catch (AuthenticationFailure error)
+{
+    Check(error.Code == "face_employee_ineligible" && error.StatusCode == 409,
+        "employee eligibility conflict remains actionable by the HR page");
+}
+var unknownDevices = new FaceFixture { ForbidBiometricAccess = true };
+unknownDevices.OnDeviceRead = () => throw new AuthenticationFailure("attendance_resource_not_found", 404);
+await Deny(() => unknownDevices.Devices(), "attendance_resource_not_found");
+foreach (var eligibilityCode in new[] { "face_employee_ineligible", "face_device_ineligible" })
+{
+    var eligibilityRejectedEnrollment = new FaceFixture { EmployeeDeviceFailure = eligibilityCode };
+    try { await eligibilityRejectedEnrollment.Enroll(); Check(false, "ineligible enrollment must be rejected"); }
+    catch (AuthenticationFailure error)
+    {
+        Check(error.Code == eligibilityCode && error.StatusCode == 409,
+            "existing enrollment preserves the actionable eligibility conflict");
+    }
+    Check(eligibilityRejectedEnrollment.ProviderCalls == 0 && eligibilityRejectedEnrollment.TemplateWrites == 0 && eligibilityRejectedEnrollment.Active is null,
+        "ineligible employee/device never reaches provider or creates enrollment");
 }
 var office = new Fixture(); office.UseOffice();
 var officeIn = await office.In();
@@ -344,7 +478,8 @@ Check(await legacyEnrollment.Enroll() == legacyResult && legacyEnrollment.Provid
 var staleVerification = new FaceFixture();
 staleVerification.Base.Actor = staleVerification.Base.Actor with { Client = SessionClient.Mobile, MfaSatisfied = false };
 staleVerification.Base.Grants.Clear(); staleVerification.Base.Grants.Add(new(AttendanceCapturePermissions.FaceSelf, false,
-    Guid.NewGuid(), AccessScopeKind.Self, staleVerification.Base.Actor.EmployeeId));
+    Guid.NewGuid(), AccessScopeKind.Self, staleVerification.Base.Actor.EmployeeId)
+    { AuthorityTimingKnown = true, ValidFromUtc = staleVerification.Base.Clock.Now.AddDays(-1) });
 Fixture.Set(staleVerification.Base.Attempt, "Outcome", FaceVerificationOutcome.Pending);
 Fixture.Set(staleVerification.Base.Attempt, "RowVersion", new byte[8]);
 Fixture.Set(staleVerification.Base.Enrollment, "EncryptedTemplateReference", JsonSerializer.Serialize(new PrivateFileReference(
@@ -747,6 +882,13 @@ public sealed class FaceFixture
     public FaceService Service;
     public FaceEnrollmentRequest Request;
     public int ProviderCalls, TemplateWrites;
+    public bool ForbidBiometricAccess, NoDevices;
+    public string? EmployeeDeviceFailure;
+    public Guid? DeviceSiteId;
+    public (Guid EmployeeId, int Page, int PageSize)? DeviceQuery;
+    public Guid? ActiveQueryEmployee;
+    public int ActiveQueryCount;
+    public Action? OnDeviceRead;
     public bool ProviderReady = true, TemplateReady = true;
     public bool ProviderReject, ProviderOutage, FailTemplateWrite, RevokeAfterProvider;
     public TaskCompletionSource<bool>? ProviderGate;
@@ -756,12 +898,16 @@ public sealed class FaceFixture
     public FaceFixture()
     {
         Base.Actor = Base.Actor with { Client = SessionClient.Web, MfaSatisfied = true };
-        Base.Grants.Clear(); Base.Grants.Add(new(AttendanceCapturePermissions.FaceManage, true, Guid.NewGuid(), AccessScopeKind.Employee, Base.Actor.EmployeeId));
+        Base.Grants.Clear(); Base.Grants.Add(new(AttendanceCapturePermissions.FaceManage, true, Guid.NewGuid(), AccessScopeKind.Employee, Base.Actor.EmployeeId)
+            { AuthorityTimingKnown = true, ValidFromUtc = Base.Clock.Now.AddDays(-1) });
         var repository = Proxy.Make<IFaceRepository>((m, a) => m.Name switch
         {
-            "ResourcesAsync" => Task.FromResult<IReadOnlyList<AccessResource>>([new(EmployeeId: Base.Actor.EmployeeId)]),
-            "EmployeeDeviceAsync" => Task.FromResult(new FaceEmployeeDevice(null!, Base.Device)),
-            "ActiveAsync" => Task.FromResult(Active),
+            "ResourcesAsync" => Task.FromResult<IReadOnlyList<AccessResource>>([new(EmployeeId: (Guid)a[0]!, SiteId: DeviceSiteId)]),
+            "DevicesAsync" => ReadDevices((Guid)a[0]!, (int)a[1]!, (int)a[2]!),
+            "EmployeeDeviceAsync" => EmployeeDeviceFailure is not null
+                ? Task.FromException<FaceEmployeeDevice>(new AuthenticationFailure(EmployeeDeviceFailure, 409))
+                : Task.FromResult(new FaceEmployeeDevice(null!, Base.Device)),
+            "ActiveAsync" => ReadActive((Guid)a[0]!),
             "EnrollmentAsync" => Task.FromResult(Active?.Id == (Guid)a[1]! ? Active : null),
             "AttemptAsync" => Task.FromResult<FaceVerificationAttempt?>(Base.Attempt),
             "Add" => Add((FaceEnrollment)a[0]!),
@@ -770,12 +916,14 @@ public sealed class FaceFixture
         });
         var provider = Proxy.Make<IFaceVerificationProvider>((m, a) =>
         {
+            if (ForbidBiometricAccess) throw new Exception("Device reads must not inspect or call the provider");
             if (m.Name == "get_Capability") return new FaceProviderCapability(ProviderReady, "synthetic", "1", ProviderReady ? "ready" : "unavailable");
             if (m.Name != "EnrollAsync") throw new Exception("Unexpected provider call");
             return Provide((FaceProviderEnrollmentInput)a[0]!);
         });
         var templates = Proxy.Make<IFaceTemplateStore>((m, a) =>
         {
+            if (ForbidBiometricAccess) throw new Exception("Device reads must not inspect or call template storage");
             if (m.Name == "get_IsConfigured") return TemplateReady;
             if (m.Name != "WriteAsync") throw new Exception("Unexpected template call");
             TemplateWrites++; var bytes = (byte[])a[0]!;
@@ -787,6 +935,22 @@ public sealed class FaceFixture
             ApprovalReference = "synthetic-only", RetentionPolicyReference = "synthetic-only", ChallengeLifetimeSeconds = 120, MaximumAttemptsPerPunch = 3 }, templates, Base.Clock,
             new(JournalData, Base.PrivateFiles, Base.Clock), Base.Retirement);
         Request = new(Base.Device.Id, "synthetic-signed-provider-evidence", null, null, "Synthetic controlled enrollment");
+    }
+    public Task<PagedResult<FaceEnrollmentDeviceResponse>> Devices() =>
+        Service.DevicesAsync(Base.Actor.EmployeeId, 1, 25, Base.Context, default);
+    private Task<FaceEnrollment?> ReadActive(Guid employeeId)
+    {
+        ActiveQueryEmployee = employeeId;
+        ActiveQueryCount++;
+        return Task.FromResult(Active);
+    }
+    private Task<PagedResult<FaceEnrollmentDeviceResponse>> ReadDevices(Guid employeeId, int page, int pageSize)
+    {
+        DeviceQuery = (employeeId, page, pageSize);
+        OnDeviceRead?.Invoke();
+        if (NoDevices) return Task.FromResult(new PagedResult<FaceEnrollmentDeviceResponse>([], 0, page, pageSize));
+        return Task.FromResult(new PagedResult<FaceEnrollmentDeviceResponse>(
+            [new(Base.Device.Id, Base.Device.DisplayName, Base.Device.Platform, Base.Device.VerifiedAt!.Value)], 101, page, pageSize));
     }
     private object? Add(FaceEnrollment enrollment) { Active = enrollment; return null; }
     private Task Save() { if (Active is not null) Fixture.Set(Active, "RowVersion", BitConverter.GetBytes(++version * 1L)); return Task.CompletedTask; }
@@ -896,7 +1060,8 @@ public sealed class EnrollmentHistoryFixture
     public EnrollmentHistoryFixture()
     {
         Base.Actor = Base.Actor with { Client = SessionClient.Web, MfaSatisfied = true };
-        Base.Grants.Clear(); Base.Grants.Add(new(AttendanceCapturePermissions.FaceRead, true, Guid.NewGuid(), AccessScopeKind.Site, CurrentSite));
+        Base.Grants.Clear(); Base.Grants.Add(new(AttendanceCapturePermissions.FaceRead, true, Guid.NewGuid(), AccessScopeKind.Site, CurrentSite)
+            { AuthorityTimingKnown = true, ValidFromUtc = Base.Clock.Now.AddDays(-1) });
         Data = new(Base); Journal = new(Data, Base.PrivateFiles, Base.Clock);
         var employees = Proxy.Make<IFaceRepository>((m, a) => m.Name == "ResourcesAsync"
             ? Task.FromResult<IReadOnlyList<AccessResource>>([new(EmployeeId: Base.Actor.EmployeeId, SiteId: CurrentSite)]) : throw new Exception(m.Name));

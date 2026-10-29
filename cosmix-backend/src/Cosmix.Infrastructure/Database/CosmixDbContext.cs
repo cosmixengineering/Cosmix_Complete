@@ -177,6 +177,9 @@ public sealed class CosmixDbContext(DbContextOptions<CosmixDbContext> options)
     public DbSet<EmployeeOnboardingDecision> EmployeeOnboardingDecisions => Set<EmployeeOnboardingDecision>();
     public DbSet<EmployeeSubmission> EmployeeSubmissions => Set<EmployeeSubmission>();
     public DbSet<PayrollHandoffBatch> PayrollHandoffBatches => Set<PayrollHandoffBatch>();
+    public DbSet<Cosmix.Domain.HR.PayrollSalary.PayrollSalaryComponent> PayrollSalaryComponents => Set<Cosmix.Domain.HR.PayrollSalary.PayrollSalaryComponent>();
+    public DbSet<Cosmix.Domain.HR.PayrollSalary.PayrollSalaryPolicy> PayrollSalaryPolicies => Set<Cosmix.Domain.HR.PayrollSalary.PayrollSalaryPolicy>();
+    public DbSet<Cosmix.Domain.HR.PayrollImports.PayrollSalaryImport> PayrollSalaryImports => Set<Cosmix.Domain.HR.PayrollImports.PayrollSalaryImport>();
     public DbSet<PayrollHandoffLine> PayrollHandoffLines => Set<PayrollHandoffLine>();
     public DbSet<PayrollHandoffProcessingRecord> PayrollHandoffProcessingRecords => Set<PayrollHandoffProcessingRecord>();
     public DbSet<Policy> Policies => Set<Policy>();
@@ -208,12 +211,6 @@ public sealed class CosmixDbContext(DbContextOptions<CosmixDbContext> options)
     public DbSet<PayrollAccountingPeriod> PayrollAccountingPeriods => Set<PayrollAccountingPeriod>();
     public DbSet<PayrollPostingProfile> PayrollPostingProfiles => Set<PayrollPostingProfile>();
     public DbSet<EmployeeStatutoryCoverage> EmployeeStatutoryCoverages => Set<EmployeeStatutoryCoverage>();
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-        optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -265,6 +262,13 @@ public sealed class CosmixDbContext(DbContextOptions<CosmixDbContext> options)
 
             if (entry.Entity is IAppendOnlyEntity)
                 throw new InvalidOperationException($"{entry.Metadata.ClrType.Name} is append-only; create a new version or an authorized correction.");
+            if (entry.Entity is Cosmix.Domain.HR.PayrollAccounting.PayrollCostPlan)
+            {
+                string[] decision = ["State", "DecidedBy", "DecidedByEmployeeId", "DecidedAt", "DecisionProofReference", "RowVersion"];
+                if (entry.State == EntityState.Deleted || (string)entry.OriginalValues["State"]! != "Draft" ||
+                    entry.Properties.Any(p => p.IsModified && !decision.Contains(p.Metadata.Name)))
+                    throw new InvalidOperationException("Cost allocation inputs and completed reviews are immutable; create a new revision.");
+            }
 
             if (entry.Entity is LoginPhoneChange)
             {
@@ -417,7 +421,13 @@ public sealed class CosmixDbContext(DbContextOptions<CosmixDbContext> options)
         foreach (var employeeId in employeeIds)
             employees[employeeId].Entity.RecordRelatedDraftChange();
         foreach (var batchId in batchIds)
-            batches[batchId].Entity.RecordLineChange();
+        {
+            var batch = batches[batchId];
+            // A complete salary is frozen before its first atomic insert. Existing
+            // batches still use the domain guard to reject any appended frozen line.
+            if (batch.State != EntityState.Added || batch.Entity.CalculationVersion != "salary-v2")
+                batch.Entity.RecordLineChange();
+        }
         ChangeTracker.DetectChanges();
     }
 

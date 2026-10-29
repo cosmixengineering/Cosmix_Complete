@@ -1,17 +1,17 @@
 {
-  "SubsequentBatch": "SYNTH-BATCH-NEXT-c879e67acab049e5b6a69623b76e1717",
-  "SubsequentObligationId": "a25c3ffd-5962-4088-8eee-a2d85e60d284",
+  "SubsequentBatch": "SYNTH-BATCH-NEXT-f8a261a7405240b4999b3e699c24378d",
+  "SubsequentObligationId": "5bd52ad2-09cf-4726-b83b-82b62bbc3b20",
   "EmployeeAPayment": {
-    "Id": "7b8c26d2-892c-41ed-924f-01db1d8d1057",
-    "ObligationId": "a25c3ffd-5962-4088-8eee-a2d85e60d284",
-    "EmployeeId": "75cb9f21-883f-4811-807d-0f15c0dd4c91",
+    "Id": "7731c335-c5ef-4e15-8c9e-143a20849c9e",
+    "ObligationId": "5bd52ad2-09cf-4726-b83b-82b62bbc3b20",
+    "EmployeeId": "630ac0a3-8eac-46ed-86d6-30586c3625fa",
     "Amount": 96500.00,
     "State": "Posted",
     "PaymentReference": "PAY-A-202611-01",
-    "PaymentJournalEntryId": "744b9a7f-b8e7-4ff6-b3ee-015c0bf5366d",
+    "PaymentJournalEntryId": "9b55a1fe-d63b-4931-b0ea-b7708b6a9fe4",
     "ConfirmedAt": null,
     "ConfirmedByUserId": null,
-    "CreatedAt": "2026-10-27T09:33:31.2650328+00:00"
+    "CreatedAt": "2026-10-28T06:47:16.158342+00:00"
   },
   "Verdict": "SUBSEQUENT_MONTH_SUCCESSFUL_NO_COLLISION"
 }

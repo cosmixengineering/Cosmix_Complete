@@ -78,6 +78,7 @@ function ContributionEntries() {
     }[]
   >([]);
   const [obligationId, setObligationId] = useState('');
+  const [obligationPage, setObligationPage] = useState(1);
   const [profileId, setProfileId] = useState('');
   const [postingDate, setPostingDate] = useState('');
   const [downloadError, setDownloadError] = useState('');
@@ -99,7 +100,7 @@ function ContributionEntries() {
     access.can('payroll.accounting.accrue'),
   );
   const obligations = useFinanceQuery(
-    '/payroll-accounting/obligations?page=1&pageSize=100',
+    `/payroll-accounting/obligations?page=${obligationPage}&pageSize=100`,
     z.array(obligation),
     access.can('payroll.accounting.accrue'),
   );
@@ -257,6 +258,14 @@ function ContributionEntries() {
                   {item.obligationId}
                 </p>
               )}
+              {item.postedEmployeeCount !== undefined && (
+                <FinanceNotice>
+                  {item.postedEmployeeCount} of {item.entries?.length ?? 0} employee contributions
+                  posted.
+                  {item.state === 'Approved' &&
+                    ' Post each remaining payroll group; this month stays open until every employee entry is posted.'}
+                </FinanceNotice>
+              )}
               {item.state === 'Draft' &&
                 item.createdByUserId !== access.user?.account?.accountId &&
                 access.can('statutory.contributions.approve') && (
@@ -281,7 +290,11 @@ function ContributionEntries() {
                         value={obligationId}
                         onChange={setObligationId}
                         options={(obligations.data ?? [])
-                          .filter((row) => row.currency === item.currency)
+                          .filter(
+                            (row) =>
+                              row.currency === item.currency &&
+                              !(item.postedObligationIds ?? []).includes(row.id),
+                          )
                           .map((row) => ({
                             value: row.id,
                             label: `${row.batchId} · ${money(row.totalNetAmount, row.currency)}`,
@@ -296,6 +309,19 @@ function ContributionEntries() {
                             (row) => row.state === 'Approved' && row.currency === item.currency,
                           )
                           .map((row) => ({ value: row.id, label: row.name }))}
+                      />
+                      <HasMorePager
+                        page={obligationPage}
+                        hasMore={obligations.data?.length === 100}
+                        busy={obligations.isFetching}
+                        onPrevious={() => {
+                          setObligationPage(obligationPage - 1);
+                          setObligationId('');
+                        }}
+                        onNext={() => {
+                          setObligationPage(obligationPage + 1);
+                          setObligationId('');
+                        }}
                       />
                       <TextInput
                         label="Posting date"

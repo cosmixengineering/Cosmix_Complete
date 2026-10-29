@@ -2,6 +2,11 @@ import type { SessionManager } from '../../auth/SessionManager';
 import type { ServiceData, ServiceKey } from '../../types/selfService';
 import { canOpenService } from '../../constants/services';
 import { AppError } from '../../utils/errors';
+import { isGuid } from '../../utils/validation';
+import {
+  paymentHistoryGroup,
+  paymentHistoryPage,
+} from '../../utils/paymentHistory';
 import {
   dateRange,
   record,
@@ -116,6 +121,13 @@ export class SelfServiceClient {
           })),
         };
       }
+      case 'payments':
+        return paymentHistoryPage(
+          await get(
+            `/api/v1/self-service/finances/payment-history?page=${query.page}&pageSize=20`,
+          ),
+          query.page,
+        );
       case 'requests':
         return {
           root: await get('/api/v1/self-service/requests/summary'),
@@ -185,6 +197,29 @@ export class SelfServiceClient {
           ),
         };
     }
+  }
+  async loadPaymentPage(batchId: string, page: number) {
+    if (
+      !isGuid(batchId) ||
+      !Number.isInteger(page) ||
+      page < 1 ||
+      page > 1000000
+    ) {
+      throw new AppError('invalid_server_response');
+    }
+    await this.session.revalidate();
+    if (!canOpenService('payments', this.session.getSnapshot())) {
+      throw new AppError('access_denied', 403);
+    }
+    const result = paymentHistoryGroup(
+      await this.session.request<unknown>(
+        `/api/v1/self-service/finances/payment-history/${batchId}?page=${page}&pageSize=20`,
+      ),
+    );
+    if (result.batchId !== batchId || result.paymentsPage !== page) {
+      throw new AppError('invalid_server_response');
+    }
+    return result;
   }
   async readNotification(id: string, version: string): Promise<void> {
     if (!/^[a-f0-9-]{36}$/i.test(id) || !/^[A-Za-z0-9+/]{11}=$/.test(version)) {

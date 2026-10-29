@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cosmix.Api.Controllers.HR;
-[ApiController, Authorize, Route("api/v1/payroll-handoff/batches/{batchId:guid}/payslips")]
+[ApiController, Authorize, TypeFilter(typeof(PayrollFinanceExceptionFilter)), Route("api/v1/payroll-handoff/batches/{batchId:guid}/payslips")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class PayrollPayslipsController(PayslipService service) : ControllerBase
 {

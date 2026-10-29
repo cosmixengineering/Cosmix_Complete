@@ -30,7 +30,7 @@ public sealed class PayrollFinanceOperation(SensitiveComplianceOperation operati
                 if (old.ResultCode != "payroll-finance-v1" || old.ProtectedResultReference is null || old.ExpiresAt <= clock.GetUtcNow())
                     throw AttendanceOperation.Conflict("idempotency_result_unavailable");
                 var reference = JsonSerializer.Deserialize<PrivateFileReference>(old.ProtectedResultReference) ?? throw AttendanceOperation.Conflict("invalid_financial_receipt");
-                return JsonSerializer.Deserialize<T>(await files.ReadAsync(reference, purpose, token)) ?? throw AttendanceOperation.Conflict("invalid_financial_receipt");
+                return JsonSerializer.Deserialize<T>(await files.ReadAsync(reference, purpose, token))!;
             }
             var result = await work(actor, token);
             var resultFile = await files.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(result), purpose, token);

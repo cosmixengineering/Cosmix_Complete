@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { useFinanceAction, useFinanceQuery } from '../../hooks/use-finance-queries';
 import { useHrLifetime } from '../../hooks/use-hr-lifetime';
+import { useFinanceAccess } from '../../hooks/use-finance-access';
 import {
   importApplied,
   importHistory,
@@ -17,6 +18,12 @@ import { FinanceQueryState } from './FinanceQueryState';
 import { PayrollSelect } from './PayrollFields';
 
 export function SalaryImport() {
+  const access = useFinanceAccess();
+  const canSubmit = access.can(
+    'attendance.payroll-imports.submit',
+    'attendance.payroll-salary.request',
+    'hr.employees.compensation.request',
+  );
   const action = useFinanceAction();
   const lifetime = useHrLifetime();
   const [source, setSource] = useState<z.infer<typeof importInspection> | null>(null);
@@ -62,7 +69,7 @@ export function SalaryImport() {
     }
   }
   async function inspect() {
-    if (!file || reading) return;
+    if (!canSubmit || !file || reading) return;
     setError('');
     if (
       !/\.(csv|xlsx)$/i.test(file.name) ||
@@ -130,7 +137,14 @@ export function SalaryImport() {
     if (result) setPreview(result);
   }
   async function apply() {
-    if (!source || !preview?.canApply || preview.sourceId !== source.sourceId || applied) return;
+    if (
+      !canSubmit ||
+      !source ||
+      !preview?.canApply ||
+      preview.sourceId !== source.sourceId ||
+      applied
+    )
+      return;
     const result = await action.run(
       '/hr/payroll-imports/apply',
       {
@@ -158,6 +172,13 @@ export function SalaryImport() {
         Compensation rows support Monthly, Daily and Hourly rates. Accepted rows create independent
         salary or component review requests; they do not approve a salary.
       </FinanceNotice>
+      {!canSubmit && (
+        <FinanceNotice>
+          Your read permissions allow retained imports, validation previews and submission receipts.
+          Uploading and submitting also require import submission, salary request and compensation
+          request permissions.
+        </FinanceNotice>
+      )}
       <FinanceQueryState query={history}>
         <details>
           <summary>Retained imports and submission receipts</summary>
@@ -188,6 +209,7 @@ export function SalaryImport() {
           Salary sheet
           <input
             type="file"
+            disabled={!canSubmit}
             accept=".csv,.xlsx"
             onChange={(event) => {
               setFile(event.target.files?.[0] ?? null);
@@ -205,7 +227,7 @@ export function SalaryImport() {
             setPreview(null);
           }}
         />
-        <Button disabled={!file || !reason.trim()} onClick={() => void inspect()}>
+        <Button disabled={!canSubmit || !file || !reason.trim()} onClick={() => void inspect()}>
           Inspect uploaded file
         </Button>
         {source && (
@@ -304,7 +326,10 @@ export function SalaryImport() {
                 </tbody>
               </table>
             </div>
-            <Button disabled={!preview.canApply || !reason.trim()} onClick={() => void apply()}>
+            <Button
+              disabled={!canSubmit || !preview.canApply || !reason.trim()}
+              onClick={() => void apply()}
+            >
               Submit validated rows for review
             </Button>
           </>

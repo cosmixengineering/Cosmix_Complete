@@ -9,16 +9,16 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Brand Palette (Executive Sapphire & Slate) */
-  --color-brand: #1e3a8a;
-  --color-brand-hover: #1e40af;
-  --color-brand-light: #eff6ff;
-  --color-brand-dark: #172554;
+  /* Brand Palette (Executive Slate & Charcoal) */
+  --color-brand: #0f172a;
+  --color-brand-hover: #1e293b;
+  --color-brand-light: #f1f5f9;
+  --color-brand-dark: #020617;
 
   /* Primary Accent */
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-subtle: #dbeafe;
+  --color-primary: #0f172a;
+  --color-primary-hover: #1e293b;
+  --color-primary-subtle: #e2e8f0;
 
   /* Surfaces & Backgrounds */
   --color-bg: #f8fafc;
@@ -40,8 +40,8 @@
   --color-muted: #64748b;
 
   /* Focus & Interactive */
-  --color-focus: #2563eb;
-  --color-focus-ring: rgba(37, 99, 235, 0.2);
+  --color-focus: #0f172a;
+  --color-focus-ring: rgba(15, 23, 42, 0.15);
 
   /* Status & Semantic Colors */
   --color-success: #10b981;

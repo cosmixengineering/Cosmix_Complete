@@ -12,11 +12,14 @@ import {
   HeartPulse,
   History,
   Home,
+  Info,
   Landmark,
+  LayoutGrid,
   Mail,
   MapPin,
   Navigation,
   Pencil,
+  Phone,
   RefreshCw,
   Receipt,
   User,
@@ -24,6 +27,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { z } from 'zod';
+import { ApiError } from '@/services/api/api-error';
 import { Button } from '@/components/ui/Button';
 import { useHrAccess } from '../hooks/use-hr-access';
 import { useHrQuery } from '../hooks/use-hr-queries';
@@ -47,6 +51,19 @@ import { EmployeeProfileHeader } from '../components/employee/EmployeeProfileHea
 import '@/styles/hr-dashboard.css';
 import { EmployeeBiometricSection } from '../components/employee/EmployeeBiometricSection';
 
+function calculateAge(dobStr?: string | null): string {
+  if (!dobStr) return '—';
+  const birth = new Date(dobStr);
+  if (isNaN(birth.getTime())) return dobStr;
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const m = now.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+    age--;
+  }
+  return `${dobStr} (${age} yrs)`;
+}
+
 export function EmployeeDetailPage() {
   const { employeeId = '' } = useParams();
   return id.safeParse(employeeId).success ? (
@@ -65,15 +82,32 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
   const name = rawName ?? 'overview';
   const section = sections.find((s) => s.name === name);
 
-  if (!access.can('hr.employees.read')) return <Denied />;
+  const canReadProfile = access.can('hr.employees.read');
+  const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
+    'hr.employees.read',
+  ]);
+
+  const deptsQuery = useHrQuery('departments?pageSize=100', pageOf(masterSchema), [
+    'hr.organization.read',
+  ]);
+  const desigsQuery = useHrQuery('designations?pageSize=100', pageOf(masterSchema), [
+    'hr.organization.read',
+  ]);
+  const branchesQuery = useHrQuery('branches?pageSize=100', pageOf(masterSchema), [
+    'hr.organization.read',
+  ]);
+
+  if (!canReadProfile) return <Denied />;
 
   const isOverview = !rawName || rawName === 'overview';
+  const profile = profileQuery.data?.profile;
+  const employee = profileQuery.data?.employee;
 
   return (
     <div className="emp-page-container">
       {/* Top Breadcrumb Link */}
       <Link className="emp-back-link" to={`${basePath}/employees`}>
-        <ArrowLeft size={16} />
+        <ArrowLeft size={13} />
         Back to employees
       </Link>
 
@@ -83,25 +117,25 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
       {/* Modern Tabs Bar */}
       <nav className="emp-nav-tabs" aria-label="Employee navigation">
         <Link to="?section=overview" className={`emp-nav-tab ${isOverview ? 'active' : ''}`}>
-          <User size={15} />
+          <User size={13} />
           Overview
         </Link>
         <Link
           to="?section=basic"
           className={`emp-nav-tab ${name === 'basic' || name === 'identity' ? 'active' : ''}`}
         >
-          <FileText size={15} />
+          <FileText size={13} />
           Personal details
         </Link>
         <Link
           to="?section=employment"
           className={`emp-nav-tab ${name === 'employment' ? 'active' : ''}`}
         >
-          <Briefcase size={15} />
+          <Briefcase size={13} />
           Employment
         </Link>
         <Link to="?section=bank" className={`emp-nav-tab ${name === 'bank' ? 'active' : ''}`}>
-          <Landmark size={15} />
+          <Landmark size={13} />
           Bank details
         </Link>
         {access.can('hr.employees.compensation.read') && (
@@ -109,7 +143,7 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
             to="?section=compensation"
             className={`emp-nav-tab ${name === 'compensation' ? 'active' : ''}`}
           >
-            <Receipt size={15} />
+            <Receipt size={13} />
             Salary
           </Link>
         )}
@@ -117,74 +151,331 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
           to="?section=files"
           className={`emp-nav-tab ${name === 'files' || name === 'medical-files' ? 'active' : ''}`}
         >
-          <FileText size={15} />
+          <FileText size={13} />
           Documents
         </Link>
         <Link
           to="?section=assignments"
           className={`emp-nav-tab ${name === 'assignments' || name === 'tracking' || name === 'biometrics' ? 'active' : ''}`}
         >
-          <MapPin size={15} />
-          Attendance & sites
+          <MapPin size={13} />
+          Attendance &amp; sites
         </Link>
         {access.can('hr.employees.submissions.review', 'access.accounts.read') && (
           <Link to="?section=access" className={`emp-nav-tab ${name === 'access' ? 'active' : ''}`}>
-            <ShieldCheck size={15} />
+            <ShieldCheck size={13} />
             Roles &amp; Access
           </Link>
         )}
       </nav>
 
-      {/* Content Area */}
+      {/* Workspace Area */}
       {isOverview ? (
         <EmployeeOverview employeeId={employeeId} />
-      ) : name === 'access' ? (
-        access.can('hr.employees.submissions.review', 'access.accounts.read') ? (
-          <CurrentAccess key={employeeId} employeeId={employeeId} />
-        ) : (
-          <Denied />
-        )
-      ) : name === 'assignments' ? (
-        access.can('hr.sites.read') ? (
-          <EmployeeSiteAssignments key={employeeId} employeeId={employeeId} />
-        ) : (
-          <Denied />
-        )
-      ) : name === 'tracking' ? (
-        <EmployeeMapTracking key={employeeId} employeeId={employeeId} />
-      ) : name === 'biometrics' ? (
-        <EmployeeBiometricSection key={employeeId} employeeId={employeeId} />
-      ) : section ? (
-        access.can(...section.read) ? (
-          <CurrentSection
-            key={section.name}
-            employeeId={employeeId}
-            section={section}
-            edit={params.get('edit') === '1'}
-          />
-        ) : (
-          <Denied />
-        )
-      ) : name === 'compensation' ? (
-        <SalaryWorkspace key={name} employeeId={employeeId} edit={params.get('edit') === '1'} />
-      ) : name === 'lifecycle' ? (
-        <StatusWorkspace key={name} employeeId={employeeId} edit={params.get('edit') === '1'} />
-      ) : name === 'files' || name === 'medical-files' ? (
-        <CurrentFiles key={name} employeeId={employeeId} medical={name === 'medical-files'} />
       ) : (
-        <p role="alert">Employee section not found.</p>
+        <div className="emp-workspace-layout">
+          <main className="emp-workspace-main">
+            {name === 'access' ? (
+              access.can('hr.employees.submissions.review', 'access.accounts.read') ? (
+                <CurrentAccess key={employeeId} employeeId={employeeId} />
+              ) : (
+                <Denied />
+              )
+            ) : name === 'assignments' ? (
+              access.can('hr.sites.read') ? (
+                <EmployeeSiteAssignments key={employeeId} employeeId={employeeId} />
+              ) : (
+                <Denied />
+              )
+            ) : name === 'tracking' ? (
+              <EmployeeMapTracking key={employeeId} employeeId={employeeId} />
+            ) : name === 'biometrics' ? (
+              <EmployeeBiometricSection key={employeeId} employeeId={employeeId} />
+            ) : section ? (
+              access.can(...section.read) ? (
+                <CurrentSection
+                  key={section.name}
+                  employeeId={employeeId}
+                  section={section}
+                  edit={params.get('edit') === '1'}
+                />
+              ) : (
+                <Denied />
+              )
+            ) : name === 'compensation' ? (
+              <SalaryWorkspace
+                key={name}
+                employeeId={employeeId}
+                edit={params.get('edit') === '1'}
+              />
+            ) : name === 'lifecycle' ? (
+              <StatusWorkspace
+                key={name}
+                employeeId={employeeId}
+                edit={params.get('edit') === '1'}
+              />
+            ) : name === 'files' || name === 'medical-files' ? (
+              <CurrentFiles key={name} employeeId={employeeId} medical={name === 'medical-files'} />
+            ) : (
+              <p role="alert">Employee section not found.</p>
+            )}
+          </main>
+
+          {/* Right Quick Section Rail */}
+          <aside className="emp-quick-rail">
+            <EmployeeQuickRail
+              currentSection={name}
+              employee={employee}
+              profile={profile}
+              departments={deptsQuery.data?.items}
+              designations={desigsQuery.data?.items}
+              branches={branchesQuery.data?.items}
+              canCompensation={access.can('hr.employees.compensation.read')}
+              canAccess={access.can('hr.employees.submissions.review', 'access.accounts.read')}
+            />
+          </aside>
+        </div>
       )}
     </div>
   );
 }
 
-function EmployeeOverview({ employeeId }: { employeeId: string }) {
-  const access = useHrAccess();
+function EmployeeQuickRail({
+  currentSection,
+  employee,
+  profile,
+  departments,
+  designations,
+  branches,
+  canCompensation,
+  canAccess,
+}: {
+  currentSection: string;
+  employee?: z.infer<typeof profileResponse>['employee'];
+  profile?: z.infer<typeof profileResponse>['profile'];
+  departments?: { id: string; name: string }[];
+  designations?: { id: string; name: string }[];
+  branches?: { id: string; name: string }[];
+  canCompensation: boolean;
+  canAccess: boolean;
+}) {
+  const deptName =
+    departments?.find((d) => d.id === profile?.departmentId)?.name || profile?.departmentId || '—';
+  const desigName =
+    designations?.find((d) => d.id === profile?.designationId)?.name ||
+    profile?.designationId ||
+    '—';
+  const branchName =
+    branches?.find((b) => b.id === profile?.branchId)?.name || profile?.branchId || '—';
+
+  const navItems = [
+    { key: 'overview', label: 'Overview', icon: User, path: '?section=overview' },
+    { key: 'basic', label: 'Personal & Family', icon: FileText, path: '?section=basic' },
+    { key: 'identity', label: 'CNIC & Identity', icon: Contact, path: '?section=identity' },
+    { key: 'employment', label: 'Employment & Org', icon: Briefcase, path: '?section=employment' },
+    { key: 'bank', label: 'Bank & Accounts', icon: Landmark, path: '?section=bank' },
+    ...(canCompensation
+      ? [
+          {
+            key: 'compensation',
+            label: 'Salary & Compensation',
+            icon: Receipt,
+            path: '?section=compensation',
+          },
+        ]
+      : []),
+    { key: 'files', label: 'Documents & KYC', icon: FileText, path: '?section=files' },
+    {
+      key: 'assignments',
+      label: 'Site Assignments',
+      icon: Building2,
+      path: '?section=assignments',
+    },
+    {
+      key: 'biometrics',
+      label: 'Biometrics & Face ID',
+      icon: Fingerprint,
+      path: '?section=biometrics',
+    },
+    { key: 'tracking', label: 'Live Map Tracking', icon: Navigation, path: '?section=tracking' },
+    ...(canAccess
+      ? [{ key: 'access', label: 'Roles & Access', icon: ShieldCheck, path: '?section=access' }]
+      : []),
+  ];
+
+  return (
+    <>
+      {/* Navigator Card */}
+      <div className="emp-rail-card">
+        <div className="emp-rail-header">
+          <span className="emp-rail-title">
+            <LayoutGrid size={12} />
+            Quick Sections
+          </span>
+          <span className="emp-rail-badge">{navItems.length}</span>
+        </div>
+        <div className="emp-rail-nav-list">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive =
+              currentSection === item.key ||
+              (item.key === 'overview' && (!currentSection || currentSection === 'overview')) ||
+              (item.key === 'basic' && currentSection === 'identity') ||
+              (item.key === 'files' && currentSection === 'medical-files');
+            return (
+              <Link
+                key={item.key}
+                to={item.path}
+                className={`emp-rail-nav-btn ${isActive ? 'active' : ''}`}
+                title={`Switch to ${item.label}`}
+              >
+                <span className="emp-rail-nav-left">
+                  <Icon size={13} className="emp-rail-nav-icon" />
+                  <span>{item.label}</span>
+                </span>
+                <ChevronRight size={13} className="emp-rail-nav-chevron" />
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Quick Actions & Verification Shortcuts */}
+      <div className="emp-rail-card">
+        <div className="emp-rail-header">
+          <span className="emp-rail-title">
+            <LayoutGrid size={12} />
+            Quick Actions &amp; Records
+          </span>
+          <span className="emp-rail-badge">4</span>
+        </div>
+        <div className="emp-rail-actions-stack">
+          <Link
+            to="?section=assignments"
+            className={`emp-action-card ${currentSection === 'assignments' ? 'active' : ''}`}
+            title="View Site Assignments & Shifts"
+          >
+            <div className="emp-action-card-left">
+              <Building2 size={13} className="emp-action-card-icon" />
+              <span>Site Assignments &amp; Shifts</span>
+            </div>
+            <ArrowRight size={12} className="emp-action-card-arrow" />
+          </Link>
+          <Link
+            to="?section=biometrics"
+            className={`emp-action-card ${currentSection === 'biometrics' ? 'active' : ''}`}
+            title="Manage Biometrics & Face ID"
+          >
+            <div className="emp-action-card-left">
+              <Fingerprint size={13} className="emp-action-card-icon" />
+              <span>Biometrics &amp; Face ID</span>
+            </div>
+            <ArrowRight size={12} className="emp-action-card-arrow" />
+          </Link>
+          <Link
+            to="?section=files"
+            className={`emp-action-card ${currentSection === 'files' ? 'active' : ''}`}
+            title="View Uploaded Documents & KYC"
+          >
+            <div className="emp-action-card-left">
+              <FileText size={13} className="emp-action-card-icon" />
+              <span>Uploaded Documents &amp; KYC</span>
+            </div>
+            <ArrowRight size={12} className="emp-action-card-arrow" />
+          </Link>
+          <Link
+            to="?section=medical-files"
+            className={`emp-action-card ${currentSection === 'medical-files' ? 'active' : ''}`}
+            title="View Medical Records & Fitness"
+          >
+            <div className="emp-action-card-left">
+              <HeartPulse size={13} className="emp-action-card-icon red" />
+              <span>Medical Records &amp; Fitness</span>
+            </div>
+            <ArrowRight size={12} className="emp-action-card-arrow" />
+          </Link>
+        </div>
+      </div>
+
+      {/* Profile Snapshot Card */}
+      <div className="emp-rail-card">
+        <div className="emp-rail-header">
+          <span className="emp-rail-title">
+            <Info size={12} />
+            Hiring Profile Snapshot
+          </span>
+          {employee?.employeeNumber && (
+            <span className="emp-rail-badge">{employee.employeeNumber}</span>
+          )}
+        </div>
+        <div className="emp-rail-snapshot-box">
+          <p className="muted">Hiring values may differ from current approved records.</p>
+          <div className="emp-rail-snapshot-row">
+            <span className="emp-rail-snapshot-lbl">Designation</span>
+            <span className="emp-rail-snapshot-val" title={desigName}>
+              {desigName}
+            </span>
+          </div>
+          <div className="emp-rail-snapshot-row">
+            <span className="emp-rail-snapshot-lbl">Department</span>
+            <span className="emp-rail-snapshot-val" title={deptName}>
+              {deptName}
+            </span>
+          </div>
+          <div className="emp-rail-snapshot-row">
+            <span className="emp-rail-snapshot-lbl">CNIC</span>
+            <span className="emp-rail-snapshot-val">
+              {profile?.identityDocumentNumber ? formatCnic(profile.identityDocumentNumber) : '—'}
+            </span>
+          </div>
+          <div className="emp-rail-snapshot-row">
+            <span className="emp-rail-snapshot-lbl">Mobile</span>
+            <span className="emp-rail-snapshot-val">
+              {profile?.personalPhone || profile?.loginPhoneNumber || '—'}
+            </span>
+          </div>
+          <div className="emp-rail-snapshot-row">
+            <span className="emp-rail-snapshot-lbl">Work Email</span>
+            <span className="emp-rail-snapshot-val" title={profile?.officialEmail || ''}>
+              {profile?.officialEmail || '—'}
+            </span>
+          </div>
+          <div className="emp-rail-snapshot-row">
+            <span className="emp-rail-snapshot-lbl">Office</span>
+            <span className="emp-rail-snapshot-val" title={branchName}>
+              {branchName}
+            </span>
+          </div>
+
+          <Link to="?section=basic&edit=1" className="emp-rail-action-btn">
+            <Pencil size={11} />
+            Edit Profile Details
+          </Link>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function EmployeeOverview({
+  employeeId,
+  employee: _employee,
+  profile: initialProfile,
+  departments: _departments,
+  designations: _designations,
+  branches: _branches,
+}: {
+  employeeId: string;
+  employee?: z.infer<typeof profileResponse>['employee'];
+  profile?: z.infer<typeof profileResponse>['profile'];
+  departments?: { id: string; name: string }[];
+  designations?: { id: string; name: string }[];
+  branches?: { id: string; name: string }[];
+}) {
   const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
     'hr.employees.read',
   ]);
-
-  const profile = profileQuery.data?.profile;
+  const profile = profileQuery.data?.profile || initialProfile;
 
   const currentAddress = profile?.currentAddress;
   const currentAddressStr = currentAddress?.line1
@@ -196,14 +487,14 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
     ? `${permanentAddress.line1}${permanentAddress.city ? `, ${permanentAddress.city}` : ''}${permanentAddress.province ? `, ${permanentAddress.province}` : ''}`
     : null;
 
-  const currentDate = labelDate(new Date().toISOString());
-  const effectiveDate = profile?.joinedOn ? labelDate(profile.joinedOn) : 'Not provided';
+  const emergency = profile?.emergencyContact;
 
   return (
     <div className="emp-overview-container">
-      {/* Timestamp line */}
+      {/* The hiring profile is not the current-value endpoint. */}
       <div className="emp-overview-timestamp">
-        Current as of {currentDate} &middot; Effective from {effectiveDate}
+        Hiring profile snapshot — these values may differ from current approved records. Open
+        Personal details, Identity or Employment for current values.
       </div>
 
       <div className="emp-overview-grid">
@@ -213,11 +504,11 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
             {/* Header */}
             <div className="emp-card-header">
               <div className="emp-card-title">
-                <User size={18} className="emp-card-title-icon" />
+                <User size={15} className="emp-card-title-icon" />
                 <span>Personal information</span>
               </div>
               <Link to="?section=basic&edit=1" className="emp-card-edit-link">
-                <Pencil size={13} />
+                <Pencil size={11} />
                 Edit
               </Link>
             </div>
@@ -228,7 +519,7 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
               {/* Current address */}
               <div className="emp-info-block">
                 <div className="emp-block-title">
-                  <MapPin size={15} className="emp-block-icon" />
+                  <MapPin size={13} className="emp-block-icon" />
                   <span>Current address</span>
                 </div>
                 <div className="emp-block-value">{currentAddressStr || 'Address not added'}</div>
@@ -240,7 +531,7 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
               {/* Permanent address */}
               <div className="emp-info-block">
                 <div className="emp-block-title">
-                  <Home size={15} className="emp-block-icon" />
+                  <Home size={13} className="emp-block-icon" />
                   <span>Permanent address</span>
                 </div>
                 <div className="emp-block-value">{permanentAddressStr || 'Address not added'}</div>
@@ -256,7 +547,7 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
               {/* Personal email */}
               <div className="emp-info-block">
                 <div className="emp-block-title">
-                  <Mail size={15} className="emp-block-icon" />
+                  <Mail size={13} className="emp-block-icon" />
                   <span>Personal email</span>
                 </div>
                 <div className="emp-block-value">{profile?.personalEmail || 'Not added'}</div>
@@ -268,25 +559,23 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
               {/* Emergency contact */}
               <div className="emp-info-block">
                 <div className="emp-block-title">
-                  <Users size={15} className="emp-block-icon" />
+                  <Users size={13} className="emp-block-icon" />
                   <span>Emergency contact</span>
                 </div>
                 <div className="emp-emergency-table">
                   <div className="emp-emergency-row">
                     <span className="emp-emergency-label">Name</span>
-                    <span className="emp-emergency-val">
-                      {profile?.emergencyContact?.name || 'Not added'}
-                    </span>
+                    <span className="emp-emergency-val">{emergency?.name || 'Not added'}</span>
                   </div>
                   <div className="emp-emergency-row">
                     <span className="emp-emergency-label">Relationship</span>
                     <span className="emp-emergency-val">
-                      {profile?.emergencyContact?.relationship || 'Not added'}
+                      {emergency?.relationship || 'Not added'}
                     </span>
                   </div>
                 </div>
                 <Link to="?section=basic&edit=1" className="emp-block-action">
-                  <Pencil size={12} />
+                  <Pencil size={11} />
                   Edit contact
                 </Link>
               </div>
@@ -297,75 +586,75 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
             <div className="emp-action-cards-grid">
               <Link to="?section=identity" className="emp-action-card">
                 <div className="emp-action-card-left">
-                  <Contact size={17} className="emp-action-card-icon" />
+                  <Contact size={14} className="emp-action-card-icon" />
                   <span>Identity details</span>
                 </div>
-                <ArrowRight size={15} className="emp-action-card-arrow" />
+                <ArrowRight size={13} className="emp-action-card-arrow" />
               </Link>
 
               <Link to="?section=medical-files" className="emp-action-card">
                 <div className="emp-action-card-left">
-                  <HeartPulse size={17} className="emp-action-card-icon red" />
+                  <HeartPulse size={14} className="emp-action-card-icon red" />
                   <span>Medical information</span>
                 </div>
-                <ArrowRight size={15} className="emp-action-card-arrow" />
+                <ArrowRight size={13} className="emp-action-card-arrow" />
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Work & attendance + Profile records */}
+        {/* Right Column: Work & attendance + Profile records (THE SIDE MENU) */}
         <div className="emp-overview-right">
           {/* Card 1: Work & attendance */}
           <div className="emp-card">
             <div className="emp-card-header simple">
               <div className="emp-card-title">
-                <MapPin size={17} className="emp-card-title-icon" />
-                <span>Work & attendance</span>
+                <MapPin size={14} className="emp-card-title-icon" />
+                <span>Work &amp; attendance</span>
               </div>
             </div>
 
             <div className="emp-menu-list">
               <Link to="?section=assignments" className="emp-menu-item">
                 <div className="emp-menu-item-left">
-                  <Building2 size={18} className="emp-menu-icon" />
+                  <Building2 size={15} className="emp-menu-icon" />
                   <div className="emp-menu-texts">
                     <div className="emp-menu-title">Site assignments</div>
                     <div className="emp-menu-subtitle">Assigned work locations</div>
                   </div>
                 </div>
-                <ChevronRight size={16} className="emp-menu-chevron" />
+                <ChevronRight size={14} className="emp-menu-chevron" />
               </Link>
 
               <Link to="?section=biometrics" className="emp-menu-item">
                 <div className="emp-menu-item-left">
-                  <Fingerprint size={18} className="emp-menu-icon" />
+                  <Fingerprint size={15} className="emp-menu-icon" />
                   <div className="emp-menu-texts">
-                    <div className="emp-menu-title">Biometrics & Face ID</div>
+                    <div className="emp-menu-title">Biometrics &amp; Face ID</div>
                     <div className="emp-menu-subtitle">Enrollment and verification</div>
                   </div>
                 </div>
-                <ChevronRight size={16} className="emp-menu-chevron" />
+                <ChevronRight size={14} className="emp-menu-chevron" />
               </Link>
 
               <Link to="?section=tracking" className="emp-menu-item">
                 <div className="emp-menu-item-left">
-                  <Navigation size={18} className="emp-menu-icon" />
+                  <Navigation size={15} className="emp-menu-icon" />
                   <div className="emp-menu-texts">
                     <div className="emp-menu-title">Live map tracking</div>
                     <div className="emp-menu-subtitle">Employee location</div>
                   </div>
                 </div>
-                <ChevronRight size={16} className="emp-menu-chevron" />
+                <ChevronRight size={14} className="emp-menu-chevron" />
               </Link>
             </div>
           </div>
 
           {/* Card 2: Profile records */}
-          <div className="emp-card" style={{ marginTop: '16px' }}>
+          <div className="emp-card">
             <div className="emp-card-header simple">
               <div className="emp-card-title">
-                <FileText size={17} className="emp-card-title-icon" />
+                <FileText size={14} className="emp-card-title-icon" />
                 <span>Profile records</span>
               </div>
             </div>
@@ -373,49 +662,36 @@ function EmployeeOverview({ employeeId }: { employeeId: string }) {
             <div className="emp-menu-list">
               <Link to="?section=employment" className="emp-menu-item">
                 <div className="emp-menu-item-left">
-                  <Briefcase size={18} className="emp-menu-icon" />
+                  <Briefcase size={15} className="emp-menu-icon" />
                   <div className="emp-menu-texts">
                     <div className="emp-menu-title">Employment</div>
                     <div className="emp-menu-subtitle">Work and employment details</div>
                   </div>
                 </div>
-                <ChevronRight size={16} className="emp-menu-chevron" />
+                <ChevronRight size={14} className="emp-menu-chevron" />
               </Link>
 
               <Link to="?section=bank" className="emp-menu-item">
                 <div className="emp-menu-item-left">
-                  <Landmark size={18} className="emp-menu-icon" />
+                  <Landmark size={15} className="emp-menu-icon" />
                   <div className="emp-menu-texts">
                     <div className="emp-menu-title">Bank details</div>
                     <div className="emp-menu-subtitle">Employee bank information</div>
                   </div>
                 </div>
-                <ChevronRight size={16} className="emp-menu-chevron" />
+                <ChevronRight size={14} className="emp-menu-chevron" />
               </Link>
 
               <Link to="?section=files" className="emp-menu-item">
                 <div className="emp-menu-item-left">
-                  <FileText size={18} className="emp-menu-icon" />
+                  <FileText size={15} className="emp-menu-icon" />
                   <div className="emp-menu-texts">
                     <div className="emp-menu-title">Documents</div>
                     <div className="emp-menu-subtitle">Records and uploaded files</div>
                   </div>
                 </div>
-                <ChevronRight size={16} className="emp-menu-chevron" />
+                <ChevronRight size={14} className="emp-menu-chevron" />
               </Link>
-
-              {access.can('hr.employees.submissions.review', 'access.accounts.read') && (
-                <Link to="?section=access" className="emp-menu-item">
-                  <div className="emp-menu-item-left">
-                    <ShieldCheck size={18} className="emp-menu-icon" />
-                    <div className="emp-menu-texts">
-                      <div className="emp-menu-title">Roles &amp; Access Control</div>
-                      <div className="emp-menu-subtitle">System roles, login &amp; credentials</div>
-                    </div>
-                  </div>
-                  <ChevronRight size={16} className="emp-menu-chevron" />
-                </Link>
-              )}
             </div>
           </div>
         </div>
@@ -456,8 +732,8 @@ function StructuredSectionDisplay({
 }) {
   if (!data && !profile) {
     return (
-      <div className="emp-card" style={{ marginTop: '16px' }}>
-        <p className="muted" style={{ margin: 0, fontSize: '13px' }}>
+      <div className="emp-card">
+        <p className="muted" style={{ margin: 0, fontSize: '11.5px' }}>
           No records found for {section.label}.
         </p>
       </div>
@@ -466,19 +742,19 @@ function StructuredSectionDisplay({
 
   if (section.name === 'basic') {
     const basic = data as Partial<z.infer<typeof basicSchema>>;
-    const currentAddr = basic?.currentAddress;
-    const permAddr = basic?.permanentAddress;
-    const emergency = basic?.emergencyContact;
+    const currentAddr = basic?.currentAddress || profile?.currentAddress;
+    const permAddr = basic?.permanentAddress || profile?.permanentAddress;
+    const emergency = basic?.emergencyContact || profile?.emergencyContact;
 
     const renderAddr = (addr: typeof currentAddr) => {
       if (!addr || (!addr.line1 && !addr.city && !addr.province)) {
         return <span className="emp-empty-badge">Not provided</span>;
       }
       return (
-        <div style={{ lineHeight: '1.4' }}>
+        <div style={{ lineHeight: '1.35' }}>
           {addr.line1 && <div style={{ fontWeight: 600, color: '#0f172a' }}>{addr.line1}</div>}
-          {addr.line2 && <div style={{ color: '#475569', fontSize: '12.5px' }}>{addr.line2}</div>}
-          <div style={{ color: '#64748b', fontSize: '12.5px', marginTop: '2px' }}>
+          {addr.line2 && <div style={{ color: '#475569', fontSize: '11px' }}>{addr.line2}</div>}
+          <div style={{ color: '#64748b', fontSize: '11px', marginTop: '1px' }}>
             {[addr.city, addr.province, addr.postalCode].filter(Boolean).join(', ')}
           </div>
         </div>
@@ -486,41 +762,54 @@ function StructuredSectionDisplay({
     };
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '14px' }}>
-        {/* Card 1: Addresses */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {/* Card 1: Personal & Family Information */}
         <div className="emp-card">
           <div className="emp-card-header">
             <div className="emp-card-title">
-              <MapPin size={18} className="emp-card-title-icon" />
-              <span>Residential & Permanent Addresses</span>
+              <User size={14} className="emp-card-title-icon" />
+              <span>Personal &amp; Family Information</span>
             </div>
             {canWrite && (
               <button type="button" className="emp-card-edit-btn" onClick={onEdit}>
-                <Pencil size={13} />
-                Edit basic details
+                <Pencil size={11} />
+                Edit details
               </button>
             )}
           </div>
 
-          <div className="emp-two-col-grid">
-            <div className="emp-info-block">
-              <div className="emp-block-title">
-                <MapPin size={15} className="emp-block-icon" />
-                <span>Current address</span>
-              </div>
-              <div className="emp-block-value" style={{ marginTop: '4px' }}>
-                {renderAddr(currentAddr)}
-              </div>
+          <div className="emp-kv-grid">
+            <div className="emp-kv-item">
+              <span className="emp-kv-label">Full Legal Name</span>
+              <span className="emp-kv-value">{profile?.fullLegalName || '—'}</span>
             </div>
-
-            <div className="emp-info-block">
-              <div className="emp-block-title">
-                <Home size={15} className="emp-block-icon" />
-                <span>Permanent address</span>
-              </div>
-              <div className="emp-block-value" style={{ marginTop: '4px' }}>
-                {renderAddr(permAddr)}
-              </div>
+            <div className="emp-kv-item">
+              <span className="emp-kv-label">Father / Spouse Name</span>
+              <span className="emp-kv-value">{profile?.fatherOrSpouseName || '—'}</span>
+            </div>
+            <div className="emp-kv-item">
+              <span className="emp-kv-label">Date of Birth &amp; Age</span>
+              <span className="emp-kv-value">{calculateAge(profile?.dateOfBirth)}</span>
+            </div>
+            <div className="emp-kv-item">
+              <span className="emp-kv-label">Gender</span>
+              <span className="emp-kv-value">{profile?.gender || '—'}</span>
+            </div>
+            <div className="emp-kv-item">
+              <span className="emp-kv-label">Marital Status</span>
+              <span className="emp-kv-value">
+                {basic?.maritalStatus || profile?.maritalStatus || '—'}
+              </span>
+            </div>
+            <div className="emp-kv-item">
+              <span className="emp-kv-label">CNIC / ID Document</span>
+              <span className="emp-kv-value">
+                {profile?.identityDocumentNumber ? formatCnic(profile.identityDocumentNumber) : '—'}
+              </span>
+            </div>
+            <div className="emp-kv-item">
+              <span className="emp-kv-label">Document Expiry</span>
+              <span className="emp-kv-value">{profile?.identityDocumentExpiresOn || '—'}</span>
             </div>
           </div>
         </div>
@@ -529,38 +818,49 @@ function StructuredSectionDisplay({
         <div className="emp-card">
           <div className="emp-card-header simple">
             <div className="emp-card-title">
-              <Users size={18} className="emp-card-title-icon" />
-              <span>Contact & Emergency Details</span>
+              <Phone size={14} className="emp-card-title-icon" />
+              <span>Contact &amp; Emergency Details</span>
             </div>
           </div>
 
           <div className="emp-two-col-grid">
-            {/* Personal contact */}
+            {/* Communication channels */}
             <div className="emp-info-block">
               <div className="emp-block-title">
-                <Mail size={15} className="emp-block-icon" />
-                <span>Personal email</span>
+                <Mail size={13} className="emp-block-icon" />
+                <span>Communication Channels</span>
               </div>
-              <div className="emp-block-value">
-                {basic?.personalEmail || <span className="emp-empty-badge">Not provided</span>}
-              </div>
-
-              <div className="emp-block-title" style={{ marginTop: '12px' }}>
-                <HeartPulse size={15} className="emp-block-icon" />
-                <span>Marital status</span>
-              </div>
-              <div className="emp-block-value">
-                {basic?.maritalStatus || <span className="emp-empty-badge">Not provided</span>}
+              <div className="emp-emergency-table" style={{ marginLeft: 0, marginTop: '4px' }}>
+                <div className="emp-emergency-row">
+                  <span className="emp-emergency-label">Work Email</span>
+                  <span className="emp-emergency-val">{profile?.officialEmail || '—'}</span>
+                </div>
+                <div className="emp-emergency-row">
+                  <span className="emp-emergency-label">Personal Email</span>
+                  <span className="emp-emergency-val">
+                    {basic?.personalEmail || profile?.personalEmail || '—'}
+                  </span>
+                </div>
+                <div className="emp-emergency-row">
+                  <span className="emp-emergency-label">Personal Mobile</span>
+                  <span className="emp-emergency-val">
+                    {profile?.personalPhone || profile?.loginPhoneNumber || '—'}
+                  </span>
+                </div>
+                <div className="emp-emergency-row">
+                  <span className="emp-emergency-label">Company Phone</span>
+                  <span className="emp-emergency-val">{profile?.companyPhone || '—'}</span>
+                </div>
               </div>
             </div>
 
             {/* Emergency contact */}
             <div className="emp-info-block">
               <div className="emp-block-title">
-                <Users size={15} className="emp-block-icon" />
-                <span>Emergency contact</span>
+                <Users size={13} className="emp-block-icon" />
+                <span>Emergency Contact Person</span>
               </div>
-              <div className="emp-emergency-table" style={{ marginTop: '4px' }}>
+              <div className="emp-emergency-table" style={{ marginLeft: 0, marginTop: '4px' }}>
                 <div className="emp-emergency-row">
                   <span className="emp-emergency-label">Name</span>
                   <span className="emp-emergency-val">{emergency?.name || 'Not provided'}</span>
@@ -572,7 +872,7 @@ function StructuredSectionDisplay({
                   </span>
                 </div>
                 <div className="emp-emergency-row">
-                  <span className="emp-emergency-label">Phone</span>
+                  <span className="emp-emergency-label">Primary Phone</span>
                   <span className="emp-emergency-val">{emergency?.phone || 'Not provided'}</span>
                 </div>
                 {emergency?.alternatePhone && (
@@ -585,22 +885,54 @@ function StructuredSectionDisplay({
             </div>
           </div>
         </div>
+
+        {/* Card 3: Addresses */}
+        <div className="emp-card">
+          <div className="emp-card-header simple">
+            <div className="emp-card-title">
+              <MapPin size={14} className="emp-card-title-icon" />
+              <span>Residential &amp; Permanent Addresses</span>
+            </div>
+          </div>
+
+          <div className="emp-two-col-grid">
+            <div className="emp-info-block">
+              <div className="emp-block-title">
+                <Home size={13} className="emp-block-icon" />
+                <span>Current Residential Address</span>
+              </div>
+              <div className="emp-block-value" style={{ marginTop: '3px' }}>
+                {renderAddr(currentAddr)}
+              </div>
+            </div>
+
+            <div className="emp-info-block">
+              <div className="emp-block-title">
+                <Building2 size={13} className="emp-block-icon" />
+                <span>Permanent Domicile Address</span>
+              </div>
+              <div className="emp-block-value" style={{ marginTop: '3px' }}>
+                {renderAddr(permAddr)}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (section.name === 'identity') {
-    const identity = data as Partial<z.infer<typeof identitySchema>>;
+    const identity = (data || profile || {}) as Partial<z.infer<typeof identitySchema>>;
     return (
-      <div className="emp-card" style={{ marginTop: '14px' }}>
+      <div className="emp-card">
         <div className="emp-card-header">
           <div className="emp-card-title">
-            <Contact size={18} className="emp-card-title-icon" />
-            <span>Identity & Legal Records</span>
+            <Contact size={14} className="emp-card-title-icon" />
+            <span>Identity &amp; Legal Records</span>
           </div>
           {canWrite && (
             <button type="button" className="emp-card-edit-btn" onClick={onEdit}>
-              <Pencil size={13} />
+              <Pencil size={11} />
               Propose change
             </button>
           )}
@@ -608,48 +940,71 @@ function StructuredSectionDisplay({
 
         <div className="emp-kv-grid">
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Full legal name</span>
-            <span className="emp-kv-value">{identity?.fullLegalName || '—'}</span>
-          </div>
-          <div className="emp-kv-item">
-            <span className="emp-kv-label">Father / Spouse name</span>
-            <span className="emp-kv-value">{identity?.fatherOrSpouseName || '—'}</span>
-          </div>
-          <div className="emp-kv-item">
-            <span className="emp-kv-label">Document type</span>
+            <span className="emp-kv-label">Full Legal Name</span>
             <span className="emp-kv-value">
-              {identity?.identityDocumentType === 2 ? 'Passport' : 'CNIC'}
+              {identity?.fullLegalName || profile?.fullLegalName || '—'}
             </span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Document number</span>
+            <span className="emp-kv-label">Father / Spouse Name</span>
             <span className="emp-kv-value">
-              {identity?.identityDocumentNumber ? formatCnic(identity.identityDocumentNumber) : '—'}
+              {identity?.fatherOrSpouseName || profile?.fatherOrSpouseName || '—'}
             </span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Document expiry</span>
-            <span className="emp-kv-value">{identity?.identityDocumentExpiresOn || '—'}</span>
+            <span className="emp-kv-label">Document Type</span>
+            <span className="emp-kv-value">
+              {(identity?.identityDocumentType ?? profile?.identityDocumentType) === 2
+                ? 'Passport'
+                : 'CNIC / Smart Card'}
+            </span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Date of birth</span>
-            <span className="emp-kv-value">{identity?.dateOfBirth || '—'}</span>
+            <span className="emp-kv-label">Document Number</span>
+            <span className="emp-kv-value">
+              {identity?.identityDocumentNumber || profile?.identityDocumentNumber
+                ? formatCnic(
+                    identity?.identityDocumentNumber || profile?.identityDocumentNumber || '',
+                  )
+                : '—'}
+            </span>
+          </div>
+          <div className="emp-kv-item">
+            <span className="emp-kv-label">Document Expiry</span>
+            <span className="emp-kv-value">
+              {identity?.identityDocumentExpiresOn || profile?.identityDocumentExpiresOn || '—'}
+            </span>
+          </div>
+          <div className="emp-kv-item">
+            <span className="emp-kv-label">Date of Birth &amp; Age</span>
+            <span className="emp-kv-value">
+              {calculateAge(identity?.dateOfBirth || profile?.dateOfBirth)}
+            </span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">Gender</span>
-            <span className="emp-kv-value">{identity?.gender || '—'}</span>
+            <span className="emp-kv-value">{identity?.gender || profile?.gender || '—'}</span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Personal phone</span>
-            <span className="emp-kv-value">{identity?.personalPhone || '—'}</span>
+            <span className="emp-kv-label">Personal Phone</span>
+            <span className="emp-kv-value">
+              {identity?.personalPhone ||
+                profile?.personalPhone ||
+                profile?.loginPhoneNumber ||
+                '—'}
+            </span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Company phone</span>
-            <span className="emp-kv-value">{identity?.companyPhone || '—'}</span>
+            <span className="emp-kv-label">Company Phone</span>
+            <span className="emp-kv-value">
+              {identity?.companyPhone || profile?.companyPhone || '—'}
+            </span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Official email</span>
-            <span className="emp-kv-value">{identity?.officialEmail || '—'}</span>
+            <span className="emp-kv-label">Official Email</span>
+            <span className="emp-kv-value">
+              {identity?.officialEmail || profile?.officialEmail || '—'}
+            </span>
           </div>
         </div>
       </div>
@@ -666,24 +1021,24 @@ function StructuredSectionDisplay({
     const deptName =
       departments?.find((d) => d.id === empData.departmentId)?.name ||
       empData.departmentId ||
-      'Not provided';
+      'Not assigned';
     const desigName =
       designations?.find((d) => d.id === empData.designationId)?.name ||
       empData.designationId ||
-      'Not provided';
+      'Not assigned';
     const branchName =
-      branches?.find((b) => b.id === empData.branchId)?.name || empData.branchId || 'Not provided';
+      branches?.find((b) => b.id === empData.branchId)?.name || empData.branchId || 'Head Office';
 
     return (
-      <div className="emp-card" style={{ marginTop: '14px', padding: '20px 24px' }}>
-        <div className="emp-card-header" style={{ marginBottom: '14px' }}>
+      <div className="emp-card">
+        <div className="emp-card-header">
           <div className="emp-card-title">
-            <Briefcase size={18} className="emp-card-title-icon" />
-            <span>Employment Records</span>
+            <Briefcase size={14} className="emp-card-title-icon" />
+            <span>Employment &amp; Organization Assignment</span>
           </div>
           {canWrite && (
             <button type="button" className="emp-card-edit-btn" onClick={onEdit}>
-              <Pencil size={13} />
+              <Pencil size={11} />
               Propose change
             </button>
           )}
@@ -705,27 +1060,27 @@ function StructuredSectionDisplay({
           <div className="emp-kv-item">
             <span className="emp-kv-label">Reporting Manager</span>
             <span className="emp-kv-value">
-              {empData.reportingManagerEmployeeId || 'Not provided'}
+              {empData.reportingManagerEmployeeId || 'Not assigned'}
             </span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">Employment Type</span>
-            <span className="emp-kv-value">{empData.employmentTypeId || 'Not provided'}</span>
+            <span className="emp-kv-value">{empData.employmentTypeId || 'Full-Time'}</span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">Staff Category</span>
-            <span className="emp-kv-value">{empData.staffCategoryId || 'Not provided'}</span>
+            <span className="emp-kv-value">{empData.staffCategoryId || 'Standard Staff'}</span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">Joining Date</span>
             <span className="emp-kv-value">
-              {empData.joinedOn ? labelDate(empData.joinedOn) : 'Not provided'}
+              {empData.joinedOn ? labelDate(empData.joinedOn) : '—'}
             </span>
           </div>
           <div className="emp-kv-item">
-            <span className="emp-kv-label">Probation Period</span>
+            <span className="emp-kv-label">Probation Period Ends</span>
             <span className="emp-kv-value">
-              {empData.probationEndsOn ? labelDate(empData.probationEndsOn) : 'Not provided'}
+              {empData.probationEndsOn ? labelDate(empData.probationEndsOn) : '—'}
             </span>
           </div>
         </div>
@@ -735,20 +1090,23 @@ function StructuredSectionDisplay({
 
   if (section.name === 'bank') {
     const rawBank = (data && !('status' in data) ? data : {}) as Record<string, unknown>;
+    const profileBank =
+      (profile as unknown as { financial?: { bank?: Record<string, unknown> } })?.financial?.bank ??
+      {};
     const bank = {
-      ...(profile?.financial?.bank ?? {}),
+      ...profileBank,
       ...rawBank,
     } as Record<string, string | undefined>;
     return (
-      <div className="emp-card" style={{ marginTop: '14px', padding: '20px 24px' }}>
-        <div className="emp-card-header" style={{ marginBottom: '14px' }}>
+      <div className="emp-card">
+        <div className="emp-card-header">
           <div className="emp-card-title">
-            <Landmark size={18} className="emp-card-title-icon" />
-            <span>Bank & Payment Details</span>
+            <Landmark size={14} className="emp-card-title-icon" />
+            <span>Bank &amp; Payment Details</span>
           </div>
           {canWrite && (
             <button type="button" className="emp-card-edit-btn" onClick={onEdit}>
-              <Pencil size={13} />
+              <Pencil size={11} />
               Propose change
             </button>
           )}
@@ -757,21 +1115,19 @@ function StructuredSectionDisplay({
         <div className="emp-kv-grid">
           <div className="emp-kv-item">
             <span className="emp-kv-label">Bank Name</span>
-            <span className="emp-kv-value">{bank.bankName || 'Meezan Bank Ltd'}</span>
+            <span className="emp-kv-value">{bank.bankName || 'Not provided'}</span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">Account Title</span>
-            <span className="emp-kv-value">
-              {bank.accountTitle || profile?.fullLegalName || 'Primary Salary Account'}
-            </span>
+            <span className="emp-kv-value">{bank.accountTitle || 'Not provided'}</span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">Account Number</span>
-            <span className="emp-kv-value">{bank.accountNumber || 'PK00MEZN0001234567'}</span>
+            <span className="emp-kv-value">{bank.accountNumber || 'Not provided'}</span>
           </div>
           <div className="emp-kv-item">
             <span className="emp-kv-label">IBAN</span>
-            <span className="emp-kv-value">{bank.iban || 'PK36MEZN0000001234567890'}</span>
+            <span className="emp-kv-value">{bank.iban || 'Not provided'}</span>
           </div>
         </div>
       </div>
@@ -783,15 +1139,15 @@ function StructuredSectionDisplay({
     (data && typeof data === 'object' ? data : {}) as Record<string, unknown>,
   ).filter(([k]) => !['id', 'version', 'cityId'].includes(k));
   return (
-    <div className="emp-card" style={{ marginTop: '14px' }}>
+    <div className="emp-card">
       <div className="emp-card-header">
         <div className="emp-card-title">
-          <FileText size={18} className="emp-card-title-icon" />
+          <FileText size={14} className="emp-card-title-icon" />
           <span>{section.label}</span>
         </div>
         {canWrite && (
           <button type="button" className="emp-card-edit-btn" onClick={onEdit}>
-            <Pencil size={13} />
+            <Pencil size={11} />
             {(section.name as string) === 'basic' ? 'Edit details' : 'Propose change'}
           </button>
         )}
@@ -825,6 +1181,8 @@ function CurrentSection({
   edit: boolean;
 }) {
   const access = useHrAccess();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/admin') ? '/admin' : '/hr';
   const [params, setParams] = useSearchParams();
   const [revision, setRevision] = useState(0);
   const [historyRevision, setHistoryRevision] = useState(0);
@@ -851,14 +1209,12 @@ function CurrentSection({
   const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
     'hr.employees.read',
   ]);
-  const isApproved = (profileQuery.data?.employee?.status ?? 2) === 2;
-
-  const query = useHrQuery(
-    `employees/${employeeId}/current/${section.name}`,
-    currentUpdateSchema,
-    ['hr.employees.read', ...section.read],
-    isApproved,
-  );
+  const query = useHrQuery(`employees/${employeeId}/current/${section.name}`, currentUpdateSchema, [
+    'hr.employees.read',
+    ...section.read,
+  ]);
+  const unapproved =
+    query.error instanceof ApiError && query.error.code === 'employee_not_approved';
   const canWrite = access.can(...section.read, ...section.write);
 
   const deptsQuery = useHrQuery('departments?pageSize=100', pageOf(masterSchema), [
@@ -871,52 +1227,49 @@ function CurrentSection({
     'hr.organization.read',
   ]);
 
-  if (!isApproved && profileQuery.data?.employee) {
-    const isDraft = profileQuery.data.employee.status === 0;
+  if (unapproved) {
+    const isDraft = profileQuery.data?.employee.onboardingStatus === 0;
     const statusLabel = isDraft ? 'Draft (Incomplete)' : 'Pending Approval';
     return (
-      <div className="emp-section-wrapper" style={{ marginTop: '16px' }}>
-        <div className="hr-repeat-heading">
-          <h2>{section.label}</h2>
-        </div>
+      <div className="emp-section-wrapper">
         <div
           style={{
-            padding: '16px 20px',
+            padding: '8px 12px',
             background: '#fefce8',
             border: '1px solid #fef08a',
-            borderRadius: '8px',
-            marginBottom: '18px',
+            borderRadius: '6px',
+            marginBottom: '10px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
-            gap: '12px',
+            gap: '8px',
           }}
         >
           <div>
             <div
-              style={{ fontWeight: 650, fontSize: '14px', color: '#854d0e', marginBottom: '3px' }}
+              style={{ fontWeight: 650, fontSize: '12px', color: '#854d0e', marginBottom: '1px' }}
             >
               Employee Onboarding in Progress ({statusLabel})
             </div>
-            <div style={{ fontSize: '12.5px', color: '#a16207' }}>
+            <div style={{ fontSize: '11px', color: '#a16207' }}>
               Formal version trees and live change requests become active after the employee
               onboarding is approved.
             </div>
           </div>
           <Link
-            to={`/hr/hiring?employeeId=${employeeId}`}
+            to={`${basePath}/employees/${employeeId}/hiring`}
             style={{
-              padding: '7px 16px',
-              borderRadius: '6px',
-              background: '#0b1a3d',
+              padding: '4px 10px',
+              borderRadius: '5px',
+              background: '#0f172a',
               color: '#ffffff',
-              fontSize: '12.5px',
+              fontSize: '11px',
               fontWeight: 600,
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '4px',
             }}
           >
             Edit / Continue Onboarding
@@ -935,7 +1288,7 @@ function CurrentSection({
           />
         ) : (
           <div className="emp-card">
-            <p className="muted" style={{ margin: 0, fontSize: '13px' }}>
+            <p className="muted" style={{ margin: 0, fontSize: '11.5px' }}>
               Draft record pending onboarding completion ({statusLabel})
             </p>
           </div>
@@ -946,48 +1299,52 @@ function CurrentSection({
   }
 
   return (
-    <div className="emp-section-wrapper" style={{ marginTop: '16px' }}>
+    <div className="emp-section-wrapper">
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '12px',
-          marginBottom: '16px',
+          gap: '8px',
+          marginBottom: '8px',
         }}
       >
         <div>
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
+          <h2 style={{ margin: 0, fontSize: '13.5px', fontWeight: 700, color: '#0f172a' }}>
             {section.label} Records
           </h2>
           {query.data && (
-            <p className="muted" style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748b' }}>
-              Current as of {query.data.asOf} &middot; Effective from {query.data.current.effectiveFrom}
+            <p
+              className="muted"
+              style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#64748b' }}
+            >
+              Current as of {query.data.asOf} &middot; Effective from{' '}
+              {query.data.current.effectiveFrom}
             </p>
           )}
         </div>
         <Button
-          variant="outline"
-          size="sm"
+          variant="secondary"
           title="Reload current section"
           aria-label="Reload current section"
           onClick={() => void query.refetch()}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '6px',
-            fontSize: '12.5px',
-            height: '34px',
+            gap: '4px',
+            fontSize: '11px',
+            height: '26px',
+            padding: '0 8px',
             borderColor: '#e2e8f0',
           }}
         >
-          <RefreshCw size={13} />
+          <RefreshCw size={11} />
           Reload
         </Button>
       </div>
       {saved && (
-        <p role="status" className="hr-message">
+        <p role="status" className="hr-message" style={{ margin: '0 0 8px 0', fontSize: '11.5px' }}>
           Saved successfully.
         </p>
       )}
@@ -1006,24 +1363,26 @@ function CurrentSection({
             />
 
             {query.data.current.bankVerified !== null && (
-              <div style={{ marginTop: '14px' }}>
+              <div style={{ marginTop: '8px' }}>
                 <span
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '6px',
-                    padding: '5px 12px',
-                    borderRadius: '20px',
-                    fontSize: '12px',
+                    gap: '4px',
+                    padding: '3px 8px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
                     fontWeight: 600,
                     background: query.data.current.bankVerified ? '#dcfce7' : '#fef3c7',
                     color: query.data.current.bankVerified ? '#15803d' : '#b45309',
                     border: `1px solid ${query.data.current.bankVerified ? '#bbf7d0' : '#fde68a'}`,
                   }}
                 >
-                  <ShieldCheck size={14} />
+                  <ShieldCheck size={12} />
                   Bank Account Status:{' '}
-                  {query.data.current.bankVerified ? 'Verified by Finance' : 'Verification In Review'}
+                  {query.data.current.bankVerified
+                    ? 'Verified by Finance'
+                    : 'Verification In Review'}
                 </span>
               </div>
             )}
@@ -1031,11 +1390,11 @@ function CurrentSection({
             {query.data.scheduled && (
               <div
                 className="emp-card"
-                style={{ marginTop: '16px', borderLeft: '4px solid #0f172a' }}
+                style={{ marginTop: '8px', borderLeft: '3px solid #0f172a' }}
               >
                 <div className="emp-card-header simple">
                   <div className="emp-card-title">
-                    <History size={17} className="emp-card-title-icon" />
+                    <History size={13} className="emp-card-title-icon" />
                     <span>Scheduled for {query.data.scheduled.effectiveFrom}</span>
                   </div>
                 </div>

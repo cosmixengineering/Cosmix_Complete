@@ -12,6 +12,49 @@ namespace Cosmix.Application.Attendance.DailySummaries;
 public sealed class AttendanceSummaryService(AttendanceOperation operation, IAttendanceSummaryRepository repository,
     IIndividualRosterResolver rosters, IAttendancePolicyCalculator policies, IPrivateFileStore files)
 {
+    public Task<AttendanceDayReadResponse> ReadDayAvailabilityAsync(Guid employeeId, DateOnly date,
+        AuthRequestContext context, CancellationToken ct)
+    {
+        Date(date);
+        if (employeeId == Guid.Empty) throw AttendanceOperation.Invalid();
+        return operation.ReadAsync(AttendanceSummaryPermissions.Read, "attendance.summary.read", employeeId,
+            context, (_, token) => LoadReadDay(employeeId, date, token), ct,
+            resourceScopes: (_, token) => repository.ResourceScopesAsync(employeeId, date, date, token));
+    }
+
+    public Task<IReadOnlyList<AttendanceDayReadResponse>> ReadCalendarAvailabilityAsync(Guid employeeId,
+        AttendanceDateRange range, AuthRequestContext context, CancellationToken ct)
+    {
+        Date(range.From); Date(range.To);
+        if (employeeId == Guid.Empty) throw AttendanceOperation.Invalid();
+        if (range.To < range.From || range.To.DayNumber - range.From.DayNumber > 30)
+            throw AttendanceOperation.Invalid("attendance_range_limit");
+        return operation.ReadAsync<IReadOnlyList<AttendanceDayReadResponse>>(AttendanceSummaryPermissions.Read,
+            "attendance.calendar.read", employeeId, context, async (_, token) =>
+            {
+                var days = new List<AttendanceDayReadResponse>();
+                for (var day = range.From.DayNumber; day <= range.To.DayNumber; day++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    days.Add(await LoadReadDay(employeeId, DateOnly.FromDayNumber(day), token));
+                }
+                return days;
+            }, ct, resourceScopes: (_, token) => repository.ResourceScopesAsync(employeeId, range.From, range.To, token));
+    }
+
+    private async Task<AttendanceDayReadResponse> LoadReadDay(Guid employeeId, DateOnly date, CancellationToken ct)
+    {
+        var snapshot = await repository.LookupAsync(employeeId, date, ct);
+        if (snapshot.IsLocked && snapshot.Summary?.InputEvidenceReference is null)
+            return AttendanceDayReadResponse.MissingLockedSummary(employeeId, date);
+        // Valid frozen records still undergo identity and fingerprint verification. Do not catch
+        // corruption, storage failures or authorization errors as ordinary missing coverage.
+        // HR must be able to inspect factual evidence and fix missing employment setup.
+        // This narrow read-only fallback does not enable calculation, self-service or payroll.
+        return AttendanceDayReadResponse.Available(await LoadDay(employeeId, date, ct,
+            allowMissingAssignment: true, snapshot: snapshot));
+    }
+
     public Task<AttendanceDayResponse> MyDayAsync(DateOnly date, AuthRequestContext context, CancellationToken ct) =>
         ReadDay(null, date, true, context, ct);
     public Task<AttendanceDayResponse> DayAsync(Guid employeeId, DateOnly date, AuthRequestContext context, CancellationToken ct) =>
@@ -102,14 +145,21 @@ public sealed class AttendanceSummaryService(AttendanceOperation operation, IAtt
     /// <summary>Trusted factual dashboard read under the caller's existing authorization transaction.
     /// An absent employment assignment leaves classification unconfigured while retaining accepted
     /// session facts. Locked evidence, invalid assignment history and other failures still fail closed.</summary>
-    public Task<AttendanceDayResponse> LoadAuthorizedDashboardDayAsync(Guid employeeId, DateOnly date, CancellationToken ct)
-    { Date(date); return LoadDay(employeeId, date, ct, allowMissingAssignment: true); }
+    public async Task<AttendanceDayResponse?> LoadAuthorizedDashboardDayAsync(Guid employeeId, DateOnly date, CancellationToken ct)
+    {
+        Date(date);
+        var snapshot = await repository.LookupAsync(employeeId, date, ct);
+        // Expected incomplete coverage is a result on this dashboard-only path, not an exception
+        // that pauses the debugger while its authorization transaction holds locks.
+        if (snapshot.IsLocked && snapshot.Summary?.InputEvidenceReference is null) return null;
+        return await LoadDay(employeeId, date, ct, allowMissingAssignment: true, snapshot);
+    }
 
     private async Task<AttendanceDayResponse> LoadDay(Guid employeeId, DateOnly date, CancellationToken ct,
-        bool allowMissingAssignment = false)
+        bool allowMissingAssignment = false, AttendanceSummaryLookup? snapshot = null)
     {
-        var locked = await repository.IsLockedAsync(date, ct);
-        var saved = await repository.LatestAsync(employeeId, date, ct);
+        var locked = snapshot?.IsLocked ?? await repository.IsLockedAsync(date, ct);
+        var saved = snapshot is null ? await repository.LatestAsync(employeeId, date, ct) : snapshot.Summary;
         if (locked)
         {
             if (saved?.InputEvidenceReference is null) throw AttendanceOperation.Conflict("locked_attendance_summary_unavailable");

@@ -33,6 +33,15 @@ public sealed class WebAuthenticationController(WebAuthenticationService service
         Accepted(await service.ResendAsync(new WebOtpResendRequest(body.ChallengeId,
             new WebLoginRequest(body.Email, body.Password, WebSessionCookies.RequireBrowser(HttpContext))), Context(), ct));
 
+    [AllowAnonymous, HttpPost("authenticator/login")]
+    public async Task<ActionResult<OtpRequestResponse>> AuthenticatorLogin(WebLoginBody body, CancellationToken ct) =>
+        Accepted(await service.LoginAuthenticatorAsync(LoginRequest(body), Context(), ct));
+
+    [AllowAnonymous, HttpPost("authenticator/verify")]
+    public async Task<ActionResult<BrowserSessionResponse>> AuthenticatorVerify(WebMfaVerifyBody body, CancellationToken ct) =>
+        Complete(await service.VerifyAuthenticatorResultAsync(new(body.ChallengeId, body.Code, body.RecoveryCode,
+            WebSessionCookies.RequireBrowser(HttpContext)), Context(), ct));
+
     [AllowAnonymous, HttpPost("otp/verify")]
     public async Task<ActionResult<BrowserSessionResponse>> Verify(WebVerifyBody body, CancellationToken ct)
     {
@@ -88,5 +97,6 @@ public sealed record WebLoginBody([Required, EmailAddress, StringLength(320)] st
 public sealed record WebResendBody(Guid ChallengeId, [Required, EmailAddress, StringLength(320)] string Email,
     [Required, StringLength(1024)] string Password);
 public sealed record WebVerifyBody(Guid ChallengeId, [Required, RegularExpression("^[0-9]{6}$")] string Code);
+public sealed record WebMfaVerifyBody(Guid ChallengeId, [Required, StringLength(64)] string Code, bool RecoveryCode);
 public sealed record BrowserSessionResponse(Guid SessionId, DateTimeOffset AccessTokenExpiresAt,
     DateTimeOffset RefreshTokenExpiresAt, string NextStep = "authenticated");

@@ -38,7 +38,8 @@ public static class AttendanceCaptureRegistration
             .RemoveAllLoggers();
         services.TryAddSingleton(provider => new CompreFaceClient(provider.GetRequiredService<IConfiguration>()
             .GetSection(CompreFaceOptions.SectionName).Get<CompreFaceOptions>() ?? new(),
-            provider.GetRequiredService<IHttpClientFactory>().CreateClient("Cosmix.CompreFace")));
+            provider.GetRequiredService<IHttpClientFactory>().CreateClient("Cosmix.CompreFace"),
+            provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CompreFaceClient>>()));
         services.TryAddSingleton(provider => new SilentFaceLivenessService(provider.GetRequiredService<IConfiguration>()
             .GetSection(SilentFaceOptions.SectionName).Get<SilentFaceOptions>() ?? new()));
         services.TryAddSingleton<IFaceTemplateStore>(provider =>

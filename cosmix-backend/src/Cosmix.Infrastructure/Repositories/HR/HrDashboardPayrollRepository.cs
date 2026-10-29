@@ -27,6 +27,7 @@ public sealed class HrDashboardPayrollRepository(CosmixDbContext db) : IHrDashbo
             ids.Contains(x.SubjectId), ct);
         var batches = await db.PayrollHandoffBatches.AsNoTracking()
             .Where(x => x.PeriodStart == monthStart && x.PeriodEnd == monthEndExclusive &&
+                x.ReviewState != "returned" && x.ReviewState != "cancelled" && x.ReviewState != "rejected" &&
                 x.Lines.Any(line => ids.Contains(line.EmployeeId)))
             .OrderBy(x => x.Id).Take(MaximumBatches + 1).ToArrayAsync(ct);
         if (batches.Length > MaximumBatches) throw EmployeeOperation.Conflict("hr_dashboard_handoff_source_limit");

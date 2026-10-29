@@ -13,7 +13,9 @@ public sealed partial class EmployeeSelfServiceRepository
         if (employeeId == Guid.Empty || page is < 1 or > 4096 || pageSize is < 1 or > 100)
             throw new ArgumentOutOfRangeException(nameof(page));
         // Identity restricts both the count and every component before grouping.
-        var source = db.PayrollHandoffLines.AsNoTracking().Where(line => line.EmployeeId == employeeId);
+        var source = db.PayrollHandoffLines.AsNoTracking().Where(line => line.EmployeeId == employeeId &&
+            line.PayrollHandoffBatch.ReviewState != "returned" && line.PayrollHandoffBatch.ReviewState != "cancelled" &&
+            line.PayrollHandoffBatch.ReviewState != "rejected");
         var count = await source.Select(line => line.PayrollHandoffBatchId).Distinct().CountAsync(ct);
         var rows = await source.GroupBy(line => line.PayrollHandoffBatch)
             .Select(group => new

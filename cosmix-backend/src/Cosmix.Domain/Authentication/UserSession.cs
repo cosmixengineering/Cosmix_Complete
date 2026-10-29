@@ -27,6 +27,9 @@ public sealed class UserSession
             throw new InvalidOperationException("Device is not registered to this account.");
         if (client == SessionClient.Web && mfa is null && smsProof is null)
             throw new InvalidOperationException("Web sign-in requires a verified second factor.");
+        if (client == SessionClient.Web && account.AuthenticatorRequired &&
+            (smsProof is not null || mfa?.Purpose != "WebLoginTotp"))
+            throw new InvalidOperationException("An enrolled authenticator cannot be downgraded to SMS sign-in.");
         if (client == SessionClient.Mobile && (mfa is not null || smsProof is not null))
             throw new InvalidOperationException("Mobile self-service cannot carry web authentication assurance.");
         if (smsProof is not null && (mfa is not null || device is not null || smsProof.Purpose != "WebLogin" ||

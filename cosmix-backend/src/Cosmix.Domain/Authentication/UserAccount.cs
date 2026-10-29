@@ -36,6 +36,7 @@ public sealed class UserAccount
     public Guid? InitialAccessScopeId { get; private set; }
     public Guid? CurrentSetupInvitationId { get; private set; }
     public bool MfaRequired { get; private set; }
+    public bool AuthenticatorRequired { get; private set; }
     public bool MobileAccessEnabled { get; private set; }
     public bool WebAccessEnabled { get; private set; }
     public DateTimeOffset? PhoneVerifiedAt { get; private set; }
@@ -192,6 +193,24 @@ public sealed class UserAccount
 
     public void InvalidateSecurityVersion() => SecurityVersion = checked(SecurityVersion + 1);
 
+    public void EnableAuthenticator(MfaCredential credential, LoginPhoneBinding phone, DateTimeOffset at)
+    {
+        if (AuthenticatorRequired || Status != AccountStatus.Active || !WebAccessEnabled ||
+            credential.UserAccountId != Id || credential.Method != MfaMethod.Totp || credential.ConfirmedAt != at ||
+            credential.RevokedAt.HasValue || credential.LastAcceptedCounter is null ||
+            !phone.IsApprovedFor(this, at) || phone.VerifiedAt is null || phone.VerifiedAt > at)
+            throw new InvalidOperationException("A current approved phone and verified authenticator enrollment are required.");
+        AuthenticatorRequired = true; InvalidateSecurityVersion();
+    }
+
+    public void CompleteAuthenticatorReset(MfaResetApproval approval)
+    {
+        if (!AuthenticatorRequired || approval.UserAccountId != Id || approval.EmployeeId != EmployeeId ||
+            approval.SecurityVersionBefore != SecurityVersion || approval.SecurityVersionAfter != checked(SecurityVersion + 1))
+            throw new InvalidOperationException("Current independent reset evidence is required.");
+        AuthenticatorRequired = false; SecurityVersion = approval.SecurityVersionAfter;
+    }
+
     /// <summary>Approved employment suspension release only. Fresh grants and channel approval are still required.</summary>
     public void PrepareForEmploymentReactivation(DateTimeOffset at)
     {
@@ -317,7 +336,7 @@ public sealed class UserAccount
     {
         ArgumentNullException.ThrowIfNull(session); ArgumentNullException.ThrowIfNull(loginProof);
         ValidateWebPasswordReplacement(binding, at);
-        if (session.UserAccountId != Id || session.SecurityVersion != SecurityVersion ||
+        if (AuthenticatorRequired || session.UserAccountId != Id || session.SecurityVersion != SecurityVersion ||
             session.Client != SessionClient.Web || !session.IsActiveAt(at) ||
             session.RegisteredDeviceId.HasValue || session.MfaChallengeId.HasValue ||
             session.SmsOtpChallengeId != loginProof.Id || loginProof.Purpose != "WebLogin" ||
@@ -325,6 +344,27 @@ public sealed class UserAccount
             loginProof.RevokedAt.HasValue || loginProof.IssuedAt > session.CreatedAt || session.CreatedAt >= loginProof.ExpiresAt ||
             loginProof.MaximumAttempts < 1 || loginProof.FailedAttempts < 0 || loginProof.FailedAttempts >= loginProof.MaximumAttempts)
             throw new InvalidOperationException("A current session with its consumed web SMS proof is required.");
+        var hash = ModelGuard.Required(passwordHash, 2000, nameof(passwordHash));
+        var format = ModelGuard.Required(hashFormat, 100, nameof(hashFormat));
+        var nextVersion = checked(SecurityVersion + 1);
+        PasswordHash = hash; PasswordHashFormat = format; PasswordChangedAt = ModelGuard.Utc(at); SecurityVersion = nextVersion;
+        FailedLoginCount = 0; LockedUntil = null;
+    }
+
+    /// <summary>Trusted current-password and authenticator-session verification; save revocations and audit atomically.</summary>
+    public void ChangeWebPassword(UserSession session, MfaChallenge loginProof, LoginPhoneBinding binding,
+        string passwordHash, string hashFormat, DateTimeOffset at)
+    {
+        ValidateWebPasswordReplacement(binding, at);
+        if (!AuthenticatorRequired || session.UserAccountId != Id || session.SecurityVersion != SecurityVersion ||
+            session.Client != SessionClient.Web || !session.IsActiveAt(at) || session.RegisteredDeviceId.HasValue ||
+            session.SmsOtpChallengeId.HasValue || session.MfaChallengeId != loginProof.Id ||
+            loginProof.Purpose != "WebLoginTotp" || loginProof.UserAccountId != Id || loginProof.SecurityVersion != SecurityVersion ||
+            loginProof.PhoneBindingId != binding.Id || binding.VerifiedAt > session.CreatedAt ||
+            loginProof.RegisteredDeviceId.HasValue || loginProof.ConsumedAt != session.CreatedAt ||
+            loginProof.VerifiedAt is null || loginProof.VerifiedAt > session.CreatedAt || loginProof.RevokedAt.HasValue ||
+            loginProof.IssuedAt < PasswordChangedAt || loginProof.IssuedAt > session.CreatedAt || session.CreatedAt >= loginProof.ExpiresAt)
+            throw new InvalidOperationException("A current session with its consumed authenticator proof is required.");
         var hash = ModelGuard.Required(passwordHash, 2000, nameof(passwordHash));
         var format = ModelGuard.Required(hashFormat, 100, nameof(hashFormat));
         var nextVersion = checked(SecurityVersion + 1);

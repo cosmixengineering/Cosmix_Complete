@@ -543,7 +543,7 @@ export function RolesPermissionsPage() {
                             style={{
                               background: 'transparent',
                               border: 'none',
-                              color: '#2563eb',
+                              color: '#0f172a',
                               fontWeight: 600,
                               fontSize: '11px',
                               cursor: 'pointer',
@@ -773,7 +773,7 @@ export function RolesPermissionsPage() {
             <div
               style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}
             >
-              <KeyRound size={20} color="#2563eb" />
+              <KeyRound size={20} color="#0f172a" />
               <div>
                 <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#0f172a' }}>
                   Direct Employee Role Setup &amp; Provisioning
@@ -835,11 +835,11 @@ export function RolesPermissionsPage() {
               </h3>
               <p style={{ fontSize: '13px', maxWidth: '480px', margin: '0 auto 16px' }}>
                 Enter an employee UUID above, or go to the{' '}
-                <Link to="/admin/approvals" style={{ color: '#2563eb', fontWeight: 600 }}>
+                <Link to="/admin/approvals" style={{ color: '#0f172a', fontWeight: 600 }}>
                   Hiring Approvals Queue
                 </Link>{' '}
                 or{' '}
-                <Link to="/admin/employees" style={{ color: '#2563eb', fontWeight: 600 }}>
+                <Link to="/admin/employees" style={{ color: '#0f172a', fontWeight: 600 }}>
                   Employees Directory
                 </Link>{' '}
                 to open the interactive Role &amp; Access Assignment dialog.

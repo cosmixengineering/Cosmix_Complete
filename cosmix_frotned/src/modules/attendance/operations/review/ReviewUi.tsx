@@ -1,6 +1,6 @@
 import { useId, useState, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, RefreshCw, Search } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RefreshCw, Search, Users } from 'lucide-react';
 import { z } from 'zod';
 import { TextInput } from '@/components/forms/TextInput';
 import { SelectInput } from '@/components/forms/SelectInput';
@@ -8,9 +8,15 @@ import { Pagination } from '@/components/data-display/Pagination';
 import { PrivateWorkspace, Command, Denied, QueryState } from '../../components/SchedulingUi';
 import { useAttendanceAccess } from '../../hooks/use-attendance-access';
 import { useAttendanceQuery } from '../../hooks/use-attendance-query';
-import { id } from '../../schemas/common';
+import { id, pageOf } from '../../schemas/common';
+import { queryString } from '../../api/attendance-api';
 import { canEmployee, scopeKey, scopeNames, supportedScopes, type Scope } from './access';
 import { nextDate, today, validRange } from './helpers';
+import { ApprovedAttendanceEmployee } from '../../components/AttendanceEmployeeSetup';
+import {
+  approvedAttendanceEmployees,
+  approvedAttendanceFilter,
+} from '../../schemas/employee-selection';
 
 export function EvidenceField({
   label,
@@ -122,11 +128,15 @@ export function EmployeeWorkspace({
   permission,
   title,
   self = false,
+  compact = false,
+  approvedOnly = false,
   children,
 }: {
   permission: string;
   title: string;
   self?: boolean;
+  compact?: boolean;
+  approvedOnly?: boolean;
   children: (employeeId: string, scope?: Scope, onEditing?: (value: boolean) => void) => ReactNode;
 }) {
   const params = useParams<{ employeeId: string }>();
@@ -138,7 +148,13 @@ export function EmployeeWorkspace({
           {children('')}
         </>
       ) : (
-        <EmployeeSelection permission={permission} title={title} routeEmployee={params.employeeId}>
+        <EmployeeSelection
+          permission={permission}
+          title={title}
+          routeEmployee={params.employeeId}
+          compact={compact}
+          approvedOnly={approvedOnly}
+        >
           {children}
         </EmployeeSelection>
       )}
@@ -149,22 +165,135 @@ function EmployeeSelection({
   permission,
   title,
   routeEmployee,
+  compact,
+  approvedOnly,
   children,
 }: {
   permission: string;
   title: string;
   routeEmployee?: string;
+  compact: boolean;
+  approvedOnly: boolean;
   children: (employeeId: string, scope?: Scope, onEditing?: (value: boolean) => void) => ReactNode;
 }) {
   const access = useAttendanceAccess();
+  const scopes = supportedScopes(access.user, permission);
+  const suggestedScope = (employeeId: string) =>
+    scopes.find((grant) => grant.kind === 7) ??
+    scopes.find((grant) => grant.kind === 2 && grant.targetId === employeeId) ??
+    (scopes.length === 1 ? scopes[0] : undefined);
   const [employee, setEmployee] = useState(routeEmployee ?? '');
-  const [scope, setScope] = useState<Scope>();
-  const [selection, setSelection] = useState<{ employee: string; scope?: Scope } | null>(null);
+  const [scope, setScope] = useState<Scope | undefined>(() =>
+    approvedOnly && routeEmployee ? suggestedScope(routeEmployee) : undefined,
+  );
+  const [selection, setSelection] = useState<{ employee: string; scope?: Scope } | null>(() =>
+    approvedOnly && routeEmployee && canEmployee(access.user, permission, routeEmployee, scope)
+      ? { employee: routeEmployee, scope }
+      : null,
+  );
   const [editing, setEditing] = useState(false);
-  const valid = canEmployee(access.user, permission, employee, scope);
+  const effectiveScope = scope ?? (compact ? suggestedScope(employee) : undefined);
+  const valid = canEmployee(access.user, permission, employee, effectiveScope);
+  const content = selection && (
+    <PrivateWorkspace
+      resource={`${selection.employee}:${selection.scope ? scopeKey(selection.scope) : ''}`}
+    >
+      {approvedOnly ? (
+        <ApprovedAttendanceEmployee employeeId={selection.employee}>
+          {children(selection.employee, selection.scope, setEditing)}
+        </ApprovedAttendanceEmployee>
+      ) : (
+        children(selection.employee, selection.scope, setEditing)
+      )}
+    </PrivateWorkspace>
+  );
+  if (compact)
+    return (
+      <>
+        <section className="att-register-picker" aria-label="Select employee">
+          <EmployeeLookup
+            approvedOnly={approvedOnly}
+            disabled={editing}
+            selected={employee}
+            compact
+            onSelect={(value) => {
+              const nextScope = scope ?? suggestedScope(value);
+              setEmployee(value);
+              setSelection(
+                canEmployee(access.user, permission, value, nextScope)
+                  ? { employee: value, scope: nextScope }
+                  : null,
+              );
+            }}
+          />
+          <details
+            className="att-register-advanced"
+            open={!access.can('hr.employees.read') || (Boolean(employee) && !valid)}
+          >
+            <summary>Find by employee ID / access options</summary>
+            <form
+              className="att-register-access"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (valid && !editing) setSelection({ employee, scope: effectiveScope });
+              }}
+            >
+              <TextInput
+                label="Employee ID"
+                required
+                disabled={editing}
+                value={employee}
+                onChange={(event) => {
+                  setSelection(null);
+                  setEmployee(event.target.value.trim());
+                }}
+              />
+              {scopes.length > 1 && !scopes.some((grant) => grant.kind === 7) && (
+                <ScopeSelect
+                  permission={permission}
+                  value={effectiveScope}
+                  disabled={editing}
+                  onChange={(value) => {
+                    setSelection(null);
+                    setScope(value);
+                  }}
+                />
+              )}
+              <Command icon={Search} type="submit" disabled={editing || !valid}>
+                View attendance
+              </Command>
+            </form>
+            {employee && !valid && (
+              <Denied>Select an access area assigned to you for this employee.</Denied>
+            )}
+          </details>
+        </section>
+        {selection ? (
+          content
+        ) : (
+          <section className="att-register-empty" aria-label="Attendance selection">
+            <Users size={26} aria-hidden="true" />
+            <h2>Select an employee to view attendance</h2>
+            <p>
+              Search by name or employee number above. Then review their dates, recorded hours and
+              daily details.
+            </p>
+          </section>
+        )}
+      </>
+    );
   return (
     <>
       <h1>{title}</h1>
+      <EmployeeLookup
+        approvedOnly={approvedOnly}
+        disabled={editing}
+        selected={employee}
+        onSelect={(value) => {
+          setSelection(null);
+          setEmployee(value);
+        }}
+      />
       <form
         className="attendance-grid"
         onSubmit={(e) => {
@@ -203,14 +332,116 @@ function EmployeeSelection({
           the server.
         </Denied>
       ) : null}
-      {selection && (
-        <PrivateWorkspace
-          resource={`${selection.employee}:${selection.scope ? scopeKey(selection.scope) : ''}`}
-        >
-          {children(selection.employee, selection.scope, setEditing)}
-        </PrivateWorkspace>
-      )}
+      {content}
     </>
+  );
+}
+const employeeChoices = pageOf(
+  z.object({
+    id,
+    employeeNumber: z.number().int(),
+    name: z.string().nullable(),
+  }),
+);
+
+function EmployeeLookup({
+  approvedOnly,
+  disabled,
+  selected,
+  onSelect,
+  compact = false,
+}: {
+  approvedOnly: boolean;
+  disabled: boolean;
+  selected: string;
+  onSelect: (value: string) => void;
+  compact?: boolean;
+}) {
+  const access = useAttendanceAccess();
+  const [search, setSearch] = useState('');
+  const [submitted, setSubmitted] = useState<string | null>(compact ? '' : null);
+  const allowed = access.can('hr.employees.read');
+  const query = useAttendanceQuery(
+    '/hr/employees' +
+      queryString({
+        search: submitted ?? '',
+        page: 1,
+        pageSize: 25,
+        ...(approvedOnly ? approvedAttendanceFilter : {}),
+      }),
+    approvedOnly ? approvedAttendanceEmployees : employeeChoices,
+    allowed && submitted !== null,
+  );
+  if (!allowed) return null;
+  return (
+    <section
+      className={compact ? 'att-register-lookup' : 'attendance-section'}
+      aria-label="Find employee"
+    >
+      <form
+        className={compact ? 'att-register-search' : 'attendance-grid'}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (disabled || query.isFetching) return;
+          if (submitted === search.trim()) void query.refetch();
+          else setSubmitted(search.trim());
+        }}
+      >
+        <TextInput
+          label={compact ? 'Search employees' : 'Find by employee name or number'}
+          placeholder={compact ? 'Name or employee number' : undefined}
+          value={search}
+          maxLength={100}
+          disabled={disabled}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+        <Command
+          icon={Search}
+          type="submit"
+          variant="secondary"
+          disabled={disabled || query.isFetching}
+        >
+          Search
+        </Command>
+      </form>
+      {approvedOnly && (
+        <p className="att-register-help">
+          Only approved employees are listed, including former and archived staff for historical
+          review. Complete hiring and approval in the employee record if someone is missing.
+        </p>
+      )}
+      {submitted !== null && (
+        <QueryState
+          query={query}
+          empty={query.data?.items.length === 0}
+          emptyText={approvedOnly ? 'No approved employees match this search.' : undefined}
+        />
+      )}
+      {!query.isError && query.data && (
+        <>
+          <SelectInput
+            label={compact ? 'Employee' : 'Employee search results'}
+            value={query.data.items.some((employee) => employee.id === selected) ? selected : ''}
+            disabled={disabled || query.isFetching}
+            options={[
+              { value: '', label: 'Choose an employee' },
+              ...query.data.items.map((employee) => ({
+                value: employee.id,
+                label: `${employee.name ?? 'Employee'} · #${employee.employeeNumber}`,
+              })),
+            ]}
+            onChange={(event) => {
+              onSelect(event.target.value);
+            }}
+          />
+          {query.data.totalCount > 25 && (
+            <p className="att-register-help">
+              Showing 25 matches. Search by name or number to narrow the list.
+            </p>
+          )}
+        </>
+      )}
+    </section>
   );
 }
 export type Range = { from: string; to: string; pageSize: number; state: number; kind?: number };

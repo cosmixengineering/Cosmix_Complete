@@ -22,9 +22,12 @@ public sealed class PayrollSalaryRepository(CosmixDbContext db) : IPayrollSalary
     public async Task<IReadOnlyList<ApprovalDecision>> DecisionsAsync(Guid id,CancellationToken ct) =>
         await db.ApprovalDecisions.AsNoTracking().Where(x=>x.ApprovalRequestId==id).OrderBy(x=>x.DecidedAt).ToArrayAsync(ct);
     public Task<bool> HasPreparedPeriodAsync(DateOnly from,DateOnly? until,CancellationToken ct) => db.PayrollHandoffBatches
-        .Include(x => x.ApprovalRequest)
         .AnyAsync(x=>x.PeriodEnd>from && (until==null || x.PeriodStart<until) &&
-            (x.ApprovalRequest == null || (x.ApprovalRequest.State != ApprovalState.Rejected && x.ApprovalRequest.State != ApprovalState.Cancelled)),ct);
+            x.ReviewState != "rejected" && x.ReviewState != "cancelled" && x.ReviewState != "returned",ct);
+    public Task<bool> HasPreparedEmployeePeriodAsync(Guid employeeId,DateOnly from,DateOnly? until,CancellationToken ct) => db.PayrollHandoffBatches
+        .AnyAsync(x=>x.PeriodEnd>from && (until==null || x.PeriodStart<until) &&
+            x.ReviewState != "rejected" && x.ReviewState != "cancelled" && x.ReviewState != "returned" &&
+            (x.CalculationVersion != "salary-v2" || !x.Lines.Any() || x.Lines.Any(line=>line.EmployeeId==employeeId)),ct);
     public void Add(PayrollSalaryComponent row,ApprovalRequest approval) {db.ApprovalRequests.Add(approval);db.Set<PayrollSalaryComponent>().Add(row);}
     public void Add(PayrollSalaryPolicy row,ApprovalRequest approval) {db.ApprovalRequests.Add(approval);db.Set<PayrollSalaryPolicy>().Add(row);}
     public void Add(ApprovalDecision decision)=>db.ApprovalDecisions.Add(decision);

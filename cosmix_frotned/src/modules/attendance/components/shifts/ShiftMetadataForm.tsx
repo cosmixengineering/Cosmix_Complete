@@ -70,7 +70,7 @@ export function ShiftMetadataForm({
     ) ?? '';
   const minimum = mode === 'schedule' ? nextDate(latest > today ? latest : today) : today;
 
-  // Initialize schedule with default working schedule
+  // A copied schedule retains its saved values; a new schedule requires HR input.
   const [schedule, setSchedule] = useState<ShiftSchedule>(() => {
     if (mode === 'create' && shift && shift.versions.length > 0) {
       const sorted = [...shift.versions].sort((a, b) =>
@@ -91,15 +91,7 @@ export function ShiftMetadataForm({
         };
       }
     }
-    const s = emptySchedule(minimum);
-    if (mode === 'create') {
-      s.startTime = '08:00:00';
-      s.endTime = '17:00:00';
-      s.scheduledMinutes = 540;
-      s.unpaidBreakMinutes = 60;
-      s.applicableWeekdays = 63; // Mon-Sat
-    }
-    return s;
+    return emptySchedule(minimum);
   });
 
   const title =
@@ -119,10 +111,6 @@ export function ShiftMetadataForm({
     const totalScheduled = schedule.scheduledMinutes || 0;
     const durationHours = (totalScheduled / 60).toFixed(1);
     const totalBreaks = (schedule.paidBreakMinutes || 0) + (schedule.unpaidBreakMinutes || 0);
-    const netWorkingHours = Math.max(
-      0,
-      (totalScheduled - (schedule.unpaidBreakMinutes || 0)) / 60,
-    ).toFixed(1);
 
     const activeDaysCount = weekdays.filter(
       (d) => (schedule.applicableWeekdays & d.value) !== 0,
@@ -138,7 +126,6 @@ export function ShiftMetadataForm({
       endFormatted,
       durationHours,
       totalBreaks,
-      netWorkingHours,
       activeDaysCount,
       isNight,
     };
@@ -274,8 +261,7 @@ export function ShiftMetadataForm({
       <div className="shift-editor-heading-wrap">
         <h1 className="shift-editor-main-title">{title}</h1>
         <p className="shift-editor-subtitle">
-          Configure operating hours, grace period thresholds, working days, and versioning for this
-          work shift.
+          Configure operating hours, breaks, working days, and versioning for this work shift.
         </p>
       </div>
 
@@ -511,8 +497,7 @@ export function ShiftMetadataForm({
                     Applicable Working Days
                   </h3>
                   <p className="shift-form-section-subtitle">
-                    Select scheduled duty days of the week. Biometric rules and attendance
-                    calculations will sync for these days.
+                    Select the weekdays on which this schedule applies.
                   </p>
                 </div>
 
@@ -730,10 +715,6 @@ export function ShiftMetadataForm({
                   </td>
                 </tr>
                 <tr>
-                  <td>Net Working Time</td>
-                  <td>{previewMetrics.netWorkingHours}h (excl. unpaid)</td>
-                </tr>
-                <tr>
                   <td>Meal / Breaks</td>
                   <td>{previewMetrics.totalBreaks} mins total</td>
                 </tr>
@@ -746,7 +727,7 @@ export function ShiftMetadataForm({
                   <td>
                     {schedule.missingCheckoutReminderAfterMinutes
                       ? `${schedule.missingCheckoutReminderAfterMinutes}m delay`
-                      : 'Default policy'}
+                      : 'Not specified'}
                   </td>
                 </tr>
               </tbody>
@@ -756,8 +737,8 @@ export function ShiftMetadataForm({
             <div className="shift-side-policy-box">
               <Info size={16} className="shift-side-policy-icon" />
               <span>
-                <strong>Immutable Audit Trail:</strong> Saved work shifts maintain permanent version
-                histories. Past payroll and attendance evaluations will remain 100% compliant.
+                <strong>Schedule history:</strong> Saved schedules retain their effective dates and
+                version history. Review the timings and audit reason before saving.
               </span>
             </div>
           </aside>

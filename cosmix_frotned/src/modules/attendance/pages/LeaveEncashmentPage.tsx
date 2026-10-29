@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { ClipboardCheck, RefreshCw } from 'lucide-react';
 import { SelectInput } from '@/components/forms/SelectInput';
+import { isSystemAdmin } from '@/auth/contracts';
 import {
   Command,
   Denied,
@@ -77,7 +78,11 @@ export function LeaveEncashmentPage() {
 
 function EncashmentQueue() {
   const access = useAttendanceAccess();
-  const allowed = access.ready && Boolean(access.user?.account) && access.can(reviewPermission);
+  const allowed =
+    access.ready &&
+    Boolean(access.user?.account) &&
+    access.can(reviewPermission) &&
+    isSystemAdmin(access.user);
   const list = useAttendanceQuery('/leaves/admin/encashment/queue', encashmentList, allowed);
   const [selected, setSelected] = useState<Encashment | null>(null);
   const [saved, setSaved] = useState('');

@@ -107,7 +107,7 @@ function RecordedSiteMap({
   boundary,
   locations,
 }: {
-  boundary?: Boundary | null;
+  boundary: Boundary;
   locations: CheckInLocation[];
 }) {
   const container = useRef<HTMLDivElement>(null);
@@ -115,9 +115,9 @@ function RecordedSiteMap({
   const tileLayerRef = useRef<Leaflet.TileLayer | null>(null);
   const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
 
-  const lat = boundary?.latitude ?? 31.28;
-  const lon = boundary?.longitude ?? 74.18;
-  const radius = boundary?.radiusMeters ?? 600;
+  const lat = boundary.latitude;
+  const lon = boundary.longitude;
+  const radius = boundary.radiusMeters;
 
   useEffect(() => {
     let disposed = false;
@@ -520,7 +520,9 @@ function SiteEvidence({ siteId }: { siteId: string }) {
           <div className="site-card-header">
             <div className="site-card-title-row">
               <h2 className="site-card-title">Geofence</h2>
-              <span className="site-version-pill">Version {boundary?.versionNumber ?? 1}</span>
+              <span className="site-version-pill">
+                {boundary ? `Version ${boundary.versionNumber}` : 'No boundary loaded'}
+              </span>
               <span className="site-card-date-meta">
                 Effective {effectiveStart} &bull; As of {asOfDateFormatted}
               </span>
@@ -536,7 +538,7 @@ function SiteEvidence({ siteId }: { siteId: string }) {
               <div className="geofence-metric-text">
                 <span className="geofence-metric-label">Latitude</span>
                 <span className="geofence-metric-val">
-                  {boundary ? boundary.latitude.toFixed(2) : '31.28'}
+                  {boundary ? boundary.latitude.toFixed(5) : 'Unavailable'}
                 </span>
               </div>
             </div>
@@ -548,7 +550,7 @@ function SiteEvidence({ siteId }: { siteId: string }) {
               <div className="geofence-metric-text">
                 <span className="geofence-metric-label">Longitude</span>
                 <span className="geofence-metric-val">
-                  {boundary ? boundary.longitude.toFixed(2) : '74.18'}
+                  {boundary ? boundary.longitude.toFixed(5) : 'Unavailable'}
                 </span>
               </div>
             </div>
@@ -560,7 +562,7 @@ function SiteEvidence({ siteId }: { siteId: string }) {
               <div className="geofence-metric-text">
                 <span className="geofence-metric-label">Radius</span>
                 <span className="geofence-metric-val">
-                  {boundary ? `${boundary.radiusMeters} m` : '600 m'}
+                  {boundary ? `${boundary.radiusMeters} m` : 'Unavailable'}
                 </span>
               </div>
             </div>
@@ -572,7 +574,7 @@ function SiteEvidence({ siteId }: { siteId: string }) {
               <div className="geofence-metric-text">
                 <span className="geofence-metric-label">GPS accuracy limit</span>
                 <span className="geofence-metric-val">
-                  {boundary ? `${boundary.maximumAccuracyMeters} m` : '30 m'}
+                  {boundary ? `${boundary.maximumAccuracyMeters} m` : 'Unavailable'}
                 </span>
               </div>
             </div>
@@ -580,7 +582,14 @@ function SiteEvidence({ siteId }: { siteId: string }) {
 
           {/* Map Preview Area */}
           <div className="geofence-map-container">
-            <RecordedSiteMap boundary={boundary} locations={sessions} />
+            {boundary ? (
+              <RecordedSiteMap boundary={boundary} locations={sessions} />
+            ) : (
+              <p>
+                No configured boundary is available to display. Check your geofence access and site
+                configuration.
+              </p>
+            )}
           </div>
 
           {/* Map Footer Indicators */}
@@ -775,7 +784,7 @@ function SiteEvidence({ siteId }: { siteId: string }) {
                       </td>
                       <td>{timestamp(worker.checkInTimeUtc)}</td>
                       <td>
-                        {worker.latitude && worker.longitude
+                        {worker.latitude !== null && worker.longitude !== null
                           ? `${worker.latitude.toFixed(4)}, ${worker.longitude.toFixed(4)}`
                           : 'Not recorded'}
                       </td>

@@ -35,7 +35,7 @@ function ExceptionsSelection({ self }: { self: boolean }) {
   const [range, setRange] = useState<Range>();
   return (
     <>
-      <h1>{self ? 'My exception notices' : 'Attendance exception detection history'}</h1>
+      <h1>{self ? 'My exception notices' : 'Attendance exceptions'}</h1>
       {!self && (
         <ScopeSelect
           permission="attendance.exceptions.read"
@@ -52,16 +52,16 @@ function ExceptionsSelection({ self }: { self: boolean }) {
           self
             ? undefined
             : [
-                'MissingCheckOut',
-                'OverlappingShift',
-                'ImpossibleTravel',
-                'ExcessiveDuration',
-                'SequenceError',
-                'OutsideGeofence',
-                'UnreliableLocation',
-                'DeviceRisk',
-                'FaceVerification',
-                'SuspectedFalseEvidence',
+                'Missing check-out',
+                'Overlapping shifts',
+                'Impossible travel',
+                'Excessive duration',
+                'Punch sequence error',
+                'Outside site boundary',
+                'Unreliable location',
+                'Device risk',
+                'Face verification',
+                'Suspected false evidence',
               ].map((label, i) => ({ value: String(i + 1), label }))
         }
       />

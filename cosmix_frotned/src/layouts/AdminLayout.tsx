@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   User,
   Users,
+  Fingerprint,
   BarChart3,
   Package,
   ShoppingCart,
@@ -17,7 +18,6 @@ import {
   Network,
   Settings,
   HelpCircle,
-  Bell,
   Search,
   Menu,
   X,
@@ -27,11 +27,14 @@ import {
   Clock,
   Calendar,
   CalendarDays,
+  CalendarCheck,
 } from 'lucide-react';
 import { useAuth } from '@/auth/use-auth';
 import { isSystemAdmin } from '@/auth/contracts';
+import { hasAttendancePermission } from '@/modules/attendance';
 import { hrConfigurationNavigation } from '@/modules/hr/policy-navigation';
 import { Button } from '@/components/ui/Button';
+import { NotificationBellToggle } from '@/components/notifications/NotificationBellToggle';
 import logo from '@/assets/images/cosmix-logo.png';
 import '@/styles/admin-dashboard.css';
 
@@ -57,6 +60,10 @@ export function AdminLayout() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const isAdmin = isSystemAdmin(user);
+  const canTrackAttendance =
+    status === 'authenticated' &&
+    hasAttendancePermission(user, 'hr.employees.read') &&
+    hasAttendancePermission(user, 'attendance.summaries.read');
 
   // If user is authenticated but not an admin, redirect to HR dashboard
   if (status === 'authenticated' && user && !isAdmin) {
@@ -78,6 +85,20 @@ export function AdminLayout() {
     { to: '/admin/panel', label: 'My Panel', icon: User },
     { to: '/admin/employees', label: 'Employees', icon: Users },
     { to: '/hr/attendance', label: 'Attendance', icon: Clock },
+    ...(user?.grants.some(
+      (g) => g.permission === 'attendance.face.manage' || g.permission === 'attendance.face.read',
+    )
+      ? [{ to: '/hr/biometrics', label: 'Biometric Registration', icon: Fingerprint }]
+      : []),
+    ...(canTrackAttendance
+      ? [
+          {
+            to: '/hr/attendance/tracking',
+            label: 'Attendance Tracking',
+            icon: CalendarCheck,
+          },
+        ]
+      : []),
     { to: '/hr/leaves', label: 'Leave Management', icon: Calendar },
     { to: '/hr/attendance/shifts', label: 'Shifts & Rosters', icon: CalendarDays },
     { to: '/admin/finance', label: 'Accounts & Finance', icon: BarChart3 },
@@ -144,7 +165,7 @@ export function AdminLayout() {
               key={item.label + item.to}
               to={item.to}
               className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
-              end={item.to === '/admin/dashboard'}
+              end={item.to === '/admin/dashboard' || item.to === '/hr/attendance'}
               onClick={() => setOpen(false)}
               title={collapsed ? item.label : undefined}
             >
@@ -216,15 +237,8 @@ export function AdminLayout() {
           </div>
 
           <div className="admin-topbar-actions">
-            {/* Notification Bell */}
-            <Link
-              to="/admin/approvals"
-              className="admin-notification-bell"
-              aria-label="5 unread notifications"
-            >
-              <Bell size={18} />
-              <span className="hr-notification-counter">5</span>
-            </Link>
+            {/* Notification Bell Dropdown Toggle */}
+            <NotificationBellToggle />
 
             {/* User Chip */}
             <Link to="/admin/account" className="admin-user-chip">

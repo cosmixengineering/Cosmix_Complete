@@ -1,12 +1,16 @@
 using System.Reflection;
+using System.Text.Json;
 using Cosmix.Application.Attendance.Shifts;
 using Cosmix.Application.Authentication;
 using Cosmix.Application.Authentication.Access;
 using Cosmix.Application.Common.Security;
 using Cosmix.Application.HR.PayrollAccounting;
+using Cosmix.Application.HR.PayrollHandoff;
+using Cosmix.Application.HR.PayrollSalary;
 using Cosmix.Application.HR.StatutoryContributions;
 using Cosmix.Domain.Authentication;
 using Cosmix.Domain.Common.Audit;
+using Cosmix.Domain.Common.Approvals;
 using Cosmix.Domain.HR.PayrollAccounting;
 using Cosmix.Domain.HR.PayrollHandoff;
 using Cosmix.Domain.HR.StatutoryContributions;
@@ -30,8 +34,9 @@ public class PermissionsTests
     public async Task SensitiveCompliance_AllServiceEntrypointsDenyBeforeRepositoryAccess(string mode)
     {
         var fixture = new Fixture(mode);
-        var payroll = new PayrollAccountingService(null!, TimeProvider.System, fixture.Operation);
-        var statutory = new StatutoryContributionService(null!, TimeProvider.System, fixture.Operation);
+        var writes = new PayrollFinanceOperation(fixture.Operation, null!, null!, TimeProvider.System);
+        var payroll = new PayrollAccountingService(null!, TimeProvider.System, fixture.Operation, writes: writes);
+        var statutory = new StatutoryContributionService(null!, TimeProvider.System, fixture.Operation, writes: writes);
         Func<Task>[] calls = [
             () => payroll.ListObligationsAsync(1, 25, Context, default),
             () => payroll.GetObligationByBatchIdAsync(Guid.NewGuid(), Context, default),
@@ -48,7 +53,19 @@ public class PermissionsTests
             () => statutory.ListAsync(null,null,1,25,Context,default),
             () => statutory.ExportScheduleCsvAsync(Guid.NewGuid(),Context,default),
             () => statutory.AddRegistrationAsync(Guid.NewGuid(),new(StatutoryScheme.EOBI,"r",new(2026,10,1)),Context,default),
-            () => statutory.GetRegistrationsAsync(Guid.NewGuid(),Context,default)
+            () => statutory.GetRegistrationsAsync(Guid.NewGuid(),Context,default),
+            () => payroll.FinalizeObligationAsync(new(Guid.NewGuid(), Reason: "Synthetic denial check"), "synthetic-denied-key", Context, default),
+            () => payroll.PostAccrualJournalAsync(new(Guid.NewGuid(), Reason: "Synthetic denial check"), "synthetic-denied-key", Context, default),
+            () => payroll.PostStatutoryJournalAsync(new(Guid.NewGuid(), Reason: "Synthetic denial check"), "synthetic-denied-key", Context, default),
+            () => payroll.RecordSalaryPaymentAsync(new(Guid.NewGuid(), Guid.NewGuid(), "ref", "d", "c", Reason: "Synthetic denial check"), "synthetic-denied-key", Context, default),
+            () => payroll.ConfirmPaymentAsync(Guid.NewGuid(), new ConfirmSalaryPaymentRequest("Synthetic denial check"), "synthetic-denied-key", Context, default),
+            () => statutory.CreateAsync(new(StatutoryScheme.EOBI, new(2026,10,1), Reason: "Synthetic denial check"), "synthetic-denied-key", Context, default),
+            () => statutory.ApproveAsync(Guid.NewGuid(), new FinancialDecisionRequest("AAAAAAAAAAA=", "Synthetic denial check"), "synthetic-denied-key", Context, default),
+            () => statutory.PostAsync(Guid.NewGuid(), new PostContributionRequest(Guid.NewGuid(), Guid.NewGuid(), new(2026,10,1), "AAAAAAAAAAA=", "Synthetic denial check"), "synthetic-denied-key", Context, default),
+            () => statutory.GetCoverageAsync(Guid.NewGuid(), Context, default),
+            () => statutory.CreateCoverageAsync(Guid.NewGuid(), new StatutoryCoverageRequest(new(2026,10,1), null, [], "synthetic", new string('A',64), "Synthetic denial check"), "synthetic-denied-key", Context, default),
+            () => statutory.ApproveCoverageAsync(Guid.NewGuid(), Guid.NewGuid(), new FinancialDecisionRequest("AAAAAAAAAAA=", "Synthetic denial check"), "synthetic-denied-key", Context, default),
+            () => statutory.AddRegistrationAsync(Guid.NewGuid(), new(StatutoryScheme.EOBI,"synthetic",new(2026,10,1), "Synthetic denial check"), "synthetic-denied-key", Context, default)
         ];
         foreach(var call in calls)
         {
@@ -83,47 +100,89 @@ public class PermissionsTests
     {
         var f=new Fixture(); PayrollObligation? added=null;
         Task Add() { Assert.True(f.InTransaction); added=(PayrollObligation)f.LastArguments![0]!; return Task.CompletedTask; }
-        var batch = new PayrollHandoffBatch("BATCH-PERM-TEST", new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 31), "PKR", "hr-preparer", DateTimeOffset.UtcNow.AddDays(-2));
-        var batchLines = new List<PayrollHandoffLine>
-        {
-            new(batch.Id, Guid.NewGuid(), PayrollComponentKind.BaseCompensation, "AttendanceSummary", Guid.NewGuid(), 1, Guid.NewGuid(), 90m, "PKR", null, null, "ref", "trace")
-        };
-        batch.Lines.Add(batchLines[0]);
-        batch.SetSalaryEvidence("prev", "fp-perm-test", "calc-ref-perm");
-        batch.ReviewSalary(Guid.NewGuid(), "hr-reviewer", DateTimeOffset.UtcNow.AddDays(-1.5), true);
-        batch.Lock(Guid.NewGuid(), "mgmt-approver", DateTimeOffset.UtcNow.AddDays(-1));
+        var (batch, frozenReader) = await CreateApprovedPayrollAsync([(Guid.NewGuid(), 90m, 0m)], () => Assert.True(f.InTransaction));
 
         // Capture arguments without exposing any client-supplied actor input.
         var repository=Proxy<IPayrollAccountingRepository>((method,args)=> {
             f.LastArguments=args;
             return method.Name switch {
                 "GetBatchByIdAsync"=>(object?)Task.FromResult<PayrollHandoffBatch?>(batch),
-                "GetBatchLinesAsync"=>(object?)Task.FromResult<IReadOnlyList<PayrollHandoffLine>>(batchLines),
                 "GetObligationByBatchIdAsync"=>(object?)Task.FromResult<PayrollObligation?>(null),
-                "GetApprovedStatutoryContributionsForMonthAsync"=>(object?)Task.FromResult<IReadOnlyList<Cosmix.Domain.HR.StatutoryContributions.StatutoryContribution>>([]),
                 "AddObligationAsync"=>(object?)Add(),
                 "SaveChangesAsync"=>(object?)Task.CompletedTask,
                 _=>throw new InvalidOperationException(method.Name)
             };
         });
-        var service=new PayrollAccountingService(repository,TimeProvider.System,f.Operation);
-        var result=await service.FinalizeObligationAsync(new(batch.Id,90,90,"PKR", "fp-perm-test"),Context,default);
+        var setup = new PayrollFinanceSetupService(Proxy<IPayrollFinanceRepository>((method, _) => throw new InvalidOperationException($"Finalization must not query posting configuration: {method.Name}")));
+        var service=new PayrollAccountingService(repository,TimeProvider.System,f.Operation, setup, frozenReader);
+        var result=await service.FinalizeObligationAsync(new(batch.Id,90,90,"PKR", batch.FrozenFingerprint),Context,default);
         Assert.NotNull(added);
         Assert.Equal(f.Actor.AccountId.ToString(),result.FinalizedByUserId);
+        Assert.Equal(batch.FrozenFingerprint, result.SourceFingerprint);
+        Assert.Equal(90m, result.TotalNetAmount);
         Assert.Single(f.Audits); Assert.Equal(1,f.Saves);
+    }
+
+    internal static async Task<(PayrollHandoffBatch Batch, IPayrollFrozenBatchReader Reader)> CreateApprovedPayrollAsync(
+        IReadOnlyList<(Guid EmployeeId, decimal Gross, decimal Deduction)> employees, Action? assertSourceTransaction = null)
+    {
+        var files = new PayrollSalaryFrozenEvidenceTests.MemoryFiles();
+        var maker = Guid.NewGuid();
+        var batch = new PayrollHandoffBatch("SYNTHETIC-APPROVED", new(2026, 10, 1), new(2026, 11, 1), "PKR", maker.ToString(), DateTimeOffset.UtcNow.AddDays(-2));
+        foreach (var employee in employees)
+        {
+            foreach (var item in new[] { (Kind: PayrollComponentKind.BaseCompensation, Amount: employee.Gross), (Kind: PayrollComponentKind.TaxDeduction, Amount: -employee.Deduction) })
+            {
+                if (item.Kind != PayrollComponentKind.BaseCompensation && item.Amount == 0) continue;
+                var source = Guid.NewGuid(); var locked = Guid.NewGuid();
+                var type = item.Kind == PayrollComponentKind.BaseCompensation ? "attendance.payroll-salary.base" : "hr.payroll-salary.component";
+                var proof = new PayrollFrozenLineEvidence(2, batch.Id, employee.EmployeeId, item.Kind.ToString(), type,
+                    source, 1, locked, item.Amount, "PKR", null, null, "synthetic-source-evidence", maker, batch.PreparedAt);
+                var reference = JsonSerializer.Serialize(await files.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(proof), $"hr:payroll-handoff:{batch.Id:N}:line", default));
+                batch.Lines.Add(new(batch.Id, employee.EmployeeId, item.Kind, type, source, 1, locked, item.Amount, "PKR", null, null, reference, Guid.NewGuid().ToString()));
+            }
+        }
+        var lines = PayrollFrozenBatchReader.Lines(batch);
+        var fingerprint = PayrollFrozenBatchReader.Fingerprint(batch, lines);
+        var proofBatch = new PayrollFrozenEvidence(2, batch.Id, "salary-v2", batch.PeriodStart, batch.PeriodEnd, "PKR", fingerprint, lines,
+            PayrollFrozenBatchReader.Totals(lines), batch.Lines.ToDictionary(x => x.Id, x => x.CalculationPrivateReference), batch.PreparedByUserId, batch.PreparedAt);
+        var referenceBatch = JsonSerializer.Serialize(await files.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(proofBatch), PayrollFrozenBatchReader.Purpose(batch.Id), default));
+        batch.SetSalaryEvidence(new string('A', 64), fingerprint, referenceBatch);
+        var approvals = new List<ApprovalRequest>(); var decisions = new List<ApprovalDecision>();
+        foreach (var stage in new[] { (Type: PayrollHandoffService.HrReviewRequestType, Purpose: "hr-review"), (Type: PayrollHandoffService.LockRequestType, Purpose: "lock") })
+        {
+            var actor = Guid.NewGuid().ToString(); var at = batch.PreparedAt.AddHours(approvals.Count + 1);
+            var reference = JsonSerializer.Serialize(await files.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(new { BatchId = batch.Id, Fingerprint = fingerprint }),
+                $"hr:payroll-handoff:{batch.Id:N}:{stage.Purpose}", default));
+            var approval = new ApprovalRequest(stage.Type, batch.Id, batch.PreparedByUserId, reference, 1, at);
+            decisions.Add(approval.Decide(ApprovalState.Approved, actor, "SyntheticIndependentReviewer", "Synthetic approval", at)); approvals.Add(approval);
+            if (stage.Purpose == "hr-review") batch.ReviewSalary(approval.Id, actor, at, true); else batch.Lock(approval.Id, actor, at);
+        }
+        batch.RecordFinanceHandoff(Guid.NewGuid().ToString());
+        var repository = Proxy<IPayrollHandoffRepository>((method, args) =>
+        {
+            assertSourceTransaction?.Invoke();
+            return method.Name switch
+            {
+                "FindBatchAsync" => Task.FromResult<PayrollHandoffBatch?>((Guid)args[0]! == batch.Id ? batch : null),
+                "ApprovalAsync" => Task.FromResult(approvals.SingleOrDefault(x => x.Id == (Guid)args[0]!)),
+                "DecisionRecordsAsync" => Task.FromResult<IReadOnlyList<ApprovalDecision>>(decisions.Where(x => x.ApprovalRequestId == (Guid)args[0]!).ToArray()),
+                _ => throw new InvalidOperationException(method.Name)
+            };
+        });
+        return (batch, new PayrollFrozenBatchReader(repository, files));
     }
 
     [Fact]
     public async Task SensitiveCompliance_ExportIsAuditedAndRequiresManageRatherThanApprove()
     {
         var f=new Fixture();
-        var item=new StatutoryContribution(StatutoryScheme.EOBI,new(2026,10,1),100,500,"PKR","creator",DateTimeOffset.UtcNow);
-        var repository=Proxy<IStatutoryContributionRepository>((method,args)=>method.Name switch {
-            "GetByIdAsync"=>Task.FromResult<StatutoryContribution?>(item),
-            "GetAllRegistrationsForSchemeAsync"=>Task.FromResult<IReadOnlyList<EmployeeStatutoryRegistration>>([]),
-            _=>throw new InvalidOperationException(method.Name)
-        });
-        var service=new StatutoryContributionService(repository,TimeProvider.System,f.Operation);
+        var item=new StatutoryContribution(StatutoryScheme.EOBI,new(2026,10,1),100,500,"PKR","creator",DateTimeOffset.UtcNow,hasEmployeeEntries:true);
+        var registration=new EmployeeStatutoryRegistration(Guid.NewGuid(),StatutoryScheme.EOBI,"SYNTHETIC-REG",new(2026,10,1),"maker",DateTimeOffset.UtcNow);
+        item.Entries.Add(new(item.Id,registration.EmployeeId,registration.Id,registration.RegistrationNumber,100,500,
+            "synthetic-source",new string('A',64),"replaced-by-retained-test-proof"));
+        var retained=await StatutorySourceFixture.RetainAsync(item,registration);
+        var service=retained.Service(f.Operation);
         var result=await service.ExportScheduleCsvAsync(item.Id,Context,default);
         Assert.NotEmpty(result.Bytes); Assert.Equal("ExportScheduleCsv",Assert.Single(f.Audits).EventType);
         f.Permission="statutory.contributions.approve";

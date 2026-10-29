@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FinanceLedgerPanel, PayrollCostPanel, BankReconciliationPanel } from '@/modules/accounts';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/forms/TextInput';
@@ -12,6 +13,10 @@ import {
 } from '../components/finance/FinanceChrome';
 import { PayrollSelect } from '../components/finance/PayrollFields';
 import { PayrollAccountingSetup } from '../components/finance/PayrollAccountingSetup';
+import { PayrollSettlementReports } from '../components/finance/PayrollSettlementReports';
+import { PaymentLifecycleControls } from '../components/finance/PaymentLifecycleControls';
+import { PayrollBankExports } from '../components/finance/PayrollBankExports';
+import { PayrollSettlementBrowser } from '../components/finance/PayrollSettlementBrowser';
 import { money } from '../components/finance/labels';
 import { useFinanceAccess } from '../hooks/use-finance-access';
 import { useFinanceAction, useFinanceQuery } from '../hooks/use-finance-queries';
@@ -29,6 +34,11 @@ export function PayrollAccountingPage() {
   const access = useFinanceAccess();
   const [tab, setTab] = useState('runs');
   const tabs = [
+    ...(access.can('finance.bank-reconciliation.read')
+      ? [{ id: 'bank', label: 'Bank reconciliation' }]
+      : []),
+    ...(access.can('finance.ledger.read') ? [{ id: 'ledger', label: 'Finance ledger' }] : []),
+    ...(access.can('payroll.reports.read') ? [{ id: 'reports', label: 'Reports' }] : []),
     ...(access.can('payroll.accounting.accrue')
       ? [{ id: 'runs', label: 'Salary obligations and journals' }]
       : []),
@@ -44,10 +54,20 @@ export function PayrollAccountingPage() {
     <div className="payroll-handoff-container">
       <header className="payroll-header-banner">
         <h1>Payroll Accounting</h1>
-        <p>Post approved salary runs using configured accounts and open periods.</p>
+        <p>Review payroll reports and manage the accounting actions available to your account.</p>
         <FinanceTabs tabs={tabs} active={current} onChange={setTab} label="Payroll accounting" />
       </header>
-      {current === 'runs' ? <PayrollObligations /> : <PayrollAccountingSetup />}
+      {current === 'bank' ? (
+        <BankReconciliationPanel />
+      ) : current === 'ledger' ? (
+        <FinanceLedgerPanel />
+      ) : current === 'reports' ? (
+        <PayrollSettlementBrowser />
+      ) : current === 'runs' ? (
+        <PayrollObligations />
+      ) : (
+        <PayrollAccountingSetup />
+      )}
     </div>
   );
 }
@@ -243,7 +263,15 @@ function PayrollObligations() {
               key={selected.id}
               obligationId={selected.id}
               currency={selected.currency}
+              sourceFingerprint={selected.sourceFingerprint}
             />
+            <PayrollSettlementReports
+              key={selected.batchId}
+              batchId={selected.batchId}
+              allowed={access.can('payroll.reports.read')}
+              exportAllowed={access.can('payroll.reports.export')}
+            />
+            <PayrollCostPanel key={`costs:${selected.batchId}`} batchId={selected.batchId} />
           </>
         )}
         <ActionMessage action={action} />
@@ -252,7 +280,15 @@ function PayrollObligations() {
   );
 }
 
-function ObligationRecords({ obligationId, currency }: { obligationId: string; currency: string }) {
+function ObligationRecords({
+  obligationId,
+  currency,
+  sourceFingerprint,
+}: {
+  obligationId: string;
+  currency: string;
+  sourceFingerprint?: string | null;
+}) {
   const access = useFinanceAccess();
   const action = useFinanceAction();
   const journals = useFinanceQuery(
@@ -278,7 +314,11 @@ function ObligationRecords({ obligationId, currency }: { obligationId: string; c
   const [bank, setBank] = useState('');
   const [date, setDate] = useState('');
   const [reason, setReason] = useState('');
-  const accrual = journals.data?.find((item) => item.kind === 'SalaryAccrual');
+  const accrual = journals.data?.find(
+    (item) =>
+      item.kind === 'SalaryAccrual' &&
+      item.sourceKey === `ACCRUAL-SALARY-${obligationId.replaceAll('-', '').toLowerCase()}`,
+  );
   async function recordPayment() {
     if (!accrual) return;
     const result = await action.run(
@@ -315,18 +355,6 @@ function ObligationRecords({ obligationId, currency }: { obligationId: string; c
     const match = employees.data?.find((e) => e.employeeId === id);
     if (match) {
       setAmount(match.remainingBalance > 0 ? match.remainingBalance.toFixed(2) : '');
-    }
-  }
-  async function confirm(id: string) {
-    const result = await action.run(
-      `/payroll-accounting/payments/${id}/confirm`,
-      { reason },
-      'POST',
-      payment,
-    );
-    if (result) {
-      void payments.refetch();
-      void employees.refetch();
     }
   }
   return (
@@ -374,33 +402,35 @@ function ObligationRecords({ obligationId, currency }: { obligationId: string; c
         {employees.data?.map((item) => (
           <p key={item.employeeId}>
             {item.employeeId}: {money(item.netEntitlement, currency)} entitlement ·{' '}
-            {money(item.disbursedAmount, currency)} recorded ·{' '}
-            {money(item.remainingBalance, currency)} outstanding
+            {money(item.disbursedAmount, currency)} allocated / reserved ·{' '}
+            {money(item.remainingBalance, currency)} available to initiate
           </p>
         ))}
       </FinanceQueryState>
       {access.can('payroll.accounting.payment') && (
         <>
           <TextAreaField
-            label="Payment evidence / confirmation reason"
+            label="Payment recording reason"
             value={reason}
             onChange={setReason}
             required
           />
           <FinanceQueryState query={payments}>
             <h3>Recorded payment states</h3>
+            {!payments.data?.length && (
+              <FinanceNotice>No recorded payments for this obligation.</FinanceNotice>
+            )}
             {payments.data?.map((item) => (
-              <p key={item.id}>
-                {item.paymentReference} · {money(item.amount, currency)} · {item.state}{' '}
-                {item.state !== 'Confirmed' && access.can('payroll.accounting.payment.confirm') && (
-                  <Button
-                    disabled={action.pending || !reason.trim()}
-                    onClick={() => void confirm(item.id)}
-                  >
-                    Confirm payment
-                  </Button>
-                )}
-              </p>
+              <PaymentLifecycleControls
+                key={item.id}
+                record={item}
+                currency={currency}
+                onChanged={() => {
+                  void payments.refetch();
+                  void employees.refetch();
+                  void journals.refetch();
+                }}
+              />
             ))}
           </FinanceQueryState>
           <FinanceQueryState query={setup}>
@@ -418,7 +448,7 @@ function ObligationRecords({ obligationId, currency }: { obligationId: string; c
                   onChange={onEmployeeSelect}
                   options={(employees.data ?? []).map((item) => ({
                     value: item.employeeId,
-                    label: `${item.employeeId} · remaining ${money(item.remainingBalance, currency)}`,
+                    label: `${item.employeeId} · available to initiate ${money(item.remainingBalance, currency)}`,
                   }))}
                 />
                 <TextInput
@@ -466,6 +496,17 @@ function ObligationRecords({ obligationId, currency }: { obligationId: string; c
             </form>
           </FinanceQueryState>
         </>
+      )}
+      {access.can('payroll.accounting.bank.export') && payments.data && !payments.isError && (
+        <PayrollBankExports
+          obligationId={obligationId}
+          currency={currency}
+          sourceFingerprint={sourceFingerprint}
+          payments={payments.data}
+          onChanged={() => {
+            void payments.refetch();
+          }}
+        />
       )}
       <ActionMessage action={action} />
     </>

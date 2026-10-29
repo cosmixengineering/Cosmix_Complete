@@ -12,6 +12,7 @@ using Cosmix.Application.Common.Files;
 using Cosmix.Application.HR.Allowances;
 using Cosmix.Application.HR.AdvancesLoans;
 using Cosmix.Application.HR.Reports;
+using Cosmix.Application.HR.PayrollSalary;
 using Cosmix.Domain.Common.Approvals;
 using Cosmix.Domain.HR.AdvancesLoans;
 using Cosmix.Domain.HR.Allowances;
@@ -20,14 +21,16 @@ using Cosmix.Domain.HR.PayrollHandoff;
 namespace Cosmix.Application.HR.PayrollHandoff;
 
 /// <summary>Payroll handoff authority. A locked attendance month is projected into frozen, signed
-/// money lines; preparing freezes them, locking approves them with a separate actor and records
-/// allowance settlement scheduling, and processing only records Accounts evidence. No code in this
+/// money lines; preparation freezes them, independent HR review precedes Management locking and
+/// allowance settlement scheduling, and independent Finance records handoff evidence. No code in this
 /// module moves money.</summary>
 public sealed partial class PayrollHandoffService(AttendanceOperation operation, IPayrollHandoffRepository repository,
     IMonthLockRepository months, IAttendancePayrollInputLedger ledger, IAllowanceRepository allowances,
     IAllowanceSettlementStore settlements, IAccountAccessReader access, IPrivateFileStore files,
     IMonthLockSnapshotReader? lockedMonths = null, IAdvanceLoanRepository? loans = null,
-    IAttendancePayrollFinancialMonthReader? financialAdjustments = null, DeploymentService? deployments = null)
+    IAttendancePayrollFinancialMonthReader? financialAdjustments = null, DeploymentService? deployments = null,
+    IPayrollSalaryRepository? salaryRepository = null, PayrollSalaryService? salarySources = null,
+    IPayrollStatutorySourceReader? statutory = null)
 {
     public const string LockRequestType = "payroll-handoff.lock";
     public const string Currency = "PKR";
@@ -85,6 +88,7 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
                 var processing = await repository.ProcessingAsync(id, token);
                 if (batch.LockedAt is null && processing.Count == 0)
                     throw AttendanceOperation.Conflict("payroll_handoff_batch_not_ready");
+                await PayrollFrozenBatchReader.ValidateAsync(batch, repository, files, true, token);
                 await ValidateFrozenLoanBalancesAsync(batch, token);
                 await ValidateFrozenFinancialAdjustmentsAsync(batch, actor, token);
 
@@ -105,6 +109,10 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
                         Money(Component(group, PayrollComponentKind.LoanRepayment)),
                         Money(Component(group, PayrollComponentKind.FuelClaim)),
                         Money(Component(group, PayrollComponentKind.OtherApprovedAdjustment)),
+                        Money(Component(group, PayrollComponentKind.FixedAllowance)),
+                        Money(Component(group, PayrollComponentKind.SalaryAdjustment)),
+                        Money(Component(group, PayrollComponentKind.StatutoryEmployeeDeduction)),
+                        Money(Component(group, PayrollComponentKind.TaxDeduction)),
                         Money(group.Sum(x => x.Amount)),
                         batch.Currency,
                         batch.BatchReference,
@@ -124,26 +132,39 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
         if (request is null || request.ExpectedPreviewFingerprint is not { Length: 64 } ||
             !MonthLockEvidence.Hash(request.ExpectedPreviewFingerprint))
             throw AttendanceOperation.Invalid("invalid_payroll_handoff_request");
+        var selectedEmployees = request.EmployeeIds?.ToArray();
+        if (selectedEmployees is not null && (selectedEmployees.Length is < 1 or > 10000 ||
+            selectedEmployees.Contains(Guid.Empty) || selectedEmployees.Distinct().Count() != selectedEmployees.Length))
+            throw AttendanceOperation.Invalid("invalid_payroll_handoff_employee_selection");
+        selectedEmployees = selectedEmployees?.OrderBy(x => x).ToArray();
         var (start, end) = MonthLockCoverage.Month(request.Year, request.Month);
+        object intent = selectedEmployees is null
+            ? new { request.Year, request.Month, request.ExpectedPreviewFingerprint }
+            : new { request.Year, request.Month, request.ExpectedPreviewFingerprint, EmployeeIds = selectedEmployees };
         return operation.WriteAsync(PayrollHandoffPermissions.Prepare, "attendance.payroll-handoff.prepare", null,
-            key, new { request.Year, request.Month, request.ExpectedPreviewFingerprint }, request.Reason, context,
+            key, intent, request.Reason, context,
             async (actor, token) =>
             {
-                if (await repository.PeriodPreparedAsync(start, end, token))
-                    throw AttendanceOperation.Conflict("payroll_handoff_period_already_prepared");
                 var projected = await ProjectAsync(start, end, actor, token);
                 if (!string.Equals(projected.Fingerprint, request.ExpectedPreviewFingerprint, StringComparison.Ordinal))
                     throw AttendanceOperation.Conflict("payroll_handoff_preview_changed");
                 if (projected.Lines.Count == 0) throw AttendanceOperation.Conflict("payroll_handoff_lines_unavailable");
+                var availableEmployees = projected.Lines.Select(x => x.Line.EmployeeId).Distinct().ToHashSet();
+                if (selectedEmployees is not null && selectedEmployees.Any(x => !availableEmployees.Contains(x)))
+                    throw AttendanceOperation.Invalid("payroll_handoff_employee_not_in_month");
+                var group = selectedEmployees?.ToHashSet() ?? availableEmployees;
+                if (await repository.EmployeesPreparedAsync(start, end, group.OrderBy(x => x).ToArray(), token))
+                    throw AttendanceOperation.Conflict("payroll_handoff_employee_already_prepared");
+                var selectedLines = projected.Lines.Where(x => group.Contains(x.Line.EmployeeId)).ToArray();
                 var batch = new PayrollHandoffBatch(BatchReference(start), start, end, Currency,
                     actor.Identity.AccountId.ToString(), actor.Now);
                 var trace = TraceBase(context.CorrelationId, batch.Id);
-                for (var index = 0; index < projected.Lines.Count; index++)
+                for (var index = 0; index < selectedLines.Length; index++)
                 {
-                    var projectedLine = projected.Lines[index];
+                    var projectedLine = selectedLines[index];
                     var line = projectedLine.Line;
                     var reference = await LineEvidenceAsync(batch.Id, projected.Lock.LockEventId, line,
-                        projectedLine.SourceEvidenceReference, actor, token);
+                        projectedLine.SourceEvidenceReference, actor, token, projectedLine.Calculation);
                     if (!Enum.TryParse<PayrollComponentKind>(line.Component, out var component))
                         throw AttendanceOperation.Conflict("payroll_handoff_component_invalid");
                     batch.Lines.Add(new PayrollHandoffLine(batch.Id, line.EmployeeId, component, line.SourceType,
@@ -153,13 +174,21 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
                 var rechecked = await ProjectAsync(start, end, actor, token);
                 if (rechecked.Fingerprint != projected.Fingerprint)
                     throw AttendanceOperation.Conflict("payroll_handoff_preview_changed");
+                var frozenLines = PayrollFrozenBatchReader.Lines(batch);
+                var fingerprint = PayrollFrozenBatchReader.Fingerprint(batch, frozenLines);
+                var salaryProof = new PayrollFrozenEvidence(2, batch.Id, "salary-v2", start, end, Currency, fingerprint,
+                    frozenLines, PayrollFrozenBatchReader.Totals(frozenLines),
+                    batch.Lines.ToDictionary(x => x.Id, x => x.CalculationPrivateReference), batch.PreparedByUserId, batch.PreparedAt);
+                var salaryReference = AttendanceOperation.Reference(await files.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(salaryProof),
+                    PayrollFrozenBatchReader.Purpose(batch.Id), token));
+                batch.SetSalaryEvidence(projected.Fingerprint, fingerprint, salaryReference);
                 repository.Add(batch);
                 await repository.SaveChangesAsync(token);
                 return new AttendanceChange<PayrollHandoffBatchDetail>(batch.Id, null, Detail(batch, []));
             }, ct, beforeReplay: async (actor, token) => { _ = await ReadLockedMonthAsync(start, end, actor, token); });
     }
 
-    /// <summary>Freeze a prepared batch through a second, separate approval and schedule every
+    /// <summary>Lock an HR-approved batch through independent Management approval and schedule every
     /// approved, unsettled allowance line into <see cref="ClaimSettlementState.InPayrollHandoff"/>.</summary>
     public Task<PayrollHandoffBatchDetail> LockAsync(Guid id, LockPayrollHandoffRequest request, string key,
         AuthRequestContext context, CancellationToken ct)
@@ -175,13 +204,19 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
                 repository.ExpectVersion(batch, expected);
                 if (batch.LockedAt.HasValue) throw AttendanceOperation.Conflict("payroll_handoff_batch_locked");
                 RequireSeparateActor(batch.PreparedByUserId, actor, "payroll_handoff_self_lock_forbidden");
+                if (batch.CalculationVersion != "salary-v2" || batch.ReviewState != "hr_approved")
+                    throw AttendanceOperation.Conflict("payroll_handoff_hr_approval_required");
+                RequireSeparateActor(batch.HrApprovedByUserId!, actor, "payroll_handoff_hr_reviewer_cannot_lock");
+                RequireNoSelfApproval(batch, actor);
+                await PayrollFrozenBatchReader.ValidateAsync(batch, repository, files, false, token);
+                await PayrollFrozenBatchReader.ValidateHrApprovalAsync(batch, repository, files, token);
                 await ValidateFrozenLoanBalancesAsync(batch, token);
                 await ValidateFrozenFinancialAdjustmentsAsync(batch, actor, token);
                 var before = Detail(batch, Map(await repository.ProcessingAsync(id, token)));
                 var reference = AttendanceOperation.Reference(await files.WriteAsync(
                     JsonSerializer.SerializeToUtf8Bytes(new PayrollHandoffLockEvidence(1, batch.Id, batch.BatchReference,
                         batch.PeriodStart, batch.PeriodEnd, batch.Lines.Count, actor.Identity.AccountId,
-                        request.Reason.Trim(), actor.Now)), LockPurpose(batch.Id), token));
+                        request.Reason.Trim(), actor.Now, batch.FrozenFingerprint)), LockPurpose(batch.Id), token));
                 var approval = new ApprovalRequest(LockRequestType, batch.Id, batch.PreparedByUserId, reference, 1, actor.Now);
                 var decision = approval.Decide(ApprovalState.Approved, actor.Identity.AccountId.ToString(),
                     actor.RoleCode, request.Reason.Trim(), actor.Now);
@@ -206,16 +241,17 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
         return operation.WriteAsync(PayrollHandoffPermissions.Process, "attendance.payroll-handoff.process", null,
             key, new { id, request }, request.Reason, context, async (actor, token) =>
             {
-                var batch = await repository.FindBatchAsync(id, false, token) ??
+                var batch = await repository.FindBatchAsync(id, true, token) ??
                     throw AttendanceOperation.Missing("payroll_handoff_batch_not_found");
                 if (batch.LockedAt is null || batch.ApprovalRequestId is not Guid approvalId)
                     throw AttendanceOperation.Conflict("payroll_handoff_batch_not_locked");
-                var deciders = await repository.DecidersAsync(approvalId, token);
                 var account = actor.Identity.AccountId.ToString();
-                var allowed = deciders.Count > 0
-                    ? Guid.TryParse(account, out var me) && deciders.Contains(me)
-                    : !string.Equals(batch.PreparedByUserId, account, StringComparison.Ordinal);
-                if (!allowed) throw new AuthenticationFailure("payroll_handoff_processing_actor_forbidden", 403);
+                await PayrollFrozenBatchReader.ValidateAsync(batch, repository, files, true, token);
+                foreach (var prior in new[] { batch.PreparedByUserId, batch.HrApprovedByUserId!, batch.LockedByUserId! })
+                    RequireSeparateActor(prior, actor, "payroll_handoff_processing_actor_forbidden");
+                RequireNoSelfApproval(batch, actor);
+                await ValidateFrozenLoanBalancesAsync(batch, token);
+                await ValidateFrozenFinancialAdjustmentsAsync(batch, actor, token);
                 var reference = request.ExternalProcessingReference.Trim();
                 if (await repository.ProcessingReferenceExistsAsync(id, reference, token))
                     throw AttendanceOperation.Conflict("payroll_handoff_processing_reference_exists");
@@ -226,6 +262,7 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
                 // Processing describes the handoff, not an exact confirmed payroll posting.
                 // Loan balances change only through a separately evidenced repayment workflow.
                 repository.Add(new PayrollHandoffProcessingRecord(id, reference, receipt, account, actor.Now));
+                batch.RecordFinanceHandoff(account);
                 await repository.SaveChangesAsync(token);
                 return new AttendanceChange<PayrollHandoffBatchDetail>(id, null,
                     Detail(batch, Map(await repository.ProcessingAsync(id, token))));
@@ -256,6 +293,12 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
         var lockEvent = existing.Event!;
         var lines = new List<ProjectedLine>();
         var skipped = new List<PayrollHandoffSkippedSource>();
+        if (salaryRepository is null || salarySources is null || statutory is null)
+            throw AttendanceOperation.Conflict("complete_salary_sources_unavailable");
+        var salaryProjection = new PayrollSalaryProjection(salaryRepository, salarySources, operation);
+        if (snapshot.PayrollInputs is null || snapshot.PayrollInputs.Select(x => x.EmployeeId).Distinct().Count() != population.Length ||
+            snapshot.PayrollInputs.Count != population.Length || snapshot.PayrollInputs.Any(x => !population.Contains(x.EmployeeId)))
+            throw AttendanceOperation.Conflict("salary_employee_coverage_invalid");
 
         foreach (var adjustment in await ReadFinancialAdjustmentsAsync(snapshot, actor, ct))
         {
@@ -309,6 +352,12 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
                 AttendancePayrollInputPermissions.Read, operation, access, ct);
             if (evidence.Calculation.State != "ready" || evidence.Calculation.Issues.Count != 0)
                 throw AttendanceOperation.Conflict("attendance_deduction_amount_source_unavailable");
+            var expectedDates = snapshot.Summaries.Where(x => x.EmployeeId == employeeId).Select(x => x.BusinessDate).Distinct().Order().ToArray();
+            var salaryDates = evidence.Calculation.SourceManifest.Days.Where(x => x.BusinessDate >= start && x.BusinessDate < end)
+                .Select(x => x.BusinessDate).Order().ToArray();
+            if (!salaryDates.SequenceEqual(expectedDates)) throw AttendanceOperation.Conflict("salary_employee_coverage_invalid");
+            var salary = await salaryProjection.ProjectAsync(revision, evidence, actor, ct);
+            lines.AddRange(salary.Lines.Select(x => new ProjectedLine(x.Line, x.EvidenceReference, x.Calculation)));
             var total = evidence.Calculation.Lines.Sum(x => x.Amount);
             if (evidence.Calculation.Lines.Any(x => x.Amount < 0))
                 throw AttendanceOperation.Conflict("attendance_deduction_amount_source_unavailable");
@@ -348,6 +397,19 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
                 fuel.Currency, fuel.PolicyVersionId, fuel.ApprovalRequestId), fuel.CalculationPrivateReference));
         }
 
+        var employeeBasis = lines.GroupBy(x => x.Line.EmployeeId).Select(g => new PayrollSalaryEmployeeBasis(g.Key,
+            g.Where(x => x.Line.Component == PayrollComponentKind.BaseCompensation.ToString()).Sum(x => x.Line.Amount),
+            g.Where(x => x.Line.Amount > 0).Sum(x => x.Line.Amount), -g.Where(x => x.Line.Amount < 0).Sum(x => x.Line.Amount), Currency)).ToArray();
+        var statutoryProjection = await statutory.ProjectAsync(start, end, employeeBasis, ct);
+        if (!MonthLockEvidence.Hash(statutoryProjection.Fingerprint) || statutoryProjection.Lines.Any(x =>
+            (x.Line.Component != PayrollComponentKind.StatutoryEmployeeDeduction.ToString() && x.Line.Component != PayrollComponentKind.TaxDeduction.ToString()) || x.Line.Amount > 0 || !population.Contains(x.Line.EmployeeId)))
+            throw AttendanceOperation.Conflict("salary_statutory_source_invalid");
+        lines.AddRange(statutoryProjection.Lines.Select(x => new ProjectedLine(x.Line, x.EvidenceReference)));
+        if (lines.Any(x => x.Line.Currency != Currency || !population.Contains(x.Line.EmployeeId)) ||
+            lines.GroupBy(x => (x.Line.EmployeeId, x.Line.SourceType, x.Line.SourceId, x.Line.SourceVersion, x.Line.Component)).Any(g => g.Count() != 1) ||
+            lines.GroupBy(x => x.Line.EmployeeId).Any(g => g.Sum(x => x.Line.Amount) < 0 ||
+                g.Count(x => x.Line.Component == PayrollComponentKind.BaseCompensation.ToString()) != 1))
+            throw AttendanceOperation.Conflict("salary_projection_invalid");
         var ordered = lines.OrderBy(x => x.Line.EmployeeId).ThenBy(x => x.Line.Component, StringComparer.Ordinal)
             .ThenBy(x => x.Line.SourceType, StringComparer.Ordinal).ThenBy(x => x.Line.SourceId)
             .ThenBy(x => x.Line.SourceVersion).ToArray();
@@ -355,7 +417,8 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
         {
             periodStart = start, periodEndExclusive = end, attendancePeriodLockEventId = lockEvent.Id,
             currency = Currency, retainedMembership = MonthLockEvidence.Fingerprint(snapshot),
-            lines = ordered.Select(x => new { x.Line, x.SourceEvidenceReference }).ToArray()
+            calculationVersion = "salary-v2", statutoryFingerprint = statutoryProjection.Fingerprint,
+            lines = ordered.Select(x => new { x.Line, x.SourceEvidenceReference, x.Calculation }).ToArray()
         });
         return new(fingerprint, new(lockEvent.Id, lockEvent.AtUtc, population), ordered, skipped.ToArray());
     }
@@ -432,12 +495,12 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
     }
 
     private async Task<string> LineEvidenceAsync(Guid batchId, Guid lockEventId, PayrollHandoffPreviewLine line,
-        string sourceEvidence, AttendanceActor actor, CancellationToken ct)
+        string sourceEvidence, AttendanceActor actor, CancellationToken ct, object? calculation = null)
     {
         var bytes = JsonSerializer.SerializeToUtf8Bytes(new PayrollHandoffLineEvidence(1, batchId, line.EmployeeId,
             line.Component, line.SourceType, line.SourceId, line.SourceVersion, lockEventId, line.Amount,
             line.Currency, line.PolicyVersionId, line.ApprovalRequestId, sourceEvidence,
-            actor.Identity.AccountId, actor.Now));
+            actor.Identity.AccountId, actor.Now, calculation));
         return AttendanceOperation.Reference(await files.WriteAsync(bytes, LinePurpose(batchId), ct));
     }
 
@@ -449,10 +512,14 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
 
     private static PayrollHandoffBatchResponse Map(PayrollHandoffBatch batch, IReadOnlyList<PayrollHandoffLine> lines) =>
         new(batch.Id, batch.BatchReference, batch.PeriodStart, batch.PeriodEnd, batch.Currency,
-            batch.LockedAt.HasValue ? "locked" : "prepared", batch.LinesRevision,
+            batch.CalculationVersion == "salary-v2" ? batch.ReviewState : batch.LockedAt.HasValue ? "locked" : "prepared", batch.LinesRevision,
             Convert.ToBase64String(batch.RowVersion), batch.PreparedAt, batch.PreparedByUserId, batch.LockedAt,
             batch.LockedByUserId, batch.ApprovalRequestId, Totals(lines.Select(x => (x.Component.ToString(), x.Amount))),
-            lines.Count);
+            lines.Count) { CalculationVersion = batch.CalculationVersion, SalaryComplete = batch.SalaryComplete,
+                PreviewFingerprint = batch.PreviewFingerprint, FrozenFingerprint = batch.FrozenFingerprint,
+                HrApprovalRequestId = batch.HrApprovalRequestId, HrApprovedByUserId = batch.HrApprovedByUserId, HrApprovedAt = batch.HrApprovedAt,
+                ReturnApprovalRequestId = batch.ReturnApprovalRequestId, ReturnedByUserId = batch.ReturnedByUserId, ReturnedAt = batch.ReturnedAt,
+                EmployeeTotals = PayrollFrozenBatchReader.Totals(lines.Select(Line)) };
 
     private static PayrollHandoffLineResponse Line(PayrollHandoffLine line) => new(line.Id, line.EmployeeId,
         line.Component.ToString(), line.SourceType, line.SourceId, line.SourceVersion,
@@ -468,7 +535,11 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
     private static PayrollHandoffPreview Map(DateOnly start, DateOnly end, Projection projected) =>
         new(start, end, projected.Lock.LockEventId, projected.Lock.LockedAtUtc, projected.Lock.EmployeeIds.Count,
             projected.Lines.Select(x => x.Line).ToArray(), projected.Skipped,
-            Totals(projected.Lines.Select(x => (x.Line.Component, x.Line.Amount))), Currency, projected.Fingerprint);
+            Totals(projected.Lines.Select(x => (x.Line.Component, x.Line.Amount))), Currency, projected.Fingerprint)
+        { CalculationVersion = "salary-v2", SalaryComplete = true,
+            EmployeeTotals = projected.Lines.GroupBy(x => x.Line.EmployeeId).OrderBy(x => x.Key).Select(g =>
+                new PayrollSalaryEmployeeTotal(g.Key, g.Where(x => x.Line.Amount > 0).Sum(x => x.Line.Amount),
+                    -g.Where(x => x.Line.Amount < 0).Sum(x => x.Line.Amount), g.Sum(x => x.Line.Amount))).ToArray() };
 
     /// <summary>Attendance deductions and loan repayments are negative signed money, so the net is a plain sum.</summary>
     private static PayrollHandoffTotals Totals(IEnumerable<(string Component, decimal Amount)> lines)
@@ -483,7 +554,7 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
     private static readonly string[] BankAdviceHeaders =
     [
         "Employee ID", "Employee Name", "BaseCompensation", "AttendanceDeduction", "Overtime", "Allowance",
-        "LoanRepayment", "FuelClaim", "OtherApprovedAdjustment", "Net Amount", "Currency", "Batch Reference",
+        "LoanRepayment", "FuelClaim", "OtherApprovedAdjustment", "FixedAllowance", "SalaryAdjustment", "StatutoryEmployeeDeduction", "TaxDeduction", "Net Amount", "Currency", "Batch Reference",
         "Period Start", "Period End"
     ];
 
@@ -518,7 +589,7 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
     private static string LockPurpose(Guid batchId) => $"hr:payroll-handoff:{batchId:N}:lock";
     private static string ProcessingPurpose(Guid batchId) => $"hr:payroll-handoff:{batchId:N}:processing";
 
-    private sealed record ProjectedLine(PayrollHandoffPreviewLine Line, string SourceEvidenceReference);
+    private sealed record ProjectedLine(PayrollHandoffPreviewLine Line, string SourceEvidenceReference, object? Calculation = null);
     private sealed record LockIdentity(Guid LockEventId, DateTimeOffset LockedAtUtc, IReadOnlyList<Guid> EmployeeIds);
     private sealed record Projection(string Fingerprint, LockIdentity Lock, IReadOnlyList<ProjectedLine> Lines,
         IReadOnlyList<PayrollHandoffSkippedSource> Skipped);
@@ -526,11 +597,11 @@ public sealed partial class PayrollHandoffService(AttendanceOperation operation,
     private sealed record PayrollHandoffLineEvidence(int SchemaVersion, Guid BatchId, Guid EmployeeId,
         string Component, string SourceType, Guid SourceId, int SourceVersion, Guid AttendancePeriodLockEventId,
         decimal Amount, string Currency, Guid? PolicyVersionId, Guid? ApprovalRequestId, string SourceEvidenceReference,
-        Guid ActorAccountId, DateTimeOffset PreparedAtUtc);
+        Guid ActorAccountId, DateTimeOffset PreparedAtUtc, object? Calculation = null);
 
     private sealed record PayrollHandoffLockEvidence(int SchemaVersion, Guid BatchId, string BatchReference,
         DateOnly PeriodStart, DateOnly PeriodEndExclusive, int LineCount, Guid ApproverAccountId, string Reason,
-        DateTimeOffset LockedAtUtc);
+        DateTimeOffset LockedAtUtc, string? Fingerprint = null);
 
     private sealed record PayrollHandoffProcessingEvidence(int SchemaVersion, Guid BatchId, string BatchReference,
         int LineCount, string ExternalProcessingReference, Guid ProcessedByAccountId, DateTimeOffset ProcessedAt);

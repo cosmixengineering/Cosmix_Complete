@@ -12,12 +12,14 @@ public enum SalaryPaymentState
     Pending = 1,
     Posted = 2,
     Confirmed = 3,
-    Failed = 4
+    Failed = 4,
+    Reversed = 5
 }
 
 public enum JournalEntryKind
 {
     SalaryAccrual = 1,
     SalaryPayment = 2,
-    StatutoryContribution = 3
+    StatutoryContribution = 3,
+    SalaryPaymentReversal = 4
 }

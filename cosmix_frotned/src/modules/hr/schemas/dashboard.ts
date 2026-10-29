@@ -12,8 +12,9 @@ const metadata = {
 export const dashboardAttendanceSummary = z
   .object({
     ...metadata,
-    coverage: z.literal('all_verified_active_employees'),
+    coverage: z.enum(['all_verified_active_employees', 'partial_locked_evidence_unavailable']),
     activeEmployees: count,
+    unavailableSummaryEmployees: count.default(0),
     withAcceptedSessionEvidence: count,
     openSessionEmployees: count,
     closedSessionOnlyEmployees: count,
@@ -28,13 +29,23 @@ export const dashboardAttendanceSummary = z
     (value) =>
       value.withAcceptedSessionEvidence ===
         value.openSessionEmployees + value.closedSessionOnlyEmployees &&
-      value.withAcceptedSessionEvidence + value.noAcceptedSessionEvidenceEmployees ===
+      value.withAcceptedSessionEvidence +
+        value.noAcceptedSessionEvidenceEmployees +
+        value.unavailableSummaryEmployees ===
         value.activeEmployees &&
-      value.classifiedEmployees + value.notYetClassifiedEmployees === value.activeEmployees &&
+      value.classifiedEmployees +
+        value.notYetClassifiedEmployees +
+        value.unavailableSummaryEmployees ===
+        value.activeEmployees &&
       Object.values(value.classifiedStatusCounts).reduce((sum, item) => sum + item, 0) ===
         value.classifiedEmployees &&
-      value.currentSavedSummaryEmployees + value.unsavedOrStaleSummaryEmployees ===
-        value.activeEmployees,
+      value.currentSavedSummaryEmployees +
+        value.unsavedOrStaleSummaryEmployees +
+        value.unavailableSummaryEmployees ===
+        value.activeEmployees &&
+      (value.coverage === 'all_verified_active_employees'
+        ? value.unavailableSummaryEmployees === 0
+        : value.unavailableSummaryEmployees > 0),
     'Attendance coverage does not match the active employee population.',
   );
 

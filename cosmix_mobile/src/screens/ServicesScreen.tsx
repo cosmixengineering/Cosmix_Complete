@@ -36,7 +36,9 @@ export function ServicesScreen({
               accessibilityState={{ disabled: !permitted }}
               disabled={!permitted}
               onPress={() =>
-                ['punches', 'calendar', 'payroll'].includes(service.key)
+                ['punches', 'calendar', 'payroll', 'payments'].includes(
+                  service.key,
+                )
                   ? navigation.navigate('History', { category: service.key })
                   : service.key === 'profile'
                   ? navigation.navigate('Profile')

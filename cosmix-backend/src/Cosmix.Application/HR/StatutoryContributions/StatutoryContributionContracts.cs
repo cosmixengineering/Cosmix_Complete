@@ -45,7 +45,11 @@ public sealed record ContributionResponse(
     string Version = "",
     IReadOnlyList<ContributionEntryResponse>? Entries = null,
     Guid? ObligationId = null,
-    Guid? PostingJournalEntryId = null);
+    Guid? PostingJournalEntryId = null)
+{
+    public int PostedEmployeeCount { get; init; }
+    public IReadOnlyList<Guid> PostedObligationIds { get; init; } = [];
+}
 
 public sealed record ContributionListResponse(
     IReadOnlyList<ContributionResponse> Items,

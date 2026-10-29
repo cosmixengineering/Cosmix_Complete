@@ -7,6 +7,8 @@ import { allowSessionRefresh, blockSessionRefresh, getCsrf } from '@/services/ap
 import type { SessionStatus, SessionUser } from './types';
 import { SESSION_EXPIRED_EVENT, SESSION_UNAVAILABLE_EVENT } from '@/constants/events';
 
+const MIN_PRELOADER_MS = 2000;
+
 export function AuthProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient();
   const [user, setUser] = useState<SessionUser | null>(null);
@@ -21,17 +23,28 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [queryClient]);
   const loadSession = useCallback(async () => {
     const version = ++revision.current;
+    const startTime = Date.now();
     setUser(null);
     setStatus('loading');
     setSessionError(null);
     await clearCache();
     try {
       const session = await authAdapter.restoreSession(true);
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, MIN_PRELOADER_MS - elapsed);
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining));
+      }
       if (version !== revision.current) return;
       setUser(session);
       hadSession.current = session !== null;
       setStatus(session ? 'authenticated' : 'anonymous');
     } catch (error) {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, MIN_PRELOADER_MS - elapsed);
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining));
+      }
       if (version !== revision.current) return;
       setStatus('unavailable');
       setSessionError(authErrorMessage(error));
@@ -40,15 +53,26 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     let active = true;
     const version = ++revision.current;
+    const startTime = Date.now();
     void authAdapter
       .restoreSession()
-      .then((session) => {
+      .then(async (session) => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, MIN_PRELOADER_MS - elapsed);
+        if (remaining > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remaining));
+        }
         if (!active || version !== revision.current) return;
         setUser(session);
         hadSession.current = session !== null;
         setStatus(session ? 'authenticated' : 'anonymous');
       })
-      .catch((error) => {
+      .catch(async (error) => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, MIN_PRELOADER_MS - elapsed);
+        if (remaining > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remaining));
+        }
         if (!active || version !== revision.current) return;
         setStatus('unavailable');
         setSessionError(authErrorMessage(error));
@@ -62,7 +86,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       void clearCache();
     };
     const unavailable = () => {
-      if (import.meta.env.DEV) return;
       ++revision.current;
       setUser(null);
       setStatus('unavailable');

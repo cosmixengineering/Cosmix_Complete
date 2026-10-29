@@ -14,7 +14,7 @@ public sealed class PayrollLedgerAccountConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.Name).HasMaxLength(150).IsRequired();
         builder.Property(x => x.Kind).IsRequired();
         builder.Property(x => x.IsActive).IsRequired();
-        builder.Property(x => x.RowVersion).IsRowVersion();
+        builder.Property(x => x.RowVersion).IsRowVersion().IsRequired(false);
 
         builder.HasIndex(x => x.Code).IsUnique();
         builder.HasIndex(x => x.Kind);

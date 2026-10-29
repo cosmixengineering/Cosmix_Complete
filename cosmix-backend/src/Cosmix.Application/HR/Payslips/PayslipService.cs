@@ -3,13 +3,14 @@ using System.Security.Cryptography;
 using Cosmix.Application.Attendance.Common;
 using Cosmix.Application.Authentication;
 using Cosmix.Application.HR.PayrollHandoff;
+using Cosmix.Application.HR.PayrollAccounting;
 using Cosmix.Application.HR.PayrollSalary;
 using Cosmix.Application.HR.Reports;
 
 namespace Cosmix.Application.HR.Payslips;
 
 public sealed class PayslipService(AttendanceOperation operation, IPayrollFrozenBatchReader frozen,
-    IPayslipRepository repository, TimeProvider clock)
+    IPayslipRepository repository, TimeProvider clock, PayrollSettlementReader? settlements = null)
 {
     public Task<PayslipDocument> ManagementDocumentAsync(Guid batchId, Guid employeeId, string format,
         AuthRequestContext context, CancellationToken ct) =>
@@ -72,9 +73,14 @@ public sealed class PayslipService(AttendanceOperation operation, IPayrollFrozen
             employee.NetPay != ownLines.Sum(x => x.Amount) || employee.NetPay < 0)
             throw AttendanceOperation.Conflict("payslip_totals_invalid");
         var identity = await repository.BatchAsync(batchId, ct) ?? throw AttendanceOperation.Missing("payslip_not_found");
-        var paid = await repository.ConfirmedPaymentsAsync(batchId, employeeId, ct);
+        var settlement = settlements is null ? null : await settlements.OwnPeriodInTransactionAsync(batchId, employeeId, 1, 1, ct);
+        var paid = settlement?.ConfirmedAmount ?? await repository.ConfirmedPaymentsAsync(batchId, employeeId, ct);
+        if (settlements is null && paid > 0) throw AttendanceOperation.Conflict("payslip_payment_evidence_validator_required");
         if (paid < 0 || paid > employee.NetPay) throw AttendanceOperation.Conflict("payslip_payment_total_invalid");
-        var payment = employee.NetPay == 0 ? "NoPaymentDue" : paid == 0 ? "Unpaid" : paid == employee.NetPay ? "Paid" : "PartiallyPaid";
+        if (settlement is not null && (settlement.NetEntitlement != employee.NetPay || settlement.Currency != batch.Currency ||
+            settlement.PeriodStart != batch.PeriodStart || settlement.PeriodEndExclusive != batch.PeriodEndExclusive))
+            throw AttendanceOperation.Conflict("payslip_payment_source_mismatch");
+        var payment = settlement?.PaymentState ?? (employee.NetPay == 0 ? "NoPaymentDue" : "Unpaid");
         return new(new(batchId, identity.Reference, batch.PeriodStart, batch.PeriodEndExclusive, batch.Currency,
             employee.GrossEarnings, employee.TotalDeductions, employee.NetPay, "ManagementApproved", payment, identity.Version), batch);
     }

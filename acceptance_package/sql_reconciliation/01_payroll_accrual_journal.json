@@ -1,32 +1,45 @@
 {
-  "ObligationId": "182742f9-439c-46fd-9e13-517b699aedb9",
-  "BatchId": "a12f81f4-3549-4904-b458-113e19765267",
+  "ObligationId": "8dae045b-05f7-4ed1-ac1a-2abda3ad3c09",
+  "BatchId": "cb5b0ecf-d048-4006-aefd-744a37c3b367",
   "TotalGross": 180000.40,
   "TotalNet": 173800.10,
-  "AccrualJournalId": "0526878f-8c17-4904-a997-4b2beac7b08d",
+  "AccrualJournalId": "575f42cc-2261-4d4d-9d1f-f344d276b442",
   "DebitAccount": "5010",
   "CreditAccount": "2010",
   "Amount": 173800.10,
-  "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
+  "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
   "PostingDate": "2026-10-31",
-  "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-  "SourceKey": "ACCRUAL-SALARY-182742f9439c46fd9e13517b699aedb9",
+  "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+  "SourceKey": "ACCRUAL-SALARY-8dae045b05f74ed1ac1a2abda3ad3c09",
   "DeductionEntries": [
     {
-      "Id": "c697e54c-b085-42e5-a6fc-301403bc1627",
+      "Id": "f814b5eb-ca99-4638-b78d-b4892c557eaf",
       "DebitAccountCode": "5010",
       "CreditAccountCode": "2020",
       "Amount": 1800.20,
       "Description": "Employee EOBI deduction for 2026-10",
-      "StatutoryContributionId": "c6e92c29-00f3-4076-8e1c-7bcf464b4854",
+      "StatutoryContributionId": "53e0420e-05e4-4820-8f10-d4fac0cbcc3c",
       "Scheme": "EOBI",
       "PostingDate": "2026-10-31",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "ACCRUAL-EOBI-182742f9439c46fd9e13517b699aedb9"
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "ACCRUAL-EOBI-8dae045b05f74ed1ac1a2abda3ad3c09"
     },
     {
-      "Id": "79ba9369-32ac-4d3a-a972-4a4125fe0bee",
+      "Id": "ff544512-68ec-472a-b95b-bc319cd05c65",
+      "DebitAccountCode": "5010",
+      "CreditAccountCode": "2030",
+      "Amount": 900.10,
+      "Description": "Employee Social Security deduction for 2026-10",
+      "StatutoryContributionId": "60f33b9a-c7c6-4d59-b742-9a85fc4b8f5d",
+      "Scheme": "PESSI",
+      "PostingDate": "2026-10-31",
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "ACCRUAL-PESSI-8dae045b05f74ed1ac1a2abda3ad3c09"
+    },
+    {
+      "Id": "253b89ac-a19e-47a9-abcb-dbd79c618260",
       "DebitAccountCode": "5010",
       "CreditAccountCode": "1050",
       "Amount": 3500.00,
@@ -34,22 +47,9 @@
       "StatutoryContributionId": null,
       "Scheme": null,
       "PostingDate": "2026-10-31",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "ACCRUAL-LOAN-182742f9439c46fd9e13517b699aedb9"
-    },
-    {
-      "Id": "9c612729-1077-4703-9cdf-ad413d2241db",
-      "DebitAccountCode": "5010",
-      "CreditAccountCode": "2030",
-      "Amount": 900.10,
-      "Description": "Employee Social Security deduction for 2026-10",
-      "StatutoryContributionId": "893303f3-42fd-4f8c-954f-a819cac673fe",
-      "Scheme": "PESSI",
-      "PostingDate": "2026-10-31",
-      "AccountingPeriodId": "405e01c6-89e0-4de3-a553-abd9f4912b3f",
-      "PostingProfileId": "d8d0f823-4a33-422d-9508-a7da3216b079",
-      "SourceKey": "ACCRUAL-SS-182742f9439c46fd9e13517b699aedb9"
+      "AccountingPeriodId": "8418b9bd-4f72-41ae-b0e5-74ab604d89b5",
+      "PostingProfileId": "e30495e0-dbdc-4b85-a9f8-0f0ee0102d28",
+      "SourceKey": "ACCRUAL-1050-8dae045b05f74ed1ac1a2abda3ad3c09"
     }
   ]
 }

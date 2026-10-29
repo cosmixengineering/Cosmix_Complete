@@ -4,6 +4,7 @@ export { SiteGeofencesPage } from './pages/SiteGeofencesPage';
 export { OfficeRostersPage } from './pages/OfficeRostersPage';
 export { OfficeBoundariesPage } from './pages/OfficeBoundariesPage';
 export { AttendanceProcessingPage } from './pages/AttendanceProcessingPage';
+export { AttendanceTrackingPage } from './pages/AttendanceTrackingPage';
 export { EmployeeAttendanceDetailPage } from './pages/EmployeeAttendanceDetailPage';
 export { LeaveManagementPage } from './pages/LeaveManagementPage';
 export { LeaveEncashmentPage } from './pages/LeaveEncashmentPage';

@@ -86,3 +86,61 @@ The updated APK was installed and the login screen exercised against the real
 HTTPS preview. Actual employee data screens, native evidence selection, real
 OTP sign-in and employee camera/GPS/print/replay acceptance remain pending;
 the absent SMS provider is preserved as an explicit failed-closed dependency.
+
+## Unified history and payments 28 October 2026
+
+History keeps the existing connected categories in the shared screen:
+
+| Category           | Connected records                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Check In / Out     | Paged own attendance receipts, business date, full server-recorded timestamp in Asia/Karachi and distinct acceptance outcome                |
+| Leave              | Own requests, decisions and cancellation details, with the exact policy-balance panel independent of roster/apply access                    |
+| Advances & loans   | Paged requests and agreements, repaid/outstanding state, approved principal, repayments, remaining balance, schedule and ledger             |
+| Supported requests | Allowances, overtime, attendance corrections, leave encashment, vehicle/fuel activity and resignation, using their existing own-record APIs |
+| Monthly attendance | Server factual attendance and company assessment for the selected year/month                                                                |
+| Payroll            | Recorded payroll summaries and the existing approved payslip PDF/Excel actions                                                              |
+| Payments           | Payroll-period entitlement, payment totals and separately paged payment entries                                                             |
+
+Payments requires explicit `ess.finances.read`; generic self-read does not grant
+access. `SelfServiceClient` revalidates the session and permission before loading
+the history or an additional payment-entry page. Both read routes omit employee
+identity; the backend resolves and enforces the signed-in employee scope:
+
+- `GET /api/v1/self-service/finances/payment-history?page=1&pageSize=20`
+- `GET /api/v1/self-service/finances/payment-history/{batchId}?page=1&pageSize=20`
+
+The list returns `items`, `page`, `pageSize` and `hasMore`. Each group returns
+`batchId`, `batchReference`, `periodStart`, `periodEndExclusive`, `currency`,
+`netEntitlement`, `confirmedAmount`, `postedAmount`, `pendingAmount`,
+`failedAmount`, `reversedAmount`, `outstandingAmount`, `remainingToInitiate`,
+`paymentState`, `payments`, `paymentsPage`, `paymentsPageSize` and
+`hasMorePayments`. The detail route returns the same group with the requested
+entry page. Every group total includes all its transactions, regardless of the
+displayed page. The app displays server totals and does not calculate salary.
+
+Confirmed and posted amounts are separate. Outstanding is entitlement less
+confirmed payments; the amount available for initiation also excludes posted
+and pending amounts. Failed and reversed amounts remain visible as historical
+outcomes and do not count as confirmed paid. Group states are `NoPaymentDue`,
+`Unpaid`, `Pending`, `PartiallyPaid`, `Paid`, `Failed` and `Reversed`.
+
+Entries contain only `id`, `amount`, `state`, nullable `valueDate`,
+`createdAtUtc`, nullable `confirmedAtUtc` and nullable `reversedAtUtc`.
+Entry states are `Pending`, `Posted`, `Confirmed`, `Failed` and `Reversed`.
+The current `valueDate` field contains the accounting journal posting date;
+the UI labels it Posting date. It is not a bank value or settlement date.
+The app shows available timestamps in Asia/Karachi and treats the period end
+as exclusive. Banking identifiers, evidence, internal reasons and employee
+identity are not payment-history display fields. Invalid money, state, dates,
+identifiers or paging metadata produce an error rather than a fabricated record.
+
+The view includes loading, error, refresh and empty states, period pagination,
+and independent previous/next payment-entry pages. Paging retains the last
+successful page on failure, blocks duplicate taps and discards responses after
+blur/unmount. Existing payslip changes remain intact.
+
+Controlled adapter and component checks are stored outside Git under
+`D:/CosmixPayrollVerification20261028/mobile/`. They use synthetic transport and
+controlled hook/native ports. They do not establish physical-phone rendering,
+real SMS delivery, real employee payment acceptance or three-phone acceptance.
+The coordinator records native build and backend integration results separately.

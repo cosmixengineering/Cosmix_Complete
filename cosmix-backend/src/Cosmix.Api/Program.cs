@@ -86,7 +86,10 @@ builder.Services.AddOpenApi(options =>
     options.AddOperationTransformer<DeprecatedOperationTransformer>();
     options.AddSchemaTransformer<AttendancePolicySchemaTransformer>();
 });
-builder.Services.AddHealthChecks().AddCheck<DatabaseReadinessCheck>("database", tags: ["ready"]);
+builder.Services.AddHealthChecks()
+    .AddCheck<WorkerReadinessCheck>("background-workers", tags: ["workers"])
+    .AddCheck<DatabaseReadinessCheck>("database", tags: ["ready"])
+    .AddCheck<PayrollDeploymentReadinessCheck>("payroll-deployment", tags: ["payroll-readiness"]);
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 {
     var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
@@ -204,7 +207,16 @@ if (permissionTestingBoundary is not null)
 if (reportTestingBoundary is not null)
     app.Use(reportTestingBoundary.PrepareOtpAsync);
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
+app.MapHealthChecks("/health/workers", new HealthCheckOptions { Predicate = check => check.Tags.Contains("workers") }).AllowAnonymous();
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") }).AllowAnonymous();
+app.MapHealthChecks("/health/payroll-ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("payroll-readiness"),
+    ResultStatusCodes =
+    {
+        [Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded] = StatusCodes.Status503ServiceUnavailable
+    }
+}).AllowAnonymous();
 app.MapControllers();
 app.Run();
 

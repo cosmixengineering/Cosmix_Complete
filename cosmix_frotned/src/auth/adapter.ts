@@ -31,14 +31,22 @@ export const authAdapter = {
     });
     return restorePending;
   },
-  async login(email: string, password: string) {
-    return otpChallengeSchema.parse(await post('/login', { email, password }));
+  async login(email: string, password: string, authenticator = false) {
+    return otpChallengeSchema.parse(
+      await post(authenticator ? '/authenticator/login' : '/login', { email, password }),
+    );
   },
   async resend(challengeId: string, email: string, password: string) {
     return otpChallengeSchema.parse(await post('/otp/resend', { challengeId, email, password }));
   },
   async verify(challengeId: string, code: string) {
     browserSessionSchema.parse(await post('/otp/verify', { challengeId, code }));
+    allowSessionRefresh();
+  },
+  async verifyAuthenticator(challengeId: string, code: string, recoveryCode: boolean) {
+    browserSessionSchema.parse(
+      await post('/authenticator/verify', { challengeId, code, recoveryCode }),
+    );
     allowSessionRefresh();
   },
   async signOut() {

@@ -309,7 +309,8 @@ public sealed partial class EmployeeSelfServiceRepository(CosmixDbContext db, Ti
 
         var payrollBatches = await db.PayrollHandoffLines.AsNoTracking()
             .Include(p => p.PayrollHandoffBatch)
-            .Where(p => p.EmployeeId == employeeId)
+            .Where(p => p.EmployeeId == employeeId && p.PayrollHandoffBatch.ReviewState != "returned" &&
+                p.PayrollHandoffBatch.ReviewState != "cancelled" && p.PayrollHandoffBatch.ReviewState != "rejected")
             .GroupBy(p => p.PayrollHandoffBatch)
             .Select(g => new
             {

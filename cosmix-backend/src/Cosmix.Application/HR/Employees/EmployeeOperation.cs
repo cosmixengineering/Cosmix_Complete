@@ -19,14 +19,14 @@ public sealed class EmployeeOperation(ICurrentAuthentication current, IAccountAc
     { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
     public Task<T> ReadAsync<T>(string[] permissions, string operation, Guid? employeeId, AuthRequestContext context,
         Func<EmployeeActor, CancellationToken, Task<T>> action, CancellationToken ct, bool adminReview = false,
-        Func<T, string>? auditTarget = null, string? fixedAdminPermission = null) =>
+        Func<T, string>? auditTarget = null, string? fixedAdminPermission = null, bool concurrentRead = false) =>
         AuthorizedAsync(permissions, async (actor, token) =>
         {
             var result = await action(actor, token);
             Audit(actor, operation, employeeId, context, targetReference: auditTarget?.Invoke(result));
             await repository.SaveChangesAsync(token);
             return result;
-        }, ct, adminReview, fixedAdminPermission: fixedAdminPermission);
+        }, ct, adminReview, fixedAdminPermission: fixedAdminPermission, concurrentRead: concurrentRead);
 
     public Task<EmployeeWriteResult?> TryReplayAsync(string[] permissions, string operation, Guid employeeId, string key,
         object payload, AuthRequestContext context, CancellationToken ct,
@@ -86,13 +86,16 @@ public sealed class EmployeeOperation(ICurrentAuthentication current, IAccountAc
     }
 
     private Task<T> AuthorizedAsync<T>(string[] permissions, Func<EmployeeActor, CancellationToken, Task<T>> action,
-        CancellationToken ct, bool adminReview, bool resolveRole = false, string? fixedAdminPermission = null)
+        CancellationToken ct, bool adminReview, bool resolveRole = false, string? fixedAdminPermission = null,
+        bool concurrentRead = false)
     {
         var identity = current.Require();
         if (identity.Client != SessionClient.Web || !identity.MfaSatisfied) throw Denied();
         var reviewPermission = fixedAdminPermission ?? (adminReview ? EmployeePermissions.Review : null);
         if (reviewPermission is not null && !permissions.Contains(reviewPermission)) throw Denied();
-        return authorization.InTransactionAsync(async token =>
+        Func<Func<CancellationToken, Task<T>>, CancellationToken, Task<T>> transaction = concurrentRead
+            ? (work, token) => authorization.InReadTransactionAsync(work, token) : authorization.InTransactionAsync;
+        return transaction(async token =>
         {
             var now = clock.GetUtcNow();
             if (!await authorization.IsCurrentAdministratorAsync(identity, now, token)) throw Denied();

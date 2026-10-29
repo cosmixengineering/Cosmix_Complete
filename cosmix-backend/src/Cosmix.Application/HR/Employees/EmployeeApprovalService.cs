@@ -113,7 +113,7 @@ public sealed class EmployeeApprovalService(EmployeeOperation operation, IEmploy
                 var account = await identities.FindAccountAsync(employeeId, token);
                 var phoneEnrolled = account is not null && (await identities.GetBindingsAsync(account.Id, token)).Any(b => b.RevokedAt is null);
                 return new EmployeeAccessSetup(employeeId, account is null ? null : new(account.Id, employeeId, account.Status,
-                    account.MobileAccessEnabled, account.WebAccessEnabled, account.MfaRequired, Convert.ToBase64String(account.RowVersion)),
+                    account.MobileAccessEnabled, account.WebAccessEnabled, account.MfaRequired, Convert.ToBase64String(account.RowVersion), account.AuthenticatorRequired),
                     employee.MobileAccessRequested, account?.InitialRoleAssignmentId is not null, phoneEnrolled);
             }, ct, adminReview: true);
 }

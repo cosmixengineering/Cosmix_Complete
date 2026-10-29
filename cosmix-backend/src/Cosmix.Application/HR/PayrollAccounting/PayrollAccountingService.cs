@@ -1,6 +1,9 @@
 using System.Text.Json;
 using Cosmix.Application.Authentication;
 using Cosmix.Application.Common.Security;
+using Cosmix.Application.Common.Files;
+using Cosmix.Application.HR.PayrollSalary;
+using Cosmix.Application.HR.StatutoryContributions;
 using Cosmix.Domain.Common.Approvals;
 using Cosmix.Domain.HR.PayrollAccounting;
 using Cosmix.Domain.HR.PayrollHandoff;
@@ -8,12 +11,32 @@ using Cosmix.Domain.HR.StatutoryContributions;
 
 namespace Cosmix.Application.HR.PayrollAccounting;
 
-public sealed class PayrollAccountingService(
+public sealed partial class PayrollAccountingService(
     IPayrollAccountingRepository repository,
     TimeProvider clock,
     SensitiveComplianceOperation operation,
-    PayrollFinanceSetupService? financeSetupService = null)
+    PayrollFinanceSetupService? financeSetupService = null,
+    IPayrollFrozenBatchReader? frozenReader = null,
+    IPayrollFinanceRepository? financeRepository = null,
+    IPrivateFileStore? files = null,
+    PayrollFinanceOperation? writes = null)
 {
+    public Task<ObligationResponse> FinalizeObligationAsync(FinalizeObligationRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
+        writes!.WriteAsync("payroll.accounting.accrue", "payroll.obligation.finalize", request.BatchId.ToString(), key, request, request.Reason, context,
+            (actor, token) => FinalizeObligationCoreAsync(request, actor.AccountId.ToString(), token), ct);
+    public Task<JournalEntryResponse> PostAccrualJournalAsync(PostAccrualJournalRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
+        writes!.WriteAsync("payroll.accounting.accrue", "payroll.accrual.post", request.ObligationId.ToString(), key, request, request.Reason, context,
+            (actor, token) => PostAccrualJournalCoreAsync(request, actor.AccountId.ToString(), token), ct);
+    public Task<JournalEntryResponse?> PostStatutoryJournalAsync(PostStatutoryJournalRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
+        writes!.WriteAsync("payroll.accounting.accrue", "payroll.statutory.post", request.ObligationId.ToString(), key, request, request.Reason, context,
+            (actor, token) => PostStatutoryJournalCoreAsync(request, actor.AccountId.ToString(), token), ct);
+    public Task<SalaryPaymentResponse> RecordSalaryPaymentAsync(RecordSalaryPaymentRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
+        writes!.WriteAsync("payroll.accounting.payment", "payroll.payment.record", request.ObligationId.ToString(), key, request, request.Reason, context,
+            (actor, token) => RecordSalaryPaymentCoreAsync(request, actor.AccountId.ToString(), token), ct);
+    public Task<SalaryPaymentResponse> ConfirmPaymentAsync(Guid id, ConfirmSalaryPaymentRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
+        writes!.WriteAsync("payroll.accounting.payment.confirm", "payroll.payment.confirm", id.ToString(), key, request, request.Reason, context,
+            (actor, token) => ConfirmPaymentWithEvidenceCoreAsync(id, request, actor.AccountId.ToString(), token), ct);
+
     public Task<ObligationResponse> FinalizeObligationAsync(FinalizeObligationRequest request, AuthRequestContext context, CancellationToken ct) =>
         operation.ExecuteAsync("payroll.accounting.accrue", "FinalizeObligation", "PayrollAccounting", request.BatchId.ToString(), context,
             (actor, token) => FinalizeObligationCoreAsync(request, actor.AccountId.ToString(), token), ct);
@@ -56,120 +79,36 @@ public sealed class PayrollAccountingService(
 
     private async Task<ObligationResponse> FinalizeObligationCoreAsync(FinalizeObligationRequest request, string actorUserId, CancellationToken ct)
     {
+        var source = await RequireFrozenAsync(request.BatchId, ct);
+        var batch = await repository.GetBatchByIdAsync(request.BatchId, ct) ?? throw new PayrollFinanceConflictException("Payroll batch not found.");
+        if (batch.ReviewState != "finance_handed_off") throw new PayrollFinanceConflictException("Explicit independent Finance handoff is required before finalizing a salary obligation.");
+        if (string.IsNullOrWhiteSpace(request.ExpectedSourceFingerprint) || !string.Equals(source.Fingerprint, request.ExpectedSourceFingerprint, StringComparison.OrdinalIgnoreCase))
+            throw new PayrollFinanceConflictException("Exact frozen payroll source fingerprint is required.");
+        foreach (var line in source.Lines.Where(x => x.Component == nameof(PayrollComponentKind.StatutoryEmployeeDeduction)))
+            await RequireStatutoryLineAsync(line, source, ct);
+        var gross = source.Lines.Where(x => x.Amount > 0).Sum(x => x.Amount);
+        var net = source.Lines.Sum(x => x.Amount);
+        if ((request.TotalGrossAmount.HasValue && request.TotalGrossAmount.Value != gross) ||
+            (request.TotalNetAmount.HasValue && request.TotalNetAmount.Value != net) ||
+            (!string.IsNullOrWhiteSpace(request.Currency) && !string.Equals(request.Currency, source.Currency, StringComparison.OrdinalIgnoreCase)))
+            throw new PayrollFinanceConflictException("Submitted monetary assertions do not exactly match the frozen payroll.");
         var existing = await repository.GetObligationByBatchIdAsync(request.BatchId, ct);
         if (existing is not null)
         {
+            ValidateObligationSource(existing, source);
             return MapObligation(existing);
         }
-
-        var batch = await repository.GetBatchByIdAsync(request.BatchId, ct)
-            ?? throw new InvalidOperationException($"Payroll batch {request.BatchId} not found.");
-
-        if (!batch.LockedAt.HasValue)
-        {
-            throw new InvalidOperationException($"Payroll batch {batch.BatchReference} is in Draft state and has not been approved/locked.");
-        }
-
-        if (batch.ApprovalRequest != null &&
-            (batch.ApprovalRequest.State == ApprovalState.Rejected || batch.ApprovalRequest.State == ApprovalState.Cancelled))
-        {
-            throw new InvalidOperationException($"Payroll batch {batch.BatchReference} approval was rejected or cancelled.");
-        }
-
-        if (string.IsNullOrWhiteSpace(request.ExpectedSourceFingerprint))
-        {
-            throw new InvalidOperationException("Source fingerprint is required to finalize payroll obligation.");
-        }
-
-        if (batch.CalculationVersion != "salary-v2" || !batch.SalaryComplete)
-        {
-            throw new InvalidOperationException($"Payroll batch {batch.BatchReference} calculation version '{batch.CalculationVersion}' is not an approved salary-v2 complete calculation.");
-        }
-
-        if (batch.ReviewState is not ("locked" or "finance_handed_off"))
-        {
-            throw new InvalidOperationException($"Payroll batch {batch.BatchReference} review state '{batch.ReviewState}' is not locked or handed off to finance.");
-        }
-
-        if (!string.Equals(batch.FrozenFingerprint, request.ExpectedSourceFingerprint, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException($"Batch source fingerprint '{request.ExpectedSourceFingerprint}' does not match frozen batch fingerprint '{batch.FrozenFingerprint}'.");
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Currency) && !string.Equals(request.Currency, batch.Currency, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException($"Submitted currency '{request.Currency}' does not match batch currency '{batch.Currency}'.");
-        }
-
-        var batchLines = await repository.GetBatchLinesAsync(batch.Id, ct);
-        if (batchLines.Count == 0)
-        {
-            throw new InvalidOperationException($"Approved payroll batch {batch.Id} contains no lines.");
-        }
-
-        var authoritativeNet = batchLines.Sum(l => l.Amount);
-        if (request.TotalNetAmount.HasValue && Math.Abs(authoritativeNet - request.TotalNetAmount.Value) > 0.01m)
-        {
-            throw new InvalidOperationException($"Submitted net amount ({request.TotalNetAmount.Value}) does not reconcile with approved batch net total ({authoritativeNet}).");
-        }
-
-        var batchMonth = new DateOnly(batch.PeriodStart.Year, batch.PeriodStart.Month, 1);
-        var approvedContributions = await repository.GetApprovedStatutoryContributionsForMonthAsync(batchMonth, ct);
-
-        var employeeStatutoryDeductions = approvedContributions.Sum(c => c.EmployeeContributionAmount);
-        var lineEarnings = batchLines.Where(l => l.Amount > 0).Sum(l => l.Amount);
-        var lineDeductions = batchLines.Where(l => l.Amount < 0).Sum(l => -l.Amount);
-
-        var authoritativeDeductions = lineDeductions + employeeStatutoryDeductions;
-        var authoritativeGross = lineEarnings + employeeStatutoryDeductions;
-
-        if (Math.Abs((authoritativeGross - authoritativeDeductions) - authoritativeNet) > 0.01m)
-        {
-            throw new InvalidOperationException($"Derived gross ({authoritativeGross}) minus deductions ({authoritativeDeductions}) does not reconcile with net ({authoritativeNet}).");
-        }
-
-        if (request.TotalGrossAmount.HasValue && Math.Abs(authoritativeGross - request.TotalGrossAmount.Value) > 0.01m)
-        {
-            throw new InvalidOperationException($"Submitted gross amount ({request.TotalGrossAmount.Value}) does not reconcile with approved gross total ({authoritativeGross}).");
-        }
-
-        var netAmount = authoritativeNet;
-        var grossAmount = authoritativeGross;
-
-        if (grossAmount < netAmount)
-        {
-            throw new InvalidOperationException($"Total gross amount ({grossAmount}) cannot be less than total net amount ({netAmount}).");
-        }
-
+        var entitlements = source.Lines.GroupBy(x => x.EmployeeId).Select(g => new BatchEmployeeEntitlementDto(g.Key,
+            g.Where(x => x.Amount > 0).Sum(x => x.Amount), g.Where(x => x.Amount < 0).Sum(x => -x.Amount), g.Sum(x => x.Amount))).ToArray();
+        if (entitlements.Any(x => x.NetSalary < 0)) throw new PayrollFinanceConflictException("An employee cannot have negative salary entitlement.");
         var now = clock.GetUtcNow();
-        var obligation = new PayrollObligation(
-            request.BatchId,
-            grossAmount,
-            netAmount,
-            batch.Currency,
-            actorUserId,
-            now);
-
-        // Snapshot authoritative employee entitlements from approved frozen payroll lines
-        var empEntitlements = batchLines
-            .GroupBy(l => l.EmployeeId)
-            .Select(g => new BatchEmployeeEntitlementDto(
-                g.Key,
-                g.Where(l => l.Amount > 0).Sum(l => l.Amount),
-                g.Where(l => l.Amount < 0).Sum(l => -l.Amount),
-                g.Sum(l => l.Amount)))
-            .ToList();
-        var entitlementsJson = JsonSerializer.Serialize(empEntitlements);
-
-        obligation.BindSource(batch.FrozenFingerprint!, batch.PeriodStart, batch.PeriodEnd.AddDays(1), entitlementsJson);
+        var obligation = new PayrollObligation(request.BatchId, gross, net, source.Currency, actorUserId, now);
+        obligation.BindSource(source.Fingerprint, source.PeriodStart, source.PeriodEndExclusive, JsonSerializer.Serialize(entitlements));
         obligation.Finalize(actorUserId, now);
-
         await repository.AddObligationAsync(obligation, ct);
         await repository.SaveChangesAsync(ct);
-
         return MapObligation(obligation);
     }
-
     private async Task<ObligationResponse?> GetObligationByBatchIdCoreAsync(Guid batchId, CancellationToken ct)
     {
         var obligation = await repository.GetObligationByBatchIdAsync(batchId, ct);
@@ -184,358 +123,140 @@ public sealed class PayrollAccountingService(
 
     private async Task<JournalEntryResponse> PostAccrualJournalCoreAsync(PostAccrualJournalRequest request, string actorUserId, CancellationToken ct)
     {
-        var obligation = await repository.GetObligationByIdAsync(request.ObligationId, ct)
-            ?? throw new InvalidOperationException("Payroll obligation not found.");
-
-        if (obligation.State != PayrollObligationState.Finalized)
-            throw new InvalidOperationException("Accrual journal can only be posted for finalized payroll obligations.");
-
-        var existingEntries = await repository.GetJournalEntriesForObligationAsync(obligation.Id, ct);
-        if (existingEntries.Any(e => e.Kind == JournalEntryKind.SalaryAccrual))
-            throw new InvalidOperationException("Salary accrual journal has already been posted for this obligation.");
-
-        var now = clock.GetUtcNow();
-        var batch = await repository.GetBatchByIdAsync(obligation.BatchId, ct)
-            ?? throw new InvalidOperationException($"Payroll batch {obligation.BatchId} not found.");
-
-        string debitAccount;
-        string creditAccount;
-        PayrollPostingRules? profileRules = null;
-        PayrollAccountingPeriod? postingPeriod = null;
-        PayrollPostingProfile? postingProfile = null;
-
-        if (!request.PostingProfileId.HasValue || !request.PostingDate.HasValue)
+        var obligation = await repository.GetObligationByIdAsync(request.ObligationId, ct) ?? throw new PayrollFinanceConflictException("Payroll obligation not found.");
+        var source = await RequireFrozenAsync(obligation.BatchId, ct);
+        ValidateObligationSource(obligation, source);
+        var configured = await financeSetupService!.ResolvePostingAsync(request.PostingProfileId, request.PostingDate,
+            source.Currency, source.PeriodStart, source.PeriodEndExclusive, ct);
+        var rules = configured.Rules;
+        if ((!string.IsNullOrWhiteSpace(request.DebitAccountCode) && request.DebitAccountCode != rules.SalaryExpenseAccountCode) ||
+            (!string.IsNullOrWhiteSpace(request.CreditAccountCode) && request.CreditAccountCode != rules.SalaryPayableAccountCode))
+            throw new PayrollFinanceConflictException("Direct account bypass is prohibited.");
+        if ((await repository.GetJournalEntriesForObligationAsync(obligation.Id, ct)).Any(x => x.Kind == JournalEntryKind.SalaryAccrual))
+            throw new PayrollFinanceConflictException("Salary accrual already posted; retry with the original idempotency key.");
+        var deductions = new List<(string Account, decimal Amount, Guid? ContributionId, string? Scheme, string Key)>();
+        foreach (var line in source.Lines.Where(x => x.Amount < 0))
         {
-            throw new InvalidOperationException("PostingProfileId and PostingDate are mandatory for posting payroll accrual. Posting without an approved posting profile is not permitted.");
-        }
-        if (financeSetupService == null)
-        {
-            throw new InvalidOperationException("Payroll finance setup service is required to resolve approved posting configuration.");
-        }
-
-        var resolved = await financeSetupService.ResolvePostingAsync(
-            request.PostingProfileId.Value,
-            request.PostingDate.Value,
-            obligation.Currency,
-            batch.PeriodStart,
-            batch.PeriodEnd,
-            ct);
-        postingPeriod = resolved.Period;
-        postingProfile = resolved.Profile;
-        profileRules = resolved.Rules;
-
-        debitAccount = profileRules.SalaryExpenseAccountCode;
-        creditAccount = profileRules.SalaryPayableAccountCode;
-
-        if (!string.IsNullOrWhiteSpace(request.DebitAccountCode) && request.DebitAccountCode != debitAccount)
-        {
-            throw new InvalidOperationException($"Submitted debit account '{request.DebitAccountCode}' does not match approved posting profile expense account '{debitAccount}'. Direct account bypass is prohibited.");
-        }
-        if (!string.IsNullOrWhiteSpace(request.CreditAccountCode) && request.CreditAccountCode != creditAccount)
-        {
-            throw new InvalidOperationException($"Submitted credit account '{request.CreditAccountCode}' does not match approved posting profile payable account '{creditAccount}'. Direct account bypass is prohibited.");
-        }
-
-        // 1. Primary salary accrual entry: Credit Net Salaries Payable (2010) with TotalNetAmount
-        var primaryEntry = new PayrollJournalEntry(
-            obligation.Id,
-            JournalEntryKind.SalaryAccrual,
-            debitAccount, // 5010 Salaries Expense
-            creditAccount, // 2010 Salaries Payable
-            obligation.TotalNetAmount,
-            obligation.Currency,
-            request.Description,
-            actorUserId,
-            now);
-
-        if (request.PostingDate.HasValue && postingPeriod != null)
-        {
-            primaryEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-SALARY-{obligation.Id:N}");
-        }
-
-        await repository.AddJournalEntryAsync(primaryEntry, ct);
-
-        // 2. Deduction postings: Allocate gross salary expense to deduction clearing / payable accounts
-        var totalDeductions = obligation.TotalGrossAmount - obligation.TotalNetAmount;
-        if (totalDeductions > 0)
-        {
-            if (request.Deductions != null && request.Deductions.Count > 0)
+            if (line.Component == nameof(PayrollComponentKind.StatutoryEmployeeDeduction))
             {
-                var explicitSum = request.Deductions.Sum(d => d.Amount);
-                if (Math.Abs(explicitSum - totalDeductions) > 0.01m)
-                {
-                    throw new InvalidOperationException($"Explicit deduction items total ({explicitSum}) does not reconcile with obligation deduction total ({totalDeductions}).");
-                }
-
-                foreach (var d in request.Deductions)
-                {
-                    if (d.Amount > 0)
-                    {
-                        var deductionEntry = new PayrollJournalEntry(
-                            obligation.Id,
-                            JournalEntryKind.SalaryAccrual,
-                            d.DebitAccountCode,
-                            d.CreditAccountCode,
-                            d.Amount,
-                            obligation.Currency,
-                            d.Description,
-                            actorUserId,
-                            now);
-                        if (request.PostingDate.HasValue && postingPeriod != null)
-                        {
-                            deductionEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-DED-{obligation.Id:N}-{Guid.NewGuid():N}");
-                        }
-                        await repository.AddJournalEntryAsync(deductionEntry, ct);
-                    }
-                }
+                var entry = await RequireStatutoryLineAsync(line, source, ct);
+                var rule = rules.Statutory.SingleOrDefault(x => x.Scheme == entry.Contribution.Scheme)
+                    ?? throw new PayrollFinanceConflictException("Approved statutory payable mapping is missing.");
+                deductions.Add((rule.PayableAccountCode, -line.Amount, entry.ContributionId, entry.Contribution.Scheme.ToString(), line.Id.ToString("N")));
             }
             else
             {
-                var batchMonth = new DateOnly(batch.PeriodStart.Year, batch.PeriodStart.Month, 1);
-
-                var approvedContributions = batchMonth != DateOnly.MinValue
-                    ? await repository.GetApprovedStatutoryContributionsForMonthAsync(batchMonth, ct)
-                    : [];
-
-                decimal resolvedDeductions = 0m;
-
-                var eobiContribution = approvedContributions.FirstOrDefault(c => c.Scheme == StatutoryScheme.EOBI);
-                if (eobiContribution != null && eobiContribution.EmployeeContributionAmount > 0)
-                {
-                    var eobiCreditAccount = profileRules.Statutory.FirstOrDefault(s => s.Scheme == StatutoryScheme.EOBI)?.PayableAccountCode
-                        ?? (!string.IsNullOrWhiteSpace(eobiContribution.PayableAccountCode) ? eobiContribution.PayableAccountCode : null);
-
-                    if (string.IsNullOrWhiteSpace(eobiCreditAccount))
-                    {
-                        throw new InvalidOperationException("EOBI deduction credit account mapping is missing from approved posting profile.");
-                    }
-
-                    var eobiEntry = new PayrollJournalEntry(
-                        obligation.Id,
-                        JournalEntryKind.SalaryAccrual,
-                        debitAccount,
-                        eobiCreditAccount,
-                        eobiContribution.EmployeeContributionAmount,
-                        obligation.Currency,
-                        $"Employee EOBI deduction for {batchMonth:yyyy-MM}",
-                        actorUserId,
-                        now,
-                        eobiContribution.Id,
-                        "EOBI");
-                    if (request.PostingDate.HasValue && postingPeriod != null)
-                    {
-                        eobiEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-EOBI-{obligation.Id:N}");
-                    }
-                    await repository.AddJournalEntryAsync(eobiEntry, ct);
-                    resolvedDeductions += eobiContribution.EmployeeContributionAmount;
-                }
-
-                var ssContribution = approvedContributions.FirstOrDefault(c => c.Scheme == StatutoryScheme.PESSI || c.Scheme == StatutoryScheme.SESSI);
-                if (ssContribution != null && ssContribution.EmployeeContributionAmount > 0)
-                {
-                    var ssCreditAccount = profileRules.Statutory.FirstOrDefault(s => s.Scheme == ssContribution.Scheme)?.PayableAccountCode
-                        ?? (!string.IsNullOrWhiteSpace(ssContribution.PayableAccountCode) ? ssContribution.PayableAccountCode : null);
-
-                    if (string.IsNullOrWhiteSpace(ssCreditAccount))
-                    {
-                        throw new InvalidOperationException("Social Security deduction credit account mapping is missing from approved posting profile.");
-                    }
-
-                    var ssEntry = new PayrollJournalEntry(
-                        obligation.Id,
-                        JournalEntryKind.SalaryAccrual,
-                        debitAccount,
-                        ssCreditAccount,
-                        ssContribution.EmployeeContributionAmount,
-                        obligation.Currency,
-                        $"Employee Social Security deduction for {batchMonth:yyyy-MM}",
-                        actorUserId,
-                        now,
-                        ssContribution.Id,
-                        ssContribution.Scheme.ToString());
-                    if (request.PostingDate.HasValue && postingPeriod != null)
-                    {
-                        ssEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-SS-{obligation.Id:N}");
-                    }
-                    await repository.AddJournalEntryAsync(ssEntry, ct);
-                    resolvedDeductions += ssContribution.EmployeeContributionAmount;
-                }
-
-                var batchLines = await repository.GetBatchLinesAsync(obligation.BatchId, ct);
-                var loanDeductionAmount = batchLines
-                    .Where(l => l.Component == PayrollComponentKind.LoanRepayment)
-                    .Sum(l => l.Amount < 0 ? -l.Amount : l.Amount);
-
-                if (loanDeductionAmount > 0)
-                {
-                    var loanCreditAccount = profileRules?.Deductions.FirstOrDefault(d => d.Component == "LoanRepayment")?.CreditAccountCode
-                        ?? "1050";
-
-                    if (string.IsNullOrWhiteSpace(loanCreditAccount))
-                    {
-                        throw new InvalidOperationException("Staff loan deduction credit account mapping is missing.");
-                    }
-
-                    var loanEntry = new PayrollJournalEntry(
-                        obligation.Id,
-                        JournalEntryKind.SalaryAccrual,
-                        debitAccount,
-                        loanCreditAccount,
-                        loanDeductionAmount,
-                        obligation.Currency,
-                        $"Staff loan principal recoveries for {batchMonth:yyyy-MM}",
-                        actorUserId,
-                        now);
-                    if (request.PostingDate.HasValue && postingPeriod != null)
-                    {
-                        loanEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-LOAN-{obligation.Id:N}");
-                    }
-                    await repository.AddJournalEntryAsync(loanEntry, ct);
-                    resolvedDeductions += loanDeductionAmount;
-                }
-
-                var remainingDeductions = totalDeductions - resolvedDeductions;
-                if (Math.Abs(remainingDeductions) > 0.01m)
-                {
-                    throw new InvalidOperationException($"Payroll deductions do not reconcile with gross minus net. Unreconciled difference: {remainingDeductions}. Missing approved statutory contributions or loan recovery line mapping.");
-                }
+                var rule = rules.Deductions.SingleOrDefault(x => x.Component == line.Component)
+                    ?? throw new PayrollFinanceConflictException($"Approved deduction mapping is missing for {line.Component}.");
+                deductions.Add((rule.CreditAccountCode, -line.Amount, null, null, line.Id.ToString("N")));
             }
         }
-
+        if (deductions.Sum(x => x.Amount) != obligation.TotalGrossAmount - obligation.TotalNetAmount)
+            throw new PayrollFinanceConflictException("Frozen salary deductions do not reconcile.");
+        if (request.Deductions is { Count: > 0 })
+        {
+            var expected = deductions.GroupBy(x => x.Account).ToDictionary(x => x.Key, x => x.Sum(y => y.Amount));
+            if (request.Deductions.Count != expected.Count || request.Deductions.Select(x => x.CreditAccountCode).Distinct().Count() != expected.Count ||
+                request.Deductions.Any(x => x.DebitAccountCode != rules.SalaryExpenseAccountCode || !expected.TryGetValue(x.CreditAccountCode, out var amount) || amount != x.Amount))
+                throw new PayrollFinanceConflictException("Submitted deduction assertions do not match approved frozen lines.");
+        }
+        var journal = new List<PayrollJournalEntry>();
+        void Add(string account, decimal amount, string key, Guid? contributionId = null, string? scheme = null)
+        {
+            if (amount == 0) return;
+            var row = PayrollFinanceErrors.Run(() => new PayrollJournalEntry(obligation.Id, JournalEntryKind.SalaryAccrual, rules.SalaryExpenseAccountCode, account,
+                amount, source.Currency, request.Description, actorUserId, clock.GetUtcNow(), contributionId, scheme));
+            row.BindPosting(request.PostingDate!.Value, configured.Period.Id, configured.Profile.Id, key);
+            journal.Add(row);
+        }
+        Add(rules.SalaryPayableAccountCode, obligation.TotalNetAmount, $"ACCRUAL-SALARY-{obligation.Id:N}");
+        foreach (var row in deductions) Add(row.Account, row.Amount, $"ACCRUAL-DED-{obligation.Id:N}-{row.Key}", row.ContributionId, row.Scheme);
+        if (journal.Count == 0) throw new PayrollFinanceConflictException("Zero-value payroll has no accrual journal to post.");
+        if (journal.Sum(x => x.Amount) != obligation.TotalGrossAmount) throw new PayrollFinanceConflictException("Journal salary expense does not reconcile with frozen gross pay.");
+        foreach (var row in journal) await repository.AddJournalEntryAsync(row, ct);
         await repository.SaveChangesAsync(ct);
-        return MapJournalEntry(primaryEntry);
+        return MapJournalEntry(journal[0]);
     }
-
-    private async Task<JournalEntryResponse?> PostStatutoryJournalCoreAsync(PostStatutoryJournalRequest request, string actorUserId, CancellationToken ct)
+    internal async Task<JournalEntryResponse?> PostStatutoryJournalCoreAsync(PostStatutoryJournalRequest request, string actorUserId, CancellationToken ct)
     {
-        var obligation = await repository.GetObligationByIdAsync(request.ObligationId, ct)
-            ?? throw new InvalidOperationException("Payroll obligation not found.");
-
-        if (obligation.State != PayrollObligationState.Finalized)
-            throw new InvalidOperationException("Statutory contribution journal can only be posted for finalized payroll obligations.");
-
-        if (!request.StatutoryContributionId.HasValue)
-        {
-            throw new InvalidOperationException("Statutory contribution ID is required for posting statutory journal.");
-        }
-
+        var obligation = await repository.GetObligationByIdAsync(request.ObligationId, ct) ?? throw new PayrollFinanceConflictException("Payroll obligation not found.");
+        var source = await RequireFrozenAsync(obligation.BatchId, ct);
+        ValidateObligationSource(obligation, source);
+        if (!request.StatutoryContributionId.HasValue) throw new PayrollFinanceConflictException("Actual statutory contribution ID is required.");
         await repository.AcquireStatutoryPostingLockAsync(request.StatutoryContributionId.Value, ct);
-
         var contribution = await repository.GetStatutoryContributionByIdAsync(request.StatutoryContributionId.Value, ct)
-            ?? throw new InvalidOperationException("Statutory contribution not found.");
-
-        if (contribution.State != ContributionState.Approved)
+            ?? throw new PayrollFinanceConflictException("Statutory contribution not found.");
+        PayrollFinanceErrors.Run(contribution.ValidateEntries);
+        if (contribution.State != ContributionState.Approved || contribution.ApprovedAt is null ||
+            string.IsNullOrWhiteSpace(contribution.ApprovedByUserId) || contribution.ApprovedByUserId == contribution.CreatedByUserId ||
+            contribution.Currency != source.Currency || contribution.ContributionMonth != source.PeriodStart ||
+            contribution.ContributionMonth.AddMonths(1) != source.PeriodEndExclusive ||
+            (contribution.ObligationId.HasValue && contribution.ObligationId != obligation.Id))
+            throw new PayrollFinanceConflictException("Approved contribution source does not match this frozen payroll.");
+        if (!string.IsNullOrWhiteSpace(request.Scheme) && request.Scheme != contribution.Scheme.ToString())
+            throw new PayrollFinanceConflictException("Statutory scheme assertion does not match its source.");
+        var employeeIds = source.Lines.Select(x => x.EmployeeId).ToHashSet();
+        var entries = contribution.Entries.Where(x => employeeIds.Contains(x.EmployeeId)).ToArray();
+        if (entries.Length == 0) throw new PayrollFinanceConflictException("This payroll group contains no entries for this contribution.");
+        var previousPostings = await repository.ContributionPostingsAsync(contribution.Id, ct);
+        var entryIds = contribution.Entries.Select(x => x.Id).ToHashSet();
+        if (previousPostings.Any(x => !entryIds.Contains(x.EntryId)) || previousPostings.Select(x => x.EntryId).Distinct().Count() != previousPostings.Count ||
+            entries.Any(entry => previousPostings.Any(posted => posted.EntryId == entry.Id)))
+            throw new PayrollFinanceConflictException("Contribution entry is already posted or its coverage is inconsistent.");
+        foreach (var entry in entries)
         {
-            throw new InvalidOperationException("Only approved statutory contributions can be posted to accounting.");
+            var matching = source.Lines.Where(x => x.SourceType == nameof(StatutoryContributionEntry) && x.SourceId == entry.Id).ToArray();
+            if (matching.Length != 1) throw new PayrollFinanceConflictException("Every contribution employee entry must belong exactly once to this frozen payroll.");
+            await RequireStatutoryLineAsync(matching[0], source, ct);
         }
-
-        if (contribution.PostedAt.HasValue || contribution.State == ContributionState.Posted || contribution.JournalEntryId.HasValue)
+        var existing = await repository.GetJournalEntriesForObligationAsync(obligation.Id, ct);
+        if (!existing.Any(x => x.Kind == JournalEntryKind.SalaryAccrual) && obligation.TotalGrossAmount > 0)
+            throw new PayrollFinanceConflictException("Salary accrual must be posted before employer contributions.");
+        if (existing.Any(x => x.Kind == JournalEntryKind.StatutoryContribution && x.StatutoryContributionId == contribution.Id))
+            throw new PayrollFinanceConflictException("Employer contribution already posted.");
+        var employerAmount = entries.Sum(x => x.EmployerContributionAmount);
+        var employeeAmount = entries.Sum(x => x.EmployeeContributionAmount);
+        if (request.Amount.HasValue && request.Amount.Value != employerAmount)
+            throw new PayrollFinanceConflictException("Submitted employer amount does not equal actual approved employee entries.");
+        var configured = await financeSetupService!.ResolvePostingAsync(request.PostingProfileId, request.PostingDate, source.Currency,
+            source.PeriodStart, source.PeriodEndExclusive, ct);
+        var rule = configured.Rules.Statutory.SingleOrDefault(x => x.Scheme == contribution.Scheme)
+            ?? throw new PayrollFinanceConflictException("Statutory posting mapping is missing.");
+        if (previousPostings.Any(x => x.PayableAccountCode != rule.PayableAccountCode))
+            throw new PayrollFinanceConflictException("All payroll groups must use the same approved statutory payable account.");
+        if ((!string.IsNullOrWhiteSpace(request.DebitAccountCode) && request.DebitAccountCode != rule.EmployerExpenseAccountCode) ||
+            (!string.IsNullOrWhiteSpace(request.CreditAccountCode) && request.CreditAccountCode != rule.PayableAccountCode) ||
+            (!string.IsNullOrWhiteSpace(contribution.PayableAccountCode) && contribution.PayableAccountCode != rule.PayableAccountCode))
+            throw new PayrollFinanceConflictException("Direct statutory account bypass is prohibited.");
+        if (existing.Where(x => x.Kind == JournalEntryKind.SalaryAccrual && x.StatutoryContributionId == contribution.Id).Sum(x => x.Amount) != employeeAmount ||
+            existing.Any(x => x.Kind == JournalEntryKind.SalaryAccrual && x.StatutoryContributionId == contribution.Id && x.CreditAccountCode != rule.PayableAccountCode))
+            throw new PayrollFinanceConflictException("Employee withholding accrual does not reconcile with this statutory source and mapping.");
+        PayrollJournalEntry? journal = null;
+        if (employerAmount > 0)
         {
-            throw new InvalidOperationException("Statutory contribution has already been posted to accounting.");
+            journal = PayrollFinanceErrors.Run(() => new PayrollJournalEntry(obligation.Id, JournalEntryKind.StatutoryContribution, rule.EmployerExpenseAccountCode,
+                rule.PayableAccountCode, employerAmount, source.Currency, request.Description,
+                actorUserId, clock.GetUtcNow(), contribution.Id, contribution.Scheme.ToString()));
+            journal.BindPosting(request.PostingDate!.Value, configured.Period.Id, configured.Profile.Id, $"STATUTORY-{contribution.Id:N}-{obligation.Id:N}");
+            await repository.AddJournalEntryAsync(journal, ct);
         }
-
-        if (contribution.ObligationId.HasValue && contribution.ObligationId.Value != obligation.Id)
+        foreach (var entry in entries)
+            await repository.AddContributionPostingAsync(new(entry.Id, contribution.Id, obligation.Id, journal?.Id,
+                source.Fingerprint, rule.PayableAccountCode, actorUserId, clock.GetUtcNow()), ct);
+        if (previousPostings.Count + entries.Length == contribution.Entries.Count)
         {
-            throw new InvalidOperationException($"Statutory contribution is linked to obligation {contribution.ObligationId.Value}, but request specified obligation {obligation.Id}. Mismatched obligation linking is prohibited.");
+            if (previousPostings.Count == 0)
+                PayrollFinanceErrors.Run(() => contribution.RecordPosting(obligation.Id, journal?.Id, rule.PayableAccountCode, actorUserId, clock.GetUtcNow()));
+            else
+                PayrollFinanceErrors.Run(() => contribution.CompleteGroupedPosting(rule.PayableAccountCode, actorUserId, clock.GetUtcNow()));
         }
-
-        if (!contribution.ObligationId.HasValue)
-        {
-            contribution.BindObligation(obligation.Id);
-        }
-
-        var existingEntries = await repository.GetJournalEntriesForObligationAsync(obligation.Id, ct);
-        if (existingEntries.Any(e => e.StatutoryContributionId == contribution.Id))
-        {
-            throw new InvalidOperationException("A journal entry has already been posted for this statutory contribution.");
-        }
-
-        var batch = await repository.GetBatchByIdAsync(obligation.BatchId, ct)
-            ?? throw new InvalidOperationException($"Payroll batch {obligation.BatchId} not found.");
-
-        var batchMonth = new DateOnly(batch.PeriodStart.Year, batch.PeriodStart.Month, 1);
-        if (batchMonth != contribution.ContributionMonth)
-        {
-            throw new InvalidOperationException($"Statutory contribution month {contribution.ContributionMonth:yyyy-MM} does not match payroll obligation period {batchMonth:yyyy-MM}.");
-        }
-
-        if (!string.Equals(contribution.Currency, obligation.Currency, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException($"Statutory contribution currency '{contribution.Currency}' does not match payroll obligation currency '{obligation.Currency}'.");
-        }
-
-        if (request.Amount.HasValue && Math.Abs(request.Amount.Value - contribution.EmployerContributionAmount) > 0.01m)
-        {
-            throw new InvalidOperationException($"Submitted statutory journal amount ({request.Amount.Value}) does not equal approved employer contribution amount ({contribution.EmployerContributionAmount}).");
-        }
-
-        var amount = contribution.EmployerContributionAmount;
-        if (amount <= 0)
-        {
-            throw new InvalidOperationException("Employer statutory contribution amount must be greater than zero.");
-        }
-
-        if (financeSetupService == null)
-        {
-            throw new InvalidOperationException("Approved finance setup service is required to post statutory journal.");
-        }
-
-        if (!request.PostingProfileId.HasValue || !request.PostingDate.HasValue)
-        {
-            throw new InvalidOperationException("Posting profile ID and posting date are required to post statutory journal.");
-        }
-
-        var now = clock.GetUtcNow();
-
-        var resolved = await financeSetupService.ResolvePostingAsync(
-            request.PostingProfileId.Value,
-            request.PostingDate.Value,
-            obligation.Currency,
-            batch.PeriodStart,
-            batch.PeriodEnd,
-            ct);
-        var postingPeriod = resolved.Period;
-        var postingProfile = resolved.Profile;
-        var statRule = resolved.Rules.Statutory.FirstOrDefault(s => s.Scheme == contribution.Scheme)
-            ?? throw new InvalidOperationException($"Statutory scheme {contribution.Scheme} is not mapped in posting profile '{postingProfile.Name}'.");
-        var debitAccount = statRule.EmployerExpenseAccountCode;
-        var creditAccount = statRule.PayableAccountCode;
-
-        if (!string.IsNullOrWhiteSpace(request.DebitAccountCode) && !string.Equals(request.DebitAccountCode, debitAccount, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("Direct account bypass is prohibited. Statutory debit account must match the approved posting profile configuration.");
-        }
-        if (!string.IsNullOrWhiteSpace(request.CreditAccountCode) && !string.Equals(request.CreditAccountCode, creditAccount, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("Direct account bypass is prohibited. Statutory credit account must match the approved posting profile configuration.");
-        }
-
-        var entry = new PayrollJournalEntry(
-            obligation.Id,
-            JournalEntryKind.StatutoryContribution,
-            debitAccount,
-            creditAccount,
-            amount,
-            obligation.Currency,
-            request.Description ?? $"Employer {contribution.Scheme} contribution for {contribution.ContributionMonth:yyyy-MM}",
-            actorUserId,
-            now,
-            contribution.Id,
-            contribution.Scheme.ToString());
-
-        entry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile.Id, $"STATUTORY-ACCRUAL-{contribution.Scheme}-{contribution.Id:N}");
-
-        await repository.AddJournalEntryAsync(entry, ct);
-        contribution.Post(actorUserId, now, entry.Id);
         await repository.SaveChangesAsync(ct);
-
-        return MapJournalEntry(entry);
+        return journal is null ? null : MapJournalEntry(journal);
     }
-
     private async Task<IReadOnlyList<BatchEmployeeEntitlementResponse>> GetBatchEmployeesCoreAsync(Guid obligationId, CancellationToken ct)
     {
         var obligation = await repository.GetObligationByIdAsync(obligationId, ct)
-            ?? throw new InvalidOperationException("Payroll obligation not found.");
+            ?? throw new PayrollFinanceConflictException("Payroll obligation not found.");
 
         List<BatchEmployeeEntitlementDto> entitlements;
         if (!string.IsNullOrWhiteSpace(obligation.EmployeeEntitlementsJson))
@@ -561,7 +282,7 @@ public sealed class PayrollAccountingService(
         foreach (var emp in entitlements)
         {
             var alreadyDisbursed = existingPayments
-                .Where(p => p.EmployeeId == emp.EmployeeId && p.State != SalaryPaymentState.Failed)
+                .Where(p => p.EmployeeId == emp.EmployeeId && ReservesEntitlement(p))
                 .Sum(p => p.Amount);
 
             var remaining = Math.Max(0m, emp.NetSalary - alreadyDisbursed);
@@ -579,36 +300,41 @@ public sealed class PayrollAccountingService(
     private async Task<SalaryPaymentResponse> RecordSalaryPaymentCoreAsync(RecordSalaryPaymentRequest request, string actorUserId, CancellationToken ct)
     {
         var obligation = await repository.GetObligationByIdAsync(request.ObligationId, ct)
-            ?? throw new InvalidOperationException("Payroll obligation not found.");
+            ?? throw new PayrollFinanceConflictException("Payroll obligation not found.");
+        var source = await RequireFrozenAsync(obligation.BatchId, ct);
+        ValidateObligationSource(obligation, source);
 
         var accrualEntry = await repository.GetJournalEntryByIdAsync(request.AccrualJournalEntryId, ct)
-            ?? throw new InvalidOperationException("Accrual journal entry not found.");
+            ?? throw new PayrollFinanceConflictException("Accrual journal entry not found.");
 
-        if (accrualEntry.ObligationId != obligation.Id || accrualEntry.Kind != JournalEntryKind.SalaryAccrual)
-            throw new InvalidOperationException("Invalid accrual journal entry for this obligation.");
+        if (accrualEntry.ObligationId != obligation.Id || accrualEntry.Kind != JournalEntryKind.SalaryAccrual ||
+            accrualEntry.SourceKey != $"ACCRUAL-SALARY-{obligation.Id:N}" || accrualEntry.Amount != obligation.TotalNetAmount || accrualEntry.Currency != obligation.Currency)
+            throw new PayrollFinanceConflictException("Invalid accrual journal entry for this obligation.");
 
         if (!request.EmployeeId.HasValue)
         {
-            throw new InvalidOperationException("Salary payment must specify a valid EmployeeId. Unallocated or batch-level payments are not permitted.");
+            throw new PayrollFinanceConflictException("Salary payment must specify a valid EmployeeId. Unallocated or batch-level payments are not permitted.");
         }
 
         // Concurrency lock on this specific employee's payment allocation to prevent overpayment across concurrent requests
         await repository.AcquirePaymentLockAsync(obligation.Id, request.EmployeeId.Value, ct);
 
         var now = clock.GetUtcNow();
-        var disbursalAmount = request.Amount ?? obligation.TotalNetAmount;
+        var disbursalAmount = request.Amount ?? throw new PayrollFinanceConflictException("An explicit employee payment amount is required.");
 
         if (disbursalAmount <= 0)
         {
-            throw new InvalidOperationException("Disbursal amount must be greater than zero.");
+            throw new PayrollFinanceConflictException("Disbursal amount must be greater than zero.");
         }
 
         var existingPayments = await repository.GetSalaryPaymentsForObligationAsync(obligation.Id, ct);
 
-        if (existingPayments.Any(p => string.Equals(p.PaymentReference, request.PaymentReference, StringComparison.OrdinalIgnoreCase) && p.State != SalaryPaymentState.Failed))
+        if (existingPayments.Any(p => string.Equals(p.PaymentReference, request.PaymentReference?.Trim(), StringComparison.OrdinalIgnoreCase)))
         {
-            throw new InvalidOperationException($"A salary payment with reference '{request.PaymentReference}' is already recorded for this obligation.");
+            throw new PayrollFinanceConflictException($"A salary payment with reference '{request.PaymentReference}' is already recorded for this obligation.");
         }
+        // Legacy or altered terminal states cannot release salary without their retained outcome and compensating journal.
+        foreach (var existing in existingPayments) await ValidatePaymentProofsForReadAsync(existing, obligation, ct);
 
         decimal employeeNetSalary;
         if (!string.IsNullOrWhiteSpace(obligation.EmployeeEntitlementsJson))
@@ -617,7 +343,7 @@ public sealed class PayrollAccountingService(
             var empItem = entitlements?.FirstOrDefault(e => e.EmployeeId == request.EmployeeId.Value);
             if (empItem == null)
             {
-                throw new InvalidOperationException($"Employee {request.EmployeeId.Value} is not included in the finalized payroll obligation snapshot.");
+                throw new PayrollFinanceConflictException($"Employee {request.EmployeeId.Value} is not included in the finalized payroll obligation snapshot.");
             }
             employeeNetSalary = empItem.NetSalary;
         }
@@ -627,43 +353,43 @@ public sealed class PayrollAccountingService(
             var empLines = batchLines.Where(l => l.EmployeeId == request.EmployeeId.Value).ToList();
             if (empLines.Count == 0)
             {
-                throw new InvalidOperationException($"Employee {request.EmployeeId.Value} is not included in the finalized payroll batch.");
+                throw new PayrollFinanceConflictException($"Employee {request.EmployeeId.Value} is not included in the finalized payroll batch.");
             }
             employeeNetSalary = empLines.Sum(l => l.Amount);
         }
 
         var empDisbursed = existingPayments
-            .Where(p => p.EmployeeId == request.EmployeeId && p.State != SalaryPaymentState.Failed)
+            .Where(p => p.EmployeeId == request.EmployeeId && ReservesEntitlement(p))
             .Sum(p => p.Amount);
 
         if (empDisbursed >= employeeNetSalary)
         {
-            throw new InvalidOperationException($"The net salary of {employeeNetSalary} for employee {request.EmployeeId.Value} has already been fully disbursed under this obligation.");
+            throw new PayrollFinanceConflictException($"The net salary of {employeeNetSalary} for employee {request.EmployeeId.Value} has already been fully disbursed under this obligation.");
         }
 
         if (empDisbursed + disbursalAmount > employeeNetSalary)
         {
-            throw new InvalidOperationException($"Disbursal amount {disbursalAmount} exceeds remaining employee net salary of {employeeNetSalary - empDisbursed} (total net salary: {employeeNetSalary}, already disbursed: {empDisbursed}).");
+            throw new PayrollFinanceConflictException($"Disbursal amount {disbursalAmount} exceeds remaining employee net salary of {employeeNetSalary - empDisbursed} (total net salary: {employeeNetSalary}, already disbursed: {empDisbursed}).");
         }
 
-        var activeDisbursed = existingPayments.Where(p => p.State != SalaryPaymentState.Failed).Sum(p => p.Amount);
+        var activeDisbursed = existingPayments.Where(ReservesEntitlement).Sum(p => p.Amount);
         if (activeDisbursed + disbursalAmount > obligation.TotalNetAmount)
         {
-            throw new InvalidOperationException($"Disbursal amount {disbursalAmount} exceeds remaining net obligation of {obligation.TotalNetAmount - activeDisbursed}.");
+            throw new PayrollFinanceConflictException($"Disbursal amount {disbursalAmount} exceeds remaining net obligation of {obligation.TotalNetAmount - activeDisbursed}.");
         }
 
-        var payment = new SalaryPayment(
+        var payment = PayrollFinanceErrors.Run(() => new SalaryPayment(
             obligation.Id,
             accrualEntry.Id,
             request.PaymentReference,
             disbursalAmount,
             actorUserId,
             now,
-            request.EmployeeId);
+            request.EmployeeId));
 
         if (!request.PostingDate.HasValue)
         {
-            throw new InvalidOperationException("Posting date is mandatory for salary payment recording.");
+            throw new PayrollFinanceConflictException("Posting date is mandatory for salary payment recording.");
         }
 
         if (financeSetupService == null)
@@ -673,17 +399,17 @@ public sealed class PayrollAccountingService(
 
         if (!string.IsNullOrWhiteSpace(request.DebitAccountCode) && !string.Equals(request.DebitAccountCode, accrualEntry.CreditAccountCode, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException($"Direct account bypass is prohibited. Payment debit account '{request.DebitAccountCode}' does not match the obligation salary payable account '{accrualEntry.CreditAccountCode}'.");
+            throw new PayrollFinanceConflictException($"Direct account bypass is prohibited. Payment debit account '{request.DebitAccountCode}' does not match the obligation salary payable account '{accrualEntry.CreditAccountCode}'.");
         }
         var debitAcc = accrualEntry.CreditAccountCode;
 
         if (string.IsNullOrWhiteSpace(request.CreditAccountCode))
         {
-            throw new InvalidOperationException("Corporate bank credit account code is required for salary payment.");
+            throw new PayrollFinanceConflictException("Corporate bank credit account code is required for salary payment.");
         }
         var creditAcc = request.CreditAccountCode;
 
-        await financeSetupService.RequireAccountAsync(creditAcc, ct, PayrollAccountKind.Asset, PayrollAccountKind.Bank);
+        await financeSetupService.RequireDisbursementAccountAsync(creditAcc, ct);
         await financeSetupService.RequireAccountAsync(debitAcc, ct, PayrollAccountKind.Liability);
 
         var period = await financeSetupService.RequirePeriodAsync(request.PostingDate.Value, obligation.Currency, ct);
@@ -710,17 +436,8 @@ public sealed class PayrollAccountingService(
         return MapSalaryPayment(payment);
     }
 
-    private async Task<SalaryPaymentResponse> ConfirmPaymentCoreAsync(Guid paymentId, string actorUserId, CancellationToken ct)
-    {
-        var payment = await repository.GetSalaryPaymentByIdAsync(paymentId, ct)
-            ?? throw new InvalidOperationException("Salary payment record not found.");
-
-        var now = clock.GetUtcNow();
-        payment.Confirm(actorUserId, now);
-
-        await repository.SaveChangesAsync(ct);
-        return MapSalaryPayment(payment);
-    }
+    private Task<SalaryPaymentResponse> ConfirmPaymentCoreAsync(Guid paymentId, string actorUserId, CancellationToken ct) =>
+        throw new PayrollFinanceConflictException("Retained evidence and expected payment version are required for confirmation.");
 
     private async Task<IReadOnlyList<SalaryPaymentResponse>> GetPaymentsForObligationCoreAsync(Guid obligationId, CancellationToken ct)
     {
@@ -734,12 +451,57 @@ public sealed class PayrollAccountingService(
         return entries.Select(MapJournalEntry).ToList();
     }
 
+    private async Task<PayrollFrozenBatch> RequireFrozenAsync(Guid batchId, CancellationToken ct)
+    {
+        // Database lines alone do not establish approved, retained salary authority.
+        if (frozenReader is null) throw new InvalidOperationException("Frozen payroll reader is required.");
+        var source = await frozenReader.ReadAsync(batchId, ct);
+        if (source.BatchId != batchId || source.CalculationVersion != "salary-v2" || source.Lines.Count == 0 || string.IsNullOrWhiteSpace(source.Fingerprint) ||
+            source.Lines.Any(x => x.Currency != source.Currency) || source.Lines.Select(x => x.Id).Distinct().Count() != source.Lines.Count)
+            throw new PayrollFinanceConflictException("Complete frozen salary source is required.");
+        return source;
+    }
+
+    internal static void ValidateObligationSource(PayrollObligation obligation, PayrollFrozenBatch source)
+    {
+        if (obligation.State != PayrollObligationState.Finalized || obligation.SourceFingerprint != source.Fingerprint ||
+            obligation.Currency != source.Currency || obligation.PeriodStart != source.PeriodStart || obligation.PeriodEndExclusive != source.PeriodEndExclusive ||
+            obligation.TotalGrossAmount != source.Lines.Where(x => x.Amount > 0).Sum(x => x.Amount) || obligation.TotalNetAmount != source.Lines.Sum(x => x.Amount))
+            throw new PayrollFinanceConflictException("Payroll obligation no longer matches its approved frozen source.");
+        var expected = source.Lines.GroupBy(x => x.EmployeeId).Select(g => new BatchEmployeeEntitlementDto(g.Key,
+            g.Where(x => x.Amount > 0).Sum(x => x.Amount), g.Where(x => x.Amount < 0).Sum(x => -x.Amount), g.Sum(x => x.Amount))).OrderBy(x => x.EmployeeId).ToArray();
+        var actual = JsonSerializer.Deserialize<BatchEmployeeEntitlementDto[]>(obligation.EmployeeEntitlementsJson ?? "[]")!;
+        if (!expected.SequenceEqual(actual.OrderBy(x => x.EmployeeId))) throw new PayrollFinanceConflictException("Employee entitlement snapshot does not match approved salary.");
+    }
+
+    private async Task<StatutoryContributionEntry> RequireStatutoryLineAsync(Cosmix.Application.HR.PayrollHandoff.PayrollHandoffLineResponse line, PayrollFrozenBatch source, CancellationToken ct)
+    {
+        if (financeRepository is null || files is null) throw new InvalidOperationException("Statutory source repository and evidence storage are required.");
+        if (line.SourceType != nameof(StatutoryContributionEntry) || line.Component != nameof(PayrollComponentKind.StatutoryEmployeeDeduction))
+            throw new PayrollFinanceConflictException("Actual statutory entry source is required.");
+        var entry = await financeRepository.EntryAsync(line.SourceId, ct) ?? throw new PayrollFinanceConflictException("Statutory entry not found.");
+        var contribution = entry.Contribution;
+        if (entry.EmployeeId != line.EmployeeId || -entry.EmployeeContributionAmount != line.Amount || contribution.Currency != source.Currency ||
+            contribution.ContributionMonth != source.PeriodStart || contribution.ContributionMonth.AddMonths(1) != source.PeriodEndExclusive ||
+            contribution.State is not (ContributionState.Approved or ContributionState.Posted) || contribution.ApprovedAt is null ||
+            string.IsNullOrWhiteSpace(contribution.ApprovedByUserId) || contribution.ApprovedByUserId == contribution.CreatedByUserId ||
+            await financeRepository.EntryUsedAsync(entry.Id, source.BatchId, ct))
+            throw new PayrollFinanceConflictException("Statutory entry does not match approved salary, or is consumed by another locked batch.");
+        await StatutoryContributionService.ValidateEntryProofAsync(contribution, entry, files, ct);
+        return entry;
+    }
+
     private static ObligationResponse MapObligation(PayrollObligation o) =>
-        new(o.Id, o.BatchId, o.TotalGrossAmount, o.TotalNetAmount, o.Currency, o.State.ToString(), o.FinalizedAt, o.FinalizedByUserId, o.CreatedAt, TotalDeductions: o.TotalGrossAmount - o.TotalNetAmount);
+        new(o.Id, o.BatchId, o.TotalGrossAmount, o.TotalNetAmount, o.Currency, o.State.ToString(), o.FinalizedAt, o.FinalizedByUserId, o.CreatedAt,
+            o.SourceFingerprint, o.TotalGrossAmount - o.TotalNetAmount, o.PeriodStart, o.PeriodEndExclusive);
 
     private static JournalEntryResponse MapJournalEntry(PayrollJournalEntry j) =>
         new(j.Id, j.ObligationId, j.Kind.ToString(), j.DebitAccountCode, j.CreditAccountCode, j.Amount, j.Currency, j.Description, j.PostedAt, j.PostedByUserId, j.PostingDate, j.AccountingPeriodId, j.SourceKey, j.StatutoryContributionId);
 
     private static SalaryPaymentResponse MapSalaryPayment(SalaryPayment p) =>
-        new(p.Id, p.ObligationId, p.EmployeeId, p.Amount, p.State.ToString(), p.PaymentReference, p.PaymentJournalEntryId, p.ConfirmedAt, p.ConfirmedByUserId, p.CreatedAt);
+        new(p.Id, p.ObligationId, p.EmployeeId, p.Amount, p.State.ToString(), p.PaymentReference, p.PaymentJournalEntryId, p.ConfirmedAt, p.ConfirmedByUserId, p.CreatedAt,
+            p.FailureReason, p.ReversalJournalEntryId, p.ReversedAt, p.ReversalRequestedAt, p.Version, p.BankExportId,
+            p.CreatedByUserId, p.ReversalRequestedByUserId, p.ReversalIsFailure);
+
+    public static bool ReservesEntitlement(SalaryPayment payment) => payment.State is SalaryPaymentState.Pending or SalaryPaymentState.Posted or SalaryPaymentState.Confirmed;
 }

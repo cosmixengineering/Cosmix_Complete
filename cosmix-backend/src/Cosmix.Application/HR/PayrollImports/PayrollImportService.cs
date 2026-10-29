@@ -103,7 +103,7 @@ public sealed class PayrollImportService(AttendanceOperation operation, IPayroll
                     else
                     {
                         var result = await salary.StageComponentAsync(row.Component! with { Reason = input.Reason }, actor, source.Id, token);
-                        links.Add(new(row.RowNumber, row.EmployeeId, result.ApprovalRequestId, "PayrollSalaryComponent"));
+                        links.Add(new(row.RowNumber, row.EmployeeId, result.ApprovalRequestId, PayrollSalaryService.ComponentRequestType));
                     }
                 }
                 var response = new PayrollImportApplied(source.Id, "Submitted", links, source.SourceSha256);
@@ -154,7 +154,7 @@ public sealed class PayrollImportService(AttendanceOperation operation, IPayroll
                 var number = PositiveLong(Value(values, "employeeNumber"), "employeeNumber");
                 var employee = await repository.EmployeeAsync(number, ct) ?? throw Bad("salary_import_employee_unknown");
                 employeeId = employee.Id; label = number.ToString(CultureInfo.InvariantCulture);
-                var effective = Date(values, "effectiveFrom", source.FileName);
+                var effective = Date(values, "effectiveFrom", source.FileName, sheet.Uses1904DateSystem);
                 var currency = Value(values, "currency");
                 var rowType = Value(values, "rowType");
                 if (rowType.Equals("Compensation", StringComparison.OrdinalIgnoreCase))
@@ -176,7 +176,7 @@ public sealed class PayrollImportService(AttendanceOperation operation, IPayroll
                         .OrderByDescending(x => x.Revision).FirstOrDefault();
                     var request = new PayrollSalaryComponentInput(employee.Id, code, EnumValue<PayrollSalaryComponentKind>(values, "componentKind"),
                         Money(values, "componentAmount"), currency, effective,
-                        values.TryGetValue("effectiveToExclusive", out var until) && until.Length > 0 ? Date(values, "effectiveToExclusive", source.FileName) : null,
+                        values.TryGetValue("effectiveToExclusive", out var until) && until.Length > 0 ? Date(values, "effectiveToExclusive", source.FileName, sheet.Uses1904DateSystem) : null,
                         Bool(values, "prorateWithBase"), previous?.Id, "Salary import preview");
                     await salary.ValidateComponentInTransactionAsync(request, actor, ct);
                     resolved.Add(new(index + 2, employee.Id, employee.Version, null, request));
@@ -184,7 +184,7 @@ public sealed class PayrollImportService(AttendanceOperation operation, IPayroll
                 else throw Bad("salary_import_row_type");
             }
             catch (AuthenticationFailure error) when (error.StatusCode is 400 or 404 or 409)
-            { issues.Add(new(error.Message)); }
+            { issues.Add(new(error.Code)); }
             rows.Add(new(index + 2, employeeId, label, values, issues));
         }
         var fingerprint = Hash(JsonSerializer.SerializeToUtf8Bytes(new { source.Id, source.SourceSha256,
@@ -206,6 +206,12 @@ public sealed class PayrollImportService(AttendanceOperation operation, IPayroll
             grants.Where(x => x.IsEffectiveAt(checkedAt)).ToArray(), permission))) throw AttendanceOperation.Denied();
         await operation.RequireAllPermissionAsync(actor, PayrollSalaryPermissions.Read, ct);
         if (write) await operation.RequireAllPermissionAsync(actor, PayrollSalaryPermissions.Request, ct);
+        // Compensation grants belong to a different permission family. Recheck their expiry
+        // after the awaited salary checks as well, including the post-save disclosure boundary.
+        if (!await authorization.IsCurrentAdministratorAsync(actor.Identity, clock.GetUtcNow(), ct) ||
+            permissions.Any(permission => !AccessPermissionEvaluator.HasAllScope(actor.Identity,
+                grants.Where(x => x.IsEffectiveAt(clock.GetUtcNow())).ToArray(), permission)))
+            throw AttendanceOperation.Denied();
     }
     private async Task<PayrollSalaryImport> FindAsync(Guid id, bool tracked, CancellationToken ct) =>
         await repository.FindAsync(id, tracked, ct) ?? throw AttendanceOperation.Missing("salary_import_not_found");
@@ -237,14 +243,15 @@ public sealed class PayrollImportService(AttendanceOperation operation, IPayroll
         Enum.TryParse<T>(Value(values, key), true, out var result) && Enum.IsDefined(result) ? result : throw Bad("salary_import_enum_" + key);
     private static bool Bool(IReadOnlyDictionary<string, string> values, string key) =>
         bool.TryParse(Value(values, key), out var result) ? result : throw Bad("salary_import_boolean_" + key);
-    private static DateOnly Date(IReadOnlyDictionary<string, string> values, string key, string fileName)
+    private static DateOnly Date(IReadOnlyDictionary<string, string> values, string key, string fileName, bool uses1904Dates)
     {
         var value = Value(values, key);
         if (DateOnly.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var result)) return result;
         // Excel serial dates are accepted only for OpenXML sources and whole business dates.
         if (fileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase) &&
-            int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var serial) && serial is > 60 and < 2958466)
-            return DateOnly.FromDateTime(DateTime.FromOADate(serial));
+            int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var serial) &&
+            serial >= (uses1904Dates ? 0 : 61) && serial < (uses1904Dates ? 2957004 : 2958466))
+            return DateOnly.FromDateTime(DateTime.FromOADate(serial + (uses1904Dates ? 1462 : 0)));
         throw Bad("salary_import_date_" + key);
     }
     private static AuthenticationFailure Bad(string code) => AttendanceOperation.Invalid(code);

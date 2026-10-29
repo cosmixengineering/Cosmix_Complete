@@ -236,6 +236,8 @@ public sealed class PayrollAccountingService(
             throw new InvalidOperationException($"Submitted credit account '{request.CreditAccountCode}' does not match approved posting profile payable account '{creditAccount}'. Direct account bypass is prohibited.");
         }
 
+        var entriesToPost = new List<PayrollJournalEntry>();
+
         // 1. Primary salary accrual entry: Credit Net Salaries Payable (2010) with TotalNetAmount
         var primaryEntry = new PayrollJournalEntry(
             obligation.Id,
@@ -252,154 +254,153 @@ public sealed class PayrollAccountingService(
         {
             primaryEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-SALARY-{obligation.Id:N}");
         }
-
-        await repository.AddJournalEntryAsync(primaryEntry, ct);
+        entriesToPost.Add(primaryEntry);
 
         // 2. Deduction postings: Allocate gross salary expense to deduction clearing / payable accounts
         var totalDeductions = obligation.TotalGrossAmount - obligation.TotalNetAmount;
         if (totalDeductions > 0)
         {
+            var batchMonth = new DateOnly(batch.PeriodStart.Year, batch.PeriodStart.Month, 1);
+            var approvedContributions = batchMonth != DateOnly.MinValue
+                ? await repository.GetApprovedStatutoryContributionsForMonthAsync(batchMonth, ct)
+                : [];
+
+            var expectedDeductions = new List<(string DebitAccount, string CreditAccount, decimal Amount, string Description, Guid? ContributionId, string? Scheme)>();
+
+            var eobiContribution = approvedContributions.FirstOrDefault(c => c.Scheme == StatutoryScheme.EOBI);
+            if (eobiContribution != null && eobiContribution.EmployeeContributionAmount > 0)
+            {
+                var eobiCreditAccount = profileRules.Statutory.FirstOrDefault(s => s.Scheme == StatutoryScheme.EOBI)?.PayableAccountCode
+                    ?? (!string.IsNullOrWhiteSpace(eobiContribution.PayableAccountCode) ? eobiContribution.PayableAccountCode : null);
+
+                if (string.IsNullOrWhiteSpace(eobiCreditAccount))
+                {
+                    throw new InvalidOperationException("EOBI deduction credit account mapping is missing from approved posting profile.");
+                }
+
+                expectedDeductions.Add((debitAccount, eobiCreditAccount, eobiContribution.EmployeeContributionAmount, $"Employee EOBI deduction for {batchMonth:yyyy-MM}", eobiContribution.Id, "EOBI"));
+            }
+
+            var ssContribution = approvedContributions.FirstOrDefault(c => c.Scheme == StatutoryScheme.PESSI || c.Scheme == StatutoryScheme.SESSI);
+            if (ssContribution != null && ssContribution.EmployeeContributionAmount > 0)
+            {
+                var ssCreditAccount = profileRules.Statutory.FirstOrDefault(s => s.Scheme == ssContribution.Scheme)?.PayableAccountCode
+                    ?? (!string.IsNullOrWhiteSpace(ssContribution.PayableAccountCode) ? ssContribution.PayableAccountCode : null);
+
+                if (string.IsNullOrWhiteSpace(ssCreditAccount))
+                {
+                    throw new InvalidOperationException("Social Security deduction credit account mapping is missing from approved posting profile.");
+                }
+
+                expectedDeductions.Add((debitAccount, ssCreditAccount, ssContribution.EmployeeContributionAmount, $"Employee Social Security deduction for {batchMonth:yyyy-MM}", ssContribution.Id, ssContribution.Scheme.ToString()));
+            }
+
+            var batchLines = await repository.GetBatchLinesAsync(obligation.BatchId, ct);
+            var loanDeductionAmount = batchLines
+                .Where(l => l.Component == PayrollComponentKind.LoanRepayment)
+                .Sum(l => l.Amount < 0 ? -l.Amount : l.Amount);
+
+            if (loanDeductionAmount > 0)
+            {
+                var loanCreditAccount = profileRules.Deductions.FirstOrDefault(d => d.Component == "LoanRepayment")?.CreditAccountCode
+                    ?? "1050";
+
+                if (string.IsNullOrWhiteSpace(loanCreditAccount))
+                {
+                    throw new InvalidOperationException("Staff loan deduction credit account mapping is missing from approved posting profile.");
+                }
+
+                expectedDeductions.Add((debitAccount, loanCreditAccount, loanDeductionAmount, $"Staff loan principal recoveries for {batchMonth:yyyy-MM}", null, null));
+            }
+
+            var expectedSum = expectedDeductions.Sum(d => d.Amount);
+            var diff = totalDeductions - expectedSum;
+            if (Math.Abs(diff) > 0.01m)
+            {
+                throw new InvalidOperationException($"Payroll deductions do not reconcile with gross minus net. Unreconciled difference: {diff}. Missing approved statutory contributions or loan recovery line mapping.");
+            }
+
             if (request.Deductions != null && request.Deductions.Count > 0)
             {
-                var explicitSum = request.Deductions.Sum(d => d.Amount);
-                if (Math.Abs(explicitSum - totalDeductions) > 0.01m)
+                var distinctCreditAccounts = request.Deductions.Select(d => d.CreditAccountCode).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+                if (distinctCreditAccounts != request.Deductions.Count)
                 {
-                    throw new InvalidOperationException($"Explicit deduction items total ({explicitSum}) does not reconcile with obligation deduction total ({totalDeductions}).");
+                    throw new InvalidOperationException("Duplicate deduction credit accounts detected. Duplicate financial effects are prohibited.");
+                }
+
+                if (request.Deductions.Count != expectedDeductions.Count)
+                {
+                    throw new InvalidOperationException($"Submitted deduction items count ({request.Deductions.Count}) does not match expected approved frozen deduction components count ({expectedDeductions.Count}).");
                 }
 
                 foreach (var d in request.Deductions)
                 {
-                    if (d.Amount > 0)
+                    if (!string.Equals(d.DebitAccountCode, debitAccount, StringComparison.OrdinalIgnoreCase))
                     {
-                        var deductionEntry = new PayrollJournalEntry(
-                            obligation.Id,
-                            JournalEntryKind.SalaryAccrual,
-                            d.DebitAccountCode,
-                            d.CreditAccountCode,
-                            d.Amount,
-                            obligation.Currency,
-                            d.Description,
-                            actorUserId,
-                            now);
-                        if (request.PostingDate.HasValue && postingPeriod != null)
-                        {
-                            deductionEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-DED-{obligation.Id:N}-{Guid.NewGuid():N}");
-                        }
-                        await repository.AddJournalEntryAsync(deductionEntry, ct);
+                        throw new InvalidOperationException($"Unauthorized deduction debit account substitution '{d.DebitAccountCode}'. Must match approved salary expense account '{debitAccount}'.");
                     }
+
+                    var expectedMatch = expectedDeductions.FirstOrDefault(e => string.Equals(e.CreditAccount, d.CreditAccountCode, StringComparison.OrdinalIgnoreCase));
+                    if (expectedMatch.CreditAccount == null)
+                    {
+                        throw new InvalidOperationException($"Unauthorized or unknown deduction credit account '{d.CreditAccountCode}'. Account does not match any approved frozen deduction component.");
+                    }
+
+                    if (Math.Abs(d.Amount - expectedMatch.Amount) > 0.01m)
+                    {
+                        throw new InvalidOperationException($"Deduction amount '{d.Amount}' for account '{d.CreditAccountCode}' does not reconcile with approved frozen payroll component amount '{expectedMatch.Amount}'.");
+                    }
+
+                    var deductionEntry = new PayrollJournalEntry(
+                        obligation.Id,
+                        JournalEntryKind.SalaryAccrual,
+                        debitAccount,
+                        expectedMatch.CreditAccount,
+                        d.Amount,
+                        obligation.Currency,
+                        d.Description ?? expectedMatch.Description,
+                        actorUserId,
+                        now,
+                        expectedMatch.ContributionId,
+                        expectedMatch.Scheme);
+
+                    if (request.PostingDate.HasValue && postingPeriod != null)
+                    {
+                        deductionEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-DED-{obligation.Id:N}-{expectedMatch.CreditAccount}");
+                    }
+                    entriesToPost.Add(deductionEntry);
                 }
             }
             else
             {
-                var batchMonth = new DateOnly(batch.PeriodStart.Year, batch.PeriodStart.Month, 1);
-
-                var approvedContributions = batchMonth != DateOnly.MinValue
-                    ? await repository.GetApprovedStatutoryContributionsForMonthAsync(batchMonth, ct)
-                    : [];
-
-                decimal resolvedDeductions = 0m;
-
-                var eobiContribution = approvedContributions.FirstOrDefault(c => c.Scheme == StatutoryScheme.EOBI);
-                if (eobiContribution != null && eobiContribution.EmployeeContributionAmount > 0)
+                foreach (var item in expectedDeductions)
                 {
-                    var eobiCreditAccount = profileRules.Statutory.FirstOrDefault(s => s.Scheme == StatutoryScheme.EOBI)?.PayableAccountCode
-                        ?? (!string.IsNullOrWhiteSpace(eobiContribution.PayableAccountCode) ? eobiContribution.PayableAccountCode : null);
-
-                    if (string.IsNullOrWhiteSpace(eobiCreditAccount))
-                    {
-                        throw new InvalidOperationException("EOBI deduction credit account mapping is missing from approved posting profile.");
-                    }
-
-                    var eobiEntry = new PayrollJournalEntry(
+                    var deductionEntry = new PayrollJournalEntry(
                         obligation.Id,
                         JournalEntryKind.SalaryAccrual,
-                        debitAccount,
-                        eobiCreditAccount,
-                        eobiContribution.EmployeeContributionAmount,
+                        item.DebitAccount,
+                        item.CreditAccount,
+                        item.Amount,
                         obligation.Currency,
-                        $"Employee EOBI deduction for {batchMonth:yyyy-MM}",
+                        item.Description,
                         actorUserId,
                         now,
-                        eobiContribution.Id,
-                        "EOBI");
+                        item.ContributionId,
+                        item.Scheme);
+
                     if (request.PostingDate.HasValue && postingPeriod != null)
                     {
-                        eobiEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-EOBI-{obligation.Id:N}");
+                        var keySuffix = item.Scheme ?? item.CreditAccount;
+                        deductionEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-{keySuffix}-{obligation.Id:N}");
                     }
-                    await repository.AddJournalEntryAsync(eobiEntry, ct);
-                    resolvedDeductions += eobiContribution.EmployeeContributionAmount;
-                }
-
-                var ssContribution = approvedContributions.FirstOrDefault(c => c.Scheme == StatutoryScheme.PESSI || c.Scheme == StatutoryScheme.SESSI);
-                if (ssContribution != null && ssContribution.EmployeeContributionAmount > 0)
-                {
-                    var ssCreditAccount = profileRules.Statutory.FirstOrDefault(s => s.Scheme == ssContribution.Scheme)?.PayableAccountCode
-                        ?? (!string.IsNullOrWhiteSpace(ssContribution.PayableAccountCode) ? ssContribution.PayableAccountCode : null);
-
-                    if (string.IsNullOrWhiteSpace(ssCreditAccount))
-                    {
-                        throw new InvalidOperationException("Social Security deduction credit account mapping is missing from approved posting profile.");
-                    }
-
-                    var ssEntry = new PayrollJournalEntry(
-                        obligation.Id,
-                        JournalEntryKind.SalaryAccrual,
-                        debitAccount,
-                        ssCreditAccount,
-                        ssContribution.EmployeeContributionAmount,
-                        obligation.Currency,
-                        $"Employee Social Security deduction for {batchMonth:yyyy-MM}",
-                        actorUserId,
-                        now,
-                        ssContribution.Id,
-                        ssContribution.Scheme.ToString());
-                    if (request.PostingDate.HasValue && postingPeriod != null)
-                    {
-                        ssEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-SS-{obligation.Id:N}");
-                    }
-                    await repository.AddJournalEntryAsync(ssEntry, ct);
-                    resolvedDeductions += ssContribution.EmployeeContributionAmount;
-                }
-
-                var batchLines = await repository.GetBatchLinesAsync(obligation.BatchId, ct);
-                var loanDeductionAmount = batchLines
-                    .Where(l => l.Component == PayrollComponentKind.LoanRepayment)
-                    .Sum(l => l.Amount < 0 ? -l.Amount : l.Amount);
-
-                if (loanDeductionAmount > 0)
-                {
-                    var loanCreditAccount = profileRules?.Deductions.FirstOrDefault(d => d.Component == "LoanRepayment")?.CreditAccountCode
-                        ?? "1050";
-
-                    if (string.IsNullOrWhiteSpace(loanCreditAccount))
-                    {
-                        throw new InvalidOperationException("Staff loan deduction credit account mapping is missing.");
-                    }
-
-                    var loanEntry = new PayrollJournalEntry(
-                        obligation.Id,
-                        JournalEntryKind.SalaryAccrual,
-                        debitAccount,
-                        loanCreditAccount,
-                        loanDeductionAmount,
-                        obligation.Currency,
-                        $"Staff loan principal recoveries for {batchMonth:yyyy-MM}",
-                        actorUserId,
-                        now);
-                    if (request.PostingDate.HasValue && postingPeriod != null)
-                    {
-                        loanEntry.BindPosting(request.PostingDate.Value, postingPeriod.Id, postingProfile?.Id, $"ACCRUAL-LOAN-{obligation.Id:N}");
-                    }
-                    await repository.AddJournalEntryAsync(loanEntry, ct);
-                    resolvedDeductions += loanDeductionAmount;
-                }
-
-                var remainingDeductions = totalDeductions - resolvedDeductions;
-                if (Math.Abs(remainingDeductions) > 0.01m)
-                {
-                    throw new InvalidOperationException($"Payroll deductions do not reconcile with gross minus net. Unreconciled difference: {remainingDeductions}. Missing approved statutory contributions or loan recovery line mapping.");
+                    entriesToPost.Add(deductionEntry);
                 }
             }
+        }
+
+        foreach (var entry in entriesToPost)
+        {
+            await repository.AddJournalEntryAsync(entry, ct);
         }
 
         await repository.SaveChangesAsync(ct);
@@ -434,14 +435,19 @@ public sealed class PayrollAccountingService(
             throw new InvalidOperationException("Statutory contribution has already been posted to accounting.");
         }
 
-        if (contribution.ObligationId.HasValue && contribution.ObligationId.Value != obligation.Id)
+        if (!contribution.ObligationId.HasValue)
+        {
+            throw new InvalidOperationException("Statutory contribution must be explicitly linked to an approved payroll obligation (ObligationId). Silent binding during posting is prohibited.");
+        }
+
+        if (contribution.ObligationId.Value != obligation.Id)
         {
             throw new InvalidOperationException($"Statutory contribution is linked to obligation {contribution.ObligationId.Value}, but request specified obligation {obligation.Id}. Mismatched obligation linking is prohibited.");
         }
 
-        if (!contribution.ObligationId.HasValue)
+        if (contribution.ApprovedByUserId == contribution.CreatedByUserId)
         {
-            contribution.BindObligation(obligation.Id);
+            throw new InvalidOperationException("Statutory contribution requires second-person approval before posting.");
         }
 
         var existingEntries = await repository.GetJournalEntriesForObligationAsync(obligation.Id, ct);
@@ -683,7 +689,7 @@ public sealed class PayrollAccountingService(
         }
         var creditAcc = request.CreditAccountCode;
 
-        await financeSetupService.RequireAccountAsync(creditAcc, ct, PayrollAccountKind.Asset, PayrollAccountKind.Bank);
+        await financeSetupService.RequireDisbursementAccountAsync(creditAcc, ct);
         await financeSetupService.RequireAccountAsync(debitAcc, ct, PayrollAccountKind.Liability);
 
         var period = await financeSetupService.RequirePeriodAsync(request.PostingDate.Value, obligation.Currency, ct);

@@ -87,7 +87,7 @@ function AllowancesContent() {
 
   // Pre-fetch count stats for executive KPI strip
   const policiesQuery = useFinanceQuery(
-    '/hr/allowance-policies?page=1&pageSize=1',
+    '/hr/allowance-policies?page=1&pageSize=25',
     policyPage,
     access.can(permissions.policy),
   );
@@ -100,7 +100,7 @@ function AllowancesContent() {
         to: initialRange.to,
         state: 0, // Pending
         page: 1,
-        pageSize: 1,
+        pageSize: 25,
       }),
     allowancePage,
     access.can(permissions.review),
@@ -123,8 +123,7 @@ function AllowancesContent() {
             <h1 className="allowance-main-title">Overtime & Allowances</h1>
           </div>
           <p className="allowance-subtitle">
-            Audit allowance intake claims, configure compensation policies, and process settlement
-            disbursements.
+            Review employee allowance claims, manage policies and follow outstation requests.
           </p>
         </div>
 
@@ -133,8 +132,8 @@ function AllowancesContent() {
             type="button"
             className="btn-alw-secondary"
             onClick={() => {
-              void policiesQuery.refetch();
-              void pendingReviewQuery.refetch();
+              if (access.can(permissions.policy)) void policiesQuery.refetch();
+              if (access.can(permissions.review)) void pendingReviewQuery.refetch();
             }}
             title="Refresh statistics and active views"
           >
@@ -151,9 +150,17 @@ function AllowancesContent() {
             <ShieldCheck size={20} />
           </div>
           <div className="alw-kpi-content">
-            <span className="alw-kpi-label">Active Policies</span>
-            <div className="alw-kpi-value">{policiesQuery.data?.items.length ?? 0} Defined</div>
-            <span className="alw-kpi-sub">Governing duty compensation</span>
+            <span className="alw-kpi-label">Policy records</span>
+            <div className="alw-kpi-value">
+              {!access.can(permissions.policy)
+                ? 'Restricted'
+                : policiesQuery.isError
+                  ? 'Unavailable'
+                  : policiesQuery.data
+                    ? `${policiesQuery.data.items.length}${policiesQuery.data.hasMore ? '+' : ''}`
+                    : 'Loading…'}
+            </div>
+            <span className="alw-kpi-sub">First page; + indicates more records</span>
           </div>
         </div>
 
@@ -164,9 +171,15 @@ function AllowancesContent() {
           <div className="alw-kpi-content">
             <span className="alw-kpi-label">Pending Review</span>
             <div className="alw-kpi-value" style={{ color: '#b45309' }}>
-              {pendingReviewQuery.data?.items.length ?? 0} Claims
+              {!access.can(permissions.review)
+                ? 'Restricted'
+                : pendingReviewQuery.isError
+                  ? 'Unavailable'
+                  : pendingReviewQuery.data
+                    ? `${pendingReviewQuery.data.items.length}${pendingReviewQuery.data.hasMore ? '+' : ''}`
+                    : 'Loading…'}
             </div>
-            <span className="alw-kpi-sub">Awaiting HR authorization</span>
+            <span className="alw-kpi-sub">Last 30 days; + indicates more records</span>
           </div>
         </div>
 
@@ -177,7 +190,7 @@ function AllowancesContent() {
           <div className="alw-kpi-content">
             <span className="alw-kpi-label">Settlement Pipeline</span>
             <div className="alw-kpi-value" style={{ color: '#047857' }}>
-              PKR Ready
+              Record-specific
             </div>
             <span className="alw-kpi-sub">External reference reconciliation</span>
           </div>
@@ -190,7 +203,7 @@ function AllowancesContent() {
           <div className="alw-kpi-content">
             <span className="alw-kpi-label">Outstation Travel</span>
             <div className="alw-kpi-value" style={{ color: '#7c3aed' }}>
-              Active
+              {canDeployment(access.user, 'read') ? 'Available' : 'Restricted'}
             </div>
             <span className="alw-kpi-sub">Deployment vouchers & claims</span>
           </div>

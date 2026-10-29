@@ -23,7 +23,7 @@ public sealed class NotificationService(ICurrentAuthentication current, IAccessM
             await notifications.SaveChangesAsync(token);
             return new PagedResult<NotificationResponse>(result.Items.Select(Map).ToArray(),
                 result.TotalCount, result.Page, result.PageSize);
-        }, ct);
+        }, ct, readOnly: true);
     }
 
     public Task<NotificationResponse> GetAsync(Guid id, AuthRequestContext context, CancellationToken ct)
@@ -35,7 +35,7 @@ public sealed class NotificationService(ICurrentAuthentication current, IAccessM
             Audit(actor, "notification.read", id.ToString(), context);
             await notifications.SaveChangesAsync(token);
             return Map(item);
-        }, ct);
+        }, ct, readOnly: true);
     }
 
     public Task<NotificationReadResponse> MarkReadAsync(Guid id, MarkNotificationReadRequest request,
@@ -59,11 +59,14 @@ public sealed class NotificationService(ICurrentAuthentication current, IAccessM
         }, ct);
     }
 
-    private Task<T> AuthorizedAsync<T>(Func<AuthenticatedAccount, CancellationToken, Task<T>> action, CancellationToken ct)
+    private Task<T> AuthorizedAsync<T>(Func<AuthenticatedAccount, CancellationToken, Task<T>> action, CancellationToken ct,
+        bool readOnly = false)
     {
         var actor = current.Require();
         if (actor.Client == SessionClient.Web && !actor.MfaSatisfied) throw new AuthenticationFailure("access_denied", 403);
-        return transactions.InTransactionAsync(async token =>
+        Func<Func<CancellationToken, Task<T>>, CancellationToken, Task<T>> transaction = readOnly
+            ? (work, token) => transactions.InReadTransactionAsync(work, token) : transactions.InTransactionAsync;
+        return transaction(async token =>
         {
             if (!await notifications.IsCurrentSessionAsync(actor, token))
                 throw new AuthenticationFailure("invalid_authentication", 401);

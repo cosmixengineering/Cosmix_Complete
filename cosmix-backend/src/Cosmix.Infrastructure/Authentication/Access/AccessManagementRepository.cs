@@ -20,29 +20,43 @@ namespace Cosmix.Infrastructure.Authentication.Access;
 public sealed class AccessManagementRepository(CosmixDbContext db, MobileAuthenticationOptions options)
     : IAccessManagementRepository
 {
-    public async Task<T> InTransactionAsync<T>(Func<CancellationToken, Task<T>> action,
-        CancellationToken cancellationToken)
+    public Task<T> InTransactionAsync<T>(Func<CancellationToken, Task<T>> action,
+        CancellationToken cancellationToken) => ExecuteTransactionAsync(action, false, false, cancellationToken);
+
+    public Task<T> InReadTransactionAsync<T>(Func<CancellationToken, Task<T>> action,
+        CancellationToken cancellationToken, bool serializeReaders = false) =>
+        ExecuteTransactionAsync(action, true, serializeReaders, cancellationToken);
+
+    private async Task<T> ExecuteTransactionAsync<T>(Func<CancellationToken, Task<T>> action,
+        bool readOnly, bool serializeReaders, CancellationToken cancellationToken)
     {
         if (db.Database.CurrentTransaction is not null || db.ChangeTracker.HasChanges())
             throw new InvalidOperationException("Stage access mutations inside their own audited transaction.");
         // Authentication middleware can have tracked these accounts before this transaction began.
         db.ChangeTracker.Clear();
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        EventHandler<SavingChangesEventArgs> guard = (_, _) => RequireAuditOnlyChanges();
+        if (readOnly) db.SavingChanges += guard;
         try
         {
             await db.Database.ExecuteSqlRawAsync("""
                 DECLARE @result int;
                 EXEC @result = sys.sp_getapplock @Resource=N'cosmix:authentication',
-                    @LockMode=N'Exclusive', @LockOwner=N'Transaction', @LockTimeout=10000;
+                    @LockMode=@mode, @LockOwner=N'Transaction', @LockTimeout=10000;
                 IF @result < 0 THROW 51001, 'Authentication is temporarily busy.', 1;
-                """, cancellationToken);
+                """, [new SqlParameter("@mode", !readOnly ? "Exclusive" : serializeReaders ? "Update" : "Shared")], cancellationToken);
             var result = await action(cancellationToken);
+            if (readOnly) RequireAuditOnlyChanges();
             await transaction.CommitAsync(cancellationToken);
             return result;
         }
         catch (DbUpdateConcurrencyException)
         {
             throw new AuthenticationFailure("access_version_conflict", 409);
+        }
+        catch (DbUpdateException error) when (error.InnerException is SqlException { Number: 51016 })
+        {
+            throw new AuthenticationFailure("bank_month_closed", 409);
         }
         catch (DbUpdateException error) when (error.InnerException is SqlException { Number: 2601 or 2627 or 547 or 1205 })
         {
@@ -58,8 +72,20 @@ public sealed class AccessManagementRepository(CosmixDbContext db, MobileAuthent
         }
         finally
         {
+            if (readOnly) db.SavingChanges -= guard;
             db.ChangeTracker.Clear();
         }
+    }
+
+    private void RequireAuditOnlyChanges()
+    {
+        // Shared readers may append audit evidence, but must never upgrade to a business writer.
+        // Check every SaveChanges (including intermediate saves), not just the final tracked state.
+        db.ChangeTracker.DetectChanges();
+        if (db.ChangeTracker.Entries().Any(entry =>
+                entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted &&
+                !(entry.Entity is AuditEvent && entry.State == EntityState.Added)))
+            throw new InvalidOperationException("Audited read transactions cannot change business records.");
     }
 
     public async Task<bool> IsCurrentAdministratorAsync(AuthenticatedAccount actor, DateTimeOffset now,
@@ -76,9 +102,27 @@ public sealed class AccessManagementRepository(CosmixDbContext db, MobileAuthent
             await CurrentAdministratorQuery(actor, now, businessDate).AnyAsync(cancellationToken);
     }
 
-    internal IQueryable<Guid> CurrentAdministratorQuery(AuthenticatedAccount actor, DateTimeOffset now, DateOnly businessDate) =>
-        (from session in db.Set<UserSession>().AsNoTracking()
-         join proof in db.Set<MobileOtpChallenge>().AsNoTracking() on session.SmsOtpChallengeId equals proof.Id
+    internal IQueryable<Guid> CurrentAdministratorQuery(AuthenticatedAccount actor, DateTimeOffset now, DateOnly businessDate)
+    {
+        var sms = db.Set<MobileOtpChallenge>().AsNoTracking()
+            .Where(p => p.Purpose == "WebLogin" && p.Platform == "web" && p.RevokedAt == null &&
+                p.MaximumAttempts > 0 && p.FailedAttempts >= 0 && p.FailedAttempts < p.MaximumAttempts &&
+                p.DeviceHash.Length == 64)
+            .Select(p => new { p.Id, p.UserAccountId, p.SecurityVersion, PhoneBindingId = (Guid?)p.PhoneBindingId,
+                p.IssuedAt, p.ExpiresAt, p.ConsumedAt, Authenticator = false });
+        var totp = from p in db.Set<MfaChallenge>().AsNoTracking()
+                   join c in db.Set<MfaCredential>().AsNoTracking() on p.VerifiedCredentialId equals c.Id
+                   where p.Purpose == "WebLoginTotp" && p.RegisteredDeviceId == null && p.RevokedAt == null &&
+                         p.FailedAttempts >= 0 && p.FailedAttempts < options.MaximumOtpAttempts &&
+                         p.BrowserContextHash != null && p.BrowserContextHash.Length == 64 &&
+                         p.VerifiedAt != null && p.VerifiedAt >= p.IssuedAt && p.VerifiedAt <= p.ConsumedAt &&
+                         c.UserAccountId == p.UserAccountId && c.RevokedAt == null && c.ConfirmedAt != null && c.ConfirmedAt <= p.VerifiedAt &&
+                         ((c.Method == MfaMethod.Totp && c.LastAcceptedCounter != null) ||
+                          (c.Method == MfaMethod.RecoveryCode && c.RecoveryCodeConsumedAt == p.VerifiedAt))
+                   select new { p.Id, p.UserAccountId, p.SecurityVersion, p.PhoneBindingId,
+                       p.IssuedAt, p.ExpiresAt, p.ConsumedAt, Authenticator = true };
+        return from session in db.Set<UserSession>().AsNoTracking()
+         join proof in sms.Concat(totp) on (session.MfaChallengeId ?? session.SmsOtpChallengeId) equals (Guid?)proof.Id
          join phone in db.Set<LoginPhoneBinding>().AsNoTracking() on proof.PhoneBindingId equals phone.Id
          where session.Id == actor.SessionId && session.UserAccountId == actor.AccountId &&
                session.Client == SessionClient.Web && session.SecurityVersion == actor.SecurityVersion &&
@@ -92,22 +136,25 @@ public sealed class AccessManagementRepository(CosmixDbContext db, MobileAuthent
                session.UserAccount.Employee.ApprovedOnboardingDecisionId == session.UserAccount.ApprovalDecisionId &&
                session.UserAccount.ApprovalDecision.EmployeeId == actor.EmployeeId &&
                session.UserAccount.ApprovalDecision.Decision == OnboardingDecision.Approve &&
-               session.RegisteredDeviceId == null && session.MfaChallengeId == null &&
+               session.RegisteredDeviceId == null && session.UserAccount.AuthenticatorRequired == proof.Authenticator &&
+               ((proof.Authenticator && session.MfaChallengeId != null && session.SmsOtpChallengeId == null) ||
+                (!proof.Authenticator && session.SmsOtpChallengeId != null && session.MfaChallengeId == null)) &&
                session.UserAccount.PasswordHash != null && session.UserAccount.PasswordHashFormat != null &&
                session.UserAccount.PasswordChangedAt != null && session.UserAccount.PasswordChangedAt <= proof.IssuedAt &&
                proof.UserAccountId == actor.AccountId && proof.SecurityVersion == actor.SecurityVersion &&
-               proof.Purpose == "WebLogin" && proof.Platform == "web" && proof.RevokedAt == null &&
-               proof.FailedAttempts < proof.MaximumAttempts && proof.IssuedAt <= session.CreatedAt &&
+               proof.IssuedAt <= session.CreatedAt &&
                proof.ConsumedAt == session.CreatedAt && session.CreatedAt < proof.ExpiresAt &&
                phone.UserAccountId == actor.AccountId && phone.RevokedAt == null &&
-               phone.VerifiedAt != null && phone.VerifiedAt <= session.CreatedAt &&
+               phone.VerifiedAt != null && phone.VerifiedAt <= session.CreatedAt && phone.CreatedAt <= proof.IssuedAt &&
+               (!proof.Authenticator || phone.VerifiedAt <= proof.IssuedAt) &&
                phone.ApprovedSubmissionId == session.UserAccount.ApprovalDecision.SubmissionId &&
                ((phone.LoginPhoneChangeId == null && phone.PhoneNumber == session.UserAccount.ApprovalDecision.Submission.ApprovedLoginPhoneNumber) ||
                 (phone.LoginPhoneChangeId != null && phone.LoginPhoneChange != null &&
                  phone.LoginPhoneChange.UserAccountId == actor.AccountId && phone.LoginPhoneChange.NewPhoneNumber == phone.PhoneNumber &&
                  phone.LoginPhoneChange.CompletedAt == phone.VerifiedAt && phone.LoginPhoneChange.CompletionChallengeId != null &&
                  phone.LoginPhoneChange.SupersededAt == null && phone.LoginPhoneChange.ApprovedAt <= phone.CreatedAt))
-         select session.Id);
+         select session.Id;
+    }
 
     internal static bool HasEligibleEmploymentHistory(IEnumerable<EmployeeStatusChange> history, DateTimeOffset now)
     {

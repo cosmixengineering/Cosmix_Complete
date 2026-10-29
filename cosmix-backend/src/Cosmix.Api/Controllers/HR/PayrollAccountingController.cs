@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Cosmix.Api.Controllers.HR;
 
-[ApiController]
+[ApiController, TypeFilter(typeof(PayrollFinanceExceptionFilter))]
 [Authorize]
 [Route("api/v1/payroll-accounting")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
@@ -18,7 +18,6 @@ public sealed class PayrollAccountingController(
     private AuthRequestContext Context() => new(HttpContext.Connection.RemoteIpAddress?.ToString() ?? "", HttpContext.TraceIdentifier);
 
     [HttpGet("setup")]
-    [Authorize(Policy = "payroll.accounting.accrue")]
     [EndpointSummary("Get payroll finance setup (accounts, periods, profiles)")]
     [ProducesResponseType<PayrollFinanceSetupResponse>(200)]
     public async Task<ActionResult<PayrollFinanceSetupResponse>> GetSetup(CancellationToken ct)
@@ -33,11 +32,11 @@ public sealed class PayrollAccountingController(
     [ProducesResponseType<AccountResponse>(200)]
     public async Task<ActionResult<AccountResponse>> CreateAccount(
         AccountRequest request,
-        [FromHeader(Name = "Idempotency-Key")] string? key,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key,
         CancellationToken ct)
     {
         if (financeSetupService == null) return NotFound();
-        var idemKey = !string.IsNullOrWhiteSpace(key) ? key : HttpContext.TraceIdentifier;
+        var idemKey = key;
         return Ok(await financeSetupService.CreateAccountAsync(request, idemKey, Context(), ct));
     }
 
@@ -48,11 +47,11 @@ public sealed class PayrollAccountingController(
     public async Task<ActionResult<AccountResponse>> SetAccountStatus(
         Guid id,
         AccountStatusRequest request,
-        [FromHeader(Name = "Idempotency-Key")] string? key,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key,
         CancellationToken ct)
     {
         if (financeSetupService == null) return NotFound();
-        var idemKey = !string.IsNullOrWhiteSpace(key) ? key : HttpContext.TraceIdentifier;
+        var idemKey = key;
         return Ok(await financeSetupService.SetAccountStatusAsync(id, request, idemKey, Context(), ct));
     }
 
@@ -62,11 +61,11 @@ public sealed class PayrollAccountingController(
     [ProducesResponseType<AccountingPeriodResponse>(200)]
     public async Task<ActionResult<AccountingPeriodResponse>> CreatePeriod(
         AccountingPeriodRequest request,
-        [FromHeader(Name = "Idempotency-Key")] string? key,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key,
         CancellationToken ct)
     {
         if (financeSetupService == null) return NotFound();
-        var idemKey = !string.IsNullOrWhiteSpace(key) ? key : HttpContext.TraceIdentifier;
+        var idemKey = key;
         return Ok(await financeSetupService.CreatePeriodAsync(request, idemKey, Context(), ct));
     }
 
@@ -77,26 +76,26 @@ public sealed class PayrollAccountingController(
     public async Task<ActionResult<AccountingPeriodResponse>> ApprovePeriod(
         Guid id,
         FinancialDecisionRequest request,
-        [FromHeader(Name = "Idempotency-Key")] string? key,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key,
         CancellationToken ct)
     {
         if (financeSetupService == null) return NotFound();
-        var idemKey = !string.IsNullOrWhiteSpace(key) ? key : HttpContext.TraceIdentifier;
+        var idemKey = key;
         return Ok(await financeSetupService.DecidePeriodAsync(id, request, false, idemKey, Context(), ct));
     }
 
     [HttpPost("periods/{id:guid}/close")]
-    [Authorize(Policy = "payroll.accounting.configure")]
+    [Authorize(Policy = "payroll.accounting.configure.approve")]
     [EndpointSummary("Close an open payroll accounting period")]
     [ProducesResponseType<AccountingPeriodResponse>(200)]
     public async Task<ActionResult<AccountingPeriodResponse>> ClosePeriod(
         Guid id,
         FinancialDecisionRequest request,
-        [FromHeader(Name = "Idempotency-Key")] string? key,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key,
         CancellationToken ct)
     {
         if (financeSetupService == null) return NotFound();
-        var idemKey = !string.IsNullOrWhiteSpace(key) ? key : HttpContext.TraceIdentifier;
+        var idemKey = key;
         return Ok(await financeSetupService.DecidePeriodAsync(id, request, true, idemKey, Context(), ct));
     }
 
@@ -106,11 +105,11 @@ public sealed class PayrollAccountingController(
     [ProducesResponseType<PostingProfileResponse>(200)]
     public async Task<ActionResult<PostingProfileResponse>> CreateProfile(
         PostingProfileRequest request,
-        [FromHeader(Name = "Idempotency-Key")] string? key,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key,
         CancellationToken ct)
     {
         if (financeSetupService == null) return NotFound();
-        var idemKey = !string.IsNullOrWhiteSpace(key) ? key : HttpContext.TraceIdentifier;
+        var idemKey = key;
         return Ok(await financeSetupService.CreateProfileAsync(request, idemKey, Context(), ct));
     }
 
@@ -121,11 +120,11 @@ public sealed class PayrollAccountingController(
     public async Task<ActionResult<PostingProfileResponse>> ApproveProfile(
         Guid id,
         FinancialDecisionRequest request,
-        [FromHeader(Name = "Idempotency-Key")] string? key,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key,
         CancellationToken ct)
     {
         if (financeSetupService == null) return NotFound();
-        var idemKey = !string.IsNullOrWhiteSpace(key) ? key : HttpContext.TraceIdentifier;
+        var idemKey = key;
         return Ok(await financeSetupService.ApproveProfileAsync(id, request, idemKey, Context(), ct));
     }
 
@@ -152,27 +151,27 @@ public sealed class PayrollAccountingController(
     [Authorize(Policy = "payroll.accounting.accrue")]
     [EndpointSummary("Finalize a payroll obligation for a locked batch")]
     [ProducesResponseType<ObligationResponse>(200)]
-    public Task<ObligationResponse> FinalizeObligation(FinalizeObligationRequest request, CancellationToken ct)
+    public Task<ObligationResponse> FinalizeObligation(FinalizeObligationRequest request, [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct)
     {
-        return service.FinalizeObligationAsync(request, Context(), ct);
+        return service.FinalizeObligationAsync(request, key, Context(), ct);
     }
 
     [HttpPost("accrual-journal")]
     [Authorize(Policy = "payroll.accounting.accrue")]
     [EndpointSummary("Post salary accrual journal entry for a finalized obligation")]
     [ProducesResponseType<JournalEntryResponse>(200)]
-    public Task<JournalEntryResponse> PostAccrualJournal(PostAccrualJournalRequest request, CancellationToken ct)
+    public Task<JournalEntryResponse> PostAccrualJournal(PostAccrualJournalRequest request, [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct)
     {
-        return service.PostAccrualJournalAsync(request, Context(), ct);
+        return service.PostAccrualJournalAsync(request, key, Context(), ct);
     }
 
     [HttpPost("statutory-journal")]
     [Authorize(Policy = "payroll.accounting.accrue")]
     [EndpointSummary("Post employer statutory contribution journal entry for an obligation")]
     [ProducesResponseType<JournalEntryResponse>(200)]
-    public Task<JournalEntryResponse?> PostStatutoryJournal(PostStatutoryJournalRequest request, CancellationToken ct)
+    public Task<JournalEntryResponse?> PostStatutoryJournal(PostStatutoryJournalRequest request, [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct)
     {
-        return service.PostStatutoryJournalAsync(request, Context(), ct);
+        return service.PostStatutoryJournalAsync(request, key, Context(), ct);
     }
 
     [HttpGet("obligations/{obligationId:guid}/employees")]
@@ -186,18 +185,19 @@ public sealed class PayrollAccountingController(
     [Authorize(Policy = "payroll.accounting.payment")]
     [EndpointSummary("Record salary disbursement payment against an accrual journal")]
     [ProducesResponseType<SalaryPaymentResponse>(200)]
-    public Task<SalaryPaymentResponse> RecordPayment(RecordSalaryPaymentRequest request, CancellationToken ct)
+    public Task<SalaryPaymentResponse> RecordPayment(RecordSalaryPaymentRequest request, [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct)
     {
-        return service.RecordSalaryPaymentAsync(request, Context(), ct);
+        return service.RecordSalaryPaymentAsync(request, key, Context(), ct);
     }
 
     [HttpPost("payments/{id:guid}/confirm")]
     [Authorize(Policy = "payroll.accounting.payment.confirm")]
     [EndpointSummary("Finance confirms salary disbursement")]
     [ProducesResponseType<SalaryPaymentResponse>(200)]
-    public Task<SalaryPaymentResponse> ConfirmPayment(Guid id, CancellationToken ct)
+    public Task<SalaryPaymentResponse> ConfirmPayment(Guid id, ConfirmSalaryPaymentRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct)
     {
-        return service.ConfirmPaymentAsync(id, Context(), ct);
+        return service.ConfirmPaymentAsync(id, request, key, Context(), ct);
     }
 
     [HttpGet("obligations/{obligationId:guid}/payments")]
@@ -206,6 +206,18 @@ public sealed class PayrollAccountingController(
     [ProducesResponseType<IReadOnlyList<SalaryPaymentResponse>>(200)]
     public Task<IReadOnlyList<SalaryPaymentResponse>> GetPayments(Guid obligationId, CancellationToken ct) =>
         service.GetPaymentsForObligationAsync(obligationId, Context(), ct);
+
+    [HttpPost("payments/{id:guid}/reversal-request")]
+    [Authorize(Policy = "payroll.accounting.payment")]
+    public Task<SalaryPaymentResponse> RequestReversal(Guid id, RequestSalaryPaymentReversalRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct) =>
+        service.RequestPaymentReversalAsync(id, request, key, Context(), ct);
+
+    [HttpPost("payments/{id:guid}/reversal-approve")]
+    [Authorize(Policy = "payroll.accounting.payment.confirm")]
+    public Task<SalaryPaymentResponse> ApproveReversal(Guid id, ApproveSalaryPaymentReversalRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct) =>
+        service.ApprovePaymentReversalAsync(id, request, key, Context(), ct);
 
     [HttpGet("obligations/{obligationId:guid}/journals")]
     [Authorize(Policy = "payroll.accounting.accrue")]

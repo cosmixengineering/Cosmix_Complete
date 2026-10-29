@@ -2,6 +2,9 @@
   <ItemGroup>
     <ProjectReference Include="../Cosmix.Application/Cosmix.Application.csproj" />
     <PackageReference Include="libphonenumber-csharp" Version="9.0.40" />
+    <PackageReference Include="Otp.NET" Version="1.4.1" />
+    <!-- Pin the patched transitive SqlClient cryptography dependency. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.21" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <PrivateAssets>all</PrivateAssets>

@@ -37,7 +37,6 @@ import {
   useVehicleNavigation,
 } from '../components/vehicle-management/VehicleManagementShared';
 import { vehicleManagementPermissions } from '../api/vehicle-management';
-import { LiveFuelRatesWidget } from '../components/vehicle-management/LiveFuelRatesWidget';
 import '@/styles/vehicle-management.css';
 import {
   commuteDistance,
@@ -159,10 +158,10 @@ function VehiclesManagementWorkspace() {
             type="button"
             className="btn-veh-secondary"
             onClick={() => {
-              void vehiclesCountQuery.refetch();
-              void pendingTripsQuery.refetch();
-              void pendingFuelQuery.refetch();
-              void custodyHistoryQuery.refetch();
+              if (canManage) void vehiclesCountQuery.refetch();
+              if (canTrips) void pendingTripsQuery.refetch();
+              if (canFuel) void pendingFuelQuery.refetch();
+              if (canCustody || canManage) void custodyHistoryQuery.refetch();
             }}
             title="Refresh fleet statistics"
           >
@@ -180,7 +179,13 @@ function VehiclesManagementWorkspace() {
           </div>
           <div className="veh-kpi-content">
             <span className="veh-kpi-label">Registered Fleet</span>
-            <div className="veh-kpi-value">{vehiclesCountQuery.data?.length ?? 0} Vehicles</div>
+            <div className="veh-kpi-value">
+              {!canManage
+                ? 'Restricted'
+                : vehiclesCountQuery.isError
+                  ? 'Unavailable'
+                  : (vehiclesCountQuery.data?.length ?? 'Loading…')}
+            </div>
             <span className="veh-kpi-sub">Total company pool & assigned</span>
           </div>
         </div>
@@ -192,7 +197,11 @@ function VehiclesManagementWorkspace() {
           <div className="veh-kpi-content">
             <span className="veh-kpi-label">Pending Trips</span>
             <div className="veh-kpi-value" style={{ color: '#b45309' }}>
-              {pendingTripsQuery.data?.items.length ?? 0} Trips
+              {!canTrips
+                ? 'Restricted'
+                : pendingTripsQuery.isError
+                  ? 'Unavailable'
+                  : (pendingTripsQuery.data?.totalCount ?? 'Loading…')}
             </div>
             <span className="veh-kpi-sub">Awaiting verification & approval</span>
           </div>
@@ -205,7 +214,11 @@ function VehiclesManagementWorkspace() {
           <div className="veh-kpi-content">
             <span className="veh-kpi-label">Fuel Claims</span>
             <div className="veh-kpi-value" style={{ color: '#047857' }}>
-              {pendingFuelQuery.data?.items.length ?? 0} Pending
+              {!canFuel
+                ? 'Restricted'
+                : pendingFuelQuery.isError
+                  ? 'Unavailable'
+                  : (pendingFuelQuery.data?.totalCount ?? 'Loading…')}
             </div>
             <span className="veh-kpi-sub">Reimbursement settlement queue</span>
           </div>
@@ -780,7 +793,10 @@ function VehicleFuel({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       {/* Live OGRA Fuel Rates & Calculator */}
-      <LiveFuelRatesWidget />
+      <p>
+        Fuel amounts are calculated by the backend from the applicable approved policy and retained
+        trip evidence.
+      </p>
 
       {/* Collapsible Baseline Commute Distance Form */}
       {canCommute && (

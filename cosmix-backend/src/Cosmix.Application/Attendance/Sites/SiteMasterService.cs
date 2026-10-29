@@ -13,7 +13,7 @@ public sealed class SiteMasterService(ISiteRepository repository, IOrganizationR
         {
             OrganizationOperation.Validate(request);
             return repository.ListAsync(request, token);
-        }, ct);
+        }, ct, concurrentRead: true);
 
     public Task<SiteResponse> GetAsync(Guid id, CancellationToken ct) =>
         operation.ReadAsync(Permissions.SitesRead, token => FindAsync(id, token), ct);

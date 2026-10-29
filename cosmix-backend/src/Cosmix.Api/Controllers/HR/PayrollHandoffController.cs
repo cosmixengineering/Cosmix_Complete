@@ -2,12 +2,14 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Cosmix.Application.Authentication;
 using Cosmix.Application.HR.PayrollHandoff;
+using Cosmix.Application.HR.PayrollSalary;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cosmix.Api.Controllers.HR;
 
 [ApiController, Authorize, Route("api/v1/payroll-handoff")]
+[TypeFilter(typeof(PayrollFinanceExceptionFilter))]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 [ProducesResponseType<ProblemDetails>(400), ProducesResponseType<ProblemDetails>(401), ProducesResponseType<ProblemDetails>(403)]
 [ProducesResponseType<ProblemDetails>(404), ProducesResponseType<ProblemDetails>(409), ProducesResponseType<ProblemDetails>(503)]
@@ -27,13 +29,13 @@ public sealed class PayrollHandoffController(PayrollHandoffService service) : Co
 
     [HttpGet("batches/{id:guid}"), ProducesResponseType<PayrollHandoffBatchDetail>(200)]
     [EndpointSummary("Read one payroll handoff batch and its frozen lines")]
-    [EndpointDescription("attendance.payroll-handoff.read with All scope. Returns the prepared or locked batch, every frozen line with its source trace identity and any recorded Accounts processing evidence; private calculation references and salaries are never exposed.")]
+    [EndpointDescription("attendance.payroll-handoff.read with All scope. Returns the prepared or locked batch, every frozen line with its source trace identity and any recorded Accounts processing evidence; private calculation references are never exposed. Complete salary runs include frozen salary amounts and per-employee totals under this sensitive permission.")]
     public Task<PayrollHandoffBatchDetail> Detail(Guid id, CancellationToken ct) => service.DetailAsync(id, Context(), ct);
 
     [HttpGet("batches/{id:guid}/bank-advice"), Produces("text/csv")]
     [ProducesResponseType<FileContentResult>(200)]
     [EndpointSummary("Export a bank advice CSV for one ready payroll handoff batch")]
-    [EndpointDescription("attendance.payroll-handoff.read with All scope. The batch must be locked or already carry Accounts processing evidence, otherwise it conflicts. One row per employee with identity, per-component totals, the signed net amount, currency, batch reference and period; the model stores no bank account numbers, so no account details are invented. CSV only, never PDF.")]
+    [EndpointDescription("attendance.payroll-handoff.read with All scope. The batch must be a complete salary run independently approved by HR and locked by Management, otherwise it conflicts. One row per employee with identity, per-component totals, the signed net amount, currency, batch reference and period; the model stores no bank account numbers, so no account details are invented. CSV only, never PDF.")]
     public async Task<IActionResult> BankAdvice(Guid id, CancellationToken ct)
     {
         var advice = await service.BankAdviceAsync(id, Context(), ct);
@@ -49,16 +51,36 @@ public sealed class PayrollHandoffController(PayrollHandoffService service) : Co
         [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct) =>
         service.PrepareAsync(request, key, Context(), ct);
 
+    [HttpPost("batches/{id:guid}/hr-review"), RequestSizeLimit(8192), ProducesResponseType<PayrollHandoffBatchDetail>(200)]
+    [EndpointSummary("Independently approve or reject a prepared salary run as HR")]
+    [EndpointDescription("attendance.payroll-handoff.hr-review with All scope, current web MFA/CSRF, Idempotency-Key, expectedVersion, decision and reason. HR must differ from the preparer and cannot approve their own salary. Approval verifies the frozen salary evidence before Management may lock the run.")]
+    public Task<PayrollHandoffBatchDetail> HrReview(Guid id, PayrollSalaryReviewRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct) =>
+        service.HrReviewAsync(id, request, key, Context(), ct);
+
+    [HttpPost("batches/{id:guid}/cancel"), RequestSizeLimit(8192), ProducesResponseType<PayrollHandoffBatchDetail>(200)]
+    [EndpointSummary("Cancel an unreviewed salary run while preserving its history")]
+    public Task<PayrollHandoffBatchDetail> Cancel(Guid id, LockPayrollHandoffRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct) =>
+        service.CancelAsync(id, request, key, Context(), ct);
+
+    [HttpPost("batches/{id:guid}/return-for-correction"), RequestSizeLimit(8192), ProducesResponseType<PayrollHandoffBatchDetail>(200)]
+    [EndpointSummary("Return an HR-approved, unlocked run for correction and fresh preparation")]
+    [EndpointDescription("Requires current HR-review authority, an independent actor, reason, exact version and retry key. Retains original approval and frozen salary. A returned run cannot be locked or paid; prepare a new run after correcting the authoritative sources.")]
+    public Task<PayrollHandoffBatchDetail> ReturnForCorrection(Guid id, LockPayrollHandoffRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct) =>
+        service.ReturnForCorrectionAsync(id, request, key, Context(), ct);
+
     [HttpPost("batches/{id:guid}/lock"), RequestSizeLimit(8192), ProducesResponseType<PayrollHandoffBatchDetail>(200)]
     [EndpointSummary("Approve and freeze a prepared payroll handoff batch")]
-    [EndpointDescription("attendance.payroll-handoff.lock with All scope, web MFA/CSRF, Idempotency-Key, expectedVersion and reason. The preparer cannot lock their own batch; the separate approval, the frozen batch and every allowance settlement scheduling share one transaction. An already locked batch, a version conflict or an allowance claim that is no longer unsettled conflicts. Locking never disburses money and never records Accounts processing.")]
+    [EndpointDescription("attendance.payroll-handoff.lock with All scope, web MFA/CSRF, Idempotency-Key, expectedVersion and reason. A complete salary run must already be HR-approved. Management must differ from both the preparer and the HR reviewer and cannot approve their own salary; the separate approval, the frozen batch and every allowance settlement scheduling share one transaction. An already locked batch, a version conflict or an allowance claim that is no longer unsettled conflicts. Locking never disburses money and never records Accounts processing.")]
     public Task<PayrollHandoffBatchDetail> Lock(Guid id, LockPayrollHandoffRequest request,
         [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct) =>
         service.LockAsync(id, request, key, Context(), ct);
 
     [HttpPost("batches/{id:guid}/processing"), RequestSizeLimit(8192), ProducesResponseType<PayrollHandoffBatchDetail>(200)]
     [EndpointSummary("Record Accounts processing evidence for a locked payroll handoff batch")]
-    [EndpointDescription("attendance.payroll-handoff.process with All scope, web MFA/CSRF, Idempotency-Key, externalProcessingReference and reason. Only the actor who approved the lock may record processing, the batch must already be locked, and the same external reference cannot be recorded twice for a batch. This appends an immutable handoff processing record, not confirmed posting, settlement or payment. It never changes a loan balance, reopens a line or writes the finance general ledger.")]
+    [EndpointDescription("attendance.payroll-handoff.process with All scope, web MFA/CSRF, Idempotency-Key, externalProcessingReference and reason. Finance must differ from the preparer, HR reviewer and Management approver. The complete salary must already be locked, and the same external reference cannot be recorded twice for a batch. This appends an immutable handoff processing record; it never changes a loan balance, reopens a line or writes the finance general ledger.")]
     public Task<PayrollHandoffBatchDetail> Processing(Guid id, ProcessPayrollHandoffRequest request,
         [FromHeader(Name = "Idempotency-Key"), Required] string key, CancellationToken ct) =>
         service.ProcessingAsync(id, request, key, Context(), ct);

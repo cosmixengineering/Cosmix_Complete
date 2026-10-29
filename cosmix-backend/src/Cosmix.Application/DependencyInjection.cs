@@ -94,6 +94,14 @@ public static class DependencyInjection
         services.AddAllowancesApplication();
         services.AddScoped<Cosmix.Application.HR.Allowances.DeploymentService>();
         services.AddScoped<PayrollHandoffService>();
+        services.AddScoped<Cosmix.Application.HR.PayrollSalary.PayrollSalaryService>();
+        services.AddScoped<Cosmix.Application.HR.PayrollSalary.PayrollSalaryProjection>();
+        services.AddScoped<Cosmix.Application.HR.PayrollSalary.IPayrollFrozenBatchReader, Cosmix.Application.HR.PayrollSalary.PayrollFrozenBatchReader>();
+        services.AddScoped<Cosmix.Application.HR.PayrollImports.PayrollImportService>();
+        services.AddScoped<Cosmix.Application.HR.Payslips.PayslipService>();
+        services.AddScoped<Cosmix.Application.HR.PayrollAccounting.PayrollBankExportService>();
+        services.AddScoped<Cosmix.Application.HR.PayrollAccounting.PayrollSettlementReader>();
+        services.AddScoped<Cosmix.Application.HR.PayrollAccounting.PayrollSettlementReportService>();
         services.AddAdvancesLoansApplication();
         services.AddVehicleFuelApplication();
         services.AddAdvancedAttendancePoliciesApplication();
@@ -158,6 +166,9 @@ public static class DependencyInjection
         services.AddScoped<EmployeeDocumentService>();
         services.AddScoped<MobileAuthenticationService>();
         services.AddScoped<WebAuthenticationService>();
+        services.AddScoped<WebMfaProofs>();
+        services.AddScoped<WebMfaManagementService>();
+        services.AddScoped<WebMfaResetService>();
         services.AddScoped<WebCredentialProvisioningService>();
         services.AddScoped<PhoneRecoveryService>();
         services.AddScoped<DeviceRecoveryService>();

@@ -4,7 +4,9 @@ import { LoadingState } from '@/components/feedback/LoadingState';
 
 export function RequireAuth() {
   const { status } = useAuth();
-  if (status === 'loading') return <LoadingState />;
+  if (status === 'loading') {
+    return <LoadingState fullscreen message="Verifying secure enterprise session..." />;
+  }
   if (status !== 'authenticated') return <Navigate to="/sign-in" replace />;
   return <Outlet />;
 }

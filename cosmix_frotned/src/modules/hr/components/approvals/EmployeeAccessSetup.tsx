@@ -7,6 +7,7 @@ import { ApiError } from '@/services/api/api-error';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/forms/TextInput';
 import { PasswordInput } from '@/components/forms/PasswordInput';
+import { AuthenticatorReset } from '@/auth/AuthenticatorReset';
 import { SelectInput } from '@/components/forms/SelectInput';
 import { useHrAccess } from '../../hooks/use-hr-access';
 import { useHrLifetime } from '../../hooks/use-hr-lifetime';
@@ -747,6 +748,18 @@ function AccessSetupPanel({
             </form>
           )}
         </>
+      )}
+      {account && (
+        <AuthenticatorReset
+          accountId={account.id}
+          employeeId={account.employeeId}
+          version={account.version}
+          enabled={account.authenticatorRequired}
+          onSaved={() => {
+            setMustReload(true);
+            onSaved?.();
+          }}
+        />
       )}
     </section>
   );

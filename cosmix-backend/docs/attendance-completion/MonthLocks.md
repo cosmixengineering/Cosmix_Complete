@@ -1,5 +1,13 @@
 # Direct attendance month lock implementation plan
 
+## 28 October 2026 — persistence guard correction
+
+New lock writes now require direct protected-manifest provenance and nonempty,
+unique, in-period summary membership. Newly inserted legacy approval-backed
+fixture locks are rejected; retained legacy rows remain readable and immutable.
+See [diagnosis and verified limits](Locked-Summary-Diagnosis-20261028.md). This
+code fix requires no migration and does not rewrite existing fixture history.
+
 ## Latest second-pass dependency integration
 
 The second local pass replaces the daily `PayrollReady` readiness test with a transaction-local

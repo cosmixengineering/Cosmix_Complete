@@ -97,6 +97,14 @@ public sealed class AttendanceSummaryRepository(CosmixDbContext db, IRosterRepos
         x.IsLocked && x.PeriodStart <= date && x.PeriodEndExclusive > date, ct);
     public async Task<DailyAttendanceSummary?> LatestAsync(Guid employeeId, DateOnly date, CancellationToken ct)
     {
+        var result = await LookupAsync(employeeId, date, ct);
+        if (result.IsLocked && result.Summary is null)
+            throw AttendanceOperation.Conflict("locked_attendance_summary_unavailable");
+        return result.Summary;
+    }
+
+    public async Task<AttendanceSummaryLookup> LookupAsync(Guid employeeId, DateOnly date, CancellationToken ct)
+    {
         var periods = await db.AttendancePeriodLocks.AsNoTracking().Where(x => x.IsLocked && x.PeriodStart <= date &&
             x.PeriodEndExclusive > date).Take(2).ToArrayAsync(ct);
         if (periods.Length > 1) throw AttendanceOperation.Conflict("attendance_period_overlap");
@@ -108,11 +116,11 @@ public sealed class AttendanceSummaryRepository(CosmixDbContext db, IRosterRepos
                 where e.AttendancePeriodLockId == period.Id && e.Revision == period.Revision && e.IsLocked &&
                     link.EmployeeId == employeeId && link.AttendanceDate == date
                 select link.DailyAttendanceSummaryId).Take(2).ToArrayAsync(ct);
-            if (ids.Length != 1) throw AttendanceOperation.Conflict("locked_attendance_summary_unavailable");
-            return await db.DailyAttendanceSummaries.AsNoTracking().SingleAsync(x => x.Id == ids[0], ct);
+            if (ids.Length != 1) return new(true, null);
+            return new(true, await db.DailyAttendanceSummaries.AsNoTracking().SingleOrDefaultAsync(x => x.Id == ids[0], ct));
         }
-        return await db.DailyAttendanceSummaries.AsNoTracking().Where(x => x.EmployeeId == employeeId && x.AttendanceDate == date)
-            .OrderByDescending(x => x.Revision).FirstOrDefaultAsync(ct);
+        return new(false, await db.DailyAttendanceSummaries.AsNoTracking().Where(x => x.EmployeeId == employeeId && x.AttendanceDate == date)
+            .OrderByDescending(x => x.Revision).FirstOrDefaultAsync(ct));
     }
     public async Task<PagedResult<DailyAttendanceSummary>> HistoryAsync(Guid employeeId, DateOnly date, int page, int pageSize, CancellationToken ct)
     {

@@ -62,6 +62,9 @@ public sealed record PayrollHandoffBatchResponse(Guid Id, string BatchReference,
     public Guid? HrApprovalRequestId { get; init; }
     public string? HrApprovedByUserId { get; init; }
     public DateTimeOffset? HrApprovedAt { get; init; }
+    public Guid? ReturnApprovalRequestId { get; init; }
+    public string? ReturnedByUserId { get; init; }
+    public DateTimeOffset? ReturnedAt { get; init; }
     public IReadOnlyList<PayrollSalaryEmployeeTotal> EmployeeTotals { get; init; } = [];
 }
 
@@ -81,7 +84,11 @@ public sealed record PayrollHandoffBankAdvice(string BatchReference, DateTimeOff
 public sealed record PreparePayrollHandoffRequest([property: JsonRequired] [Range(1, 9998)] int Year,
     [property: JsonRequired] [Range(1, 12)] int Month,
     [Required, StringLength(64, MinimumLength = 64)] string ExpectedPreviewFingerprint,
-    [Required, StringLength(1000)] string Reason);
+    [Required, StringLength(1000)] string Reason)
+{
+    /// <summary>Optional complete-employee group. Null prepares the full month; an empty group is invalid.</summary>
+    public IReadOnlyList<Guid>? EmployeeIds { get; init; }
+}
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record LockPayrollHandoffRequest(
@@ -127,6 +134,8 @@ public interface IPayrollHandoffRepository
     Task<Guid?> FindAgreementIdForScheduleAsync(Guid scheduleId, CancellationToken ct);
     Task<Cosmix.Domain.HR.PayrollHandoff.PayrollHandoffBatch?> FindBatchAsync(Guid id, bool tracked, CancellationToken ct);
     Task<bool> PeriodPreparedAsync(DateOnly start, DateOnly endExclusive, CancellationToken ct);
+    Task<bool> EmployeesPreparedAsync(DateOnly start, DateOnly endExclusive, IReadOnlyList<Guid> employeeIds,
+        CancellationToken ct) => PeriodPreparedAsync(start, endExclusive, ct);
     Task<bool> ProcessingReferenceExistsAsync(Guid batchId, string reference, CancellationToken ct);
     Task<IReadOnlyList<Guid>> DecidersAsync(Guid approvalRequestId, CancellationToken ct);
     Task<IReadOnlyList<Cosmix.Domain.HR.PayrollHandoff.PayrollHandoffProcessingRecord>> ProcessingAsync(Guid batchId, CancellationToken ct);

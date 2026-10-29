@@ -29,24 +29,19 @@ public sealed class PayrollHandoffBatch
     public DateTimeOffset PreparedAt { get; private set; }
     public int LinesRevision { get; private set; }
 
-    [NotMapped]
     public string CalculationVersion { get; private set; } = "adjustments-v1";
     [NotMapped]
     public bool SalaryComplete => CalculationVersion == "salary-v2" && !string.IsNullOrWhiteSpace(FrozenFingerprint);
-    [NotMapped]
     public string? PreviewFingerprint { get; private set; }
-    [NotMapped]
     public string? FrozenFingerprint { get; private set; }
-    [NotMapped]
     public string? CalculationPrivateReference { get; private set; }
-    [NotMapped]
     public string ReviewState { get; private set; } = "prepared";
-    [NotMapped]
     public Guid? HrApprovalRequestId { get; private set; }
-    [NotMapped]
     public string? HrApprovedByUserId { get; private set; }
-    [NotMapped]
     public DateTimeOffset? HrApprovedAt { get; private set; }
+    public Guid? ReturnApprovalRequestId { get; private set; }
+    public string? ReturnedByUserId { get; private set; }
+    public DateTimeOffset? ReturnedAt { get; private set; }
 
     public byte[] RowVersion { get; private set; } = [];
 
@@ -68,6 +63,7 @@ public sealed class PayrollHandoffBatch
 
     public void ReviewSalary(Guid requestId, string actor, DateTimeOffset at, bool approve)
     {
+        actor = ModelGuard.Required(actor, 200, nameof(actor));
         if (CalculationVersion != "salary-v2" || ReviewState != "prepared" || LockedAt.HasValue || actor == PreparedByUserId || at < PreparedAt)
             throw new InvalidOperationException("Independent HR review of a prepared salary is required.");
         HrApprovalRequestId = ModelGuard.Id(requestId, nameof(requestId));
@@ -78,13 +74,29 @@ public sealed class PayrollHandoffBatch
 
     public void CancelSalary(string actor)
     {
+        actor = ModelGuard.Required(actor, 200, nameof(actor));
         if (CalculationVersion != "salary-v2" || ReviewState != "prepared" || actor != PreparedByUserId || LockedAt.HasValue)
             throw new InvalidOperationException("Only an unreviewed salary maker can cancel.");
         ReviewState = "cancelled";
     }
 
+    /// <summary>Retire the approved snapshot; preparation creates a new run with fresh source evidence.</summary>
+    public void ReturnForCorrection(Guid requestId, string actor, DateTimeOffset at)
+    {
+        actor = ModelGuard.Required(actor, 200, nameof(actor));
+        at = ModelGuard.Utc(at);
+        if (CalculationVersion != "salary-v2" || ReviewState != "hr_approved" || LockedAt.HasValue ||
+            HrApprovalRequestId is null || HrApprovedAt is null || at < HrApprovedAt || actor == PreparedByUserId)
+            throw new InvalidOperationException("Only independently reviewed, unlocked salary can be returned.");
+        ReturnApprovalRequestId = ModelGuard.Id(requestId, nameof(requestId));
+        ReturnedByUserId = actor;
+        ReturnedAt = at;
+        ReviewState = "returned";
+    }
+
     public void RecordFinanceHandoff(string actor)
     {
+        actor = ModelGuard.Required(actor, 200, nameof(actor));
         if (CalculationVersion != "salary-v2" || LockedAt is null || ReviewState is not ("locked" or "finance_handed_off") ||
             actor == PreparedByUserId || actor == HrApprovedByUserId || actor == LockedByUserId)
             throw new InvalidOperationException("Independent Finance handoff requires an approved salary.");
@@ -94,7 +106,7 @@ public sealed class PayrollHandoffBatch
     /// <summary>Participates in the parent rowversion transaction for staged line additions.</summary>
     public void RecordLineChange()
     {
-        if (LockedAt.HasValue) throw new InvalidOperationException("Locked handoff contents cannot change.");
+        if (LockedAt.HasValue || CalculationVersion == "salary-v2") throw new InvalidOperationException("Frozen handoff contents cannot change.");
         LinesRevision = checked(LinesRevision + 1);
     }
 

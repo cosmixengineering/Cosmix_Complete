@@ -4,6 +4,7 @@ export type ServiceKey =
   | 'resignation'
   | 'finances'
   | 'payroll'
+  | 'payments'
   | 'profile'
   | 'allowances'
   | 'vehicles'

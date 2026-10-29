@@ -18,7 +18,11 @@ export function useFinanceQuery<T extends z.ZodType>(
   const access = useHrAccess();
   return useQuery({
     queryKey: ['hr', 'finance', access.subject, path],
-    queryFn: ({ signal }) => financeGet(path, schema, signal),
+    queryFn: ({ signal }) => {
+      if (!access.ready) throw new ApiError(401);
+      if (!allowed) throw new ApiError(403);
+      return financeGet(path, schema, signal);
+    },
     enabled: access.ready && allowed && enabled,
     gcTime: 0,
     retry: false,

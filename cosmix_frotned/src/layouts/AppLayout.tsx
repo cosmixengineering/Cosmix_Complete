@@ -3,6 +3,7 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
+  Fingerprint,
   Network,
   MapPin,
   Clock,
@@ -14,7 +15,6 @@ import {
   Receipt,
   FileText,
   BarChart2,
-  Bell,
   Search,
   Menu,
   X,
@@ -28,6 +28,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/auth/use-auth';
+import { hasAttendancePermission } from '@/modules/attendance';
+import { NotificationBellToggle } from '@/components/notifications/NotificationBellToggle';
 import { hrConfigurationNavigation } from '@/modules/hr/policy-navigation';
 import logo from '@/assets/images/cosmix-logo.png';
 import '@/styles/hr-dashboard.css';
@@ -35,6 +37,10 @@ import '@/styles/hr-dashboard.css';
 export function AppLayout() {
   const { user, signOut, status } = useAuth();
   const configurationLinks = hrConfigurationNavigation(user, status).filter((link) => link.allowed);
+  const canTrackAttendance =
+    status === 'authenticated' &&
+    hasAttendancePermission(user, 'hr.employees.read') &&
+    hasAttendancePermission(user, 'attendance.summaries.read');
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -105,7 +111,11 @@ export function AppLayout() {
       return pathname.startsWith('/hr/attendance/shifts') || pathname.startsWith('/hr/shifts');
     }
 
-    // Attendance: Must NEVER match shifts!
+    if (pathname === '/hr/attendance/tracking' || pathname.startsWith('/hr/attendance/tracking/')) {
+      return to === '/hr/attendance/tracking';
+    }
+
+    // Attendance excludes separate attendance workspaces.
     if (label === 'Attendance' || label === 'Attendance & Punches' || to === '/hr/attendance') {
       if (
         isLeaveWorkspace ||
@@ -209,6 +219,12 @@ export function AppLayout() {
       label: 'Employee Master',
       icon: Users,
     },
+    ...(status === 'authenticated' &&
+    user?.grants.some(
+      (g) => g.permission === 'attendance.face.manage' || g.permission === 'attendance.face.read',
+    )
+      ? [{ to: '/hr/biometrics', label: 'Biometric Registration', icon: Fingerprint }]
+      : []),
     {
       to: '/hr/organization',
       label: 'Organization Structure',
@@ -226,6 +242,15 @@ export function AppLayout() {
       badge: 'Live',
       badgeType: 'live',
     },
+    ...(canTrackAttendance
+      ? [
+          {
+            to: '/hr/attendance/tracking',
+            label: 'Attendance Tracking',
+            icon: CalendarCheck,
+          },
+        ]
+      : []),
     {
       to: '/hr/attendance/shifts',
       label: 'Shift Management',
@@ -468,16 +493,9 @@ export function AppLayout() {
             </Link>
           </div>
 
-          {/* Right: Notification Bell + User Profile */}
+          {/* Right: Notification Bell Toggle + User Profile */}
           <div className="hr-topbar-actions" style={{ gap: '14px' }}>
-            <Link
-              to="/account/notifications"
-              className="hr-notification-bell"
-              aria-label="Open notifications"
-              title="Notifications"
-            >
-              <Bell size={17} />
-            </Link>
+            <NotificationBellToggle />
 
             {/* Current User Chip matching Screenshot */}
             <Link to="/account" className="hr-user-chip" style={{ textDecoration: 'none' }}>

@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { History, RefreshCw, ArrowLeft, ArrowRight, ShieldAlert, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
+import {
+  History,
+  RefreshCw,
+  ArrowLeft,
+  ArrowRight,
+  ShieldAlert,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useHrQuery } from '../../hooks/use-hr-queries';
 import { useHrAccess } from '../../hooks/use-hr-access';
@@ -92,7 +101,7 @@ export function DocumentCompleteness({ employeeId }: { employeeId: string }) {
         </div>
         <Button
           type="submit"
-          variant="outline"
+          variant="secondary"
           disabled={!validWindow || query.isFetching}
           style={{
             height: '36px',
@@ -119,7 +128,8 @@ export function DocumentCompleteness({ employeeId }: { employeeId: string }) {
             fontSize: '12.5px',
           }}
         >
-          No category-specific document enforcement policy is configured for this employee. Documents uploaded above remain active and tracked.
+          No category-specific document enforcement policy is configured for this employee.
+          Documents uploaded above remain active and tracked.
         </div>
       ) : (
         <QueryState query={{ ...query, isPending: query.isPending || query.isFetching }}>
@@ -130,7 +140,14 @@ export function DocumentCompleteness({ employeeId }: { employeeId: string }) {
               </p>
 
               <div>
-                <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
+                <div
+                  style={{
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    color: '#334155',
+                    marginBottom: '8px',
+                  }}
+                >
                   Required Document Checklist:
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -159,7 +176,14 @@ export function DocumentCompleteness({ employeeId }: { employeeId: string }) {
 
               {query.data.expiringDocuments.length > 0 && (
                 <div>
-                  <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#854d0e', marginBottom: '6px' }}>
+                  <div
+                    style={{
+                      fontSize: '12.5px',
+                      fontWeight: 600,
+                      color: '#854d0e',
+                      marginBottom: '6px',
+                    }}
+                  >
                     Expiring Documents:
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -195,10 +219,19 @@ export function DocumentCompleteness({ employeeId }: { employeeId: string }) {
                     border: '1px solid #fecaca',
                   }}
                 >
-                  <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#991b1b', marginBottom: '4px' }}>
+                  <div
+                    style={{
+                      fontSize: '12.5px',
+                      fontWeight: 600,
+                      color: '#991b1b',
+                      marginBottom: '4px',
+                    }}
+                  >
                     Activation Blockers:
                   </div>
-                  <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: '#b91c1c' }}>
+                  <ul
+                    style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: '#b91c1c' }}
+                  >
                     {query.data.activationBlockers.map((b) => (
                       <li key={b}>{b}</li>
                     ))}

@@ -1,6 +1,8 @@
 import type { SessionStatus, SessionUser } from '@/auth/types';
+import { isSystemAdmin } from '@/auth/contracts';
 
 export function hrConfigurationNavigation(user: SessionUser | null, status: SessionStatus) {
+  const isSysAdmin = isSystemAdmin(user);
   const can = (permission: string) =>
     status === 'authenticated' &&
     Boolean(
@@ -15,12 +17,13 @@ export function hrConfigurationNavigation(user: SessionUser | null, status: Sess
     {
       to: '/hr/attendance/policies',
       label: 'Attendance policies',
-      allowed: can('attendance.policies.configure') || can('attendance.policies.publish'),
+      allowed:
+        isSysAdmin && (can('attendance.policies.configure') || can('attendance.policies.publish')),
     },
     {
       to: '/hr/attendance/leave-settings',
       label: 'Leave settings',
-      allowed: can('attendance.leaves.configure'),
+      allowed: isSysAdmin && can('attendance.leaves.configure'),
     },
     {
       to: '/hr/approval-routing',

@@ -27,16 +27,27 @@ public sealed class PayrollFrozenBatchReader(IPayrollHandoffRepository repositor
         IPrivateFileStore files,bool requireApproved,CancellationToken ct)
     {
         if(batch.CalculationVersion!="salary-v2" || batch.CalculationPrivateReference is null || batch.FrozenFingerprint is null ||
-            batch.ReviewState is "cancelled" or "rejected" || requireApproved && (batch.LockedAt is null || batch.HrApprovedAt is null ||
+            batch.ReviewState is "cancelled" or "rejected" or "returned" || requireApproved && (batch.LockedAt is null || batch.HrApprovedAt is null ||
                 batch.ApprovalRequestId is null || batch.HrApprovalRequestId is null || batch.ReviewState is not ("locked" or "finance_handed_off")))
             throw AttendanceOperation.Conflict("complete_approved_salary_required");
         var proof=await ReadAsync<PayrollFrozenEvidence>(files,batch.CalculationPrivateReference,Purpose(batch.Id),ct);
         var lines=Lines(batch);var totals=Totals(lines);
-        var fingerprint=Fingerprint(batch,lines);
+        if (batch.Lines.Any(x => x.PayrollHandoffBatchId != batch.Id || x.Currency != batch.Currency) ||
+            lines.GroupBy(x => (x.EmployeeId, x.SourceType, x.SourceId, x.SourceVersion, x.Component)).Any(g => g.Count() != 1) ||
+            lines.GroupBy(x => x.EmployeeId).Any(g => g.Count(x => x.Component == PayrollComponentKind.BaseCompensation.ToString()) != 1) ||
+            lines.Any(x => x.Component == PayrollComponentKind.BaseCompensation.ToString() && (x.SourceType != "attendance.payroll-salary.base" || x.Amount < 0)))
+            throw AttendanceOperation.Conflict("salary_frozen_evidence_invalid");
+        if (proof.Lines is null || proof.Employees is null || proof.LineReferences is null)
+            throw AttendanceOperation.Conflict("salary_frozen_evidence_invalid");
+        // SQL decimal(18,2) adds a scale to whole amounts (30000 -> 30000.00).
+        // Keep the original protected fingerprint authoritative, including for existing
+        // schema-2 evidence, and compare every retained line/total by typed value.
+        // Rehashing SQL's representation would invalidate an unchanged approved salary.
+        var fingerprint=Fingerprint(batch,proof.Lines);
         if(proof.SchemaVersion!=2 || proof.BatchId!=batch.Id || proof.CalculationVersion!=batch.CalculationVersion || proof.PeriodStart!=batch.PeriodStart ||
             proof.PeriodEndExclusive!=batch.PeriodEnd || proof.Currency!=batch.Currency || proof.Fingerprint!=fingerprint || batch.FrozenFingerprint!=fingerprint ||
             proof.PreparedByUserId!=batch.PreparedByUserId || proof.PreparedAt!=batch.PreparedAt ||
-            JsonSerializer.Serialize(proof.Lines)!=JsonSerializer.Serialize(lines) || JsonSerializer.Serialize(proof.Employees)!=JsonSerializer.Serialize(totals) ||
+            !proof.Lines.SequenceEqual(lines) || !proof.Employees.SequenceEqual(totals) ||
             totals.Count==0 || totals.Any(x=>x.NetPay<0) || totals.Any(x=>!lines.Any(l=>l.EmployeeId==x.EmployeeId && l.Component==PayrollComponentKind.BaseCompensation.ToString())))
             throw AttendanceOperation.Conflict("salary_frozen_evidence_invalid");
         foreach(var row in batch.Lines)
@@ -51,12 +62,21 @@ public sealed class PayrollFrozenBatchReader(IPayrollHandoffRepository repositor
         }
         if(requireApproved)
         {
-            await ApprovalAsync(batch,batch.HrApprovalRequestId!.Value,"payroll-handoff.hr-review",batch.HrApprovedByUserId!,batch.HrApprovedAt!.Value,repository,files,ct);
+            await ValidateHrApprovalAsync(batch, repository, files, ct);
             await ApprovalAsync(batch,batch.ApprovalRequestId!.Value,PayrollHandoffService.LockRequestType,batch.LockedByUserId!,batch.LockedAt!.Value,repository,files,ct);
             if(batch.HrApprovedByUserId==batch.PreparedByUserId || batch.LockedByUserId==batch.PreparedByUserId || batch.LockedByUserId==batch.HrApprovedByUserId)
                 throw AttendanceOperation.Conflict("salary_approval_actor_conflict");
         }
         return new(batch.Id,batch.CalculationVersion,batch.PeriodStart,batch.PeriodEnd,batch.Currency,fingerprint,lines,totals,batch.CalculationPrivateReference);
+    }
+    public static async Task ValidateHrApprovalAsync(PayrollHandoffBatch batch, IPayrollHandoffRepository repository,
+        IPrivateFileStore files, CancellationToken ct)
+    {
+        if (batch.HrApprovalRequestId is not Guid request || batch.HrApprovedAt is not DateTimeOffset at ||
+            string.IsNullOrWhiteSpace(batch.HrApprovedByUserId) || batch.HrApprovedByUserId == batch.PreparedByUserId ||
+            at < batch.PreparedAt || batch.LockedAt.HasValue && batch.LockedAt < at)
+            throw AttendanceOperation.Conflict("salary_approval_evidence_invalid");
+        await ApprovalAsync(batch, request, PayrollHandoffService.HrReviewRequestType, batch.HrApprovedByUserId, at, repository, files, ct);
     }
     private static async Task ApprovalAsync(PayrollHandoffBatch batch,Guid id,string type,string actor,DateTimeOffset at,
         IPayrollHandoffRepository repository,IPrivateFileStore files,CancellationToken ct)

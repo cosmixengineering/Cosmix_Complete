@@ -24,12 +24,19 @@ The authenticated workspace now has five tabs: Home, Services, Attendance,
 History and Profile. The shared circular bottom bar follows the owner's visual
 reference. History provides permission-aware category buttons for Check In/Out,
 leave, advances/loans, allowances, overtime, corrections, monthly attendance,
-payroll, encashment, vehicle activity and resignation. Dates and pagination reach
+payroll, payments, encashment, vehicle activity and resignation. Dates and pagination reach
 older records. Check In/Out receipts show the full server-recorded date and time,
 including year and seconds, explicitly in Asia/Karachi. The result remains
 separate from the recorded time; pending/rejected receipts are not success.
 Request forms remain above the tabs, and attendance locks tab changes while
 verification/submission runs. Profile uses the actual own-profile endpoint.
+
+Payment history groups each salary entitlement by payroll period, with separate
+confirmed, posted, pending, failed and reversed amounts. Each period has its own
+payment-entry pager; the totals cover all its entries. Posted payments remain
+awaiting confirmation. The app uses the employee-only financial endpoints and
+does not display banking details or payment evidence. See the
+[payment history contract and acceptance limits](docs/Employee-Self-Service.md#unified-history-and-payments-28-october-2026).
 
 Login and verification use shared reference-inspired authentication controls:
 Pakistan/+92 phone entry, rounded white cards, indigo actions, a Need help sheet

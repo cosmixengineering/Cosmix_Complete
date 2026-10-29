@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { errorMessage } from '../utils/messages';
 import { Button } from '@/components/ui/Button';
+import { TableSkeleton, CardSkeleton, ListSkeleton } from '@/components/ui/Skeleton';
 
 export function Denied() {
   return (
@@ -12,19 +13,23 @@ export function Denied() {
     </section>
   );
 }
+
 export function QueryState({
   query,
   children,
+  skeleton = 'table',
+  rows = 6,
 }: {
   query: { isPending: boolean; isError: boolean; error: unknown; refetch: () => unknown };
   children: ReactNode;
+  skeleton?: 'table' | 'card' | 'list';
+  rows?: number;
 }) {
-  if (query.isPending)
-    return (
-      <p className="hr-notice" role="status">
-        Loading records...
-      </p>
-    );
+  if (query.isPending) {
+    if (skeleton === 'card') return <CardSkeleton />;
+    if (skeleton === 'list') return <ListSkeleton rows={rows} />;
+    return <TableSkeleton rows={rows} />;
+  }
   if (query.isError)
     return (
       <div className="hr-notice" role="alert">

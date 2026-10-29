@@ -122,6 +122,7 @@ export function HrDashboardPage() {
     'employees/submissions?page=1&pageSize=10&status=1',
     pageOf(submissionSummarySchema),
     ['hr.employees.read', 'hr.employees.submissions.review'],
+    canReadHiring,
   );
   const pendingLeavesQuery = useAttendanceQuery(
     `/leaves/admin/queue?pendingOnly=true&from=${year}-01-01&to=${year}-12-31&pageSize=10`,
@@ -147,15 +148,30 @@ export function HrDashboardPage() {
   const attendanceData = attendance.status === 'ready' ? attendanceQuery.data : undefined;
   const payrollData = payroll.status === 'ready' ? payrollQuery.data : undefined;
 
-  const totalEmployeesCount = employees.count ?? 11;
-  const approvedCount = approved.count ?? 5;
-  const draftsCount = drafts.count ?? 6;
-  const hiringCount = hiring.count ?? 0;
-
-  // Percentage for progress bar
+  const totalEmployeesCount = employees.label;
+  const approvedCount = approved.label;
+  const draftsCount = drafts.label;
+  const hiringCount = hiring.label;
+  const onboardingLabel = canReadHiring
+    ? hiring.count !== undefined && drafts.count !== undefined
+      ? String(hiring.count + drafts.count)
+      : 'Unavailable'
+    : drafts.label;
+  const payrollLabel = payrollData
+    ? payrollData.effectiveMonthlySalary.length
+      ? payrollData.effectiveMonthlySalary
+          .map((group) => dashboardMoney(group.grossAmount, group.currency))
+          .join(' / ')
+      : 'No effective monthly salaries'
+    : payroll.label;
   const approvedPercent =
-    totalEmployeesCount > 0 ? Math.round((approvedCount / totalEmployeesCount) * 100) : 45;
-  const draftsPercent = 100 - approvedPercent;
+    employees.count && approved.count !== undefined
+      ? Math.min(100, (approved.count / employees.count) * 100)
+      : 0;
+  const draftsPercent =
+    employees.count && drafts.count !== undefined
+      ? Math.min(100, (drafts.count / employees.count) * 100)
+      : 0;
 
   const dashboardReads = [
     { query: employeesQuery, allowed: canReadEmployees },
@@ -235,7 +251,7 @@ export function HrDashboardPage() {
             details: `${lr.requestedMinutes} mins • ${lr.startDate} to ${lr.endDate}`,
             date: lr.startDate || `${year}`,
             status: cancellationPending ? 'Cancellation pending' : 'Pending',
-            actionUrl: '/hr/leaves',
+            actionUrl: `/hr/attendance/leaves/${lr.id}`,
           });
         }
       }
@@ -255,9 +271,19 @@ export function HrDashboardPage() {
       ['Approved onboarding', String(approvedCount), 'Onboarding status.'],
       ['Draft onboarding', String(draftsCount), 'Draft onboarding records.'],
       ['Site directory', sites.label, 'Site records.'],
-      ["Today's turnout", 'Access restricted', 'Attendance permission required'],
-      ['Pending approvals', `${hiringCount} hiring requests`, 'Leave queue restricted'],
-      ['Monthly salary estimate', 'Access restricted', 'Salary summary permission required'],
+      [
+        "Today's turnout",
+        attendanceData ? String(attendanceData.withAcceptedSessionEvidence) : attendance.label,
+        attendanceData
+          ? `Accepted attendance session evidence; ${attendanceData.unavailableSummaryEmployees} unavailable employee summaries excluded (${attendanceData.coverage}).`
+          : 'Attendance evidence unavailable; no turnout inferred.',
+      ],
+      ['Pending approvals', hiringCount, 'Hiring review queue'],
+      [
+        'Monthly salary summary',
+        payrollLabel,
+        'Effective salaries grouped by currency; not payment or settlement',
+      ],
       [],
       ['Employee', 'Request type', 'Details', 'Status', 'Date'],
       ...dynamicActivities.map((a) => [a.employeeName, a.type, a.details, a.status, a.date]),
@@ -333,14 +359,16 @@ export function HrDashboardPage() {
             <span className="dash-exact-kpi-label">TODAY'S TURNOUT</span>
             <div className="dash-exact-kpi-value-row">
               <span className="dash-exact-kpi-value-lg">
-                {attendanceData ? attendanceData.withAcceptedSessionEvidence : approvedCount}
+                {attendanceData ? attendanceData.withAcceptedSessionEvidence : '—'}
               </span>
-              <span className="dash-exact-kpi-value-unit muted">staff active</span>
+              <span className="dash-exact-kpi-value-unit muted">recorded check-ins</span>
             </div>
             <span className="dash-exact-kpi-meta">
               {attendanceData
                 ? `${attendanceData.openSessionEmployees} on shift • ${attendanceData.activeEmployees} active total`
-                : '100% operational coverage • Shift monitoring live'}
+                : attendance.status === 'loading'
+                  ? 'Loading attendance…'
+                  : 'Attendance data unavailable'}
             </span>
           </div>
           <div className="dash-exact-kpi-icon-box is-blue-icon">
@@ -356,13 +384,11 @@ export function HrDashboardPage() {
               <span className="dash-exact-badge-peach">Live queue</span>
             </div>
             <div className="dash-exact-kpi-value-row">
-              <span className="dash-exact-kpi-value-lg">
-                {(submissionsQuery.data?.totalCount ?? 0) + draftsCount}
-              </span>
+              <span className="dash-exact-kpi-value-lg">{onboardingLabel}</span>
               <span className="dash-exact-kpi-value-unit muted">in queue</span>
             </div>
             <span className="dash-exact-kpi-meta">
-              {draftsCount} draft onboarding • {submissionsQuery.data?.totalCount ?? 0} submissions
+              {draftsCount} draft onboarding • {hiring.label} submissions
             </span>
           </div>
           <div className="dash-exact-kpi-icon-box is-peach-icon">
@@ -375,13 +401,8 @@ export function HrDashboardPage() {
           <div className="dash-exact-kpi-info">
             <span className="dash-exact-kpi-label">MONTHLY SALARY ESTIMATE</span>
             <div className="dash-exact-kpi-value-row">
-              <span className="dash-exact-kpi-value-md">
-                {payrollData && payrollData.effectiveMonthlySalary?.length
-                  ? dashboardMoney(
-                      payrollData.effectiveMonthlySalary.reduce((sum, g) => sum + g.grossAmount, 0),
-                      payrollData.effectiveMonthlySalary[0]?.currency || 'PKR',
-                    )
-                  : `PKR ${(approvedCount * 85000).toLocaleString()}`}
+              <span className="dash-exact-kpi-value-md" title={payrollLabel}>
+                {payrollLabel}
               </span>
             </div>
             <span className="dash-exact-kpi-meta">
@@ -398,9 +419,18 @@ export function HrDashboardPage() {
       <div className="dash-exact-alert-banner">
         <Shield size={13} className="dash-exact-alert-icon" />
         <div className="dash-exact-alert-text">
-          <strong>System live status:</strong> {totalEmployeesCount} total directory records
-          verified ({approvedCount} approved onboarding, {draftsCount} in onboarding queue) across
-          active operational zones.
+          <strong>Directory summary:</strong> {totalEmployeesCount} directory records (
+          {approvedCount} approved onboarding, {draftsCount} in onboarding queue). Attendance
+          coverage and salary availability are reported separately.
+          <span className="dash-exact-attendance-note" role="status">
+            {attendanceData
+              ? attendanceData.unavailableSummaryEmployees > 0
+                ? `Attendance: ${attendanceData.unavailableSummaryEmployees} employee summaries need HR review and are excluded from the counts above.`
+                : 'Attendance: no unavailable employee summaries were reported.'
+              : attendance.status === 'loading'
+                ? 'Loading attendance coverage…'
+                : 'Attendance coverage is unavailable. No attendance totals have been inferred.'}
+          </span>
         </div>
       </div>
 
@@ -542,9 +572,7 @@ export function HrDashboardPage() {
               onClick={() => setActiveTab('hiring')}
             >
               <span>Hiring & Onboarding</span>
-              <span className="dash-exact-tab-count">
-                {(submissionsQuery.data?.totalCount ?? 0) + draftsCount}
-              </span>
+              <span className="dash-exact-tab-count">{onboardingLabel}</span>
             </button>
             <button
               type="button"
@@ -552,9 +580,7 @@ export function HrDashboardPage() {
               onClick={() => setActiveTab('leave')}
             >
               <span>Leave {year}</span>
-              <span className="dash-exact-tab-count">
-                {pendingLeavesQuery.data?.totalCount ?? leaves.count ?? 0}
-              </span>
+              <span className="dash-exact-tab-count">{leaves.label}</span>
             </button>
           </div>
 
@@ -578,13 +604,17 @@ export function HrDashboardPage() {
                 </div>
                 <h3 className="dash-exact-empty-title">
                   {activeTab === 'hiring'
-                    ? 'No pending hiring submissions'
-                    : 'No pending leave requests'}
+                    ? drafts.status === 'ready' && (!canReadHiring || hiring.status === 'ready')
+                      ? 'No records returned'
+                      : 'Hiring records unavailable'
+                    : leaves.status === 'ready'
+                      ? 'No pending leave requests'
+                      : leaves.label}
                 </h3>
                 <p className="dash-exact-empty-sub">
                   {activeTab === 'hiring'
-                    ? 'All candidate onboarding requests have been reviewed.'
-                    : `All employee leave requests for ${year} have been reviewed.`}
+                    ? 'Only records available to your account appear here. Refresh to check again.'
+                    : 'The queue only shows requests within your permitted review scope and date range.'}
                 </p>
                 <button
                   type="button"
@@ -641,8 +671,8 @@ export function HrDashboardPage() {
           <div className="dash-exact-card-footer">
             <span>
               {activeTab === 'hiring'
-                ? `${(submissionsQuery.data?.totalCount ?? 0) + draftsCount} onboarding & hiring records`
-                : `${pendingLeavesQuery.data?.totalCount ?? leaves.count ?? 0} leave requests for ${year}`}
+                ? `${onboardingLabel} onboarding & hiring records`
+                : `${leaves.label} leave requests for ${year}`}
             </span>
           </div>
         </div>

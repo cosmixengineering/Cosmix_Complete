@@ -114,5 +114,9 @@
   {
     "MigrationId": "20261027133000_PersistPayrollFinanceSetupTables",
     "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261028071931_CompleteSalaryRunAndStatutoryEntries",
+    "ProductVersion": "10.0.12"
   }
 ]

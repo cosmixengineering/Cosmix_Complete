@@ -75,14 +75,32 @@ export const journal = z.object({
   sourceKey: z.string().nullable().optional(),
   statutoryContributionId: id.nullable().optional(),
 });
-export const payment = z.object({
+export const paymentLifecycle = z.object({
   id,
   obligationId: id,
   employeeId: id.nullable(),
   amount: z.number(),
   state: z.string(),
   paymentReference: z.string(),
+  version: z.number().int().positive(),
+  createdByUserId: z.string().min(1),
+  reversalRequestedByUserId: z.string().nullable(),
+  reversalRequestedAt: z.string().nullable(),
+  reversalIsFailure: z.boolean(),
+  confirmedAt: z.string().nullable(),
+  reversedAt: z.string().nullable(),
+  reversalJournalEntryId: id.nullable(),
+  bankExportId: id.nullable(),
 });
+// Older running APIs omit these actor/outcome fields. Keep their payment reads usable,
+// but require the complete lifecycle contract before offering an independent decision.
+export const payment = paymentLifecycle.extend({
+  createdByUserId: z.string().min(1).nullish(),
+  reversalRequestedByUserId: z.string().nullable().optional(),
+  reversalIsFailure: z.boolean().optional(),
+});
+export type SalaryPayment = z.infer<typeof paymentLifecycle>;
+export type PayrollPayment = z.infer<typeof payment>;
 export const entitlement = z.object({
   employeeId: id,
   netEntitlement: z.number(),
@@ -110,9 +128,11 @@ export const contribution = z.object({
   totalContributionAmount: z.number(),
   createdByUserId: z.string(),
   version: version.optional(),
-  entries: z.array(contributionEntry).optional(),
+  entries: z.array(contributionEntry).nullable().optional(),
   obligationId: id.nullable().optional(),
   postingJournalEntryId: id.nullable().optional(),
+  postedEmployeeCount: z.number().int().nonnegative().optional(),
+  postedObligationIds: z.array(id).optional(),
 });
 export const contributionPage = z.object({ items: z.array(contribution), totalCount: z.number() });
 export const registration = z.object({

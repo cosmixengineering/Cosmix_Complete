@@ -175,6 +175,12 @@ const codes: Record<string, string> = {
     'This attendance month is not locked yet. Lock the month before preparing a payroll handoff.',
   payroll_handoff_period_already_prepared:
     'A payroll handoff batch already exists for this period.',
+  payroll_handoff_employee_already_prepared:
+    'An employee in this selection already belongs to an active payroll batch for this month. Review the existing batches and select the remaining employees.',
+  payroll_handoff_employee_not_in_month:
+    'A selected employee is not in this month’s authoritative salary preview. Refresh the preview and select again.',
+  invalid_payroll_handoff_employee_selection:
+    'Select at least one employee, without duplicates, for this payroll group.',
   payroll_handoff_preview_changed:
     'The preview changed since it was loaded. Reload the preview and prepare again.',
   payroll_handoff_lines_unavailable: 'No payroll lines are available for this period.',

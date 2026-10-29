@@ -7,7 +7,10 @@ using Cosmix.Application.Attendance.Common;
 
 namespace Cosmix.Application.HR.PayrollImports;
 
-public sealed record PayrollSheet(string Name, IReadOnlyList<string> Columns, IReadOnlyList<IReadOnlyList<string>> Rows);
+public sealed record PayrollSheet(string Name, IReadOnlyList<string> Columns, IReadOnlyList<IReadOnlyList<string>> Rows)
+{
+    public bool Uses1904DateSystem { get; init; }
+}
 
 /// <summary>Bounded, non-executing CSV/OpenXML reader. Formula cells are rejected, never evaluated.</summary>
 public static class PayrollSheetParser
@@ -96,6 +99,9 @@ public static class PayrollSheetParser
             if (Xml(relation).Descendants().Any(x => (string?)x.Attribute("TargetMode") == "External"))
                 throw Bad("salary_import_external_link");
         var workbook = Xml(Entry(zip, "xl/workbook.xml"));
+        var dateSystem = (string?)workbook.Root?.Element(Main + "workbookPr")?.Attribute("date1904");
+        if (dateSystem is not (null or "0" or "1" or "true" or "false")) throw Bad("salary_import_date_system_invalid");
+        var uses1904Dates = dateSystem is "1" or "true";
         var relationships = Xml(Entry(zip, "xl/_rels/workbook.xml.rels"));
         var sharedEntry = zip.GetEntry("xl/sharedStrings.xml");
         var shared = sharedEntry is null ? [] : Xml(sharedEntry).Root!.Elements(Main + "si")
@@ -143,7 +149,7 @@ public static class PayrollSheetParser
                 rows.Add(cells);
                 if (rows.Count > MaximumRows + 1) throw Bad("salary_import_row_limit");
             }
-            result.Add(Sheet(name, rows));
+            result.Add(Sheet(name, rows) with { Uses1904DateSystem = uses1904Dates });
         }
         if (result.Select(x => x.Name).Distinct(StringComparer.Ordinal).Count() != result.Count) throw Bad("salary_import_duplicate_sheet");
         return result;

@@ -34,7 +34,7 @@
 }
 
 .rp-breadcrumb a {
-  color: #2563eb;
+  color: #0f172a;
   text-decoration: none;
   font-weight: 500;
 }
@@ -61,12 +61,12 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1d4ed8;
+  color: #0f172a;
   flex-shrink: 0;
 }
 
@@ -75,7 +75,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #2563eb;
+  color: #475569;
   display: block;
   margin-bottom: 2px;
 }
@@ -184,8 +184,8 @@
 }
 
 .rp-tab-btn.is-active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
+  color: #0f172a;
+  border-bottom-color: #0f172a;
 }
 
 .rp-tab-counter {
@@ -198,8 +198,8 @@
 }
 
 .rp-tab-btn.is-active .rp-tab-counter {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #0f172a;
+  color: #ffffff;
 }
 
 /* Controls Bar (Search + Action) */
@@ -225,8 +225,8 @@
 }
 
 .rp-search-box:focus-within {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
 }
 
 .rp-search-input {
@@ -295,7 +295,7 @@
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: #2563eb;
+  color: #475569;
   text-transform: uppercase;
 }
 
@@ -336,9 +336,9 @@
 }
 
 .rp-badge--active {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
 }
 
 .rp-badge--inactive {
@@ -550,8 +550,8 @@
 
 .rp-form-input:focus,
 .rp-form-textarea:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
 }
 
 .rp-modal-actions {

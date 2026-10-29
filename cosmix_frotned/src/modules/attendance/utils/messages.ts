@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { ApiError } from '@/services/api/api-error';
 
 const leaveWorkflowErrors: Readonly<Record<string, string>> = {
+  locked_attendance_summary_unavailable:
+    'This locked date has no retained attendance summary. HR must review the historical records; no attendance or pay can be inferred.',
   leave_policy_year_transition_unavailable:
     'This leave-year change overlaps retained usage. The existing balance history must be reconciled before this transition can be used.',
   leave_benefit_policy_not_configured:

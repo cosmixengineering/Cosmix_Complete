@@ -79,7 +79,7 @@ public sealed partial class LeaveService(AttendanceOperation operation, ILeaveRe
         return operation.ReadAsync(self ? LeavePermissions.Self : LeavePermissions.Review, self ? "attendance.leave.mine" : "attendance.leave.queue", null,
             context, async (actor, token) => { var page = await repository.ListAsync(self ? actor.Identity.EmployeeId : null, request, token);
                 return new PagedResult<LeaveResponse>(page.Items.Select(LeaveRules.Response).ToArray(), page.TotalCount, page.Page, page.PageSize); }, ct,
-            self: self, resources: self ? null : authority.ScopeAsync);
+            self: self, resources: self ? null : authority.ScopeAsync, concurrentRead: !self);
     }
     public Task<LeaveResponse> DetailAsync(Guid id, bool self, AuthRequestContext context, CancellationToken ct) =>
         operation.ReadAsync(self ? LeavePermissions.Self : LeavePermissions.Review, "attendance.leave.detail", null, context,

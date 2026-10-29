@@ -20,7 +20,7 @@ public sealed class PayrollPostingProfileConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.ApprovedByUserId).HasMaxLength(200);
         builder.Property(x => x.ApprovedAt);
-        builder.Property(x => x.RowVersion).IsRowVersion();
+        builder.Property(x => x.RowVersion).IsRowVersion().IsRequired(false);
 
         builder.HasIndex(x => new { x.Currency, x.EffectiveFrom });
         builder.HasIndex(x => x.State);

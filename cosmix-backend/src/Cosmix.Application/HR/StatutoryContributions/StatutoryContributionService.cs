@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Cosmix.Application.Authentication;
 using Cosmix.Application.Common.Security;
+using Cosmix.Application.Common.Files;
 using Cosmix.Application.HR.PayrollAccounting;
 using Cosmix.Domain.HR.PayrollAccounting;
 using Cosmix.Domain.HR.StatutoryContributions;
@@ -13,8 +14,38 @@ public sealed class StatutoryContributionService(
     IStatutoryContributionRepository repository,
     TimeProvider clock,
     SensitiveComplianceOperation operation,
-    IPayrollFinanceRepository? financeRepository = null)
+    IPayrollFinanceRepository? financeRepository = null,
+    IPrivateFileStore? files = null,
+    PayrollFinanceOperation? writes = null,
+    PayrollAccountingService? accounting = null)
 {
+    public Task<ContributionResponse> CreateAsync(CreateContributionRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
+        writes!.WriteAsync("statutory.contributions.manage", "statutory.create", "contributions", key, request, request.Reason, context,
+            (actor, token) => CreateCoreAsync(request, actor.AccountId.ToString(), token), ct);
+    public Task<RegistrationResponse> AddRegistrationAsync(Guid employeeId, AddRegistrationRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
+        writes!.WriteAsync("statutory.contributions.manage", "statutory.registration.create", employeeId.ToString(), key, request, request.Reason, context,
+            (actor, token) => AddRegistrationCoreAsync(employeeId, request, actor.AccountId.ToString(), token), ct);
+
+    public Task<ContributionResponse> ApproveAsync(Guid id, FinancialDecisionRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
+        writes!.WriteAsync("statutory.contributions.approve", "statutory.approve", id.ToString(), key, request, request.Reason, context,
+            async (actor, token) =>
+            {
+                var row = await repository.GetByIdAsync(id, token) ?? throw new PayrollFinanceConflictException("Contribution not found.");
+                PayrollFinanceSetupService.ExpectVersion(financeRepository!, row, row.RowVersion, request.ExpectedVersion);
+                return await ApproveCoreAsync(id, actor.AccountId.ToString(), token);
+            }, ct);
+
+    public Task<ContributionResponse> PostAsync(Guid id, PostContributionRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
+        writes!.WriteAsync("payroll.accounting.accrue", "statutory.post", id.ToString(), key, request, request.Reason, context,
+            async (actor, token) =>
+            {
+                var row = await repository.GetByIdAsync(id, token) ?? throw new PayrollFinanceConflictException("Contribution not found.");
+                PayrollFinanceSetupService.ExpectVersion(financeRepository!, row, row.RowVersion, request.ExpectedVersion);
+                await accounting!.PostStatutoryJournalCoreAsync(new PostStatutoryJournalRequest(request.ObligationId,
+                    StatutoryContributionId: id, PostingProfileId: request.PostingProfileId, PostingDate: request.PostingDate, Reason: request.Reason), actor.AccountId.ToString(), token);
+                return Map(row);
+            }, ct);
+
     public Task<ContributionResponse> CreateAsync(CreateContributionRequest request, AuthRequestContext context, CancellationToken ct) =>
         operation.ExecuteAsync("statutory.contributions.manage", "StatutoryCreate", "StatutoryContributions", "collection", context,
             (actor, token) => CreateCoreAsync(request, actor.AccountId.ToString(), token), ct);
@@ -49,199 +80,85 @@ public sealed class StatutoryContributionService(
 
     private async Task<ContributionResponse> CreateCoreAsync(CreateContributionRequest request, string actorUserId, CancellationToken ct)
     {
-        var existing = await repository.GetBySchemeAndMonthAsync(request.Scheme, request.ContributionMonth, ct);
-        if (existing is not null)
-        {
-            throw new InvalidOperationException($"A contribution record already exists for scheme {request.Scheme} and month {request.ContributionMonth:yyyy-MM}.");
-        }
+        RequireEvidenceDependencies();
+        var month = new DateOnly(request.ContributionMonth.Year, request.ContributionMonth.Month, 1);
+        if (request.ContributionMonth != month) throw new PayrollFinanceConflictException("Contribution month must be its first day.");
+        if (await repository.GetBySchemeAndMonthAsync(request.Scheme, month, ct) is not null)
+            throw new PayrollFinanceConflictException("A contribution already exists for this scheme and month.");
 
-        decimal eeAmount;
-        decimal erAmount;
+        if (request.Entries is null || request.Entries.Count is < 1 or > 5000 ||
+            request.Entries.Select(x => x.EmployeeId).Distinct().Count() != request.Entries.Count || request.EmployeeItems is { Count: > 0 })
+            throw new PayrollFinanceConflictException("Unique actual employee entries are required; legacy totals/items cannot create payroll evidence.");
+        var ee = request.Entries.Sum(x => x.EmployeeContributionAmount);
+        var er = request.Entries.Sum(x => x.EmployerContributionAmount);
 
-        if (request.EmployeeItems != null && request.EmployeeItems.Count > 0)
-        {
-            var sumEe = request.EmployeeItems.Sum(i => i.EmployeeContribution);
-            var sumEr = request.EmployeeItems.Sum(i => i.EmployerContribution);
+        if ((request.EmployeeContributionAmount.HasValue && request.EmployeeContributionAmount != ee) ||
+            (request.EmployerContributionAmount.HasValue && request.EmployerContributionAmount != er))
+            throw new PayrollFinanceConflictException("Submitted totals must exactly equal employee entries.");
 
-            if (request.EmployeeContributionAmount.HasValue && Math.Abs(request.EmployeeContributionAmount.Value - sumEe) > 0.01m)
-            {
-                throw new InvalidOperationException($"Employee contribution header amount ({request.EmployeeContributionAmount.Value}) does not reconcile with sum of employee items ({sumEe}).");
-            }
-
-            if (request.EmployerContributionAmount.HasValue && Math.Abs(request.EmployerContributionAmount.Value - sumEr) > 0.01m)
-            {
-                throw new InvalidOperationException($"Employer contribution header amount ({request.EmployerContributionAmount.Value}) does not reconcile with sum of employer items ({sumEr}).");
-            }
-
-            eeAmount = request.EmployeeContributionAmount ?? sumEe;
-            erAmount = request.EmployerContributionAmount ?? sumEr;
-        }
-        else
-        {
-            eeAmount = request.EmployeeContributionAmount ?? 0m;
-            erAmount = request.EmployerContributionAmount ?? 0m;
-        }
-
-        var now = clock.GetUtcNow();
-        var contribution = new StatutoryContribution(
-            request.Scheme,
-            request.ContributionMonth,
-            eeAmount,
-            erAmount,
-            request.Currency,
-            actorUserId,
-            now,
-            request.PayableAccountCode,
-            request.Notes,
-            request.EmployerRegistrationNumber);
-
-        if (request.EmployeeItems != null && request.EmployeeItems.Count > 0)
-        {
-            contribution.SetEmployeeItemsJson(JsonSerializer.Serialize(request.EmployeeItems));
-        }
+        var contribution = PayrollFinanceErrors.Run(() => new StatutoryContribution(request.Scheme, month, ee, er, request.Currency,
+            actorUserId, clock.GetUtcNow(), request.PayableAccountCode, request.Notes, request.EmployerRegistrationNumber, hasEmployeeEntries: true));
 
         if (request.ObligationId.HasValue)
         {
-            contribution.BindObligation(request.ObligationId.Value);
+            var obligation = await repository.GetObligationByIdAsync(request.ObligationId.Value, ct)
+                ?? throw new PayrollFinanceConflictException("Linked payroll obligation not found.");
+            if (obligation.State != PayrollObligationState.Finalized)
+                throw new PayrollFinanceConflictException("Linked payroll obligation must be finalized.");
+            var pStart = obligation.PeriodStart ?? obligation.Batch.PeriodStart;
+            if (pStart.Year != month.Year || pStart.Month != month.Month)
+                throw new PayrollFinanceConflictException("Statutory contribution month does not correspond to linked payroll obligation period.");
+            if (!string.Equals(obligation.Currency, request.Currency, StringComparison.OrdinalIgnoreCase))
+                throw new PayrollFinanceConflictException("Statutory contribution currency does not match linked payroll obligation.");
+            contribution.BindObligation(obligation.Id);
         }
 
+        var itemsList = new List<StatutoryContributionEmployeeItemDto>();
+        foreach (var item in request.Entries!)
+        {
+            if (!await financeRepository!.EmployeeExistsAsync(item.EmployeeId, ct)) throw new PayrollFinanceConflictException("Employee not found.");
+            var registration = await RequireRegistrationAsync(item.EmployeeId, request.Scheme, month, ct);
+            await RequireCoverageAsync(item.EmployeeId, month, month.AddMonths(1), request.Scheme, ct);
+            var regNumber = registration.RegistrationNumber;
+            var regId = registration.Id;
+
+            var proof = new StatutoryEntryProof(contribution.Id, item.EmployeeId, regId, regNumber,
+                request.Scheme, month, contribution.Currency, item.EmployeeContributionAmount, item.EmployerContributionAmount,
+                item.EvidenceReference, PayrollFinanceErrors.Run(() => StatutoryContributionEntry.ValidateSha256(item.EvidenceSha256)));
+            var proofBytes = JsonSerializer.SerializeToUtf8Bytes(proof);
+            var reference = await files!.WriteAsync(proofBytes, EntryPurpose(contribution.Id, item.EmployeeId), ct);
+            var privateProof = JsonSerializer.Serialize(reference);
+
+            contribution.Entries.Add(PayrollFinanceErrors.Run(() => new StatutoryContributionEntry(contribution.Id, item.EmployeeId, regId, regNumber,
+                item.EmployeeContributionAmount, item.EmployerContributionAmount, item.EvidenceReference, item.EvidenceSha256, privateProof)));
+            itemsList.Add(new StatutoryContributionEmployeeItemDto(item.EmployeeId, item.EmployeeContributionAmount, item.EmployerContributionAmount, regNumber));
+        }
+        contribution.SetEmployeeItemsJson(JsonSerializer.Serialize(itemsList));
+
+        PayrollFinanceErrors.Run(contribution.ValidateEntries);
         await repository.AddContributionAsync(contribution, ct);
         await repository.SaveChangesAsync(ct);
-
         return Map(contribution);
     }
-
     private async Task<ContributionResponse> ApproveCoreAsync(Guid id, string actorUserId, CancellationToken ct)
     {
         var contribution = await repository.GetByIdAsync(id, ct)
-            ?? throw new InvalidOperationException("Statutory contribution record not found.");
+            ?? throw new PayrollFinanceConflictException("Statutory contribution record not found.");
 
         var now = clock.GetUtcNow();
-        contribution.Approve(actorUserId, now);
+        await ValidateEvidenceAsync(contribution, ct);
+        PayrollFinanceErrors.Run(() => contribution.Approve(actorUserId, now));
 
         await repository.SaveChangesAsync(ct);
         return Map(contribution);
     }
 
-    private async Task<ContributionResponse> PostCoreAsync(Guid id, string actorUserId, CancellationToken ct)
-    {
-        await repository.AcquireStatutoryPostingLockAsync(id, ct);
-
-        var contribution = await repository.GetByIdAsync(id, ct)
-            ?? throw new InvalidOperationException("Statutory contribution record not found.");
-
-        if (contribution.PostedAt.HasValue || contribution.State == ContributionState.Posted || contribution.JournalEntryId.HasValue)
-        {
-            throw new InvalidOperationException("Statutory contribution has already been posted to accounting.");
-        }
-
-        if (contribution.State != ContributionState.Approved)
-        {
-            throw new InvalidOperationException("Only approved contributions can be posted to accounting.");
-        }
-
-        if (!contribution.ObligationId.HasValue)
-        {
-            throw new InvalidOperationException("Statutory contribution must be explicitly linked to an approved payroll obligation (ObligationId). Silent month matching is prohibited.");
-        }
-
-        var obligation = await repository.GetObligationByIdAsync(contribution.ObligationId.Value, ct)
-            ?? throw new InvalidOperationException($"Linked payroll obligation {contribution.ObligationId.Value} not found.");
-
-        if (obligation.State != Cosmix.Domain.HR.PayrollAccounting.PayrollObligationState.Finalized)
-        {
-            throw new InvalidOperationException($"Linked payroll obligation {obligation.Id} is not in Finalized state.");
-        }
-
-        if (!string.Equals(obligation.Currency, contribution.Currency, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException($"Statutory contribution currency '{contribution.Currency}' does not match linked obligation currency '{obligation.Currency}'.");
-        }
-
-        var existingJournal = await repository.GetJournalEntryByStatutoryContributionIdAsync(contribution.Id, ct);
-        if (existingJournal != null)
-        {
-            throw new InvalidOperationException("A journal entry already exists for this statutory contribution.");
-        }
-
-        if (financeRepository == null)
-        {
-            throw new InvalidOperationException("Approved finance setup repository is required for statutory posting. Silent hardcoded fallbacks are disabled.");
-        }
-
-        var profiles = await financeRepository.ProfilesAsync(ct);
-        var applicableProfile = profiles.FirstOrDefault(p =>
-            p.State == PayrollFinanceApprovalState.Approved &&
-            p.Currency == contribution.Currency &&
-            p.EffectiveFrom <= contribution.ContributionMonth &&
-            (!p.EffectiveToExclusive.HasValue || p.EffectiveToExclusive.Value > contribution.ContributionMonth));
-
-        if (applicableProfile == null)
-        {
-            throw new InvalidOperationException($"No approved payroll posting profile found for currency {contribution.Currency} and month {contribution.ContributionMonth:yyyy-MM}.");
-        }
-
-        var rules = PayrollFinanceSetupService.Rules(applicableProfile);
-        var statMapping = rules.Statutory.FirstOrDefault(s => s.Scheme == contribution.Scheme);
-        if (statMapping == null)
-        {
-            throw new InvalidOperationException($"No approved statutory mapping found for scheme {contribution.Scheme} in posting profile '{applicableProfile.Name}'.");
-        }
-
-        var debitAccount = statMapping.EmployerExpenseAccountCode;
-        var creditAccount = statMapping.PayableAccountCode;
-
-        if (!string.IsNullOrWhiteSpace(contribution.PayableAccountCode) && !string.Equals(contribution.PayableAccountCode, statMapping.PayableAccountCode, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException($"Direct account bypass is prohibited. Contribution payable account '{contribution.PayableAccountCode}' does not match the approved posting profile mapping '{statMapping.PayableAccountCode}'.");
-        }
-
-        var expenseAcc = await financeRepository.AccountAsync(debitAccount, ct);
-        if (expenseAcc == null || !expenseAcc.IsActive || expenseAcc.Kind != PayrollAccountKind.Expense)
-        {
-            throw new InvalidOperationException($"Configured employer expense account '{debitAccount}' is invalid or inactive in chart of accounts.");
-        }
-        var payableAcc = await financeRepository.AccountAsync(creditAccount, ct);
-        if (payableAcc == null || !payableAcc.IsActive || payableAcc.Kind != PayrollAccountKind.Liability)
-        {
-            throw new InvalidOperationException($"Configured statutory payable account '{creditAccount}' is invalid or inactive in chart of accounts.");
-        }
-
-        var period = await financeRepository.PeriodForDateAsync(contribution.ContributionMonth, contribution.Currency, ct);
-        if (period == null || period.State != PayrollAccountingPeriodState.Open || period.ApprovedAt == null || period.ApprovedByUserId == period.CreatedByUserId)
-        {
-            throw new InvalidOperationException($"No approved, open accounting period found for statutory contribution date {contribution.ContributionMonth:yyyy-MM-dd} in {contribution.Currency}.");
-        }
-
-        var now = clock.GetUtcNow();
-
-        var journalEntry = new Cosmix.Domain.HR.PayrollAccounting.PayrollJournalEntry(
-            obligation.Id,
-            Cosmix.Domain.HR.PayrollAccounting.JournalEntryKind.StatutoryContribution,
-            debitAccount,
-            creditAccount,
-            contribution.EmployerContributionAmount,
-            contribution.Currency,
-            $"Employer {contribution.Scheme} contribution for {contribution.ContributionMonth:yyyy-MM} [Ref:{contribution.Id}]",
-            actorUserId,
-            now,
-            contribution.Id,
-            contribution.Scheme.ToString());
-
-        journalEntry.BindPosting(contribution.ContributionMonth, period.Id, applicableProfile.Id, $"STATUTORY-{contribution.Scheme}-{contribution.Id:N}");
-
-        await repository.AddJournalEntryAsync(journalEntry, ct);
-
-        contribution.Post(actorUserId, now, journalEntry.Id);
-        await repository.SaveChangesAsync(ct);
-
-        return Map(contribution);
-    }
-
+    private Task<ContributionResponse> PostCoreAsync(Guid id, string actorUserId, CancellationToken ct) =>
+        throw new PayrollFinanceConflictException("Explicit obligation, approved posting profile, posting date and contribution version are required; use the source-bound posting request.");
     private async Task<ContributionResponse> GetCoreAsync(Guid id, CancellationToken ct)
     {
         var contribution = await repository.GetByIdAsync(id, ct)
-            ?? throw new InvalidOperationException("Statutory contribution record not found.");
+            ?? throw new PayrollFinanceConflictException("Statutory contribution record not found.");
 
         return Map(contribution);
     }
@@ -261,93 +178,41 @@ public sealed class StatutoryContributionService(
     private async Task<(string FileName, byte[] Bytes)> ExportScheduleCsvCoreAsync(Guid id, CancellationToken ct)
     {
         var contribution = await repository.GetByIdAsync(id, ct)
-            ?? throw new InvalidOperationException("Statutory contribution record not found.");
-
-        var registrations = await repository.GetAllRegistrationsForSchemeAsync(contribution.Scheme, ct);
-        var regMap = registrations.ToDictionary(r => r.EmployeeId, r => r.RegistrationNumber);
-
+            ?? throw new PayrollFinanceConflictException("Statutory contribution record not found.");
+        await ValidateEvidenceAsync(contribution, ct);
         var sb = new StringBuilder();
         sb.AppendLine("Scheme,ContributionMonth,EmployerRegistrationNumber,EmployeeId,RegistrationNumber,EmployeeContribution,EmployerContribution,TotalContribution,Currency,State");
-
-        decimal totalEe = 0;
-        decimal totalEr = 0;
-
-        var items = !string.IsNullOrWhiteSpace(contribution.EmployeeItemsJson)
-            ? JsonSerializer.Deserialize<List<StatutoryContributionEmployeeItemDto>>(contribution.EmployeeItemsJson) ?? []
-            : [];
-        if (items.Count > 0)
-        {
-            foreach (var item in items)
-            {
-                var regNum = !string.IsNullOrWhiteSpace(item.RegistrationNumber)
-                    ? item.RegistrationNumber
-                    : (regMap.TryGetValue(item.EmployeeId, out var rn) ? rn : "");
-
-                var rowTotal = item.EmployeeContribution + item.EmployerContribution;
-                totalEe += item.EmployeeContribution;
-                totalEr += item.EmployerContribution;
-
-                sb.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                    "{0},{1:yyyy-MM-dd},{2},{3},{4},{5:F2},{6:F2},{7:F2},{8},{9}",
-                    Escape(contribution.Scheme.ToString()),
-                    contribution.ContributionMonth,
-                    Escape(contribution.EmployerRegistrationNumber),
-                    item.EmployeeId,
-                    Escape(regNum),
-                    item.EmployeeContribution,
-                    item.EmployerContribution,
-                    rowTotal,
-                    Escape(contribution.Currency),
-                    contribution.State));
-            }
-        }
-        else
-        {
-            totalEe = contribution.EmployeeContributionAmount;
-            totalEr = contribution.EmployerContributionAmount;
+        foreach (var entry in contribution.Entries.OrderBy(x => x.EmployeeId))
             sb.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                "{0},{1:yyyy-MM-dd},{2},TOTAL_ONLY,,{3:F2},{4:F2},{5:F2},{6},{7}",
-                Escape(contribution.Scheme.ToString()),
-                contribution.ContributionMonth,
-                Escape(contribution.EmployerRegistrationNumber),
-                contribution.EmployeeContributionAmount,
-                contribution.EmployerContributionAmount,
-                contribution.TotalContributionAmount,
-                Escape(contribution.Currency),
-                contribution.State));
-        }
-
+                "{0},{1:yyyy-MM-dd},{2},{3},{4},{5:F2},{6:F2},{7:F2},{8},{9}",
+                Escape(contribution.Scheme.ToString()), contribution.ContributionMonth, Escape(contribution.EmployerRegistrationNumber),
+                entry.EmployeeId, Escape(entry.RegistrationNumber), entry.EmployeeContributionAmount, entry.EmployerContributionAmount,
+                entry.EmployeeContributionAmount + entry.EmployerContributionAmount, Escape(contribution.Currency), contribution.State));
         sb.AppendLine(string.Format(CultureInfo.InvariantCulture,
             "TOTAL,{0:yyyy-MM-dd},{1},COMPANY_TOTAL,,{2:F2},{3:F2},{4:F2},{5},{6}",
-            contribution.ContributionMonth,
-            Escape(contribution.EmployerRegistrationNumber),
-            totalEe,
-            totalEr,
-            totalEe + totalEr,
-            Escape(contribution.Currency),
-            contribution.State));
-
-        var fileName = $"{contribution.Scheme}_Contribution_{contribution.ContributionMonth:yyyy_MM}.csv";
-        var bytes = Encoding.UTF8.GetBytes(sb.ToString());
-        return (fileName, bytes);
+            contribution.ContributionMonth, Escape(contribution.EmployerRegistrationNumber),
+            contribution.Entries.Sum(x => x.EmployeeContributionAmount), contribution.Entries.Sum(x => x.EmployerContributionAmount),
+            contribution.Entries.Sum(x => x.EmployeeContributionAmount + x.EmployerContributionAmount), Escape(contribution.Currency), contribution.State));
+        return ($"{contribution.Scheme}_Contribution_{contribution.ContributionMonth:yyyy_MM}.csv", Encoding.UTF8.GetBytes(sb.ToString()));
     }
-
     private async Task<RegistrationResponse> AddRegistrationCoreAsync(Guid employeeId, AddRegistrationRequest request, string actorUserId, CancellationToken ct)
     {
+        if (financeRepository is null) throw new InvalidOperationException("Statutory finance repository is required.");
+        if (!await financeRepository.EmployeeExistsAsync(employeeId, ct)) throw new PayrollFinanceConflictException("Employee not found.");
         var existing = await repository.GetRegistrationAsync(employeeId, request.Scheme, ct);
         if (existing is not null)
         {
-            throw new InvalidOperationException($"Employee already has a registration for scheme {request.Scheme}.");
+            throw new PayrollFinanceConflictException($"Employee already has a registration for scheme {request.Scheme}.");
         }
 
         var now = clock.GetUtcNow();
-        var reg = new EmployeeStatutoryRegistration(
+        var reg = PayrollFinanceErrors.Run(() => new EmployeeStatutoryRegistration(
             employeeId,
             request.Scheme,
             request.RegistrationNumber,
             request.RegisteredAt,
             actorUserId,
-            now);
+            now));
 
         await repository.AddRegistrationAsync(reg, ct);
         await repository.SaveChangesAsync(ct);
@@ -361,9 +226,106 @@ public sealed class StatutoryContributionService(
         return list.Select(r => new RegistrationResponse(r.Id, r.EmployeeId, r.Scheme.ToString(), r.RegistrationNumber, r.RegisteredAt, r.RecordedAt)).ToList();
     }
 
+    public static string EntryPurpose(Guid contributionId, Guid employeeId) => $"statutory-entry/{contributionId:D}/{employeeId:D}";
+    public static string CoveragePurpose(Guid employeeId) => $"statutory-coverage/{employeeId:D}";
+
+    public Task<IReadOnlyList<StatutoryCoverageResponse>> GetCoverageAsync(Guid employeeId, AuthRequestContext context, CancellationToken ct) =>
+        operation.ExecuteAsync<IReadOnlyList<StatutoryCoverageResponse>>("statutory.contributions.manage", "StatutoryCoverageRead", "Employee", employeeId.ToString(), context,
+            async (_, token) => (await financeRepository!.CoverageAsync(employeeId, token)).Select(MapCoverage).ToArray(), ct);
+
+    public Task<StatutoryCoverageResponse> CreateCoverageAsync(Guid employeeId, StatutoryCoverageRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
+        writes!.WriteAsync("statutory.contributions.manage", "statutory.coverage.create", employeeId.ToString(), key, request, request.Reason, context,
+            async (actor, token) =>
+            {
+                if (!await financeRepository!.EmployeeExistsAsync(employeeId, token)) throw new PayrollFinanceConflictException("Employee not found.");
+                var existing = await financeRepository.CoverageAsync(employeeId, token);
+                if (existing.Any(x => x.EffectiveFrom < (request.EffectiveToExclusive ?? DateOnly.MaxValue) &&
+                    (x.EffectiveToExclusive ?? DateOnly.MaxValue) > request.EffectiveFrom)) throw new PayrollFinanceConflictException("Statutory coverage dates overlap.");
+                var proof = new StatutoryCoverageProof(employeeId, request.EffectiveFrom, request.EffectiveToExclusive,
+                    request.Schemes.Order().ToArray(), request.EvidenceReference, PayrollFinanceErrors.Run(() => StatutoryContributionEntry.ValidateSha256(request.EvidenceSha256)));
+                var reference = await files!.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(proof), CoveragePurpose(employeeId), token);
+                var row = PayrollFinanceErrors.Run(() => new EmployeeStatutoryCoverage(employeeId, request.EffectiveFrom, request.EffectiveToExclusive, request.Schemes,
+                    request.EvidenceReference, request.EvidenceSha256, JsonSerializer.Serialize(reference), actor.AccountId.ToString(), clock.GetUtcNow()));
+                financeRepository.Add(row); await financeRepository.SaveChangesAsync(token); return MapCoverage(row);
+            }, ct);
+
+    public Task<StatutoryCoverageResponse> ApproveCoverageAsync(Guid employeeId, Guid id, FinancialDecisionRequest request, string key, AuthRequestContext context, CancellationToken ct) =>
+        writes!.WriteAsync("statutory.contributions.approve", "statutory.coverage.approve", id.ToString(), key, new { employeeId, request }, request.Reason, context,
+            async (actor, token) =>
+            {
+                var row = await financeRepository!.CoverageByIdAsync(id, token) ?? throw new PayrollFinanceConflictException("Coverage not found.");
+                if (row.EmployeeId != employeeId) throw new PayrollFinanceConflictException("Employee coverage mismatch.");
+                PayrollFinanceSetupService.ExpectVersion(financeRepository, row, row.RowVersion, request.ExpectedVersion);
+                await ValidateCoverageProofAsync(row, files!, token);
+                PayrollFinanceErrors.Run(() => row.Approve(actor.AccountId.ToString(), clock.GetUtcNow()));
+                await financeRepository.SaveChangesAsync(token); return MapCoverage(row);
+            }, ct);
+
+    private async Task RequireCoverageAsync(Guid employeeId, DateOnly start, DateOnly end, StatutoryScheme scheme, CancellationToken ct)
+    {
+        var applicable = (await financeRepository!.CoverageAsync(employeeId, ct)).Where(x => x.ApprovedAt.HasValue &&
+            x.EffectiveFrom < end && (!x.EffectiveToExclusive.HasValue || x.EffectiveToExclusive > start)).ToArray();
+        if (applicable.Length != 1 || applicable[0].EffectiveFrom > start || applicable[0].EffectiveToExclusive < end ||
+            applicable[0].ApprovedByUserId == applicable[0].CreatedByUserId || !applicable[0].ReadSchemes().Contains(scheme))
+            throw new PayrollFinanceConflictException("One independently approved coverage record must explicitly cover the entire contribution month and scheme.");
+        await ValidateCoverageProofAsync(applicable[0], files!, ct);
+    }
+
+    private async Task ValidateEvidenceAsync(StatutoryContribution row, CancellationToken ct)
+    {
+        RequireEvidenceDependencies();
+        PayrollFinanceErrors.Run(row.ValidateEntries);
+        foreach (var entry in row.Entries)
+        {
+            var registration = await RequireRegistrationAsync(entry.EmployeeId, row.Scheme, row.ContributionMonth, ct);
+            if (registration.Id != entry.RegistrationId || registration.RegistrationNumber != entry.RegistrationNumber)
+                throw new PayrollFinanceConflictException("Statutory registration no longer matches the retained employee entry.");
+            await RequireCoverageAsync(entry.EmployeeId, row.ContributionMonth, row.ContributionMonth.AddMonths(1), row.Scheme, ct);
+            await ValidateEntryProofAsync(row, entry, files!, ct);
+        }
+    }
+
+    private void RequireEvidenceDependencies()
+    {
+        if (financeRepository is null || files is null)
+            throw new InvalidOperationException("Statutory finance repository and private evidence storage are required.");
+    }
+
+    private async Task<EmployeeStatutoryRegistration> RequireRegistrationAsync(Guid employeeId, StatutoryScheme scheme, DateOnly month, CancellationToken ct)
+    {
+        var registration = await repository.GetRegistrationAsync(employeeId, scheme, ct);
+        if (registration is null || registration.EmployeeId != employeeId || registration.Scheme != scheme ||
+            registration.RegisteredAt > month || string.IsNullOrWhiteSpace(registration.RegistrationNumber))
+            throw new PayrollFinanceConflictException("An existing employee registration must cover the full contribution month.");
+        return registration;
+    }
+
+    public static async Task ValidateEntryProofAsync(StatutoryContribution row, StatutoryContributionEntry entry, IPrivateFileStore files, CancellationToken ct)
+    {
+        var reference = JsonSerializer.Deserialize<PrivateFileReference>(entry.PrivateProofReference) ?? throw new PayrollFinanceConflictException("Entry proof unavailable.");
+        var actual = JsonSerializer.Deserialize<StatutoryEntryProof>(await files.ReadAsync(reference, EntryPurpose(row.Id, entry.EmployeeId), ct));
+        var expected = new StatutoryEntryProof(row.Id, entry.EmployeeId, entry.RegistrationId, entry.RegistrationNumber, row.Scheme,
+            row.ContributionMonth, row.Currency, entry.EmployeeContributionAmount, entry.EmployerContributionAmount, entry.EvidenceReference, entry.EvidenceSha256);
+        if (actual != expected) throw new PayrollFinanceConflictException("Statutory entry evidence changed.");
+    }
+
+    public static async Task ValidateCoverageProofAsync(EmployeeStatutoryCoverage row, IPrivateFileStore files, CancellationToken ct)
+    {
+        var reference = JsonSerializer.Deserialize<PrivateFileReference>(row.PrivateProofReference) ?? throw new PayrollFinanceConflictException("Coverage proof unavailable.");
+        var actual = JsonSerializer.Deserialize<StatutoryCoverageProof>(await files.ReadAsync(reference, CoveragePurpose(row.EmployeeId), ct));
+        if (actual is null || actual.EmployeeId != row.EmployeeId || actual.EffectiveFrom != row.EffectiveFrom ||
+            actual.EffectiveToExclusive != row.EffectiveToExclusive || actual.EvidenceReference != row.EvidenceReference ||
+            actual.EvidenceSha256 != row.EvidenceSha256 || !actual.Schemes.SequenceEqual(row.ReadSchemes()))
+            throw new PayrollFinanceConflictException("Statutory coverage evidence changed.");
+    }
+
+    private static StatutoryCoverageResponse MapCoverage(EmployeeStatutoryCoverage x) => new(x.Id, x.EmployeeId, x.EffectiveFrom, x.EffectiveToExclusive,
+        x.ReadSchemes(), x.EvidenceReference, x.EvidenceSha256, x.ApprovedAt.HasValue ? "Approved" : "Draft", Convert.ToBase64String(x.RowVersion), x.CreatedByUserId, x.ApprovedByUserId);
+
     private static string Escape(string? value)
     {
         if (string.IsNullOrEmpty(value)) return "";
+        if (value.TrimStart().StartsWith('=') || value.TrimStart().StartsWith('+') || value.TrimStart().StartsWith('-') || value.TrimStart().StartsWith('@')) value = "'" + value;
         if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
         {
             return $"\"{value.Replace("\"", "\"\"")}\"";
@@ -371,9 +333,25 @@ public sealed class StatutoryContributionService(
         return value;
     }
 
-    private static ContributionResponse Map(StatutoryContribution c) =>
-        new(c.Id, c.Scheme.ToString(), c.ContributionMonth, c.EmployeeContributionAmount, c.EmployerContributionAmount,
+    private static ContributionResponse Map(StatutoryContribution c)
+    {
+        var employeeItems = c.Entries.Count > 0
+            ? c.Entries.Select(x => new StatutoryContributionEmployeeItemDto(x.EmployeeId, x.EmployeeContributionAmount, x.EmployerContributionAmount, x.RegistrationNumber)).ToArray()
+            : (!string.IsNullOrWhiteSpace(c.EmployeeItemsJson)
+                ? JsonSerializer.Deserialize<List<StatutoryContributionEmployeeItemDto>>(c.EmployeeItemsJson)?.ToArray() ?? []
+                : []);
+
+        var entries = c.Entries.Select(x => new ContributionEntryResponse(x.Id, x.EmployeeId, x.RegistrationId, x.RegistrationNumber,
+            x.EmployeeContributionAmount, x.EmployerContributionAmount, x.EvidenceReference, x.EvidenceSha256)).ToArray();
+
+        return new(c.Id, c.Scheme.ToString(), c.ContributionMonth, c.EmployeeContributionAmount, c.EmployerContributionAmount,
             c.TotalContributionAmount, c.Currency, c.State.ToString(), c.PayableAccountCode, c.Notes, c.EmployerRegistrationNumber,
             c.CreatedAt, c.CreatedByUserId, c.ApprovedAt, c.ApprovedByUserId, c.PostedAt, c.PostedByUserId, c.JournalEntryId,
-            !string.IsNullOrWhiteSpace(c.EmployeeItemsJson) ? JsonSerializer.Deserialize<List<StatutoryContributionEmployeeItemDto>>(c.EmployeeItemsJson) : null);
+            employeeItems, Convert.ToBase64String(c.RowVersion), entries, c.ObligationId, c.JournalEntryId)
+        {
+            PostedEmployeeCount = c.State == ContributionState.Posted ? c.Entries.Count : c.EmployeePostings.Count,
+            PostedObligationIds = c.EmployeePostings.Select(x => x.ObligationId)
+                .Concat(c.ObligationId.HasValue ? [c.ObligationId.Value] : []).Distinct().OrderBy(x => x).ToArray()
+        };
+    }
 }

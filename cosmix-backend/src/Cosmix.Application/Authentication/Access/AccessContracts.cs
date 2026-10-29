@@ -44,7 +44,7 @@ public sealed record AccessAssignmentResponse(Guid Id, Guid RoleId, string RoleC
     DateTimeOffset EffectiveFrom, DateTimeOffset? EffectiveTo, DateTimeOffset? RevokedAt,
     IReadOnlyList<AccessScopeRequest> Scopes, string Version);
 public sealed record AccessAccountResponse(Guid Id, Guid EmployeeId, AccountStatus Status,
-    bool MobileAccessEnabled, bool WebAccessEnabled, bool MfaRequired, string Version);
+    bool MobileAccessEnabled, bool WebAccessEnabled, bool MfaRequired, string Version, bool AuthenticatorRequired = false);
 public sealed record AccessAssignmentResult(AccessAssignmentResponse Assignment, string AccountVersion);
 
 public sealed record CreateAccessRoleRequest(
@@ -87,6 +87,11 @@ public interface IAccessManagementService
 public interface IAccessManagementRepository
 {
     Task<T> InTransactionAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken);
+    /// <summary>Audited read only; business writes are prohibited. serializeReaders is for reports
+    /// that read audit ranges before appending an audit: serialize those reports, not ordinary readers.</summary>
+    Task<T> InReadTransactionAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken,
+        bool serializeReaders = false) =>
+        InTransactionAsync(action, cancellationToken);
     Task<bool> IsCurrentAdministratorAsync(AuthenticatedAccount actor, DateTimeOffset now, CancellationToken cancellationToken);
     /// <summary>Revalidates web MFA evidence and an active, currently effective SuperAdmin assignment. Does not grant permissions.</summary>
     Task<bool> IsCurrentSuperAdminAsync(AuthenticatedAccount actor, DateTimeOffset now, CancellationToken cancellationToken);

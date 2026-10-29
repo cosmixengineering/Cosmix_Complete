@@ -43,7 +43,7 @@ public sealed class PayrollSalaryService(AttendanceOperation operation,IPayrollS
         if(previous?.Id!=input.ExpectedPreviousId || previous is not null &&
             (input.EffectiveFrom<=previous.EffectiveFrom || input.Kind!=previous.Kind))throw AttendanceOperation.Conflict("salary_component_source_changed");
         var until=input.Kind is PayrollSalaryComponentKind.OneTimeEarning or PayrollSalaryComponentKind.OneTimeDeduction?input.EffectiveFrom.AddDays(1):input.EffectiveToExclusive;
-        if(await repository.HasPreparedPeriodAsync(input.EffectiveFrom,until,ct))throw AttendanceOperation.Conflict("salary_period_already_prepared");
+        if(await repository.HasPreparedEmployeePeriodAsync(input.EmployeeId,input.EffectiveFrom,until,ct))throw AttendanceOperation.Conflict("salary_period_already_prepared");
     }
     /// <summary>Canonical transaction-local intake shared by manual and imported rows.</summary>
     public async Task<PayrollSalaryComponentResponse> StageComponentAsync(PayrollSalaryComponentInput input,AttendanceActor actor,Guid? sourceImportId,CancellationToken ct)
@@ -75,7 +75,7 @@ public sealed class PayrollSalaryService(AttendanceOperation operation,IPayrollS
             if(!await repository.EmployeeApprovedAsync(row.EmployeeId,ct))throw AttendanceOperation.Conflict("salary_employee_not_approved");
             var previous=(await repository.ComponentsAsync(row.EmployeeId,ct)).Where(x=>x.Code==row.Code && x.Id!=id && x.ApprovalRequest.State==ApprovalState.Approved).MaxBy(x=>x.Revision);
             if(previous?.Id!=row.SupersedesId || previous is not null && previous.EffectiveFrom>=row.EffectiveFrom)throw AttendanceOperation.Conflict("salary_component_source_changed");
-            if(await repository.HasPreparedPeriodAsync(row.EffectiveFrom,row.Kind is PayrollSalaryComponentKind.OneTimeEarning or PayrollSalaryComponentKind.OneTimeDeduction?row.EffectiveFrom.AddDays(1):row.EffectiveToExclusive,ct))
+            if(await repository.HasPreparedEmployeePeriodAsync(row.EmployeeId,row.EffectiveFrom,row.Kind is PayrollSalaryComponentKind.OneTimeEarning or PayrollSalaryComponentKind.OneTimeDeduction?row.EffectiveFrom.AddDays(1):row.EffectiveToExclusive,ct))
                 throw AttendanceOperation.Conflict("salary_period_already_prepared");
         }
         var proof=await DecisionProofAsync(id,request,decision,reason,actor,ct);

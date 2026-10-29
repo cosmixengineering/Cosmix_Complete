@@ -63,6 +63,8 @@ public sealed class MfaCredentialConfiguration : IEntityTypeConfiguration<MfaCre
         b.HasOne(x => x.UserAccount).WithMany().HasForeignKey(x => x.UserAccountId).OnDelete(DeleteBehavior.Restrict);
         b.Property(x => x.ProtectedSecretReference).HasMaxLength(500); b.Property(x => x.RecoveryCodeHash).HasMaxLength(256).IsUnicode(false).UseCollation("Latin1_General_100_BIN2");
         b.HasIndex(x => x.RecoveryCodeHash).IsUnique().HasFilter("[RecoveryCodeHash] IS NOT NULL");
+        b.HasIndex(x => x.UserAccountId).IsUnique().HasDatabaseName("UX_MfaCredentials_CurrentAuthenticator")
+            .HasFilter("[Method] = 1 AND [ConfirmedAt] IS NOT NULL AND [RevokedAt] IS NULL");
         b.Property(x => x.RowVersion).IsRowVersion(); b.HasIndex(x => new { x.UserAccountId, x.RevokedAt });
     }
 }
@@ -76,6 +78,7 @@ public sealed class MfaChallengeConfiguration : IEntityTypeConfiguration<MfaChal
             t.HasCheckConstraint("CK_MfaChallenges_Lifetime", "[ExpiresAt] > [IssuedAt] AND ([VerifiedAt] IS NULL OR ([VerifiedAt] >= [IssuedAt] AND [VerifiedAt] < [ExpiresAt])) AND ([ConsumedAt] IS NULL OR ([VerifiedAt] IS NOT NULL AND [ConsumedAt] >= [VerifiedAt] AND [ConsumedAt] < [ExpiresAt]))");
             t.HasCheckConstraint("CK_MfaChallenges_Verified", "([VerifiedAt] IS NULL AND [VerifiedCredentialId] IS NULL) OR ([VerifiedAt] IS NOT NULL AND [VerifiedCredentialId] IS NOT NULL)");
             t.HasCheckConstraint("CK_MfaChallenges_Counters", "[SecurityVersion] > 0 AND [FailedAttempts] >= 0");
+            t.HasCheckConstraint("CK_MfaChallenges_WebBinding", "([Purpose] IS NULL AND [PhoneBindingId] IS NULL AND [BrowserContextHash] IS NULL) OR ([Purpose] IS NOT NULL AND [Purpose] = N'WebLoginTotp' AND [PhoneBindingId] IS NOT NULL AND [BrowserContextHash] IS NOT NULL AND LEN([BrowserContextHash]) = 64 AND [RegisteredDeviceId] IS NULL)");
         });
         b.HasKey(x => x.Id); b.HasAlternateKey(x => new { x.UserAccountId, x.Id });
         b.HasOne(x => x.UserAccount).WithMany().HasForeignKey(x => x.UserAccountId).OnDelete(DeleteBehavior.Restrict);
@@ -84,6 +87,29 @@ public sealed class MfaChallengeConfiguration : IEntityTypeConfiguration<MfaChal
         b.HasOne<MfaCredential>().WithMany().HasForeignKey(x => new { x.UserAccountId, x.VerifiedCredentialId })
             .HasPrincipalKey(x => new { x.UserAccountId, x.Id }).OnDelete(DeleteBehavior.Restrict);
         b.Property(x => x.ChallengeHash).HasMaxLength(256).IsUnicode(false).UseCollation("Latin1_General_100_BIN2").IsRequired(); b.HasIndex(x => x.ChallengeHash).IsUnique();
+        b.Property(x => x.Purpose).HasMaxLength(40);
+        b.Property(x => x.BrowserContextHash).HasMaxLength(64).IsUnicode(false).UseCollation("Latin1_General_100_BIN2");
+        b.HasOne<LoginPhoneBinding>().WithMany().HasForeignKey(x => new { x.UserAccountId, x.PhoneBindingId })
+            .HasPrincipalKey(x => new { x.UserAccountId, x.Id }).OnDelete(DeleteBehavior.Restrict);
         b.Property(x => x.RowVersion).IsRowVersion(); b.HasIndex(x => new { x.UserAccountId, x.IssuedAt });
+    }
+}
+
+public sealed class MfaResetApprovalConfiguration : IEntityTypeConfiguration<MfaResetApproval>
+{
+    public void Configure(EntityTypeBuilder<MfaResetApproval> b)
+    {
+        b.ToTable("MfaResetApprovals", "auth", t =>
+        {
+            t.HasCheckConstraint("CK_MfaResetApprovals_Independent", "[ReviewerAccountId] <> [UserAccountId] AND [ReviewerEmployeeId] <> [EmployeeId]");
+            t.HasCheckConstraint("CK_MfaResetApprovals_Version", "[SecurityVersionBefore] > 0 AND [SecurityVersionAfter] = [SecurityVersionBefore] + 1");
+        });
+        b.HasKey(x => x.Id);
+        b.HasIndex(x => new { x.UserAccountId, x.SecurityVersionBefore }).IsUnique();
+        b.Property(x => x.ProofReference).HasMaxLength(2000).IsRequired();
+        b.HasOne<UserAccount>().WithMany().HasForeignKey(x => new { x.EmployeeId, x.UserAccountId })
+            .HasPrincipalKey(x => new { x.EmployeeId, x.Id }).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<UserAccount>().WithMany().HasForeignKey(x => new { x.ReviewerEmployeeId, x.ReviewerAccountId })
+            .HasPrincipalKey(x => new { x.EmployeeId, x.Id }).OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -177,6 +177,9 @@ public sealed class CosmixDbContext(DbContextOptions<CosmixDbContext> options)
     public DbSet<EmployeeOnboardingDecision> EmployeeOnboardingDecisions => Set<EmployeeOnboardingDecision>();
     public DbSet<EmployeeSubmission> EmployeeSubmissions => Set<EmployeeSubmission>();
     public DbSet<PayrollHandoffBatch> PayrollHandoffBatches => Set<PayrollHandoffBatch>();
+    public DbSet<Cosmix.Domain.HR.PayrollSalary.PayrollSalaryComponent> PayrollSalaryComponents => Set<Cosmix.Domain.HR.PayrollSalary.PayrollSalaryComponent>();
+    public DbSet<Cosmix.Domain.HR.PayrollSalary.PayrollSalaryPolicy> PayrollSalaryPolicies => Set<Cosmix.Domain.HR.PayrollSalary.PayrollSalaryPolicy>();
+    public DbSet<Cosmix.Domain.HR.PayrollImports.PayrollSalaryImport> PayrollSalaryImports => Set<Cosmix.Domain.HR.PayrollImports.PayrollSalaryImport>();
     public DbSet<PayrollHandoffLine> PayrollHandoffLines => Set<PayrollHandoffLine>();
     public DbSet<PayrollHandoffProcessingRecord> PayrollHandoffProcessingRecords => Set<PayrollHandoffProcessingRecord>();
     public DbSet<Policy> Policies => Set<Policy>();

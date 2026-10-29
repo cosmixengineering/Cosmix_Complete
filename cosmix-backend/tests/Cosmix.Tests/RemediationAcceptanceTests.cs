@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using Cosmix.Application.HR.PayrollSalary;
 using Cosmix.Api.Controllers.Attendance;
 using Cosmix.Api.Controllers.HR;
 using Cosmix.Application.Attendance.LocationConsent;
@@ -78,7 +80,7 @@ public class RemediationAcceptanceTests
 
         var postMethod = type.GetMethod(nameof(StatutoryContributionsController.Post));
         Assert.NotNull(postMethod);
-        Assert.Equal("statutory.contributions.approve", postMethod.GetCustomAttribute<AuthorizeAttribute>()?.Policy);
+        Assert.Equal("payroll.accounting.accrue", postMethod.GetCustomAttribute<AuthorizeAttribute>()?.Policy);
 
         var exportMethod = type.GetMethod(nameof(StatutoryContributionsController.ExportCsv));
         Assert.NotNull(exportMethod);
@@ -93,7 +95,6 @@ public class RemediationAcceptanceTests
     [Fact]
     public async Task DEF_04_StatutoryCsvExport_IncludesEmployerRegistrationNumber_AndEscapesRfc4180()
     {
-        var contributionId = Guid.NewGuid();
         var employeeId = Guid.NewGuid();
         var contribution = new StatutoryContribution(
             StatutoryScheme.EOBI,
@@ -105,12 +106,7 @@ public class RemediationAcceptanceTests
             createdAt: DateTimeOffset.UtcNow,
             payableAccountCode: "2030",
             notes: "Test, with commas",
-            employerRegistrationNumber: "EMP, REG \"123\"");
-        contribution.SetEmployeeItemsJson(System.Text.Json.JsonSerializer.Serialize(new List<StatutoryContributionEmployeeItemDto>
-        {
-            new(employeeId, 1000m, 5000m, "REG-999,XYZ")
-        }));
-
+            employerRegistrationNumber: "EMP, REG \"123\"", hasEmployeeEntries: true);
         var registration = new EmployeeStatutoryRegistration(
             employeeId,
             StatutoryScheme.EOBI,
@@ -119,11 +115,13 @@ public class RemediationAcceptanceTests
             "admin",
             DateTimeOffset.UtcNow);
 
-        var fakeRepo = new FakeStatutoryRepo(contribution, [registration]);
+        contribution.Entries.Add(new StatutoryContributionEntry(contribution.Id, employeeId, registration.Id, registration.RegistrationNumber,
+            1000m, 5000m, "synthetic-statutory-evidence", new string('A', 64), "synthetic-private-reference"));
         var fakeOperation = CreateDirectSensitiveComplianceOperation();
-        var service = new StatutoryContributionService(fakeRepo, TimeProvider.System, fakeOperation);
+        var retained = await StatutorySourceFixture.RetainAsync(contribution, registration);
+        var service = retained.Service(fakeOperation);
 
-        var (fileName, bytes) = await service.ExportScheduleCsvAsync(contributionId, Context, default);
+        var (fileName, bytes) = await service.ExportScheduleCsvAsync(contribution.Id, Context, default);
         var csv = Encoding.UTF8.GetString(bytes);
 
         // Header check
@@ -141,72 +139,28 @@ public class RemediationAcceptanceTests
     [Fact]
     public async Task Section5_PayrollAccounting_EnforcesEmployeeNetLimit_AndSupportsInstallmentsWithReplayBlock()
     {
-        var obligationId = Guid.NewGuid();
-        var batchId = Guid.NewGuid();
-        var accrualJournalId = Guid.NewGuid();
         var employeeAId = Guid.NewGuid();
         var employeeBId = Guid.NewGuid();
-
-        var obligation = new PayrollObligation(
-            batchId,
-            totalGrossAmount: 180000.40m,
-            totalNetAmount: 173800.10m,
-            currency: "PKR",
-            createdByUserId: "finance-preparer",
-            createdAt: DateTimeOffset.UtcNow);
+        var (batch, frozenReader) = await PermissionsTests.CreateApprovedPayrollAsync(
+            [(employeeAId, 100000.15m, 3500.15m), (employeeBId, 80000.25m, 2700.15m)]);
+        var source = await frozenReader.ReadAsync(batch.Id, default);
+        var obligation = new PayrollObligation(batch.Id, source.Employees.Sum(x => x.GrossEarnings), source.Employees.Sum(x => x.NetPay),
+            source.Currency, "finance-preparer", DateTimeOffset.UtcNow);
+        obligation.BindSource(source.Fingerprint, source.PeriodStart, source.PeriodEndExclusive,
+            JsonSerializer.Serialize(source.Employees.Select(x => new BatchEmployeeEntitlementDto(x.EmployeeId, x.GrossEarnings, x.TotalDeductions, x.NetPay))));
         obligation.Finalize("finance-manager", DateTimeOffset.UtcNow);
-
-        var accrualEntry = new PayrollJournalEntry(
-            obligation.Id,
-            JournalEntryKind.SalaryAccrual,
-            "5010",
-            "2010",
-            180000.40m,
-            "PKR",
-            "Monthly salary accrual",
-            "finance-manager",
-            DateTimeOffset.UtcNow);
-
-        // Employee A: 96,500.00 net
-        var lineA = new PayrollHandoffLine(
-            batchId,
-            employeeAId,
-            PayrollComponentKind.BaseCompensation,
-            "Salary",
-            Guid.NewGuid(),
-            1,
-            Guid.NewGuid(),
-            96500.00m,
-            "PKR",
-            null,
-            null,
-            "calc-ref-a",
-            "trace-a");
-
-        // Employee B: 77,300.10 net
-        var lineB = new PayrollHandoffLine(
-            batchId,
-            employeeBId,
-            PayrollComponentKind.BaseCompensation,
-            "Salary",
-            Guid.NewGuid(),
-            1,
-            Guid.NewGuid(),
-            77300.10m,
-            "PKR",
-            null,
-            null,
-            "calc-ref-b",
-            "trace-b");
-
-        var fakeRepo = new FakePayrollRepo(obligation, accrualEntry, [lineA, lineB]);
-        var fakeOperation = CreateDirectSensitiveComplianceOperation();
         var fakeFinanceRepo = new FakePayrollFinanceRepo();
+        var accrualEntry = new PayrollJournalEntry(obligation.Id, JournalEntryKind.SalaryAccrual, "5010", "2010", obligation.TotalNetAmount,
+            "PKR", "Monthly net salary accrual", "finance-manager", DateTimeOffset.UtcNow);
+        accrualEntry.BindPosting(new DateOnly(2026, 10, 31), fakeFinanceRepo.Period.Id, fakeFinanceRepo.Profile.Id, $"ACCRUAL-SALARY-{obligation.Id:N}");
+        var fakeRepo = new FakePayrollRepo(obligation, accrualEntry, batch.Lines.ToList());
+        var fakeOperation = CreateDirectSensitiveComplianceOperation();
         var fakeFinanceService = new PayrollFinanceSetupService(fakeFinanceRepo, clock: TimeProvider.System);
-        var service = new PayrollAccountingService(fakeRepo, TimeProvider.System, fakeOperation, fakeFinanceService);
-
+        var service = new PayrollAccountingService(fakeRepo, TimeProvider.System, fakeOperation, fakeFinanceService, frozenReader);
+        Assert.Equal(180000.40m, obligation.TotalGrossAmount);
+        Assert.Equal(173800.10m, obligation.TotalNetAmount);
         // 1. Employee A: Attempt overpayment (96,500.01) -> rejected
-        var exExcessive = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exExcessive = await Assert.ThrowsAsync<PayrollFinanceConflictException>(() =>
             service.RecordSalaryPaymentAsync(new RecordSalaryPaymentRequest(
                 obligation.Id,
                 accrualEntry.Id,
@@ -219,7 +173,7 @@ public class RemediationAcceptanceTests
         Assert.Contains("exceeds remaining employee net salary", exExcessive.Message, StringComparison.OrdinalIgnoreCase);
 
         // 2. Attempt zero or negative amount -> rejected
-        var exZero = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exZero = await Assert.ThrowsAsync<PayrollFinanceConflictException>(() =>
             service.RecordSalaryPaymentAsync(new RecordSalaryPaymentRequest(
                 obligation.Id,
                 accrualEntry.Id,
@@ -233,7 +187,7 @@ public class RemediationAcceptanceTests
 
         // 3. Employee outside batch -> rejected
         var outsideEmpId = Guid.NewGuid();
-        var exOutside = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exOutside = await Assert.ThrowsAsync<PayrollFinanceConflictException>(() =>
             service.RecordSalaryPaymentAsync(new RecordSalaryPaymentRequest(
                 obligation.Id,
                 accrualEntry.Id,
@@ -243,7 +197,7 @@ public class RemediationAcceptanceTests
                 Amount: 50000m,
                 EmployeeId: outsideEmpId,
                 PostingDate: new DateOnly(2026, 10, 31)), Context, default));
-        Assert.Contains("not included in the finalized payroll batch", exOutside.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("not included in the finalized payroll obligation snapshot", exOutside.Message, StringComparison.OrdinalIgnoreCase);
 
         // 4. Employee A: Full valid payment of 96,500.00 succeeds
         var paymentA = await service.RecordSalaryPaymentAsync(new RecordSalaryPaymentRequest(
@@ -260,7 +214,7 @@ public class RemediationAcceptanceTests
         Assert.Equal(96500.00m, paymentA.Amount);
 
         // 5. Employee A: Attempt further payment after full disbursement -> blocked
-        var exFullyPaid = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exFullyPaid = await Assert.ThrowsAsync<PayrollFinanceConflictException>(() =>
             service.RecordSalaryPaymentAsync(new RecordSalaryPaymentRequest(
                 obligation.Id,
                 accrualEntry.Id,
@@ -286,7 +240,7 @@ public class RemediationAcceptanceTests
         Assert.Equal(40000.00m, paymentB1.Amount);
 
         // 7. Employee B: Replay of installment 1 reference blocked
-        var exReplay = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exReplay = await Assert.ThrowsAsync<PayrollFinanceConflictException>(() =>
             service.RecordSalaryPaymentAsync(new RecordSalaryPaymentRequest(
                 obligation.Id,
                 accrualEntry.Id,
@@ -312,7 +266,7 @@ public class RemediationAcceptanceTests
         Assert.Equal(37300.10m, paymentB2.Amount);
 
         // 9. Employee B: Attempt any further installment after reaching 77,300.10 -> blocked
-        var exBOver = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exBOver = await Assert.ThrowsAsync<PayrollFinanceConflictException>(() =>
             service.RecordSalaryPaymentAsync(new RecordSalaryPaymentRequest(
                 obligation.Id,
                 accrualEntry.Id,
@@ -323,6 +277,14 @@ public class RemediationAcceptanceTests
                 EmployeeId: employeeBId,
                 PostingDate: new DateOnly(2026, 10, 31)), Context, default));
         Assert.Contains("already been fully disbursed", exBOver.Message, StringComparison.OrdinalIgnoreCase);
+        var postedPayments = await fakeRepo.GetSalaryPaymentsForObligationAsync(obligation.Id, default);
+        Assert.Equal(3, postedPayments.Count);
+        Assert.Equal(96500m, postedPayments.Where(x => x.EmployeeId == employeeAId).Sum(x => x.Amount));
+        Assert.Equal(77300.10m, postedPayments.Where(x => x.EmployeeId == employeeBId).Sum(x => x.Amount));
+        var paymentJournals = (await fakeRepo.GetJournalEntriesForObligationAsync(obligation.Id, default)).Where(x => x.Kind == JournalEntryKind.SalaryPayment).ToArray();
+        Assert.Equal(3, paymentJournals.Length);
+        Assert.Equal(obligation.TotalNetAmount, paymentJournals.Sum(x => x.Amount));
+        Assert.All(paymentJournals, x => { Assert.Equal("2010", x.DebitAccountCode); Assert.Equal("1010", x.CreditAccountCode); });
     }
 
     [Fact]
@@ -433,14 +395,20 @@ public class RemediationAcceptanceTests
     {
         private readonly List<PayrollLedgerAccount> accounts =
         [
+            new PayrollLedgerAccount("5010", "Salary Expense", PayrollAccountKind.Expense),
             new PayrollLedgerAccount("2010", "Salary Payable", PayrollAccountKind.Liability),
+            new PayrollLedgerAccount("2020", "Tax Payable", PayrollAccountKind.Liability),
             new PayrollLedgerAccount("1010", "Main Corporate Bank", PayrollAccountKind.Bank)
         ];
         private readonly PayrollAccountingPeriod period = new(new DateOnly(2026, 10, 1), new DateOnly(2026, 11, 1), "PKR", "fin-maker", DateTimeOffset.UtcNow);
+        public PayrollAccountingPeriod Period => period;
+        public PayrollPostingProfile Profile { get; } = new("Synthetic salary profile", "PKR", new(2026, 10, 1), new(2026, 11, 1),
+            JsonSerializer.Serialize(new PayrollPostingRules("5010", "2010", [new("TaxDeduction", "2020")], [])), "fin-maker", DateTimeOffset.UtcNow);
 
         public FakePayrollFinanceRepo()
         {
             period.Approve("fin-checker", DateTimeOffset.UtcNow);
+            Profile.Approve("fin-checker", DateTimeOffset.UtcNow);
         }
 
         public Task<IReadOnlyList<PayrollLedgerAccount>> AccountsAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<PayrollLedgerAccount>>(accounts);
@@ -448,8 +416,8 @@ public class RemediationAcceptanceTests
         public Task<PayrollLedgerAccount?> AccountAsync(string code, CancellationToken ct) => Task.FromResult(accounts.FirstOrDefault(a => a.Code == code));
         public Task<IReadOnlyList<PayrollAccountingPeriod>> PeriodsAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<PayrollAccountingPeriod>>([period]);
         public Task<PayrollAccountingPeriod?> PeriodAsync(Guid id, CancellationToken ct) => Task.FromResult<PayrollAccountingPeriod?>(period);
-        public Task<IReadOnlyList<PayrollPostingProfile>> ProfilesAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<PayrollPostingProfile>>([]);
-        public Task<PayrollPostingProfile?> ProfileAsync(Guid id, CancellationToken ct) => Task.FromResult<PayrollPostingProfile?>(null);
+        public Task<IReadOnlyList<PayrollPostingProfile>> ProfilesAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<PayrollPostingProfile>>([Profile]);
+        public Task<PayrollPostingProfile?> ProfileAsync(Guid id, CancellationToken ct) => Task.FromResult<PayrollPostingProfile?>(id == Profile.Id ? Profile : null);
         public Task<bool> PeriodOverlapAsync(DateOnly start, DateOnly endExclusive, string currency, CancellationToken ct) => Task.FromResult(false);
         public Task<PayrollAccountingPeriod?> PeriodForDateAsync(DateOnly date, string currency, CancellationToken ct) => Task.FromResult<PayrollAccountingPeriod?>(period);
         public Task<bool> EmployeeExistsAsync(Guid employeeId, CancellationToken ct) => Task.FromResult(true);

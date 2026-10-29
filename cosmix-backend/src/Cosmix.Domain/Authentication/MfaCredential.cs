@@ -24,11 +24,18 @@ public sealed class MfaCredential
     public string? ProtectedSecretReference { get; private set; }
     public string? RecoveryCodeHash { get; private set; }
     public DateTimeOffset EnrolledAt { get; private set; }
+    public Guid? EnrollmentSessionId { get; private set; }
     public DateTimeOffset? ConfirmedAt { get; private set; }
     public DateTimeOffset? RevokedAt { get; private set; }
     public long? LastAcceptedCounter { get; private set; }
     public DateTimeOffset? RecoveryCodeConsumedAt { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
+    public void BindEnrollment(Guid sessionId)
+    {
+        if (Method != MfaMethod.Totp || ConfirmedAt.HasValue || RevokedAt.HasValue || EnrollmentSessionId.HasValue)
+            throw new InvalidOperationException("Only a new authenticator can bind its enrollment session.");
+        EnrollmentSessionId = ModelGuard.Id(sessionId, nameof(sessionId));
+    }
     public void Confirm(DateTimeOffset at)
     {
         if (at < EnrolledAt || RevokedAt.HasValue || ConfirmedAt.HasValue) throw new InvalidOperationException("Invalid MFA confirmation.");

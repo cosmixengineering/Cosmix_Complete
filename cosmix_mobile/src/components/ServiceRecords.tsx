@@ -7,6 +7,7 @@ import { DateField, InfoRow, ReasonSheet, RecordCard } from './ServiceControls';
 import { ServiceSummary } from './ServiceSummary';
 import { LeaveBalancePanel } from './LeaveBalancePanel';
 import { RequestFeedback } from './RequestFeedback';
+import { PaymentHistoryCard } from './PaymentHistoryCard';
 import { useServiceResource } from '../hooks/useServiceResource';
 import { useServiceMutation } from '../hooks/useServiceMutation';
 import { allowanceTitle, serviceTitle } from '../constants/services';
@@ -66,6 +67,7 @@ const paged = new Set<ServiceKey>([
   'notifications',
   'punches',
   'payroll',
+  'payments',
 ]);
 type Cancellation = { row: DataRecord; route: string; versionName?: string };
 
@@ -343,6 +345,8 @@ export function ServiceRecords({
       <Text style={layout.muted}>
         {service === 'profile'
           ? 'Your current employment record, documents and assigned items.'
+          : service === 'payments'
+          ? 'Your salary payments by payroll period. Only confirmed payments count as paid. Turn the page for earlier periods.'
           : readOnly
           ? service === 'punches'
             ? 'Check In and Check Out times show when the server recorded each receipt, in Asia/Karachi. Change the dates to view older records.'
@@ -482,6 +486,9 @@ export function ServiceRecords({
         <Text style={layout.heading}>Request & agreement history</Text>
       ) : null}
       {rows.map((row, index) => {
+        if (service === 'payments') {
+          return <PaymentHistoryCard key={text(row.batchId)} initial={row} />;
+        }
         const action = readOnly ? null : cancellation(row);
         const displayRow =
           service === 'calendar'

@@ -9,11 +9,17 @@ export function SelectInput({
   value,
   onChange,
   disabled,
+  compact,
+  placeholder,
+  className,
+  style,
   ...props
 }: SelectHTMLAttributes<HTMLSelectElement> & {
-  label: string;
+  label?: string;
   options: readonly { value: string; label: string }[];
   error?: string;
+  compact?: boolean;
+  placeholder?: string;
 }) {
   const generated = useId();
   const inputId = id ?? generated;
@@ -34,13 +40,16 @@ export function SelectInput({
     if (selectedOption && selectedOption.value !== '') {
       return selectedOption.label;
     }
-    // If the first option is a placeholder like "Select relationship", show it
+    if (placeholder) {
+      return placeholder;
+    }
+    // If the first option is a placeholder like "All statuses" or "Select relationship", show it
     const firstOpt = options[0];
     if (firstOpt && firstOpt.value === '') {
       return firstOpt.label;
     }
-    return `Select ${label.toLowerCase()}...`;
-  }, [selectedOption, options, label]);
+    return label ? `Select ${label.toLowerCase()}...` : 'Select...';
+  }, [selectedOption, options, label, placeholder]);
 
   const isPlaceholder = !selectedOption || selectedOption.value === '';
 
@@ -100,20 +109,22 @@ export function SelectInput({
 
   return (
     <div
-      className="field custom-select-field"
+      className={`field custom-select-field ${compact ? 'is-compact' : ''} ${className ?? ''}`}
       ref={containerRef}
       data-field={dataField}
-      style={{ position: 'relative' }}
+      style={{ position: 'relative', ...style }}
     >
-      <label htmlFor={inputId}>
-        {label}
-        {props.required && (
-          <span className="hr-required-mark" aria-hidden="true">
-            {' '}
-            *
-          </span>
-        )}
-      </label>
+      {label && (
+        <label htmlFor={inputId}>
+          {label}
+          {props.required && (
+            <span className="hr-required-mark" aria-hidden="true">
+              {' '}
+              *
+            </span>
+          )}
+        </label>
+      )}
 
       {/* Hidden native select for HTML form accessibility & test selectors */}
       <select
@@ -151,7 +162,7 @@ export function SelectInput({
         aria-invalid={Boolean(error)}
         aria-describedby={error ? inputId + '-error' : undefined}
         data-field={dataField}
-        className={`custom-select-trigger ${isOpen ? 'is-open' : ''} ${error ? 'is-invalid' : ''} ${disabled ? 'is-disabled' : ''}`}
+        className={`custom-select-trigger ${compact ? 'is-compact' : ''} ${isOpen ? 'is-open' : ''} ${error ? 'is-invalid' : ''} ${disabled ? 'is-disabled' : ''}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         onKeyDown={(e) => {
           if (disabled) return;
@@ -167,7 +178,7 @@ export function SelectInput({
           {displayLabel}
         </span>
         <ChevronDown
-          size={16}
+          size={compact ? 12 : 16}
           className={`custom-select-chevron ${isOpen ? 'is-rotated' : ''}`}
           aria-hidden="true"
         />
@@ -175,10 +186,10 @@ export function SelectInput({
 
       {/* Popover Dropdown Menu */}
       {isOpen && (
-        <div className="custom-select-popover" role="listbox">
+        <div className={`custom-select-popover ${compact ? 'is-compact' : ''}`} role="listbox">
           {options.length > 7 && (
             <div className="custom-select-search-box">
-              <Search size={14} className="custom-select-search-icon" />
+              <Search size={compact ? 11 : 14} className="custom-select-search-icon" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -208,11 +219,13 @@ export function SelectInput({
                     key={opt.value}
                     role="option"
                     aria-selected={isSelected}
-                    className={`custom-select-option ${isSelected ? 'is-selected' : ''} ${isBlank ? 'is-blank-opt' : ''}`}
+                    className={`custom-select-option ${compact ? 'is-compact' : ''} ${isSelected ? 'is-selected' : ''} ${isBlank ? 'is-blank-opt' : ''}`}
                     onClick={() => handleSelect(opt.value)}
                   >
                     <span className="custom-select-option-label">{opt.label}</span>
-                    {isSelected && !isBlank && <Check size={14} className="custom-select-check" />}
+                    {isSelected && !isBlank && (
+                      <Check size={compact ? 12 : 14} className="custom-select-check" />
+                    )}
                   </div>
                 );
               })

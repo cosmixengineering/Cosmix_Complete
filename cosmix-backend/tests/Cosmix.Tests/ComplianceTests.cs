@@ -24,7 +24,10 @@ public class ComplianceTests
             employerContributionAmount: 2500m,
             currency: "PKR",
             createdByUserId: creator,
-            createdAt: now);
+            createdAt: now,
+            hasEmployeeEntries: true);
+        contribution.Entries.Add(new StatutoryContributionEntry(contribution.Id, Guid.NewGuid(), Guid.NewGuid(), "SYNTHETIC-REG",
+            500m, 2500m, "synthetic-approved-assessment", new string('A', 64), "synthetic-private-proof"));
 
         Assert.Equal(ContributionState.Draft, contribution.State);
 
@@ -106,7 +109,7 @@ public class ComplianceTests
         Assert.Equal(SalaryPaymentState.Pending, payment.State);
 
         // Cannot confirm pending payment before journal is posted
-        Assert.Throws<InvalidOperationException>(() => payment.Confirm("finance-approver", now));
+        Assert.Throws<InvalidOperationException>(() => payment.Confirm("finance-approver", now, "synthetic-protected-proof"));
 
         // Record payment journal transitions to Posted
         payment.RecordPaymentJournal(paymentJournalId);
@@ -114,16 +117,16 @@ public class ComplianceTests
         Assert.Equal(paymentJournalId, payment.PaymentJournalEntryId);
 
         // Creator cannot confirm their own payment disbursement (second-person approval rule)
-        var selfApprovalEx = Assert.Throws<InvalidOperationException>(() => payment.Confirm("finance-disburser", now));
+        var selfApprovalEx = Assert.Throws<InvalidOperationException>(() => payment.Confirm("finance-disburser", now, "synthetic-protected-proof"));
         Assert.Contains("creator cannot confirm", selfApprovalEx.Message, StringComparison.OrdinalIgnoreCase);
 
         // Now separate Finance approver can confirm
-        payment.Confirm("finance-approver", now);
+        payment.Confirm("finance-approver", now, "synthetic-protected-proof");
         Assert.Equal(SalaryPaymentState.Confirmed, payment.State);
         Assert.Equal("finance-approver", payment.ConfirmedByUserId);
 
         // Double confirmation is strictly prohibited
-        Assert.Throws<InvalidOperationException>(() => payment.Confirm("another-user", now));
+        Assert.Throws<InvalidOperationException>(() => payment.Confirm("another-user", now, "synthetic-protected-proof"));
     }
 
     [Fact]
@@ -174,7 +177,10 @@ public class ComplianceTests
             currency: "PKR",
             createdByUserId: "user-1",
             createdAt: DateTimeOffset.UtcNow,
-            payableAccountCode: null); // missing account code
+            payableAccountCode: null,
+            hasEmployeeEntries: true); // missing account code
+        contribution.Entries.Add(new StatutoryContributionEntry(contribution.Id, Guid.NewGuid(), Guid.NewGuid(), "SYNTHETIC-REG",
+            0m, 1800m, "synthetic-approved-assessment", new string('A', 64), "synthetic-private-proof"));
 
         contribution.Approve("user-2", DateTimeOffset.UtcNow);
 

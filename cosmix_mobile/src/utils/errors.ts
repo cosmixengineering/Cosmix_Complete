@@ -74,6 +74,8 @@ const messages: Record<string, string> = {
   access_denied: 'Your account does not have access to this action.',
   invalid_server_response:
     'The service returned an unexpected response. Please try again later.',
+  document_open_failed:
+    'Could not open this file. Try PDF or check that a compatible viewer is installed.',
   network_error:
     'Could not reach the company server. Check your connection and try again.',
   request_timeout: 'The server took too long to respond. Please try again.',

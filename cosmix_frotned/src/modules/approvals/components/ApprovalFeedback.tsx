@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
+import { TableSkeleton } from '@/components/ui/Skeleton';
 import {
   approvalError,
   approvalWriteError,
@@ -15,12 +16,7 @@ export function ApprovalQueryState({
   query: { isPending: boolean; isError: boolean; error: unknown; refetch: () => unknown };
   children: ReactNode;
 }) {
-  if (query.isPending)
-    return (
-      <p className="hr-notice" role="status">
-        Loading records...
-      </p>
-    );
+  if (query.isPending) return <TableSkeleton rows={6} />;
   if (query.isError)
     return (
       <div className="hr-notice" role="alert">

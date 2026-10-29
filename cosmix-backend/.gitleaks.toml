@@ -1,0 +1,17 @@
+title = "Cosmix source secret scanning"
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Generated output and installed third-party dependencies; application source and fixtures remain scanned."
+paths = [
+  '''(^|[\\/])(node_modules|bin|obj|build|dist|Pods|\.gradle|\.cxx|\.git|\.vs)([\\/]|$)'''
+]
+
+
+[[allowlists]]
+description = "Reviewed exact synthetic idempotency identifiers, storage labels and a directory name; none authorizes access."
+regexTarget = "secret"
+regexes = [
+  '''^(withdraw-correction-20261008-001|synthetic-month-v1|attendance-dp-20261013-b01|huma-attendance-20261013-b03-stale|huma-attendance-b06-(city|office|assign|stale|end)|synthetic-b02-publish|correction-key-001|hr-vehicle-v2-continue01|benefit-(award|revoke|waiver)-001|vehicle-publish-001)$'''
+]

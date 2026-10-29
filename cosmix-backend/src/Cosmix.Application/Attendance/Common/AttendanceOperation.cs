@@ -80,7 +80,8 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
         bool self = false, bool requireDevice = false,
         Func<AttendanceActor, CancellationToken, Task<IReadOnlyList<AttendanceResourceScope>>>? resourceScopes = null,
         bool requireSystemRole = false, bool requireAdministrator = false,
-        Func<AttendanceActor, CancellationToken, Task>? afterSave = null) =>
+        Func<AttendanceActor, CancellationToken, Task>? afterSave = null, bool concurrentRead = false,
+        bool serializeReaders = false) =>
         AuthorizedAsync(permission, employeeId, resources, resourceScopes, self, requireDevice, async (actor, targets, token) =>
         {
             var result = await action(actor, token);
@@ -89,7 +90,7 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
             await journal.SaveChangesAsync(token);
             if (afterSave is not null) await afterSave(actor, token);
             return result;
-        }, ct, requireSystemRole, requireAdministrator);
+        }, ct, requireSystemRole, requireAdministrator, concurrentRead, serializeReaders);
 
     public Task<T> WriteAsync<T>(string permission, string operation, Guid? employeeId, string key,
         object payload, string reason, AuthRequestContext context,
@@ -224,7 +225,7 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
         Func<AttendanceActor, CancellationToken, Task<IReadOnlyList<AttendanceResourceScope>>>? resourceScopes,
         bool self, bool requireDevice,
         Func<AttendanceActor, AuthorizationTargets, CancellationToken, Task<T>> action, CancellationToken ct,
-        bool requireSystemRole, bool requireAdministrator)
+        bool requireSystemRole, bool requireAdministrator, bool concurrentRead = false, bool serializeReaders = false)
     {
         var identity = current.Require();
         var definition = AccessPermissionCatalog.Find(permission);
@@ -236,7 +237,9 @@ public sealed class AttendanceOperation(ICurrentAuthentication current, IAccount
         if (self && (resources is not null || resourceScopes is not null || employeeId.HasValue && employeeId != identity.EmployeeId)) throw Denied();
         if (!self && (identity.Client != SessionClient.Web || !identity.MfaSatisfied)) throw Denied();
         if (requireDevice && (!self || identity.Client != SessionClient.Mobile)) throw Denied();
-        return authorization.InTransactionAsync(async token =>
+        Func<Func<CancellationToken, Task<T>>, CancellationToken, Task<T>> transaction = concurrentRead
+            ? (work, token) => authorization.InReadTransactionAsync(work, token, serializeReaders) : authorization.InTransactionAsync;
+        return transaction(async token =>
         {
             if (!await journal.IsCurrentSessionAsync(identity, token))
                 throw new AuthenticationFailure("invalid_authentication", 401);

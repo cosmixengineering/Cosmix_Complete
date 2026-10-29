@@ -5,7 +5,7 @@
     "CookieSupplied": "__Host-Cosmix.Access",
     "CsrfHeaderSupplied": false,
     "StatusCode": 400,
-    "ResponseBody": "{\u0022type\u0022:\u0022https://tools.ietf.org/html/rfc9110#section-15.5.1\u0022,\u0022title\u0022:\u0022invalid_csrf_token\u0022,\u0022status\u0022:400,\u0022traceId\u0022:\u00220HNPK1LFVDDKK\u0022}"
+    "ResponseBody": "{\u0022type\u0022:\u0022https://tools.ietf.org/html/rfc9110#section-15.5.1\u0022,\u0022title\u0022:\u0022invalid_csrf_token\u0022,\u0022status\u0022:400,\u0022traceId\u0022:\u00220HNPKQASG6JU4\u0022}"
   },
   "BearerWithoutCookie": {
     "Method": "POST",

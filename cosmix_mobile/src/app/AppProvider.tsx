@@ -80,7 +80,10 @@ export function AppProvider({
 }: React.PropsWithChildren): React.JSX.Element {
   const [services] = useState(createServices);
   useEffect(() => {
-    Promise.all([EvidencePicker.clearTemporaryCopies(), PayslipFiles.clearTemporaryCopies()])
+    Promise.all([
+      EvidencePicker.clearTemporaryCopies(),
+      PayslipFiles.clearTemporaryCopies(),
+    ])
       .catch(() => undefined)
       .then(() => services.session.initialize());
     const subscription = AppState.addEventListener('change', next => {

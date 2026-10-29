@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { LogOut, RefreshCw, ShieldCheck, Laptop, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/auth/use-auth';
+import { AuthenticatorSettings } from '@/auth/AuthenticatorSettings';
 
 export function AccountPage() {
   const { user, signOut, retrySession } = useAuth();
@@ -143,7 +144,7 @@ export function AccountPage() {
             <strong
               style={{ fontSize: '12px', color: '#0f172a', marginTop: '2px', display: 'block' }}
             >
-              Active Password & Session SMS
+              Password & verified second factor
             </strong>
           </div>
         </div>
@@ -192,6 +193,7 @@ export function AccountPage() {
           </Button>
         </div>
       </div>
+      <AuthenticatorSettings />
     </div>
   );
 }

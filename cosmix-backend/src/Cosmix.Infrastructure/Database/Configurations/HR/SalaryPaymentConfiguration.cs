@@ -18,6 +18,16 @@ public sealed class SalaryPaymentConfiguration : IEntityTypeConfiguration<Salary
         builder.Property(x => x.CreatedByUserId).HasMaxLength(200).IsRequired();
         builder.Property(x => x.ConfirmedByUserId).HasMaxLength(200);
         builder.Property(x => x.FailureReason).HasMaxLength(500);
+        builder.Property(x => x.Version).IsConcurrencyToken().HasDefaultValue(1);
+        builder.Property(x => x.ConfirmationProofReference).HasMaxLength(2000);
+        builder.Property(x => x.ReversalRequestProofReference).HasMaxLength(2000);
+        builder.Property(x => x.ReversalApprovalProofReference).HasMaxLength(2000);
+        builder.Property(x => x.ReversalRequestedByUserId).HasMaxLength(200);
+        builder.Property(x => x.ReversedByUserId).HasMaxLength(200);
+        builder.Property(x => x.ReversalReason).HasMaxLength(500);
+        builder.HasOne<PayrollJournalEntry>().WithMany().HasForeignKey(x => x.ReversalJournalEntryId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(x => x.ReversalJournalEntryId).IsUnique().HasFilter("[ReversalJournalEntryId] IS NOT NULL");
+        builder.HasOne<PayrollBankExport>().WithMany().HasForeignKey(x => x.BankExportId).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Obligation)
             .WithMany()

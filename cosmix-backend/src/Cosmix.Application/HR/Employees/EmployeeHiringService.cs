@@ -29,7 +29,7 @@ public sealed class EmployeeHiringService(EmployeeOperation operation, IEmployee
         operation.ReadAsync([EmployeePermissions.Read], "hr.employee.directory.read", null, context, (_, token) =>
         {
             ValidateList(input); return repository.ListAsync(input, token);
-        }, ct);
+        }, ct, concurrentRead: true);
 
     public Task<EmployeeProfileResponse> GetAsync(Guid id, AuthRequestContext context, CancellationToken ct) =>
         operation.ReadAsync([EmployeePermissions.Read], "hr.employee.profile.read", id, context, async (actor, token) =>
@@ -153,7 +153,7 @@ public sealed class EmployeeHiringService(EmployeeOperation operation, IEmployee
 
     public Task<PagedResult<EmployeeSubmissionSummary>> QueueAsync(EmployeeListRequest input, AuthRequestContext context, CancellationToken ct) =>
         operation.ReadAsync([EmployeePermissions.Read, EmployeePermissions.Review], "hr.employee.approval_queue.read", null, context,
-            (_, token) => { ValidateList(input); return repository.SubmissionsAsync(input, token); }, ct, adminReview: true);
+            (_, token) => { ValidateList(input); return repository.SubmissionsAsync(input, token); }, ct, adminReview: true, concurrentRead: true);
 
     public Task<EmployeeSubmissionProfile> GetSubmissionAsync(Guid id, Guid submissionId, AuthRequestContext context, CancellationToken ct) =>
         operation.ReadAsync([EmployeePermissions.Read, EmployeePermissions.Review, EmployeePermissions.DocumentsRead], "hr.employee.submission.read", id, context,

@@ -93,6 +93,8 @@ export function SalarySources() {
     decision: number,
   ) {
     if (type === 'components') {
+      if (components.data?.items.find((item) => item.id === id)?.employeeId === access.employeeId)
+        return;
       const result = await action.run(
         `${root}/components/${id}/review`,
         { expectedVersion, decision, reason },
@@ -164,6 +166,7 @@ export function SalarySources() {
                   <td>{item.state}</td>
                   <td>
                     {item.state.toLowerCase() === 'pending' &&
+                      item.employeeId !== access.employeeId &&
                       access.can('attendance.payroll-salary.review') && (
                         <>
                           <Button

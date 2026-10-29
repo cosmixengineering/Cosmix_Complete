@@ -103,13 +103,28 @@ public sealed record SalaryPaymentResponse(
     Guid? PaymentJournalEntryId,
     DateTimeOffset? ConfirmedAt,
     string? ConfirmedByUserId,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? FailureReason = null,
+    Guid? ReversalJournalEntryId = null,
+    DateTimeOffset? ReversedAt = null,
+    DateTimeOffset? ReversalRequestedAt = null,
+    int Version = 1,
+    Guid? BankExportId = null,
+    string? CreatedByUserId = null,
+    string? ReversalRequestedByUserId = null,
+    bool ReversalIsFailure = false);
+
+public sealed record ConfirmSalaryPaymentRequest(string Reason, string? Evidence = null, int ExpectedVersion = 0);
+public sealed record RequestSalaryPaymentReversalRequest(string Reason, string Evidence, bool PaymentFailed, int ExpectedVersion);
+public sealed record ApproveSalaryPaymentReversalRequest(string Reason, string Evidence, DateOnly PostingDate, int ExpectedVersion);
 
 public interface IPayrollAccountingRepository
 {
     Task<PayrollObligation?> GetObligationByIdAsync(Guid id, CancellationToken ct);
     Task<PayrollObligation?> GetObligationByBatchIdAsync(Guid batchId, CancellationToken ct);
     Task<IReadOnlyList<PayrollObligation>> ListObligationsAsync(int page, int pageSize, CancellationToken ct);
+    /// <summary>Approved locked salary navigation, with exactly pageSize + 1 look-ahead rows at most.</summary>
+    Task<IReadOnlyList<PayrollSettlementBatchSummary>> ListSettlementBatchesAsync(int page, int pageSize, CancellationToken ct) => throw new NotSupportedException();
     Task<PayrollJournalEntry?> GetJournalEntryByIdAsync(Guid id, CancellationToken ct);
     Task<IReadOnlyList<PayrollJournalEntry>> GetJournalEntriesForObligationAsync(Guid obligationId, CancellationToken ct);
     Task<SalaryPayment?> GetSalaryPaymentByIdAsync(Guid id, CancellationToken ct);
@@ -121,7 +136,20 @@ public interface IPayrollAccountingRepository
     Task AddObligationAsync(PayrollObligation obligation, CancellationToken ct);
     Task AddJournalEntryAsync(PayrollJournalEntry entry, CancellationToken ct);
     Task AddSalaryPaymentAsync(SalaryPayment payment, CancellationToken ct);
+    Task RefreshSalaryPaymentAsync(SalaryPayment payment, CancellationToken ct) => Task.CompletedTask;
+    Task<PayrollBankFormatProfile?> GetBankFormatAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
+    Task<IReadOnlyList<PayrollBankFormatProfile>> ListBankFormatsAsync(CancellationToken ct) => throw new NotSupportedException();
+    Task<PayrollBankExport?> GetBankExportAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
+    Task AddBankFormatAsync(PayrollBankFormatProfile profile, CancellationToken ct) => throw new NotSupportedException();
+    Task AddBankExportAsync(PayrollBankExport export, CancellationToken ct) => throw new NotSupportedException();
+    Task<IReadOnlyList<PayrollBankExport>> ListBankExportsAsync(Guid obligationId, CancellationToken ct) => throw new NotSupportedException();
+    Task<PayrollBankExportRenewal?> LatestBankExportRenewalAsync(Guid exportId, CancellationToken ct) => throw new NotSupportedException();
+    Task AddBankExportRenewalAsync(PayrollBankExportRenewal renewal, CancellationToken ct) => throw new NotSupportedException();
     Task AcquirePaymentLockAsync(Guid obligationId, Guid employeeId, CancellationToken ct) => Task.CompletedTask;
     Task AcquireStatutoryPostingLockAsync(Guid contributionId, CancellationToken ct) => Task.CompletedTask;
+    Task<IReadOnlyList<Cosmix.Domain.HR.StatutoryContributions.StatutoryEmployeePosting>> ContributionPostingsAsync(Guid contributionId, CancellationToken ct)
+        => throw new NotSupportedException();
+    Task AddContributionPostingAsync(Cosmix.Domain.HR.StatutoryContributions.StatutoryEmployeePosting row, CancellationToken ct)
+        => throw new NotSupportedException();
     Task SaveChangesAsync(CancellationToken ct);
 }

@@ -89,7 +89,7 @@ public sealed class WebCredentialProvisioningService(IAccessManagementRepository
                 account.EmployeeId, ipAddress: context.IpAddress, deviceReference: actor.SessionId.ToString()));
             await administrators.SaveChangesAsync(token);
             return new AccessAccountResponse(account.Id, account.EmployeeId, account.Status,
-                account.MobileAccessEnabled, account.WebAccessEnabled, account.MfaRequired, Convert.ToBase64String(account.RowVersion));
+                account.MobileAccessEnabled, account.WebAccessEnabled, account.MfaRequired, Convert.ToBase64String(account.RowVersion), account.AuthenticatorRequired);
         }, ct);
     }
 
@@ -143,7 +143,7 @@ public sealed class WebCredentialProvisioningService(IAccessManagementRepository
                 ipAddress: context.IpAddress, deviceReference: actor.SessionId.ToString()));
             await administrators.SaveChangesAsync(token);
             return new AccessAccountResponse(account.Id, account.EmployeeId, account.Status,
-                account.MobileAccessEnabled, account.WebAccessEnabled, account.MfaRequired, Convert.ToBase64String(account.RowVersion));
+                account.MobileAccessEnabled, account.WebAccessEnabled, account.MfaRequired, Convert.ToBase64String(account.RowVersion), account.AuthenticatorRequired);
         }, ct);
     }
 

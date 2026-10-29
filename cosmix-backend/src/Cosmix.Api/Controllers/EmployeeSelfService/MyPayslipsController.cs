@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cosmix.Api.Controllers.EmployeeSelfService;
-[ApiController, Authorize, Route("api/v1/self-service/finances/payslips")]
+[ApiController, Authorize, TypeFilter(typeof(Cosmix.Api.Controllers.HR.PayrollFinanceExceptionFilter)), Route("api/v1/self-service/finances/payslips")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class MyPayslipsController(Cosmix.Application.HR.EmployeeSelfService.EmployeeSelfService service) : ControllerBase
 {

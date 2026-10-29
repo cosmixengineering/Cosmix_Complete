@@ -32,4 +32,8 @@ Only the coordinator generates/applies migrations and runs heavy builds. Agents 
 6. Verify balanced source-derived journals, configured account types, closed periods, currency, duplicate posting and idempotent retries.
 7. Release build, appropriate regression tests and isolated SQL/API acceptance. Apply additive reviewed migrations to the authorized testing target after backup. No real salary payment or invented real company configuration.
 
-Implementation and verification evidence is retained under `D:/CosmixPayroll12to21`. Passing builds alone do not mark tasks complete.
+The 28 October continuation retains fresh evidence under `D:/CosmixPayrollVerification20261028`; the former `D:/CosmixPayroll12to21` directory was unavailable on resumption. Passing builds alone do not mark tasks complete.
+
+## Executed continuation — 28 October
+
+Tasks 12–21 have implementation, service/controller checks and SQL persistence verification. The final backend run passed 463 tests with no skips, and the Release API build passed with zero warnings/errors. Four reviewed migrations were applied to a restored clone and then `Cosmix_Testing` after a verified backup; migration count is 30 and existing business-table row counts were preserved. See [the verification report](../../Payroll-Salary-Finance-Verification-20261028.md) for task-specific coverage, client evidence and operational acceptance boundaries. A real company payroll-month comparison and physical employee/provider acceptance are not implied by these results.

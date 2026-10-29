@@ -158,6 +158,26 @@ public sealed class StatutoryContributionService(
             throw new InvalidOperationException($"Statutory contribution currency '{contribution.Currency}' does not match linked obligation currency '{obligation.Currency}'.");
         }
 
+        var obligationPeriodStart = obligation.PeriodStart ?? (obligation.Batch != null ? obligation.Batch.PeriodStart : (DateOnly?)null);
+        if (obligationPeriodStart.HasValue)
+        {
+            var obligationMonth = new DateOnly(obligationPeriodStart.Value.Year, obligationPeriodStart.Value.Month, 1);
+            if (obligationMonth != contribution.ContributionMonth)
+            {
+                throw new InvalidOperationException($"Statutory contribution month '{contribution.ContributionMonth:yyyy-MM}' does not correspond to linked payroll obligation period '{obligationMonth:yyyy-MM}'. Mismatched period linking is prohibited.");
+            }
+        }
+
+        if (contribution.EmployerContributionAmount <= 0)
+        {
+            throw new InvalidOperationException("Employer statutory contribution amount must be greater than zero.");
+        }
+
+        if (contribution.ApprovedByUserId == contribution.CreatedByUserId)
+        {
+            throw new InvalidOperationException("Statutory contribution requires second-person approval before posting.");
+        }
+
         var existingJournal = await repository.GetJournalEntryByStatutoryContributionIdAsync(contribution.Id, ct);
         if (existingJournal != null)
         {

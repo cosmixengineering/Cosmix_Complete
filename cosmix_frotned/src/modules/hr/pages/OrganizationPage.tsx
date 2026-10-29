@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
+import { SelectInput } from '@/components/forms/SelectInput';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useHrAccess } from '../hooks/use-hr-access';
 import { useHrQuery } from '../hooks/use-hr-queries';
@@ -72,7 +73,7 @@ export function OrganizationPage() {
         </div>
         {kind !== 'holiday-calendars' && manage && (
           <button type="button" className="org-add-btn" onClick={() => setAdding(true)}>
-            <Plus size={16} strokeWidth={2.5} />
+            <Plus size={12} strokeWidth={2.5} />
             Add {meta.singular}
           </button>
         )}
@@ -145,7 +146,7 @@ function MasterList({
       {/* Toolbar */}
       <div className="org-toolbar">
         <div className="org-search-box">
-          <Search size={16} className="org-search-icon" />
+          <Search size={12} className="org-search-icon" />
           <input
             type="text"
             className="org-search-input"
@@ -159,18 +160,21 @@ function MasterList({
           />
         </div>
 
-        <select
-          className="org-status-select"
-          value={active}
-          onChange={(e) => {
-            setActive(e.target.value);
-            setPage(1);
-          }}
-        >
-          <option value="">All statuses</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
-        </select>
+        <div style={{ width: '110px' }}>
+          <SelectInput
+            compact
+            value={active}
+            onChange={(e) => {
+              setActive(e.target.value);
+              setPage(1);
+            }}
+            options={[
+              { value: '', label: 'All statuses' },
+              { value: 'true', label: 'Active' },
+              { value: 'false', label: 'Inactive' },
+            ]}
+          />
+        </div>
 
         <button
           type="button"
@@ -178,7 +182,7 @@ function MasterList({
           title="Refresh records"
           onClick={() => void query.refetch()}
         >
-          <RotateCw size={15} />
+          <RotateCw size={12} />
         </button>
       </div>
 
@@ -241,7 +245,7 @@ function MasterList({
                                 aria-label={`Edit ${r.name}`}
                                 onClick={() => setEditor({ record: r })}
                               >
-                                <Pencil size={15} />
+                                <Pencil size={11} />
                               </button>
                               <button
                                 type="button"
@@ -250,7 +254,7 @@ function MasterList({
                                 aria-label={`Change ${r.name} status`}
                                 onClick={() => setEditor({ record: r, statusOnly: true })}
                               >
-                                <Power size={15} />
+                                <Power size={11} />
                               </button>
                             </>
                           )}
@@ -262,7 +266,7 @@ function MasterList({
                               aria-label={`${r.name} history`}
                               onClick={() => setHistory(r)}
                             >
-                              <History size={15} />
+                              <History size={11} />
                             </button>
                           )}
                         </div>
@@ -281,18 +285,21 @@ function MasterList({
               <div className="org-pagination-right">
                 <div className="org-page-size-selector">
                   <span>Rows per page</span>
-                  <select
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(Number(e.target.value));
-                      setPage(1);
-                    }}
-                    className="org-page-select"
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                  </select>
+                  <div style={{ width: '65px' }}>
+                    <SelectInput
+                      compact
+                      value={String(pageSize)}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setPage(1);
+                      }}
+                      options={[
+                        { value: '10', label: '10' },
+                        { value: '20', label: '20' },
+                        { value: '50', label: '50' },
+                      ]}
+                    />
+                  </div>
                 </div>
                 <div className="org-page-controls">
                   <button
@@ -301,7 +308,7 @@ function MasterList({
                     disabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
-                    <ChevronLeft size={16} />
+                    <ChevronLeft size={12} />
                     Previous
                   </button>
                   <span className="org-page-indicator">
@@ -314,7 +321,7 @@ function MasterList({
                     onClick={() => setPage((p) => p + 1)}
                   >
                     Next
-                    <ChevronRight size={16} />
+                    <ChevronRight size={12} />
                   </button>
                 </div>
               </div>

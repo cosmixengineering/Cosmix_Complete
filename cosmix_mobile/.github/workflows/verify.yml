@@ -1,0 +1,56 @@
+name: Mobile verification
+on:
+  push:
+    branches: [main, develop, 'codex/**']
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+      - run: node --test scripts/release-config.test.mjs
+      - run: npm audit --audit-level=high
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npm ci
+      - name: Compile and lint Android debug (no production signing secrets)
+        working-directory: android
+        run: bash gradlew :app:assembleDebug :app:lintDebug -PreactNativeArchitectures=x86_64 --no-daemon
+      - name: Missing release configuration must be rejected
+        working-directory: android
+        shell: bash
+        run: |
+          if bash gradlew :app:verifyCosmixReleaseSigning --no-daemon > release-guard.log 2>&1; then
+            echo 'Release unexpectedly accepted missing configuration.'
+            exit 1
+          fi
+          grep -q 'Set COSMIX_ANDROID_RELEASE_CONFIG' release-guard.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-verification
+          path: |
+            android/app/build/reports/
+            android/release-guard.log
+          retention-days: 14

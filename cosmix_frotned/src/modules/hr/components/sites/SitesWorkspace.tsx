@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Pencil, History, RefreshCw, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
-import { TextInput } from '@/components/forms/TextInput';
 import { SelectInput } from '@/components/forms/SelectInput';
 import { DataTable } from '@/components/data-display/DataTable';
 import { Pagination } from '@/components/data-display/Pagination';
@@ -52,14 +50,14 @@ export function SitesWorkspace() {
             alignItems: 'center',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
-            gap: '16px',
+            gap: '8px',
           }}
         >
           <div>
             <div
               style={{
-                fontSize: '11px',
-                fontWeight: 600,
+                fontSize: '9.5px',
+                fontWeight: 700,
                 color: '#64748b',
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
@@ -67,33 +65,42 @@ export function SitesWorkspace() {
             >
               HUMAN RESOURCES &bull; WORKING SITES
             </div>
-            <h1 style={{ margin: '3px 0 0', fontSize: '20px', fontWeight: 700, color: '#0f172a' }}>
+            <h1 style={{ margin: '1px 0 0', fontSize: '15px', fontWeight: 750, color: '#0f172a' }}>
               Working Sites & Locations
             </h1>
           </div>
 
-          <div className="hr-inline">
-            <Button
-              variant="ghost"
+          <div className="hr-inline" style={{ gap: '6px' }}>
+            <button
+              type="button"
+              className="sites-compact-btn-ghost"
               title="Reload sites"
               aria-label="Reload sites"
               disabled={Boolean(editor)}
               onClick={() => void query.refetch()}
             >
-              <RefreshCw size={15} />
-            </Button>
+              <RefreshCw size={12} />
+            </button>
             {manage && (
-              <Button onClick={() => setEditor({})}>
-                <Plus size={15} />
-                Add site
-              </Button>
+              <button
+                type="button"
+                className="sites-compact-btn-primary"
+                onClick={() => setEditor({})}
+              >
+                <Plus size={12} />
+                <span>Add site</span>
+              </button>
             )}
           </div>
         </div>
       </div>
 
       {saved && (
-        <p role="status" className="hr-message" style={{ marginBottom: '16px' }}>
+        <p
+          role="status"
+          className="hr-message"
+          style={{ marginBottom: '8px', padding: '4px 8px', fontSize: '11px' }}
+        >
           Site saved successfully.
         </p>
       )}
@@ -101,55 +108,77 @@ export function SitesWorkspace() {
       {/* Toolbar & Filters */}
       <div className="sites-filter-card">
         <div
-          style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', flex: 1 }}
+          style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', flexWrap: 'wrap', flex: 1 }}
         >
-          <div style={{ minWidth: '220px', flex: 1, maxWidth: '360px' }}>
-            <TextInput
-              label="Search sites"
+          <div style={{ width: '190px' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '9.5px',
+                fontWeight: 650,
+                color: '#64748b',
+                marginBottom: '2px',
+              }}
+            >
+              Search sites
+            </label>
+            <input
+              type="text"
+              className="sites-compact-input"
               value={search}
               maxLength={100}
-              placeholder="Filter by site name, code, client..."
+              placeholder="Search sites..."
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
             />
           </div>
-          <div style={{ width: '130px' }}>
+          <div style={{ width: '84px' }}>
             <SelectInput
               label="Status"
+              compact
               value={status}
+              onChange={(e) => {
+                setStatus(e.target.value);
+                setPage(1);
+              }}
               options={[
                 { value: '', label: 'All' },
                 { value: 'true', label: 'Active' },
                 { value: 'false', label: 'Inactive' },
               ]}
-              onChange={(e) => {
-                setStatus(e.target.value);
-                setPage(1);
-              }}
             />
           </div>
-          <div style={{ width: '130px' }}>
+          <div style={{ width: '84px' }}>
             <SelectInput
               label="Sort by"
+              compact
               value={sort}
-              options={[
-                { value: 'code', label: 'Code' },
-                { value: 'name', label: 'Name' },
-              ]}
               onChange={(e) => {
                 setSort(e.target.value);
                 setPage(1);
               }}
+              options={[
+                { value: 'code', label: 'Code' },
+                { value: 'name', label: 'Name' },
+              ]}
             />
           </div>
           <label
             className="hr-inline"
-            style={{ marginTop: '22px', fontSize: '13px', color: '#475569', cursor: 'pointer' }}
+            style={{
+              fontSize: '10.5px',
+              color: '#475569',
+              cursor: 'pointer',
+              height: '24px',
+              alignItems: 'center',
+              marginBottom: '1px',
+            }}
           >
             <input
               type="checkbox"
+              style={{ width: '12px', height: '12px' }}
               checked={descending}
               onChange={(e) => {
                 setDescending(e.target.checked);
@@ -165,112 +194,131 @@ export function SitesWorkspace() {
       <QueryState query={query}>
         {query.data && (
           <>
-            <DataTable
-              caption="Operational Sites & Geofences"
-              rows={query.data.items}
-              rowKey={(row) => row.id}
-              columns={[
-                {
-                  id: 'name',
-                  header: 'NAME',
-                  cell: (row) => (
-                    <button
-                      type="button"
-                      className="site-cell-item"
-                      title={`Open ${row.name} Detail`}
-                      onClick={() => navigate(`/hr/sites/${row.id}`)}
-                    >
-                      <div className="site-cell-avatar">
-                        <MapPin size={16} />
-                      </div>
-                      <div className="site-cell-content">
-                        <span className="site-cell-name">{row.name}</span>
-                        <span className="site-cell-subtitle">
-                          {row.cityName ? `${row.cityName}` : 'Active Site'} &bull; {row.code}
-                        </span>
-                      </div>
-                    </button>
-                  ),
-                },
-                {
-                  id: 'code',
-                  header: 'CODE',
-                  cell: (row) => <span className="site-code-badge">{row.code}</span>,
-                },
-                {
-                  id: 'city',
-                  header: 'CITY',
-                  cell: (row) => <span style={{ color: '#334155' }}>{row.cityName ?? '-'}</span>,
-                },
-                {
-                  id: 'client',
-                  header: 'CLIENT',
-                  cell: (row) => <span style={{ color: '#334155' }}>{row.clientName ?? '-'}</span>,
-                },
-                {
-                  id: 'dates',
-                  header: 'DATES',
-                  cell: (row) => (
-                    <span style={{ color: '#64748b', fontSize: '12.5px' }}>
-                      {row.startsOn ?? '2026-01-01'} / {row.endsOn ?? 'Open'}
-                    </span>
-                  ),
-                },
-                {
-                  id: 'status',
-                  header: 'STATUS',
-                  cell: (row) => (
-                    <span
-                      className={`hr-status hr-status--${row.isActive ? 'positive' : 'neutral'}`}
-                    >
-                      {row.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  ),
-                },
-                {
-                  id: 'actions',
-                  header: '',
-                  cell: (row) => (
-                    <div className="hr-inline" style={{ gap: '6px' }}>
+            <div className="sites-compact-table-wrap">
+              <DataTable
+                caption="Operational Sites & Geofences"
+                rows={query.data.items}
+                rowKey={(row) => row.id}
+                columns={[
+                  {
+                    id: 'name',
+                    header: 'NAME',
+                    cell: (row) => (
                       <button
-                        className="site-btn-view"
-                        title="View site detail, supervisor, workers & geofence map"
+                        type="button"
+                        className="site-cell-item"
+                        title={`Open ${row.name} Detail`}
                         onClick={() => navigate(`/hr/sites/${row.id}`)}
                       >
-                        <MapPin size={13} /> View
+                        <div className="site-cell-avatar">
+                          <MapPin size={12} />
+                        </div>
+                        <div className="site-cell-content">
+                          <span className="site-cell-name">{row.name}</span>
+                          <span className="site-cell-subtitle">
+                            {row.cityName ? `${row.cityName}` : 'Active Site'} &bull; {row.code}
+                          </span>
+                        </div>
                       </button>
-                      {manage && (
-                        <>
-                          <button
-                            className="icon-button"
-                            title="Edit site"
-                            aria-label={`Edit ${row.name}`}
-                            onClick={() => setEditor({ siteId: row.id })}
-                          >
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            className="icon-button"
-                            title="Site history"
-                            aria-label={`${row.name} history`}
-                            onClick={() => setDetail({ id: row.id, history: true })}
-                          >
-                            <History size={14} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  ),
-                },
-              ]}
-            />
-            {!query.data.items.length && <p className="hr-notice">No sites found.</p>}
-            <Pagination
-              page={page}
-              pageSize={20}
-              total={query.data.totalCount}
-              onChange={setPage}
-            />
+                    ),
+                  },
+                  {
+                    id: 'code',
+                    header: 'CODE',
+                    cell: (row) => <span className="site-code-badge">{row.code}</span>,
+                  },
+                  {
+                    id: 'city',
+                    header: 'CITY',
+                    cell: (row) => (
+                      <span style={{ color: '#334155', fontSize: '11px' }}>
+                        {row.cityName ?? '-'}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: 'client',
+                    header: 'CLIENT',
+                    cell: (row) => (
+                      <span style={{ color: '#334155', fontSize: '11px' }}>
+                        {row.clientName ?? '-'}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: 'dates',
+                    header: 'DATES',
+                    cell: (row) => (
+                      <span style={{ color: '#64748b', fontSize: '10.5px' }}>
+                        {row.startsOn ?? '2026-01-01'} / {row.endsOn ?? 'Open'}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: 'status',
+                    header: 'STATUS',
+                    cell: (row) => (
+                      <span
+                        className={`hr-status hr-status--${row.isActive ? 'positive' : 'neutral'}`}
+                        style={{ fontSize: '9.5px', padding: '1px 6px' }}
+                      >
+                        {row.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: 'actions',
+                    header: '',
+                    cell: (row) => (
+                      <div className="hr-inline" style={{ gap: '4px', justifyContent: 'flex-end' }}>
+                        <button
+                          className="site-btn-view"
+                          title="View site detail, supervisor, workers & geofence map"
+                          onClick={() => navigate(`/hr/sites/${row.id}`)}
+                        >
+                          <MapPin size={11} /> View
+                        </button>
+                        {manage && (
+                          <>
+                            <button
+                              className="icon-button"
+                              style={{ width: '22px', height: '22px', padding: 0 }}
+                              title="Edit site"
+                              aria-label={`Edit ${row.name}`}
+                              onClick={() => setEditor({ siteId: row.id })}
+                            >
+                              <Pencil size={11} />
+                            </button>
+                            <button
+                              className="icon-button"
+                              style={{ width: '22px', height: '22px', padding: 0 }}
+                              title="Site history"
+                              aria-label={`${row.name} history`}
+                              onClick={() => setDetail({ id: row.id, history: true })}
+                            >
+                              <History size={11} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    ),
+                  },
+                ]}
+              />
+            </div>
+            {!query.data.items.length && (
+              <p className="hr-notice" style={{ fontSize: '11px', padding: '8px' }}>
+                No sites found.
+              </p>
+            )}
+            <div style={{ marginTop: '6px' }}>
+              <Pagination
+                page={page}
+                pageSize={20}
+                total={query.data.totalCount}
+                onChange={setPage}
+              />
+            </div>
           </>
         )}
       </QueryState>

@@ -3,10 +3,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { Check, RefreshCw, Save, X, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { TableSkeleton } from '@/components/ui/Skeleton';
 import { useDirtyForm } from '@/hooks/use-dirty-form';
 import { useAttendanceAccess } from '../hooks/use-attendance-access';
 import { useAttendanceAction } from '../hooks/use-attendance-action';
 import { attendanceError } from '../utils/messages';
+import { ApiError } from '@/services/api/api-error';
 import { freezeBody } from '../utils/roster-intent';
 import '@/styles/attendance.css';
 
@@ -65,10 +67,16 @@ export function QueryState({
   if (query.isError)
     return (
       <p className="attendance-error" role="alert">
-        {attendanceError(query.error)}
+        {query.error instanceof DOMException && query.error.name === 'TimeoutError'
+          ? 'The attendance read timed out. Check that the API is running and not paused in the debugger, then reload the records.'
+          : query.error instanceof TypeError
+            ? 'Could not reach the attendance service. Check the API connection, then reload the records.'
+            : query.error instanceof ApiError && query.error.status >= 500
+              ? 'Attendance records could not be loaded. The service is unavailable or returned an error. Try refreshing once the connection is restored.'
+              : attendanceError(query.error)}
       </p>
     );
-  if (query.isPending) return <p role="status">Loading records...</p>;
+  if (query.isPending) return <TableSkeleton rows={6} />;
   if (empty) return <p className="attendance-empty">{emptyText}</p>;
   return query.isFetching ? <p role="status">Refreshing records...</p> : null;
 }

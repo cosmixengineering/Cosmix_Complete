@@ -18,6 +18,11 @@ import {
 import { CursorControls, EmployeeWorkspace, SourceFacts } from '../operations/review/ReviewUi';
 import { formatTime, monthRange, nextDate, today } from '../operations/review/helpers';
 import { id } from '../schemas/common';
+import {
+  AttendanceEmployeeQueryState,
+  AttendanceSetupNotice,
+} from '../components/AttendanceEmployeeSetup';
+import { needsAttendanceSetup } from '../schemas/employee-selection';
 import '@/styles/employee-attendance-detail.css';
 
 export function EmployeeAttendanceDetailPage() {
@@ -28,7 +33,11 @@ export function EmployeeAttendanceDetailPage() {
       <Link to="/hr/attendance" className="ead-back">
         <ArrowLeft size={16} aria-hidden="true" /> Attendance processing
       </Link>
-      <EmployeeWorkspace permission="attendance.summaries.read" title="Employee attendance">
+      <EmployeeWorkspace
+        permission="attendance.summaries.read"
+        title="Employee attendance"
+        approvedOnly
+      >
         {(selectedEmployeeId, scope) => (
           <EmployeeAttendance employeeId={selectedEmployeeId} scope={scope} />
         )}
@@ -51,8 +60,9 @@ function EmployeeAttendance({ employeeId, scope }: { employeeId: string; scope?:
       rows.every(
         (row) =>
           row.employeeId === employeeId &&
-          row.roster.employeeId === employeeId &&
-          row.roster.businessDate === row.businessDate &&
+          (row.unavailableReason === 'locked_attendance_summary_unavailable' ||
+            (row.roster.employeeId === employeeId &&
+              row.roster.businessDate === row.businessDate)) &&
           row.businessDate >= range!.from &&
           row.businessDate <= range!.to,
       ),
@@ -66,6 +76,11 @@ function EmployeeAttendance({ employeeId, scope }: { employeeId: string; scope?:
   if (!allowed) return <Denied>Matching attendance summary scope is required.</Denied>;
 
   const rows = range && !query.isError && !query.isFetching ? query.data : undefined;
+  const availableRows =
+    rows?.filter(
+      (row): row is Day => row.unavailableReason !== 'locked_attendance_summary_unavailable',
+    ) ?? [];
+  const completeCoverage = rows !== undefined && availableRows.length === rows.length;
   const selected = rows?.find((row) => row.businessDate === selectedDate) ?? rows?.[0];
   const recordPath = `/hr/attendance/employees/${employeeId}`;
 
@@ -112,12 +127,14 @@ function EmployeeAttendance({ employeeId, scope }: { employeeId: string; scope?:
       {!range ? (
         <p role="alert">Select a valid business month.</p>
       ) : (
-        <QueryState
+        <AttendanceEmployeeQueryState
+          employeeId={employeeId}
           query={query}
           empty={rows?.length === 0}
           emptyText="No attendance records returned for this employee and month."
         />
       )}
+      {rows?.some(needsAttendanceSetup) && <AttendanceSetupNotice employeeId={employeeId} />}
 
       {rows && rows.length > 0 && (
         <>
@@ -126,10 +143,22 @@ function EmployeeAttendance({ employeeId, scope }: { employeeId: string; scope?:
               ['Days returned', rows.length],
               [
                 'Factual worked minutes',
-                rows.reduce((total, row) => total + row.facts.workedMinutes, 0),
+                completeCoverage
+                  ? availableRows.reduce((total, row) => total + row.facts.workedMinutes, 0)
+                  : 'Unavailable',
               ],
-              ['Open sessions', rows.reduce((total, row) => total + row.facts.openSessions, 0)],
-              ['Recorded exceptions', rows.reduce((total, row) => total + row.exceptionCount, 0)],
+              [
+                'Open sessions',
+                completeCoverage
+                  ? availableRows.reduce((total, row) => total + row.facts.openSessions, 0)
+                  : 'Unavailable',
+              ],
+              [
+                'Recorded exceptions',
+                completeCoverage
+                  ? availableRows.reduce((total, row) => total + row.exceptionCount, 0)
+                  : 'Unavailable',
+              ],
             ].map(([label, value]) => (
               <div className="ead-metric" key={label}>
                 <dt>{label}</dt>
@@ -137,6 +166,12 @@ function EmployeeAttendance({ employeeId, scope }: { employeeId: string; scope?:
               </div>
             ))}
           </dl>
+          {!completeCoverage && (
+            <p role="status">
+              {rows.length - availableRows.length} locked dates have no retained summary. Totals are
+              unavailable; missing records are not zero time or absence.
+            </p>
+          )}
           <section className="ead-attendance-log" aria-labelledby="ead-log-title">
             <div className="ead-section-heading">
               <h2 id="ead-log-title">Attendance log</h2>
@@ -173,14 +208,20 @@ function EmployeeAttendance({ employeeId, scope }: { employeeId: string; scope?:
                       }
                     >
                       <th scope="row">{row.businessDate}</th>
-                      <td>{row.factualStatus}</td>
-                      <td>{row.roster.status}</td>
-                      <td>{row.facts.workedMinutes}</td>
-                      <td>{row.policy.status}</td>
-                      <td>{row.policy.payableMinutes ?? 'Unavailable'}</td>
-                      <td>{row.policy.lateMinutes ?? 'Unavailable'}</td>
-                      <td>{row.policy.overtimeMinutes ?? 'Unavailable'}</td>
-                      <td>{row.exceptionCount}</td>
+                      <td>
+                        {row.unavailableReason
+                          ? 'Locked summary unavailable'
+                          : needsAttendanceSetup(row)
+                            ? 'Attendance setup required'
+                            : row.factualStatus}
+                      </td>
+                      <td>{row.roster?.status ?? 'Unavailable'}</td>
+                      <td>{row.facts?.workedMinutes ?? 'Unavailable'}</td>
+                      <td>{row.policy?.status ?? 'Unavailable'}</td>
+                      <td>{row.policy?.payableMinutes ?? 'Unavailable'}</td>
+                      <td>{row.policy?.lateMinutes ?? 'Unavailable'}</td>
+                      <td>{row.policy?.overtimeMinutes ?? 'Unavailable'}</td>
+                      <td>{row.exceptionCount ?? 'Unavailable'}</td>
                       <td>{row.isLocked ? 'Locked' : 'Unlocked'}</td>
                       <td>
                         <button
@@ -203,7 +244,13 @@ function EmployeeAttendance({ employeeId, scope }: { employeeId: string; scope?:
         </>
       )}
 
-      {selected && (
+      {selected?.unavailableReason && (
+        <p role="status">
+          {selected.businessDate}: this locked date has no retained attendance summary. HR must
+          review the historical records; this page cannot recalculate a locked period.
+        </p>
+      )}
+      {selected && selected.unavailableReason !== 'locked_attendance_summary_unavailable' && (
         <section className="ead-audit" aria-labelledby="ead-selected-title">
           <div className="ead-section-heading">
             <h2 id="ead-selected-title">{selected.businessDate}</h2>

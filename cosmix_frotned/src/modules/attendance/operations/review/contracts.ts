@@ -89,8 +89,23 @@ export const day = z.object({
   exceptionCount: minutes,
   isLocked: z.boolean(),
   latestSavedRevision: summaryRevision.nullable(),
+  unavailableReason: z.null().optional(),
 });
-export const calendar = z.array(day).max(31);
+export const unavailableDay = z.object({
+  employeeId: id,
+  businessDate: date,
+  timeZone: z.null(),
+  factualStatus: z.literal('unavailable'),
+  facts: z.null(),
+  roster: z.null(),
+  policy: z.null(),
+  exceptionCount: z.null(),
+  isLocked: z.literal(true),
+  latestSavedRevision: z.null(),
+  unavailableReason: z.literal('locked_attendance_summary_unavailable'),
+});
+export const readDay = z.union([day, unavailableDay]);
+export const calendar = z.array(readDay).max(31);
 const officeEvidence = {
   branchId: id.optional(),
   officeRosterAssignmentId: id.optional(),

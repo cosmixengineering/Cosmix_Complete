@@ -85,7 +85,9 @@ public sealed class PayrollHandoffRepository(CosmixDbContext db) : IPayrollHando
                 schedule.DueDate >= fromDate && schedule.DueDate < toExclusive &&
                 employeeIds.Contains(request.EmployeeId) &&
                 !db.RepaymentLedgerEntries.Any(r => r.RepaymentScheduleEntryId == schedule.Id && r.Kind == RepaymentEntryKind.PayrollDeduction) &&
-                !db.PayrollHandoffLines.Any(l => l.SourceId == schedule.Id && l.Component == PayrollComponentKind.LoanRepayment)
+                !db.PayrollHandoffLines.Any(l => l.SourceId == schedule.Id && l.Component == PayrollComponentKind.LoanRepayment &&
+                    l.PayrollHandoffBatch.ReviewState != "cancelled" && l.PayrollHandoffBatch.ReviewState != "rejected" &&
+                    l.PayrollHandoffBatch.ReviewState != "returned")
             orderby request.EmployeeId, schedule.DueDate, schedule.Sequence
             select new PayrollHandoffLoanScheduleSource(schedule.Id, request.EmployeeId, agreement.Id,
                 schedule.Sequence, schedule.DueDate, schedule.PrincipalAmount + schedule.OtherApprovedAmount,
@@ -103,7 +105,9 @@ public sealed class PayrollHandoffRepository(CosmixDbContext db) : IPayrollHando
             where approval.State == ApprovalState.Approved &&
                 claim.CreatedAt >= fromUtc && claim.CreatedAt < toUtcExclusive &&
                 employeeIds.Contains(claim.EmployeeId) &&
-                !db.PayrollHandoffLines.Any(l => l.SourceId == claim.Id && l.Component == PayrollComponentKind.FuelClaim)
+                !db.PayrollHandoffLines.Any(l => l.SourceId == claim.Id && l.Component == PayrollComponentKind.FuelClaim &&
+                    l.PayrollHandoffBatch.ReviewState != "cancelled" && l.PayrollHandoffBatch.ReviewState != "rejected" &&
+                    l.PayrollHandoffBatch.ReviewState != "returned")
             orderby claim.EmployeeId, claim.CreatedAt, claim.Id
             select new PayrollHandoffFuelClaimSource(claim.Id, claim.EmployeeId, claim.VehicleTripId,
                 claim.ClaimedAmount, claim.Currency, claim.PolicyVersionId, approval.Id, claim.CalculationPrivateReference))
@@ -122,7 +126,16 @@ public sealed class PayrollHandoffRepository(CosmixDbContext db) : IPayrollHando
             .Include(x => x.Lines).SingleOrDefaultAsync(x => x.Id == id, ct);
 
     public Task<bool> PeriodPreparedAsync(DateOnly start, DateOnly endExclusive, CancellationToken ct) =>
-        db.PayrollHandoffBatches.AsNoTracking().AnyAsync(x => x.PeriodStart == start && x.PeriodEnd == endExclusive, ct);
+        db.PayrollHandoffBatches.AsNoTracking().AnyAsync(x => x.PeriodStart == start && x.PeriodEnd == endExclusive &&
+            x.ReviewState != "cancelled" && x.ReviewState != "rejected" && x.ReviewState != "returned", ct);
+
+    // Called inside the serialized authorization write transaction. Legacy/empty batches block
+    // the entire period because their employee coverage cannot safely authorize another salary.
+    public Task<bool> EmployeesPreparedAsync(DateOnly start, DateOnly endExclusive, IReadOnlyList<Guid> employeeIds,
+        CancellationToken ct) => db.PayrollHandoffBatches.AsNoTracking().AnyAsync(x =>
+            x.PeriodStart == start && x.PeriodEnd == endExclusive && x.ReviewState != "cancelled" &&
+            x.ReviewState != "rejected" && x.ReviewState != "returned" &&
+            (x.CalculationVersion != "salary-v2" || !x.Lines.Any() || x.Lines.Any(line => employeeIds.Contains(line.EmployeeId))), ct);
 
     public Task<bool> ProcessingReferenceExistsAsync(Guid batchId, string reference, CancellationToken ct) =>
         db.PayrollHandoffProcessingRecords.AsNoTracking().AnyAsync(x =>

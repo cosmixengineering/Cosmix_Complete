@@ -67,7 +67,7 @@ public sealed class HrDashboardPayrollService(EmployeeOperation operation,
                 var sources = await repository.ReadAsync(employees, date, start, start.AddMonths(1), token);
                 return Project(actor.Now.ToUniversalTime(), date, RosterSchedule.TimeZoneId, employees, candidates,
                     sources.FutureSalaryVersions, sources.PendingCompensationChangeCount, sources.Batches, sources.Lines);
-            }, ct);
+            }, ct, concurrentRead: true);
 
     private static HrDashboardPayrollSummary Project(DateTimeOffset now, DateOnly date, string timeZone,
         IReadOnlyList<Guid> employeeIds, IReadOnlyList<CompensationRecord> candidates,

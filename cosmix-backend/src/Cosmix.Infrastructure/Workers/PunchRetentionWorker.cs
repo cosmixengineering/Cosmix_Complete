@@ -9,7 +9,8 @@ namespace Cosmix.Infrastructure.Workers;
 public sealed class PunchRetentionWorker(
     IServiceScopeFactory scopeFactory,
     IConfiguration configuration,
-    ILogger<PunchRetentionWorker> logger) : BackgroundService
+    ILogger<PunchRetentionWorker> logger,
+    Cosmix.Application.Common.BackgroundJobs.WorkerHealth? health = null) : BackgroundService
 {
     public async Task<PunchRetentionRunResult> ExecuteCycleAsync(CancellationToken stoppingToken = default)
     {
@@ -24,7 +25,8 @@ public sealed class PunchRetentionWorker(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var intervalHours = configuration.GetValue<int?>("PunchRetention:RunIntervalHours") ?? 24;
-        intervalHours = Math.Max(1, intervalHours);
+        if (intervalHours is < 1 or > 720) throw new InvalidOperationException("Invalid GPS retention run interval.");
+        health?.Register("gps-retention", TimeSpan.FromHours(intervalHours + 1));
         var startupDelaySeconds = configuration.GetValue<int?>("PunchRetention:StartupDelaySeconds") ?? 60;
 
         logger.LogInformation("PunchRetentionWorker initialized with interval of {IntervalHours} hours.", intervalHours);
@@ -43,14 +45,16 @@ public sealed class PunchRetentionWorker(
                 try
                 {
                     await ExecuteCycleAsync(stoppingToken);
+                    health?.Complete("gps-retention");
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
                     break;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    logger.LogError(ex, "Error occurred during GPS punch retention execution.");
+                    health?.Fail("gps-retention");
+                    logger.LogError("GPS punch retention failed; review protected operational diagnostics.");
                 }
 
                 await timer.WaitForNextTickAsync(stoppingToken);

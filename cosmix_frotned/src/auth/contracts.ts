@@ -4,7 +4,7 @@ export const otpChallengeSchema = z.object({
   challengeId: z.uuid(),
   expiresAt: z.iso.datetime({ offset: true }),
   resendAvailableAt: z.iso.datetime({ offset: true }),
-  nextStep: z.literal('enter_otp'),
+  nextStep: z.enum(['enter_otp', 'enter_authenticator']),
 });
 export type OtpChallenge = z.infer<typeof otpChallengeSchema>;
 

@@ -71,6 +71,7 @@ public sealed class StatutoryContribution
 
     public void BindObligation(Guid obligationId)
     {
+        if (State != ContributionState.Draft || ObligationId.HasValue) throw new InvalidOperationException("Only an unbound draft can bind an obligation.");
         ObligationId = ModelGuard.Id(obligationId, nameof(obligationId));
     }
 
@@ -80,6 +81,7 @@ public sealed class StatutoryContribution
             throw new InvalidOperationException("Only draft contributions can be approved.");
         if (string.Equals(actorUserId, CreatedByUserId, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("The creator cannot approve their own statutory contribution (separation of duties).");
+        ValidateEntries();
         ApprovedByUserId = ModelGuard.Required(actorUserId, 200, nameof(actorUserId));
         ApprovedAt = ModelGuard.Utc(at);
         State = ContributionState.Approved;
@@ -97,5 +99,14 @@ public sealed class StatutoryContribution
         PostedAt = ModelGuard.Utc(at);
         JournalEntryId = journalEntryId;
         State = ContributionState.Posted;
+    }
+
+    public void ValidateEntries()
+    {
+        if (!HasEmployeeEntries || Entries.Count == 0 || Entries.Any(x => x.ContributionId != Id) ||
+            Entries.Select(x => x.EmployeeId).Distinct().Count() != Entries.Count ||
+            Entries.Sum(x => x.EmployeeContributionAmount) != EmployeeContributionAmount ||
+            Entries.Sum(x => x.EmployerContributionAmount) != EmployerContributionAmount)
+            throw new InvalidOperationException("Unique actual employee entries must reconcile exactly with contribution totals.");
     }
 }

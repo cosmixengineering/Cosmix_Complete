@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Fingerprint, RefreshCw } from 'lucide-react';
 import { z } from 'zod';
@@ -15,7 +16,6 @@ import '@/styles/biometrics.css';
 export interface EmployeeBiometricSectionProps {
   employeeId: string;
   compact?: boolean;
-  onEnrolled?: (base64Image: string) => void;
 }
 
 const enrollmentSchema = z.object({
@@ -136,8 +136,8 @@ function BiometricRecords({
         </div>
       )}
       <p className="hr-notice" role="status">
-        Enrollment and revocation are unavailable in this panel. Active enrollment metadata does not
-        confirm check-in eligibility or a successful attendance punch.
+        Use <Link to="/hr/biometrics">Biometric Registration</Link> for camera enrollment. Active
+        enrollment metadata does not confirm check-in eligibility or a successful attendance punch.
       </p>
     </section>
   );

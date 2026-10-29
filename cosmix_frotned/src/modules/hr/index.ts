@@ -8,6 +8,7 @@ export { foundationPolicyRoutes } from './foundation-policies';
 export { staffTaxonomyRoutes } from './staff-taxonomy';
 export { OrganizationPage } from './pages/OrganizationPage';
 export { EmployeeHiringPage, NewEmployeePage } from './pages/EmployeeHiringPage';
+export { BiometricRegistrationPage } from './pages/BiometricRegistrationPage';
 export { EmployeeDetailPage } from './pages/EmployeeDetailPage';
 export { HrRequestsPage } from './pages/HrRequestsPage';
 export { HiringApprovalsPage } from './pages/HiringApprovalsPage';

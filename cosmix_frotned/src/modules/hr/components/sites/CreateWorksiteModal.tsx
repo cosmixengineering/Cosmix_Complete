@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Primitive from '@radix-ui/react-dialog';
-import { Building2, Check, ChevronDown, Shield, Wrench, X } from 'lucide-react';
+import { Building2, Check, Shield, Wrench, X } from 'lucide-react';
+import { SelectInput } from '@/components/forms/SelectInput';
 import { useHrLifetime } from '../../hooks/use-hr-lifetime';
 import { useHrQuery } from '../../hooks/use-hr-queries';
 import { hrWrite } from '../../api/hr-api';
@@ -344,22 +345,13 @@ export function CreateWorksiteModal({ onClose, onSaved }: CreateWorksiteModalPro
                   </div>
 
                   <div className="form-group">
-                    <label className="worksite-label">Project Category</label>
-                    <div className="select-wrapper">
-                      <select
-                        className="worksite-select"
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        disabled={submitting}
-                      >
-                        {PROJECT_CATEGORIES.map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown size={15} className="select-caret" />
-                    </div>
+                    <SelectInput
+                      label="Project Category"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      disabled={submitting}
+                      options={PROJECT_CATEGORIES.map((cat) => ({ value: cat, label: cat }))}
+                    />
                   </div>
                 </div>
 
@@ -401,68 +393,50 @@ export function CreateWorksiteModal({ onClose, onSaved }: CreateWorksiteModalPro
               <div className="worksite-card-body">
                 <div className="worksite-two-col-grid">
                   <div className="form-group">
-                    <label className="worksite-label">
-                      City <span className="req">*</span>
-                    </label>
-                    <div className="select-wrapper">
-                      <select
-                        className="worksite-select"
-                        value={cityId}
-                        onChange={(e) => handleCityChange(e.target.value)}
-                        required
-                        disabled={submitting}
-                      >
-                        <option value="">Select City</option>
-                        {cities.map((city) => (
-                          <option key={city.id} value={city.id}>
-                            {city.name}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown size={15} className="select-caret" />
-                    </div>
+                    <SelectInput
+                      label="City"
+                      required
+                      value={cityId}
+                      onChange={(e) => handleCityChange(e.target.value)}
+                      disabled={submitting}
+                      options={[
+                        { value: '', label: 'Select City' },
+                        ...cities.map((city) => ({ value: city.id, label: city.name })),
+                      ]}
+                    />
                   </div>
 
                   <div className="form-group">
-                    <label className="worksite-label">
-                      Project Manager / Incharge <span className="req">*</span>
-                    </label>
-                    <div className="select-wrapper">
-                      <select
-                        className="worksite-select"
-                        value={supervisorId}
-                        onChange={(e) => setSupervisorId(e.target.value)}
-                        disabled={submitting}
-                      >
-                        <option value="">e.g. Engr. Imran Saeed</option>
-                        {employees.map((emp) => (
-                          <option key={emp.id} value={emp.id}>
-                            {emp.name ?? `Employee #${emp.employeeNumber}`} (#{emp.employeeNumber})
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown size={15} className="select-caret" />
-                    </div>
+                    <SelectInput
+                      label="Project Manager / Incharge"
+                      required
+                      value={supervisorId}
+                      onChange={(e) => setSupervisorId(e.target.value)}
+                      disabled={submitting}
+                      options={[
+                        { value: '', label: 'e.g. Engr. Imran Saeed' },
+                        ...employees.map((emp) => ({
+                          value: emp.id,
+                          label: `${emp.name ?? `Employee #${emp.employeeNumber}`} (#${emp.employeeNumber})`,
+                        })),
+                      ]}
+                    />
                   </div>
 
                   <div className="form-group">
-                    <label className="worksite-label">Assigned Operational Shift</label>
-                    <div className="select-wrapper">
-                      <select
-                        className="worksite-select"
-                        value={assignedShiftId}
-                        onChange={(e) => setAssignedShiftId(e.target.value)}
-                        disabled={submitting}
-                      >
-                        <option value="">Select or leave for default day shift...</option>
-                        {shiftsQuery.data?.items?.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.code} - {s.name}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown size={15} className="select-caret" />
-                    </div>
+                    <SelectInput
+                      label="Assigned Operational Shift"
+                      value={assignedShiftId}
+                      onChange={(e) => setAssignedShiftId(e.target.value)}
+                      disabled={submitting}
+                      options={[
+                        { value: '', label: 'Select or leave for default day shift...' },
+                        ...(shiftsQuery.data?.items ?? []).map((s) => ({
+                          value: s.id,
+                          label: `${s.code} - ${s.name}`,
+                        })),
+                      ]}
+                    />
                   </div>
                 </div>
 

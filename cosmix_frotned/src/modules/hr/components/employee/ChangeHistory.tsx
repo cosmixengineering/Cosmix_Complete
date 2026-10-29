@@ -4,7 +4,6 @@ import { Pagination } from '@/components/data-display/Pagination';
 import { Dialog } from '@/components/ui/Dialog';
 import { useHrQuery } from '../../hooks/use-hr-queries';
 import { pageOf } from '../../schemas/contracts';
-import { profileResponse } from '../../schemas/hiring';
 import { changeHistorySchema, changeSummarySchema } from '../../schemas/updates';
 import type { Section } from '../../types/updates';
 import { labelDate } from '../../utils/messages';
@@ -16,52 +15,18 @@ export function ChangeHistory({ employeeId, section }: { employeeId: string; sec
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string | null>(null);
 
-  const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
-    'hr.employees.read',
-  ]);
-  const isApproved = (profileQuery.data?.employee?.status ?? 2) === 2;
-
   const path = `employees/${employeeId}/changes/${section.name}/history`;
-  const query = useHrQuery(
-    `${path}?page=${page}&pageSize=10`,
-    pageOf(changeSummarySchema),
-    ['hr.employees.read', ...section.read],
-    isApproved,
-  );
+  const query = useHrQuery(`${path}?page=${page}&pageSize=10`, pageOf(changeSummarySchema), [
+    'hr.employees.read',
+    ...section.read,
+  ]);
   const detail = useHrQuery(
     `${path}/${selected}`,
     changeHistorySchema,
     ['hr.employees.read', ...section.read],
-    !!selected && isApproved,
+    !!selected,
   );
 
-  if (!isApproved) {
-    return (
-      <div
-        className="emp-card"
-        style={{
-          marginTop: '18px',
-          padding: '20px 24px',
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
-          borderRadius: '10px',
-        }}
-      >
-        <div className="emp-card-header simple" style={{ marginBottom: '10px' }}>
-          <div
-            className="emp-card-title"
-            style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}
-          >
-            <History size={16} className="emp-card-title-icon" style={{ color: '#334155' }} />
-            <span>Change history</span>
-          </div>
-        </div>
-        <p className="muted" style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
-          Change history is activated once the employee onboarding has been approved.
-        </p>
-      </div>
-    );
-  }
   return (
     <div
       className="emp-card"

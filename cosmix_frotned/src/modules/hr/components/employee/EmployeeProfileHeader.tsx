@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Camera, Clock, MoreHorizontal, Navigation, Pencil, Upload, User } from 'lucide-react';
+import { Camera, MoreHorizontal, Navigation, Pencil, Upload, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { request } from '@/services/api/http-client';
@@ -29,7 +29,6 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
   const [photoBlobUrl, setPhotoBlobUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const canReadProfile = access.can('hr.employees.read');
   const canReadDocs = access.can('hr.employees.read', 'hr.employees.documents.read');
   const canManageDocs = access.can(
     'hr.employees.read',
@@ -37,23 +36,18 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
     'hr.employees.drafts.manage',
   );
 
-  const profileQuery = useHrQuery(
-    `employees/${employeeId}`,
-    profileResponse,
-    canReadProfile ? ['hr.employees.read'] : [],
-  );
+  const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
+    'hr.employees.read',
+  ]);
 
-  const docsQuery = useHrQuery(
-    `employees/${employeeId}/documents`,
-    documentsSchema,
-    canReadDocs ? ['hr.employees.read', 'hr.employees.documents.read'] : [],
-  );
+  const docsQuery = useHrQuery(`employees/${employeeId}/documents`, documentsSchema, [
+    'hr.employees.read',
+    'hr.employees.documents.read',
+  ]);
 
-  const desigsQuery = useHrQuery(
-    'designations?pageSize=50',
-    pageOf(masterSchema),
-    canReadProfile ? ['hr.organization.read'] : [],
-  );
+  const desigsQuery = useHrQuery('designations?pageSize=50', pageOf(masterSchema), [
+    'hr.organization.read',
+  ]);
 
   const employee = profileQuery.data?.employee;
   const profile = profileQuery.data?.profile;
@@ -104,13 +98,6 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
 
   const desigName =
     desigsQuery.data?.items?.find((d) => d.id === profile?.designationId)?.name || null;
-
-  // Overtime (OT) Status:
-  const isOvertimeActive = Boolean(
-    profile?.staffCategoryId ||
-    profile?.mobileAccessRequested ||
-    (desigName && /technician|engineer|supervisor|operator|driver|field/i.test(desigName)),
-  );
 
   // Generate initials
   const initials =
@@ -206,12 +193,12 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
               {statusLabel}
             </span>
             <span className="emp-badge-onboarding">{onboardingLabel}</span>
-            <span className="emp-badge-ot">
-              <Clock size={11} />
-              <span>OT: {isOvertimeActive ? 'ON' : 'OFF'}</span>
-            </span>
             {desigName && <span className="emp-badge-desig">{desigName}</span>}
           </div>
+          <p className="muted">
+            Name and designation are from the hiring profile snapshot and may differ from current
+            approved records. View Identity and Employment for current values.
+          </p>
         </div>
       </div>
 

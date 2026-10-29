@@ -8,12 +8,13 @@ using Cosmix.Domain.HR.Onboarding;
 
 namespace Cosmix.Application.Authentication.Web;
 
-/// <summary>Email/password followed by a purpose-bound SMS proof for every web session.</summary>
-public sealed class WebAuthenticationService(
+/// <summary>Email/password followed by a browser-bound SMS or enrolled authenticator proof.</summary>
+public sealed partial class WebAuthenticationService(
     IAuthenticationRepository repository, IWebAuthenticationRepository webRepository,
     IWebPasswordVerifier passwords, IOtpProtector secrets, IOtpSmsSender sender,
     IAccessTokenIssuer tokens, WebAuthenticationOptions options,
-    MobileAuthenticationOptions commonOptions, TimeProvider clock)
+    MobileAuthenticationOptions commonOptions, TimeProvider clock,
+    IWebMfaRepository? mfaRepository = null, WebMfaProofs? mfaProofs = null)
 {
     public Task<OtpRequestResponse> LoginAsync(WebLoginRequest request, AuthRequestContext context,
         CancellationToken ct) => RequestCoreAsync(request, null, context, ct);
@@ -22,13 +23,15 @@ public sealed class WebAuthenticationService(
         CancellationToken ct) => RequestCoreAsync(request.Request, request.ChallengeId, context, ct);
 
     private async Task<OtpRequestResponse> RequestCoreAsync(WebLoginRequest request, Guid? previousChallengeId,
-        AuthRequestContext context, CancellationToken ct)
+        AuthRequestContext context, CancellationToken ct, bool authenticator = false)
     {
-        EnsureConfigured();
+        EnsureConfigured(requireSms: !authenticator);
+        if (authenticator && (mfaRepository is null || mfaProofs is null))
+            throw new AuthenticationFailure("authentication_unavailable", 503);
         var started = Stopwatch.GetTimestamp();
         var requestedAt = clock.GetUtcNow();
         var response = new OtpRequestResponse(Guid.NewGuid(), requestedAt.AddSeconds(commonOptions.OtpLifetimeSeconds),
-            requestedAt.AddSeconds(commonOptions.ResendCooldownSeconds));
+            requestedAt.AddSeconds(commonOptions.ResendCooldownSeconds), authenticator ? "enter_authenticator" : "enter_otp");
         var email = WebLoginEmail.Normalize(request.Email);
         var emailKey = secrets.Digest("web-email:" + (email ?? "invalid-mailbox"));
         var validPasswordInput = request.Password is { Length: >= 1 and <= 1024 };
@@ -66,7 +69,10 @@ public sealed class WebAuthenticationService(
                 now = clock.GetUtcNow();
                 if (state is null || !Eligible(state, now) || email != state.Account.NormalizedLoginName ||
                     !ValidBrowser(request.BrowserSecret) || now >= response.ExpiresAt) return false;
+                if (state.Account.AuthenticatorRequired != authenticator) return false;
                 var browserHash = BrowserHash(request.BrowserSecret);
+                if (authenticator)
+                    return await CreateAuthenticatorChallengeAsync(state, response, browserHash, now, context, token);
                 var latest = await webRepository.GetLatestWebChallengeAsync(state.Account.Id, token);
                 if (previousChallengeId.HasValue && (latest is null || latest.Id != previousChallengeId.Value ||
                     latest.ConsumedAt.HasValue || !MatchesCurrentAccount(latest, state) ||
@@ -123,7 +129,7 @@ public sealed class WebAuthenticationService(
                 Audit("web.otp.rejected", "otp-challenge", challenge.Id.ToString(), now, context);
                 return Failure();
             }
-            if (state is null || !Eligible(state, now) || !MatchesCurrentAccount(challenge, state) ||
+            if (state is null || state.Account.AuthenticatorRequired || !Eligible(state, now) || !MatchesCurrentAccount(challenge, state) ||
                 challenge.IssuedAt < state.Phone!.CreatedAt || challenge.IssuedAt < state.Account.PasswordChangedAt)
             {
                 challenge.Revoke(now);
@@ -151,7 +157,7 @@ public sealed class WebAuthenticationService(
 
     public async Task<AuthenticationResult<SessionResponse>> RefreshResultAsync(WebRefreshRequest request, AuthRequestContext context, CancellationToken ct)
     {
-        EnsureConfigured();
+        EnsureConfigured(requireSms: false);
         var result = await repository.AtomicAsync(async token =>
         {
             var now = clock.GetUtcNow();
@@ -237,9 +243,12 @@ public sealed class WebAuthenticationService(
     {
         if (session.Client != SessionClient.Web || !session.IsActiveAt(now) ||
             session.UserAccountId != state.Account.Id || session.SecurityVersion != state.Account.SecurityVersion ||
-            session.RegisteredDeviceId.HasValue || session.MfaChallengeId.HasValue || !session.SmsOtpChallengeId.HasValue ||
+            session.RegisteredDeviceId.HasValue ||
             !Eligible(state, now) || state.Phone!.VerifiedAt is null ||
             state.Phone.VerifiedAt > session.CreatedAt) return false;
+        if (session.MfaChallengeId.HasValue)
+            return !session.SmsOtpChallengeId.HasValue && await AuthenticatorSessionIsValidAsync(state, session, browserHash, now, ct);
+        if (state.Account.AuthenticatorRequired || !session.SmsOtpChallengeId.HasValue) return false;
         var proof = await repository.GetChallengeAsync(session.SmsOtpChallengeId.Value, ct);
         return proof is not null && proof.Id == session.SmsOtpChallengeId.Value && MatchesCurrentAccount(proof, state) &&
             proof.DeviceHash.Length == 64 && proof.DeviceHash.All(char.IsAsciiHexDigit) &&
@@ -306,9 +315,9 @@ public sealed class WebAuthenticationService(
             targetId, now, context.CorrelationId, ipAddress: context.IpAddress));
 
     private bool SettingsValid() => options.Enabled && options.IsValid() && commonOptions.Enabled && commonOptions.IsValid();
-    private void EnsureConfigured()
+    private void EnsureConfigured(bool requireSms = true)
     {
-        if (!SettingsValid() || !secrets.IsConfigured || !sender.IsConfigured || !tokens.IsConfigured)
+        if (!SettingsValid() || !secrets.IsConfigured || (requireSms && !sender.IsConfigured) || !tokens.IsConfigured)
             throw new AuthenticationFailure("authentication_unavailable", 503);
     }
 

@@ -339,6 +339,7 @@ sealed class ResultRepository(AuthenticationAccount account, MobileOtpChallenge 
     public Task<IReadOnlyList<UserSession>> GetSessionsAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
     public Task<IReadOnlyList<UserSession>> GetActiveSessionsPageAsync(Guid id, DateTimeOffset now, int page, int size, CancellationToken ct) => throw new NotSupportedException();
     public Task<IReadOnlyList<RegisteredDevice>> GetDevicesAsync(Guid id, int page, int size, CancellationToken ct) => throw new NotSupportedException();
+    public Task<IReadOnlyList<RegisteredDevice>> GetNonRevokedDevicesAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
     public void AddChallenge(MobileOtpChallenge value, OtpDelivery delivery) => throw new NotSupportedException();
     public void AddDevice(RegisteredDevice device) => throw new NotSupportedException();
     public void AddNotification(Notification notification) => throw new NotSupportedException();

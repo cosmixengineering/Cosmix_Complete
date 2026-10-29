@@ -9,6 +9,7 @@ export const accessAccountSchema = z.object({
   mobileAccessEnabled: z.boolean(),
   webAccessEnabled: z.boolean(),
   mfaRequired: z.boolean(),
+  authenticatorRequired: z.boolean(),
   version: accessVersionSchema,
 });
 export const employeeAccessSetupSchema = z.object({

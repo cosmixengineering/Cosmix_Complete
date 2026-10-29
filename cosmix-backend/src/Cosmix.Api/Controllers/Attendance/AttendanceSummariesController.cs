@@ -14,12 +14,13 @@ public sealed class AttendanceSummariesController(AttendanceSummaryService servi
 {
     [HttpGet("employees/{employeeId:guid}/daily")]
     [EndpointSummary("Read scoped factual attendance and explicit policy availability")]
-    public Task<AttendanceDayResponse> Day(Guid employeeId, [FromQuery, Required] DateOnly businessDate, CancellationToken ct) =>
-        service.DayAsync(employeeId, businessDate, Context(), ct);
+    public Task<AttendanceDayReadResponse> Day(Guid employeeId, [FromQuery, Required] DateOnly businessDate, CancellationToken ct) =>
+        service.ReadDayAvailabilityAsync(employeeId, businessDate, Context(), ct);
     [HttpGet("employees/{employeeId:guid}/calendar")]
     [EndpointSummary("Read at most 31 shift-start dates within employee/site scope")]
-    public Task<IReadOnlyList<AttendanceDayResponse>> Calendar(Guid employeeId, [FromQuery] AttendanceDateRange range, CancellationToken ct) =>
-        service.CalendarAsync(employeeId, range, false, Context(), ct);
+    [EndpointDescription("Missing frozen membership is returned per date with unavailableReason=locked_attendance_summary_unavailable and null facts, roster, policy and exceptionCount. Other dates remain readable. No missing attendance is inferred as zero or absence.")]
+    public Task<IReadOnlyList<AttendanceDayReadResponse>> Calendar(Guid employeeId, [FromQuery] AttendanceDateRange range, CancellationToken ct) =>
+        service.ReadCalendarAvailabilityAsync(employeeId, range, Context(), ct);
     [HttpGet("employees/{employeeId:guid}/daily/history")]
     public Task<Cosmix.Application.Common.Models.PagedResult<AttendanceSummaryRevision>> History(Guid employeeId,
         [FromQuery, Required] DateOnly businessDate, [FromQuery] int page = 1, [FromQuery] int pageSize = 25, CancellationToken ct = default) =>

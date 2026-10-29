@@ -22,7 +22,8 @@ public sealed partial class EmployeeSelfService(
     LeaveService? leaves = null,
     AttendanceSummaryService? attendance = null,
     IEmployeePayrollHistoryReader? payrollHistory = null,
-    Cosmix.Application.HR.Payslips.PayslipService? payslips = null)
+    Cosmix.Application.HR.Payslips.PayslipService? payslips = null,
+    Cosmix.Application.HR.PayrollAccounting.PayrollSettlementReader? settlements = null)
 {
     public Task<EssProfileResponse> GetProfileAsync(AuthRequestContext context, CancellationToken ct) =>
         ReadAuditedAsync(EmployeeSelfServicePermissions.ProfileRead, context,
@@ -159,8 +160,12 @@ public sealed partial class EmployeeSelfService(
         var basis = grants.FirstOrDefault(grant => grant.IsEffectiveAt(checkedAt) && AccessPermissionEvaluator.Allows(identity, [grant],
             EmployeeSelfServicePermissions.FinancesRead, own));
         if (basis is null) throw new AuthenticationFailure("forbidden", 403);
-        return await authorization.GetAssignmentRoleCodeAsync(basis.RoleAssignmentId, ct)
+        var role = await authorization.GetAssignmentRoleCodeAsync(basis.RoleAssignmentId, ct)
             ?? throw new AuthenticationFailure("forbidden", 403);
+        if (current.Require() != identity || !await journal.IsCurrentSessionAsync(identity, ct))
+            throw new AuthenticationFailure("invalid_authentication", 401);
+        if (!basis.IsEffectiveAt(clock.GetUtcNow())) throw new AuthenticationFailure("forbidden", 403);
+        return role;
     }
 
     public Task<EssRequestsSummaryResponse> GetRequestsSummaryAsync(AuthRequestContext context, CancellationToken ct) =>

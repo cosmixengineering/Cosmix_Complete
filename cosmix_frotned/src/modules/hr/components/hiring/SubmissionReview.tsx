@@ -15,7 +15,6 @@ import {
   Folder,
   CreditCard,
   HeartPulse,
-  Fingerprint,
   Briefcase,
   FileCheck,
   FileText,
@@ -370,15 +369,6 @@ const FIELD_REGISTRY: Record<string, FieldMeta> = {
     stepName: 'Step 3: Medical',
     tab: 'medical',
     icon: HeartPulse,
-  },
-
-  // 10. Biometrics
-  biometrics: {
-    label: 'Facial Recognition / Face ID Enrollment Template',
-    category: 'Biometrics & Face ID',
-    stepName: 'Step 6: Biometrics',
-    tab: 'biometrics',
-    icon: Fingerprint,
   },
 };
 

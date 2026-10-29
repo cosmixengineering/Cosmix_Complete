@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Eye, Search, ClipboardCheck } from 'lucide-react';
+import { isSystemAdmin } from '@/auth/contracts';
 import { TextInput } from '@/components/forms/TextInput';
 import {
   Command,
@@ -38,7 +39,8 @@ export function LeaveRecoveryReviewPage() {
 }
 function RecoveryWorkspace() {
   const access = useAttendanceAccess();
-  const allowed = access.ready && canAll(access.user, permissions.recovery);
+  const allowed =
+    access.ready && canAll(access.user, permissions.recovery) && isSystemAdmin(access.user);
   const queue = useAttendanceQuery(recoveryQueuePath, recoveryQueue, allowed);
   const [selection, setSelection] = useState<Selection | null>(null);
   if (!allowed)

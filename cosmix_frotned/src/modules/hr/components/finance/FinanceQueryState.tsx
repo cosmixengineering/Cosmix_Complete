@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { CircleAlert, RotateCcw } from 'lucide-react';
 import { ApiError } from '@/services/api/api-error';
 import { Button } from '@/components/ui/Button';
+import { TableSkeleton } from '@/components/ui/Skeleton';
 import { financeError } from '../../api/finance-messages';
 
 export function FinanceQueryState({
@@ -19,12 +20,7 @@ export function FinanceQueryState({
   children: ReactNode;
   title?: string;
 }) {
-  if (query.isPending)
-    return (
-      <p className="allowance-state" role="status">
-        Loading records...
-      </p>
-    );
+  if (query.isPending) return <TableSkeleton rows={6} />;
   if (!query.isError) return children;
   const failure = query.error instanceof ApiError ? query.error : null;
   const retryable = !failure || failure.status >= 500 || failure.status === 429;

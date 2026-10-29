@@ -51,19 +51,22 @@ public sealed class StatutoryContribution
     public string? EmployeeItemsJson { get; private set; }
     public bool HasEmployeeEntries { get; private set; }
     public ICollection<StatutoryContributionEntry> Entries { get; private set; } = new List<StatutoryContributionEntry>();
+    public ICollection<StatutoryEmployeePosting> EmployeePostings { get; private set; } = new List<StatutoryEmployeePosting>();
     public Guid? ObligationId { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
     public void SetEmployeeItemsJson(string json)
     {
-        if (State != ContributionState.Draft || HasEmployeeEntries) throw new InvalidOperationException("Approved contribution evidence is immutable.");
+        if (State != ContributionState.Draft) throw new InvalidOperationException("Approved contribution evidence is immutable.");
         EmployeeItemsJson = json;
-        HasEmployeeEntries = !string.IsNullOrWhiteSpace(json);
+        HasEmployeeEntries = !string.IsNullOrWhiteSpace(json) || Entries.Count > 0;
     }
 
     public void RecordPosting(Guid obligationId, Guid? journalId, string payableAccountCode, string actor, DateTimeOffset at)
     {
-        if (!HasEmployeeEntries || Entries.Count == 0) throw new InvalidOperationException("Explicit employee entries required.");
+        if (State != ContributionState.Approved || (ObligationId.HasValue && ObligationId != obligationId))
+            throw new InvalidOperationException("Only an approved contribution can bind its matching payroll obligation.");
+        ValidateEntries();
         ObligationId = ModelGuard.Id(obligationId, nameof(obligationId));
         PayableAccountCode = ModelGuard.Required(payableAccountCode, 50, nameof(payableAccountCode));
         Post(actor, at, journalId);
@@ -71,7 +74,24 @@ public sealed class StatutoryContribution
 
     public void BindObligation(Guid obligationId)
     {
+        if (State != ContributionState.Draft)
+            throw new InvalidOperationException("Only draft contributions can bind an obligation before approval.");
+        if (ObligationId.HasValue && ObligationId.Value == obligationId)
+            return;
+        if (ObligationId.HasValue && ObligationId.Value != obligationId)
+            throw new InvalidOperationException("Statutory contribution is already linked to a different obligation.");
         ObligationId = ModelGuard.Id(obligationId, nameof(obligationId));
+    }
+
+    public void CompleteGroupedPosting(string payableAccountCode, string actor, DateTimeOffset at)
+    {
+        if (State != ContributionState.Approved || ObligationId.HasValue)
+            throw new InvalidOperationException("Only unbound approved contributions can complete across payroll groups.");
+        ValidateEntries();
+        PayableAccountCode = ModelGuard.Required(payableAccountCode, 50, nameof(payableAccountCode));
+        // Each obligation/journal remains in immutable employee posting rows; no single group
+        // is misrepresented as having posted the whole month's contribution.
+        Post(actor, at);
     }
 
     public void Approve(string actorUserId, DateTimeOffset at)
@@ -80,6 +100,7 @@ public sealed class StatutoryContribution
             throw new InvalidOperationException("Only draft contributions can be approved.");
         if (string.Equals(actorUserId, CreatedByUserId, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("The creator cannot approve their own statutory contribution (separation of duties).");
+        ValidateEntries();
         ApprovedByUserId = ModelGuard.Required(actorUserId, 200, nameof(actorUserId));
         ApprovedAt = ModelGuard.Utc(at);
         State = ContributionState.Approved;
@@ -97,5 +118,14 @@ public sealed class StatutoryContribution
         PostedAt = ModelGuard.Utc(at);
         JournalEntryId = journalEntryId;
         State = ContributionState.Posted;
+    }
+
+    public void ValidateEntries()
+    {
+        if (!HasEmployeeEntries || Entries.Count == 0 || Entries.Any(x => x.ContributionId != Id) ||
+            Entries.Select(x => x.EmployeeId).Distinct().Count() != Entries.Count ||
+            Entries.Sum(x => x.EmployeeContributionAmount) != EmployeeContributionAmount ||
+            Entries.Sum(x => x.EmployerContributionAmount) != EmployerContributionAmount)
+            throw new InvalidOperationException("Unique actual employee entries must reconcile exactly with contribution totals.");
     }
 }
