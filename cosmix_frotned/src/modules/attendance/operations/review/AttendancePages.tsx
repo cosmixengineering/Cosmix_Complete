@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarDays, List, RefreshCw } from 'lucide-react';
+import { CalendarDays, List, RefreshCw, Info } from 'lucide-react';
 import { z } from 'zod';
 import { TextInput } from '@/components/forms/TextInput';
 import { IconButton } from '@/components/ui/IconButton';
@@ -484,65 +484,108 @@ function DailyDetail({
   );
 }
 function DayFacts({ value }: { value: Day }) {
+  const isSetupRequired = needsAttendanceSetup(value);
+  const statusLabel = isSetupRequired
+    ? 'Attendance setup required'
+    : readableStatus(value.factualStatus);
+
   return (
-    <>
+    <div className="att-day-overview-wrapper">
       <dl className="att-register-day-facts">
-        <div>
+        <div className="att-day-kpi-tile">
           <dt>Attendance status</dt>
           <dd>
-            {needsAttendanceSetup(value)
-              ? 'Attendance setup required'
-              : readableStatus(value.factualStatus)}
+            <span
+              className={`att-status-pill ${
+                isSetupRequired
+                  ? 'att-pill-warning'
+                  : value.factualStatus === 'closed_session_evidence'
+                    ? 'att-pill-success'
+                    : 'att-pill-neutral'
+              }`}
+            >
+              {statusLabel}
+            </span>
           </dd>
         </div>
-        <div>
+        <div className="att-day-kpi-tile">
           <dt>Hours worked</dt>
-          <dd>{duration(value.facts.workedMinutes)}</dd>
+          <dd className="att-day-kpi-val">{duration(value.facts.workedMinutes)}</dd>
         </div>
-        <div>
+        <div className="att-day-kpi-tile">
           <dt>Late time</dt>
-          <dd>{duration(value.policy.lateMinutes)}</dd>
+          <dd className="att-day-kpi-val">{duration(value.policy.lateMinutes)}</dd>
         </div>
-        <div>
+        <div className="att-day-kpi-tile">
           <dt>Overtime</dt>
-          <dd>{duration(value.policy.overtimeMinutes)}</dd>
+          <dd className="att-day-kpi-val">{duration(value.policy.overtimeMinutes)}</dd>
         </div>
-        <div>
+        <div className="att-day-kpi-tile">
           <dt>Scheduled shift</dt>
-          <dd>
+          <dd className="att-day-kpi-val">
             {formatTime(value.roster.startsAt, value.timeZone)} –{' '}
             {formatTime(value.roster.endsAt, value.timeZone)}
           </dd>
         </div>
-        <div>
+        <div className="att-day-kpi-tile">
           <dt>Time zone</dt>
-          <dd>{value.timeZone}</dd>
+          <dd className="att-day-kpi-val">{value.timeZone}</dd>
         </div>
-        <div>
+        <div className="att-day-kpi-tile">
           <dt>Open sessions</dt>
-          <dd>{value.facts.openSessions}</dd>
+          <dd className="att-day-kpi-val">{value.facts.openSessions}</dd>
         </div>
-        <div>
+        <div className="att-day-kpi-tile">
           <dt>Exceptions</dt>
-          <dd>{value.exceptionCount}</dd>
+          <dd className="att-day-kpi-val">{value.exceptionCount}</dd>
         </div>
-        <div>
+        <div className="att-day-kpi-tile">
           <dt>Payable time</dt>
-          <dd>{duration(value.policy.payableMinutes)}</dd>
+          <dd className="att-day-kpi-val">{duration(value.policy.payableMinutes)}</dd>
         </div>
-        <div>
+        <div className="att-day-kpi-tile">
           <dt>Calculation status</dt>
-          <dd>{readableStatus(value.policy.status)}</dd>
+          <dd>
+            <span
+              className={`att-status-pill ${
+                value.policy.status === 'Present'
+                  ? 'att-pill-success'
+                  : value.policy.status === 'schedule_configuration_required'
+                    ? 'att-pill-warning'
+                    : 'att-pill-neutral'
+              }`}
+            >
+              {readableStatus(value.policy.status)}
+            </span>
+          </dd>
         </div>
-        <div>
+        <div className="att-day-kpi-tile">
           <dt>Record status</dt>
-          <dd>{value.isLocked ? 'Locked' : 'Open'}</dd>
+          <dd>
+            <span
+              className={`att-status-pill ${value.isLocked ? 'att-pill-neutral' : 'att-pill-info'}`}
+            >
+              {value.isLocked ? 'Locked' : 'Open'}
+            </span>
+          </dd>
         </div>
       </dl>
-      {value.policy.explanations.map((explanation, i) => (
-        <p key={i}>{explanation}</p>
-      ))}
-      <p>Elapsed factual time and saved attendance revisions do not confirm payroll settlement.</p>
-    </>
+
+      <div className="att-day-policy-banner">
+        <div className="att-policy-banner-icon-col">
+          <Info size={15} className="att-policy-banner-icon" />
+        </div>
+        <div className="att-policy-banner-text-col">
+          {value.policy.explanations.map((explanation, i) => (
+            <p key={i} className="att-policy-banner-line">
+              {explanation}
+            </p>
+          ))}
+          <p className="att-policy-banner-disclaimer">
+            Elapsed factual time and saved attendance revisions do not confirm payroll settlement.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

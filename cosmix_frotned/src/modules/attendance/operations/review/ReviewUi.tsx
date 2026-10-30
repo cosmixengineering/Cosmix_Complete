@@ -1,6 +1,24 @@
+import {
+  EmployeeReference,
+  EmployeePicker,
+  useEmployeeCodes,
+} from '@/components/employees/EmployeeReference';
 import { useId, useState, type ReactNode } from 'react';
+import { employeeSearchTerm, formatEmployeeCode } from '@/utils/employee-code';
 import { useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, RefreshCw, Search, Users, ShieldCheck } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  RefreshCw,
+  Search,
+  Users,
+  ShieldCheck,
+  Calendar,
+  Clock,
+  Scale,
+  History,
+  Layers,
+} from 'lucide-react';
 import { z } from 'zod';
 import { TextInput } from '@/components/forms/TextInput';
 import { SelectInput } from '@/components/forms/SelectInput';
@@ -55,7 +73,30 @@ function label(key: string) {
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HEX_HASH_REGEX = /^[0-9a-f]{32,}$/i;
 
-export function RecordFacts({ value }: { value: unknown }) {
+const STATUS_FORMAT: Record<string, { label: string; cls: string }> = {
+  employee_assignment_unavailable: { label: 'Assignment Unavailable', cls: 'att-pill-warning' },
+  schedule_configuration_required: { label: 'Schedule Config Required', cls: 'att-pill-warning' },
+  no_accepted_session_evidence: { label: 'No Punch Evidence', cls: 'att-pill-neutral' },
+  closed_session_evidence: { label: 'Completed Session Evidence', cls: 'att-pill-success' },
+  open_session_evidence: { label: 'Active Open Punch', cls: 'att-pill-info' },
+  correction_evidence_unavailable: { label: 'Evidence Unavailable', cls: 'att-pill-warning' },
+  present: { label: 'Present', cls: 'att-pill-success' },
+  absent: { label: 'Absent', cls: 'att-pill-danger' },
+  scheduled: { label: 'Scheduled', cls: 'att-pill-info' },
+  configured: { label: 'Configured', cls: 'att-pill-info' },
+  locked: { label: 'Locked', cls: 'att-pill-neutral' },
+  open: { label: 'Open', cls: 'att-pill-info' },
+};
+
+export function RecordFacts({ value, field }: { value: unknown; field?: string }) {
+  if (field && /^(?:employeeId|.*EmployeeId)$/.test(field))
+    return <EmployeeReference employeeId={typeof value === 'string' ? value : null} />;
+  if (field === 'employeeNumber')
+    return (
+      <EmployeeReference
+        employeeNumber={typeof value === 'number' || typeof value === 'string' ? value : null}
+      />
+    );
   if (value === null || value === undefined) return <span className="att-fact-muted">—</span>;
   if (typeof value !== 'object') {
     if (typeof value === 'boolean') {
@@ -66,6 +107,11 @@ export function RecordFacts({ value }: { value: unknown }) {
     const str = String(value);
     if (str === 'Unavailable') {
       return <span className="att-fact-muted">—</span>;
+    }
+    const lower = str.toLowerCase();
+    if (STATUS_FORMAT[lower]) {
+      const badge = STATUS_FORMAT[lower];
+      return <span className={`att-status-pill ${badge.cls}`}>{badge.label}</span>;
     }
     if (UUID_REGEX.test(str)) {
       return (
@@ -92,7 +138,12 @@ export function RecordFacts({ value }: { value: unknown }) {
       <ol className="attendance-manifest">
         {value.map((item, i) => (
           <li key={i}>
-            <RecordFacts value={item} />
+            <RecordFacts
+              value={item}
+              field={
+                field && /^(?:employeeIds|.*EmployeeIds)$/.test(field) ? 'employeeId' : undefined
+              }
+            />
           </li>
         ))}
       </ol>
@@ -105,13 +156,173 @@ export function RecordFacts({ value }: { value: unknown }) {
         <div key={key} style={{ display: 'contents' }}>
           <dt>{label(key)}</dt>
           <dd>
-            <RecordFacts value={item} />
+            <RecordFacts
+              value={item}
+              field={
+                key === 'targetId' &&
+                ((field === 'scope' && 'kind' in value && value.kind === 2) ||
+                  ('target' in value && value.target === 'employee'))
+                  ? 'employeeId'
+                  : key
+              }
+            />
           </dd>
         </div>
       ))}
     </dl>
   );
 }
+
+function isCompositeProvenance(val: unknown): val is Record<string, unknown> {
+  if (!val || typeof val !== 'object' || Array.isArray(val)) return false;
+  const keys = Object.keys(val);
+  return (
+    keys.length > 1 &&
+    keys.some((k) => ['roster', 'facts', 'policy', 'latestSavedRevision'].includes(k))
+  );
+}
+
+function CompositeSourceTabs({
+  title,
+  record,
+}: {
+  title: string;
+  record: Record<string, unknown>;
+}) {
+  const [activeTab, setActiveTab] = useState<string>('roster');
+
+  const knownKeys = ['roster', 'facts', 'policy', 'latestSavedRevision'];
+  const otherKeys = Object.keys(record).filter((k) => !knownKeys.includes(k));
+  const availableKeys = [...knownKeys.filter((k) => k in record), ...otherKeys];
+
+  const effectiveTab =
+    activeTab === 'all' || activeTab in record ? activeTab : availableKeys[0] || 'all';
+
+  const tabDefs = [
+    {
+      key: 'roster',
+      label: 'Shift & Roster',
+      Icon: Calendar,
+      desc: 'Scheduled shift timings, site assignment, break allocation and holiday rules',
+      hasValue: Boolean(record.roster),
+    },
+    {
+      key: 'facts',
+      label: 'Punches & Facts',
+      Icon: Clock,
+      desc: 'Actual biometrics, mobile punch sessions, elapsed work time and raw evidence',
+      hasValue: Boolean(record.facts),
+    },
+    {
+      key: 'policy',
+      label: 'Policy & Calculation',
+      Icon: Scale,
+      desc: 'Overtime rules, grace periods, lates deduction and payable time outcomes',
+      hasValue: Boolean(record.policy),
+    },
+    {
+      key: 'latestSavedRevision',
+      label: 'Saved Revision',
+      Icon: History,
+      desc: 'Audited snapshot revision saved in attendance ledger',
+      hasValue: Boolean(record.latestSavedRevision),
+    },
+    ...otherKeys.map((k) => ({
+      key: k,
+      label: label(k),
+      Icon: Layers,
+      desc: `Detailed ${label(k)} data`,
+      hasValue: Boolean(record[k]),
+    })),
+    {
+      key: 'all',
+      label: 'All Details',
+      Icon: Layers,
+      desc: 'Full composite evidence record',
+      hasValue: true,
+    },
+  ].filter((t) => t.key === 'all' || t.key in record);
+
+  const fallbackTab = {
+    key: 'all',
+    label: 'All Details',
+    Icon: Layers,
+    desc: 'Full composite evidence record',
+    hasValue: true,
+  };
+  const currentTab = tabDefs.find((t) => t.key === effectiveTab) ?? tabDefs[0] ?? fallbackTab;
+  const currentValue = effectiveTab === 'all' ? record : record[effectiveTab];
+
+  return (
+    <div className="att-source-tabs-container">
+      {/* Top Header */}
+      <div className="att-source-tabs-topbar">
+        <div className="att-source-title-group">
+          <ShieldCheck size={16} className="att-source-shield-icon" />
+          <span className="att-source-title-text">{title}</span>
+        </div>
+        <div className="att-source-badge-group">
+          <span className="att-source-badge">Engine Audited</span>
+        </div>
+      </div>
+
+      {/* Button Switcher / Tab Toolbar */}
+      <div className="att-source-buttons-bar" role="tablist" aria-label="Evidence categories">
+        {tabDefs.map((tab) => {
+          const TabIcon = tab.Icon;
+          const isSelected = tab.key === effectiveTab;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={isSelected}
+              className={`att-source-action-btn ${isSelected ? 'is-active' : ''}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              <TabIcon size={13} className="att-source-btn-icon" />
+              <span className="att-source-btn-text">{tab.label}</span>
+              {tab.key !== 'all' && (
+                <span
+                  className={`att-source-dot ${tab.hasValue ? 'dot-active' : 'dot-empty'}`}
+                  title={tab.hasValue ? 'Contains data' : 'Empty'}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab Content Panel */}
+      <div className="att-source-active-panel">
+        <div className="att-source-desc-row">
+          <span className="att-source-tab-desc">{currentTab.desc}</span>
+        </div>
+
+        {effectiveTab === 'all' ? (
+          <div className="att-source-all-grid">
+            <RecordFacts value={record} />
+          </div>
+        ) : currentValue ? (
+          <div className="att-source-tab-content">
+            <RecordFacts value={currentValue} />
+          </div>
+        ) : (
+          <div className="att-source-empty-state">
+            <currentTab.Icon size={26} className="att-empty-icon" />
+            <div className="att-empty-text">
+              <span className="att-empty-heading">No {currentTab.label} Recorded</span>
+              <p className="att-empty-sub">
+                No {currentTab.label.toLowerCase()} entries have been filed for this date.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function SourceFacts({
   title = 'Retained source evidence',
   value,
@@ -119,6 +330,10 @@ export function SourceFacts({
   title?: string;
   value: unknown;
 }) {
+  if (isCompositeProvenance(value)) {
+    return <CompositeSourceTabs title={title} record={value} />;
+  }
+
   return (
     <details className="att-source-facts-details" open>
       <summary className="att-source-facts-summary">
@@ -147,6 +362,11 @@ export function ScopeSelect({
 }) {
   const access = useAttendanceAccess();
   const scopes = supportedScopes(access.user, permission);
+  const codes = useEmployeeCodes(
+    scopes
+      .filter((scope) => scope.kind === 2 && scope.targetId !== null)
+      .map((scope) => scope.targetId!),
+  );
   return (
     <SelectInput
       label="Authority scope"
@@ -154,15 +374,16 @@ export function ScopeSelect({
       disabled={disabled}
       options={[
         { value: '', label: 'Select granted scope' },
-        ...scopes.map((s) => ({
-          value: scopeKey(s),
-          label: `${scopeNames[s.kind]}${s.targetId ? ': ' + s.targetId : ''}`,
+        ...scopes.map((scope) => ({
+          value: scopeKey(scope),
+          label: `${scopeNames[scope.kind]}${scope.targetId ? ': ' + (scope.kind === 2 ? (codes[scope.targetId] ?? 'Employee unavailable') : scope.targetId) : ''}`,
         })),
       ]}
-      onChange={(e) => onChange(scopes.find((s) => scopeKey(s) === e.target.value))}
+      onChange={(event) => onChange(scopes.find((scope) => scopeKey(scope) === event.target.value))}
     />
   );
 }
+
 export function EmployeeWorkspace({
   permission,
   title,
@@ -269,7 +490,7 @@ function EmployeeSelection({
             className="att-register-advanced"
             open={!access.can('hr.employees.read') || (Boolean(employee) && !valid)}
           >
-            <summary>Find by employee ID / access options</summary>
+            <summary>Employee selection / access options</summary>
             <form
               className="att-register-access"
               onSubmit={(event) => {
@@ -277,14 +498,14 @@ function EmployeeSelection({
                 if (valid && !editing) setSelection({ employee, scope: effectiveScope });
               }}
             >
-              <TextInput
-                label="Employee ID"
+              <EmployeePicker
+                label="Employee"
                 required
                 disabled={editing}
                 value={employee}
-                onChange={(event) => {
+                onChange={(uuid) => {
                   setSelection(null);
-                  setEmployee(event.target.value.trim());
+                  setEmployee(uuid);
                 }}
               />
               {scopes.length > 1 && !scopes.some((grant) => grant.kind === 7) && (
@@ -347,14 +568,14 @@ function EmployeeSelection({
           }}
         >
           <div className="att-form-row">
-            <TextInput
-              label="Employee ID"
+            <EmployeePicker
+              label="Employee"
               required
               disabled={editing}
               value={employee}
-              onChange={(e) => {
+              onChange={(uuid) => {
                 setSelection(null);
-                setEmployee(e.target.value.trim());
+                setEmployee(uuid);
               }}
             />
             <ScopeSelect
@@ -375,7 +596,7 @@ function EmployeeSelection({
         </form>
       </div>
       {!id.safeParse(employee).success ? (
-        <p className="att-workspace-hint">Select an employee resource from above or enter an ID.</p>
+        <p className="att-workspace-hint">Select an employee by name or employee code above.</p>
       ) : !valid ? (
         <Denied>
           Choose a matching grant for this employee or historical resource. Membership is checked by
@@ -414,7 +635,7 @@ function EmployeeLookup({
   const query = useAttendanceQuery(
     '/hr/employees' +
       queryString({
-        search: submitted ?? '',
+        search: employeeSearchTerm(submitted ?? ''),
         page: 1,
         pageSize: 25,
         ...(approvedOnly ? approvedAttendanceFilter : {}),
@@ -477,7 +698,7 @@ function EmployeeLookup({
               { value: '', label: 'Choose an employee' },
               ...query.data.items.map((employee) => ({
                 value: employee.id,
-                label: `${employee.name ?? 'Employee'} · #${employee.employeeNumber}`,
+                label: `${employee.name ?? 'Employee'} · ${formatEmployeeCode(employee.employeeNumber)}`,
               })),
             ]}
             onChange={(event) => {
