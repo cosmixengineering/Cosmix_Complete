@@ -1,10 +1,5 @@
-import { useId, useState } from 'react';
-import { Button } from '@/components/ui/Button';
-import { TextInput } from '@/components/forms/TextInput';
-import { useHrQuery } from '../../hooks/use-hr-queries';
-import { useHrAccess } from '../../hooks/use-hr-access';
-import { employeePage } from '../../schemas/contracts';
-import { FinanceQueryState } from './FinanceQueryState';
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
+import { useId } from 'react';
 export function PayrollSelect({
   label,
   value,
@@ -45,65 +40,5 @@ export function PayrollEmployeePicker({
   value: string;
   onChange(value: string): void;
 }) {
-  const access = useHrAccess();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const employees = useHrQuery(
-    `employees?page=${page}&pageSize=25&search=${encodeURIComponent(search)}`,
-    employeePage,
-    ['hr.employees.read'],
-  );
-  return (
-    <div>
-      <TextInput
-        label="Find employee"
-        value={search}
-        onChange={(event) => {
-          setSearch(event.target.value);
-          setPage(1);
-        }}
-      />
-      {access.can('hr.employees.read') ? (
-        <FinanceQueryState query={employees}>
-          <PayrollSelect
-            label="Employee"
-            value={value}
-            onChange={onChange}
-            options={(employees.data?.items ?? []).map((employee) => ({
-              value: employee.id,
-              label: `${employee.employeeNumber} · ${employee.name ?? employee.id}`,
-            }))}
-          />
-          <div className="hr-actions">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={page <= 1 || employees.isFetching}
-              onClick={() => setPage(page - 1)}
-            >
-              Previous employees
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={employees.isFetching || page * 25 >= (employees.data?.totalCount ?? 0)}
-              onClick={() => setPage(page + 1)}
-            >
-              Next employees
-            </Button>
-          </div>
-        </FinanceQueryState>
-      ) : (
-        <p>
-          Employee directory access is unavailable. Enter an authorized employee reference below.
-        </p>
-      )}
-      <TextInput
-        label="Selected employee ID"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        required
-      />
-    </div>
-  );
+  return <EmployeePicker value={value} onChange={onChange} required />;
 }

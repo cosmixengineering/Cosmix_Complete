@@ -132,3 +132,28 @@ These are read-only summaries behind existing All-scope source permissions. No l
 salary formula, fabricated attendance rate or payroll preparation runs in the browser.
 Each source has independent loading, error/retry and restricted states. CSV exports
 the same source dates, coverage and state as the visible dashboard.
+
+## Role entry and retained payroll comparison (30 October 2026)
+
+The web entry point now chooses an existing permitted workspace: HR employee read
+opens the HR dashboard; Finance opens its accounting/payroll workspace; scoped
+attendance reviewers open their operational workspace. Accounts with only personal
+grants land on Account & Security. Personal attendance/leave remains in mobile.
+The shared sidebar and shortcuts follow destination grants, and expose existing
+operational review routes without borrowing unrelated Self permissions.
+
+`/hr/payroll-reconciliation` connects the durable backend comparison contract at
+`/hr/payroll/reconciliation`. Salary-read All access opens saved runs, detail and
+revision history. Preparation, historical comparison, HR explanation, Finance
+review and Management decision each require their existing separate permissions.
+The page retains the actual source sheet and explicit field mapping only in memory;
+reviewed commands use the existing idempotent transport and unchanged uncertain
+retries. Run state, amounts, employee membership, fingerprints and version come
+from the server. HR may edit only classification and justification. Unclassified
+variance rows cannot be approved. The server validates independence, current
+source evidence, account mappings and accruals; UI acknowledgement does not
+replace those checks. Reconciliation creates no salary change or payment instruction.
+
+See `docs/HR-Web-Role-Workflow-20261030.md` for the route/permission matrix and
+verification boundaries. Real historical evidence and named company sign-off
+remain separate authorized acceptance; this implementation does not supply them.

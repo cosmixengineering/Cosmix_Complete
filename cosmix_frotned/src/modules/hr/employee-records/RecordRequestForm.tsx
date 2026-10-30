@@ -1,3 +1,4 @@
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useEffect, useState } from 'react';
 import { Send, X } from 'lucide-react';
 import { TextInput } from '@/components/forms/TextInput';
@@ -315,13 +316,11 @@ export function RecordRequestForm({
               )}
               {transfer && (
                 <>
-                  <TextInput
+                  <EmployeePicker
                     label="Receiving employee reference"
                     required
-                    maxLength={36}
                     value={draft.targetEmployeeId}
-                    onChange={(e) => set('targetEmployeeId', e.target.value)}
-                    autoComplete="off"
+                    onChange={(id) => set('targetEmployeeId', id)}
                   />
                   {targetValid && (
                     <QueryState query={target}>

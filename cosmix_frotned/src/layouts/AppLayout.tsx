@@ -29,6 +29,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/auth/use-auth';
+import { canOpenWorkspace, workspaceHome, workspaceLabel } from '@/auth/workspace-access';
 import { attendanceOperationalNavigation, hasAttendancePermission } from '@/modules/attendance';
 import { NotificationBellToggle } from '@/components/notifications/NotificationBellToggle';
 import { hrConfigurationNavigation } from '@/modules/hr/policy-navigation';
@@ -37,13 +38,15 @@ import '@/styles/hr-dashboard.css';
 
 export function AppLayout() {
   const { user, signOut, status } = useAuth();
+  const home = workspaceHome(user);
+  const deskLabel = workspaceLabel(user);
+  const canOpen = (path: string) => status === 'authenticated' && canOpenWorkspace(user, path);
   const configurationLinks = hrConfigurationNavigation(user, status).filter((link) => link.allowed);
-  const overtimeLinks = attendanceOperationalNavigation(user).filter(
-    (link) =>
-      status === 'authenticated' &&
-      link.allowed &&
-      (link.to === '/hr/overtime' || link.to === '/hr/overtime/review'),
-  );
+  // Evaluate each operational link against non-Self grants. One management grant
+  // must never promote unrelated personal grants into management navigation.
+  const operationalLinks = attendanceOperationalNavigation(
+    user ? { ...user, grants: user.grants.filter((grant) => grant.scopeKind !== 1) } : null,
+  ).filter((link) => status === 'authenticated' && link.allowed);
   const canTrackAttendance =
     status === 'authenticated' &&
     hasAttendancePermission(user, 'hr.employees.read') &&
@@ -69,11 +72,7 @@ export function AppLayout() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const rawDisplayName = user?.account?.displayName || 'Account';
-  const roleName = user?.grants.some((g) => g.permission.startsWith('access.'))
-    ? 'System Administrator'
-    : user?.grants.some((g) => g.permission.startsWith('hr.'))
-      ? 'HR Desk'
-      : 'User Desk';
+  const roleName = deskLabel;
 
   // Parse clean name and custom role from parentheses if present, e.g. "Muhammad Rashid (Lead Engineer)"
   const parenMatch = rawDisplayName.match(/^(.*?)\s*\((.*?)\)$/);
@@ -94,7 +93,7 @@ export function AppLayout() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchTerm.trim()) {
+    if (canOpen('/hr/employees') && searchTerm.trim()) {
       void navigate(`/hr/employees?search=${encodeURIComponent(searchTerm.trim())}`);
     }
   };
@@ -102,6 +101,10 @@ export function AppLayout() {
   // Dedicated single-active checker to prevent multiple simultaneous active links
   const isNavActive = (to: string, label: string): boolean => {
     const pathname = location.pathname;
+    const closest = visibleLinks
+      .filter((link) => pathname === link.to || pathname.startsWith(`${link.to}/`))
+      .sort((a, b) => b.to.length - a.to.length)[0];
+    if (closest) return closest.to === to;
     const activeConfiguration = configurationLinks.find(
       (link) => pathname === link.to || pathname.startsWith(`${link.to}/`),
     );
@@ -296,10 +299,6 @@ export function AppLayout() {
       label: 'Allowances',
       icon: Banknote,
     },
-    ...overtimeLinks.map((link) => ({
-      ...link,
-      icon: link.to === '/hr/overtime/review' ? ClipboardCheck : Clock,
-    })),
     {
       to: '/hr/advances-loans',
       label: 'Claims & Advances',
@@ -321,6 +320,11 @@ export function AppLayout() {
       icon: Banknote,
     },
     {
+      to: '/hr/payroll-reconciliation',
+      label: 'Payroll Comparison',
+      icon: ClipboardCheck,
+    },
+    {
       to: '/hr/statutory-contributions',
       label: 'Statutory Schemes',
       icon: Coins,
@@ -335,8 +339,13 @@ export function AppLayout() {
       label: 'HR Reports',
       icon: BarChart2,
     },
-    ...configurationLinks.map((link) => ({ ...link, icon: Settings })),
   ];
+  const visibleLinks: typeof navLinks = [
+    ...navLinks.filter((link) => canOpen(link.to)),
+    ...configurationLinks.map((link) => ({ ...link, icon: Settings })),
+    ...operationalLinks.map((link) => ({ ...link, icon: Clock })),
+    { to: '/account', label: 'Account & Security', icon: Settings },
+  ].filter((link, index, links) => links.findIndex((item) => item.to === link.to) === index);
 
   return (
     <div className={`hr-shell ${collapsed ? 'is-collapsed' : ''}`}>
@@ -363,7 +372,7 @@ export function AppLayout() {
       >
         {/* Brand Header */}
         <div className="hr-brand-wrapper">
-          <Link to="/hr/dashboard" className="hr-brand" onClick={() => setOpen(false)}>
+          <Link to={home} className="hr-brand" onClick={() => setOpen(false)}>
             <img src={logo} alt="Cosmix Engineering" className="hr-brand-logo-img" />
           </Link>
         </div>
@@ -378,13 +387,13 @@ export function AppLayout() {
         {/* Section Header */}
         {!collapsed && (
           <div className="hr-nav-section-header">
-            <span>HR OPERATIONS</span>
+            <span>{deskLabel.toUpperCase()}</span>
           </div>
         )}
 
         {/* Menu Items */}
         <nav className="hr-sidebar-nav-list">
-          {navLinks.map((item) => {
+          {visibleLinks.map((item) => {
             const active = isNavActive(item.to, item.label);
             return (
               <Link
@@ -411,14 +420,10 @@ export function AppLayout() {
         {/* Footer with User Console matching Screenshot */}
         {!collapsed ? (
           <div className="hr-sidebar-footer-compact">
-            <Link
-              to="/hr/dashboard"
-              className="hr-sidebar-user-card"
-              style={{ textDecoration: 'none' }}
-            >
+            <Link to="/account" className="hr-sidebar-user-card" style={{ textDecoration: 'none' }}>
               <div className="hr-sidebar-avatar-circle">{initials}</div>
               <div className="hr-sidebar-user-text">
-                <span className="hr-sidebar-user-heading">HR Console</span>
+                <span className="hr-sidebar-user-heading">{deskLabel}</span>
                 <span className="hr-sidebar-user-sub">
                   <span className="hr-online-dot">●</span> Online
                 </span>
@@ -471,60 +476,70 @@ export function AppLayout() {
             </button>
 
             <div className="hr-breadcrumb-strip">
-              <Link to="/hr/dashboard" className="hr-breadcrumb-item">
-                Dashboard
+              <Link to={home} className="hr-breadcrumb-item">
+                Home
               </Link>
               <span className="hr-breadcrumb-sep">/</span>
-              <span className="hr-breadcrumb-active">Human Resources</span>
+              <span className="hr-breadcrumb-active">{deskLabel}</span>
             </div>
           </div>
 
           {/* Center: Global Search Bar */}
-          <form onSubmit={handleSearchSubmit} className="hr-search-bar">
-            <Search size={15} style={{ color: '#94a3b8', flexShrink: 0 }} />
-            <input
-              type="text"
-              placeholder="Search employees, sites, records..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              aria-label="Search HR System"
-            />
-          </form>
+          {canOpen('/hr/employees') && (
+            <form onSubmit={handleSearchSubmit} className="hr-search-bar">
+              <Search size={15} style={{ color: '#94a3b8', flexShrink: 0 }} />
+              <input
+                type="text"
+                placeholder="Search employees..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="Search HR System"
+              />
+            </form>
+          )}
 
           {/* Quick Shortcuts (Right side of Search Bar) */}
           <div className="hr-topbar-quick-actions" aria-label="Quick Navigation Shortcuts">
-            <Link
-              to="/hr/attendance"
-              className="hr-topbar-icon-btn"
-              title="Quick Attendance & Punches"
-              aria-label="Quick Attendance & Punches"
-            >
-              <CalendarCheck size={16} />
-            </Link>
-            <Link
-              to="/hr/employees"
-              className="hr-topbar-icon-btn"
-              title="Employee Directory & Records"
-              aria-label="Employee Directory & Records"
-            >
-              <UserPlus size={16} />
-            </Link>
-            <Link
-              to="/hr/reports/hr"
-              className="hr-topbar-icon-btn"
-              title="HR Reports & Registers"
-              aria-label="HR Reports & Registers"
-            >
-              <BarChart3 size={16} />
-            </Link>
-            <Link
-              to="/hr/organization"
-              className="hr-topbar-icon-btn"
-              title="Organization & Sites"
-              aria-label="Organization & Sites"
-            >
-              <Building2 size={16} />
-            </Link>
+            {canOpen('/hr/attendance') && (
+              <Link
+                to="/hr/attendance"
+                className="hr-topbar-icon-btn"
+                title="Quick Attendance & Punches"
+                aria-label="Quick Attendance & Punches"
+              >
+                <CalendarCheck size={16} />
+              </Link>
+            )}
+            {canOpen('/hr/employees') && (
+              <Link
+                to="/hr/employees"
+                className="hr-topbar-icon-btn"
+                title="Employee Directory & Records"
+                aria-label="Employee Directory & Records"
+              >
+                <UserPlus size={16} />
+              </Link>
+            )}
+            {canOpen('/hr/reports/hr') && (
+              <Link
+                to="/hr/reports/hr"
+                className="hr-topbar-icon-btn"
+                title="HR Reports & Registers"
+                aria-label="HR Reports & Registers"
+              >
+                <BarChart3 size={16} />
+              </Link>
+            )}
+            {canOpen('/hr/organization') && (
+              <Link
+                to="/hr/organization"
+                className="hr-topbar-icon-btn"
+                title="Organization & Sites"
+                aria-label="Organization & Sites"
+              >
+                <Building2 size={16} />
+              </Link>
+            )}
           </div>
 
           {/* Right: Notification Bell Toggle + User Profile */}

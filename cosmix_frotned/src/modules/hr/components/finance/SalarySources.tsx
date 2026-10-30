@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
@@ -155,7 +156,7 @@ export function SalarySources() {
               {components.data?.items.map((item) => (
                 <tr key={item.id}>
                   <td>
-                    {item.employeeId}
+                    <EmployeeReference employeeId={item.employeeId} />
                     <br />
                     {item.code}
                   </td>

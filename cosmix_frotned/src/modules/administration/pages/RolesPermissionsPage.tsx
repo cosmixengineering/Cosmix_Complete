@@ -1,6 +1,9 @@
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
+import { sourceCount, sourceReady } from '@/utils/query-summary';
 import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { initialAccessTab, type AccessWorkspaceTab } from '../utils/route-tabs';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -48,8 +51,11 @@ const CATEGORY_MAP: Record<string, { label: string; prefix: string[] }> = {
 
 export function RolesPermissionsPage() {
   const queryClient = useQueryClient();
+  const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState<'roles' | 'permissions' | 'assignments'>('roles');
+  const [activeTab, setActiveTab] = useState<AccessWorkspaceTab>(() =>
+    initialAccessTab(location.pathname),
+  );
   const [roleSearch, setRoleSearch] = useState('');
   const [permSearch, setPermSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -84,7 +90,7 @@ export function RolesPermissionsPage() {
     staleTime: 30000,
   });
 
-  // 2. Fetch Catalog (193 permissions)
+  // 2. Fetch the current server permission catalog.
   const catalogQuery = useQuery({
     queryKey: ['admin-access-catalog'],
     queryFn: fetchCatalog,
@@ -94,6 +100,8 @@ export function RolesPermissionsPage() {
   const roles = rolesQuery.data ?? [];
   const catalog = catalogQuery.data ?? [];
   const isRefreshing = rolesQuery.isFetching || catalogQuery.isFetching;
+  const rolesReady = sourceReady(rolesQuery);
+  const catalogReady = sourceReady(catalogQuery);
 
   // Filtered Roles
   const filteredRoles = useMemo(() => {
@@ -266,8 +274,8 @@ export function RolesPermissionsPage() {
               <span className="rp-tagline">Security &amp; Authorization Hub</span>
               <h1 className="rp-title">Roles &amp; Permissions Management</h1>
               <p className="rp-subtitle">
-                Configure role definitions, assign system permissions across 193 enterprise
-                capabilities, and manage role delegations for authorized employees.
+                Configure role definitions, assign permissions from the current server catalog, and
+                manage role delegations for authorized employees.
               </p>
             </div>
           </div>
@@ -354,9 +362,11 @@ export function RolesPermissionsPage() {
           </div>
           <div className="rp-stat-info">
             <span className="rp-stat-label">Total System Roles</span>
-            <span className="rp-stat-val">{totalRoles}</span>
+            <span className="rp-stat-val">{sourceCount(rolesQuery, totalRoles)}</span>
             <span className="rp-stat-sub">
-              {customRoles} custom &bull; {systemRoles} protected
+              {rolesReady
+                ? `${customRoles} custom · ${systemRoles} protected`
+                : 'Role directory not yet available'}
             </span>
           </div>
         </div>
@@ -367,8 +377,8 @@ export function RolesPermissionsPage() {
           </div>
           <div className="rp-stat-info">
             <span className="rp-stat-label">Permissions Catalog</span>
-            <span className="rp-stat-val">{totalCatalogPerms}</span>
-            <span className="rp-stat-sub">10 enterprise functional domains</span>
+            <span className="rp-stat-val">{sourceCount(catalogQuery, totalCatalogPerms)}</span>
+            <span className="rp-stat-sub">Capabilities returned by the server</span>
           </div>
         </div>
 
@@ -378,7 +388,7 @@ export function RolesPermissionsPage() {
           </div>
           <div className="rp-stat-info">
             <span className="rp-stat-label">Custom Extensibility</span>
-            <span className="rp-stat-val">{customRoles}</span>
+            <span className="rp-stat-val">{sourceCount(rolesQuery, customRoles)}</span>
             <span className="rp-stat-sub">Configured custom access roles</span>
           </div>
         </div>
@@ -388,9 +398,15 @@ export function RolesPermissionsPage() {
             <Lock size={20} />
           </div>
           <div className="rp-stat-info">
-            <span className="rp-stat-label">Protection Level</span>
-            <span className="rp-stat-val">Hardware MFA</span>
-            <span className="rp-stat-sub">Strict cryptographic rowversions</span>
+            <span className="rp-stat-label">Access Data</span>
+            <span className="rp-stat-val">
+              {rolesQuery.isError || catalogQuery.isError
+                ? 'Unavailable'
+                : rolesReady && catalogReady
+                  ? 'Loaded'
+                  : 'Loading…'}
+            </span>
+            <span className="rp-stat-sub">Role updates use the returned record version</span>
           </div>
         </div>
       </div>
@@ -405,7 +421,7 @@ export function RolesPermissionsPage() {
           >
             <ShieldCheck size={16} />
             <span>Roles Directory</span>
-            <span className="rp-tab-counter">{roles.length}</span>
+            <span className="rp-tab-counter">{sourceCount(rolesQuery, roles.length)}</span>
           </button>
 
           <button
@@ -415,7 +431,7 @@ export function RolesPermissionsPage() {
           >
             <Layers size={16} />
             <span>Permissions Catalog</span>
-            <span className="rp-tab-counter">{catalog.length}</span>
+            <span className="rp-tab-counter">{sourceCount(catalogQuery, catalog.length)}</span>
           </button>
 
           <button
@@ -432,7 +448,14 @@ export function RolesPermissionsPage() {
       {/* =========================================================================
           TAB 1: ROLES DIRECTORY
           ========================================================================= */}
-      {activeTab === 'roles' && (
+      {activeTab === 'roles' && !rolesReady && (
+        <p role={rolesQuery.isError ? 'alert' : 'status'}>
+          {rolesQuery.isError
+            ? 'The role directory could not be loaded. Refresh data or check your account permissions.'
+            : 'Loading the current role directory…'}
+        </p>
+      )}
+      {activeTab === 'roles' && rolesReady && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Controls Bar */}
           <div className="rp-controls-bar">
@@ -621,7 +644,14 @@ export function RolesPermissionsPage() {
       {/* =========================================================================
           TAB 2: PERMISSIONS MATRIX (CATALOG OF 193 PERMISSIONS)
           ========================================================================= */}
-      {activeTab === 'permissions' && (
+      {activeTab === 'permissions' && (!catalogReady || !rolesReady) && (
+        <p role={catalogQuery.isError || rolesQuery.isError ? 'alert' : 'status'}>
+          {catalogQuery.isError || rolesQuery.isError
+            ? 'The permission catalog or role assignments could not be loaded. Refresh data or check your account permissions.'
+            : 'Loading the permission catalog and assigned roles…'}
+        </p>
+      )}
+      {activeTab === 'permissions' && catalogReady && rolesReady && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Controls Bar */}
           <div className="rp-controls-bar">
@@ -785,15 +815,13 @@ export function RolesPermissionsPage() {
               </div>
             </div>
 
-            {/* Input to specify employee ID */}
+            {/* Select the employee for access setup */}
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', maxWidth: '600px' }}>
               <div style={{ flex: 1 }}>
-                <input
-                  type="text"
-                  className="rp-form-input"
-                  placeholder="Paste Employee UUID (e.g. 6ba7b810-9dad-11d1-80b4-00c04fd430c8)..."
+                <EmployeePicker
+                  label="Employee"
                   value={assignEmployeeId}
-                  onChange={(e) => setAssignEmployeeId(e.target.value.trim())}
+                  onChange={setAssignEmployeeId}
                 />
               </div>
               <Link
@@ -806,7 +834,7 @@ export function RolesPermissionsPage() {
             </div>
           </div>
 
-          {/* Render EmployeeAccessSetup if UUID is supplied */}
+          {/* Render access setup for the selected employee */}
           {assignEmployeeId ? (
             <div
               style={{
@@ -834,7 +862,7 @@ export function RolesPermissionsPage() {
                 Select an Employee to Manage Access
               </h3>
               <p style={{ fontSize: '13px', maxWidth: '480px', margin: '0 auto 16px' }}>
-                Enter an employee UUID above, or go to the{' '}
+                Search for an employee by name or employee code above, or go to the{' '}
                 <Link to="/admin/approvals" style={{ color: '#0f172a', fontWeight: 600 }}>
                   Hiring Approvals Queue
                 </Link>{' '}

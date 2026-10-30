@@ -1,3 +1,4 @@
+import { employeeSearchTerm, formatEmployeeCode } from '@/utils/employee-code';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Camera, Fingerprint, Search, ShieldCheck, ShieldAlert, X } from 'lucide-react';
@@ -28,7 +29,7 @@ export function BiometricRegistrationPage() {
       (g) => g.permission === 'attendance.face.manage' || g.permission === 'attendance.face.read',
     );
   const employees = useHrQuery(
-    `employees${queryString({ page, pageSize: 10, search: term })}`,
+    `employees${queryString({ page, pageSize: 10, search: employeeSearchTerm(term) })}`,
     employeePage,
     ['hr.employees.read'],
     Boolean(canUse),
@@ -134,7 +135,7 @@ export function BiometricRegistrationPage() {
                                 {employee.name || 'Unnamed employee'}
                               </span>
                               <span className="bioreg-employee-meta">
-                                EMP-{employee.employeeNumber}
+                                {formatEmployeeCode(employee.employeeNumber)}
                               </span>
                             </div>
                             <span
@@ -200,7 +201,7 @@ function EmployeeRegistration({ employee }: { employee: EmployeeSummary }) {
         <div className="bioreg-person-info">
           <h2>{employee.name || 'Employee'}</h2>
           <div className="bioreg-person-badge">
-            <span className="bioreg-empid-pill">EMP-{employee.employeeNumber}</span>
+            <span className="bioreg-empid-pill">{formatEmployeeCode(employee.employeeNumber)}</span>
             <span
               className={`bio-status-chip ${isApproved ? 'bio-status-chip--approved' : 'bio-status-chip--pending'}`}
             >

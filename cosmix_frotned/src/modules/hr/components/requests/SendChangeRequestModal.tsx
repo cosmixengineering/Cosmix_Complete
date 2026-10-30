@@ -1,3 +1,4 @@
+import { formatEmployeeCode } from '@/utils/employee-code';
 import { useState, useMemo } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {
@@ -191,8 +192,7 @@ export function SendChangeRequestModal({
                 >
                   {employees.map((emp) => (
                     <option key={emp.id} value={emp.id}>
-                      {emp.employeeNumber ? `[EMP-${emp.employeeNumber}] ` : ''}
-                      {emp.name || 'Unnamed Staff'}
+                      [{formatEmployeeCode(emp.employeeNumber)}]{emp.name || 'Unnamed Staff'}
                     </option>
                   ))}
                 </select>

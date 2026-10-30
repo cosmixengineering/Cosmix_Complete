@@ -46,6 +46,7 @@ export const reportMetadata = z.object({
 export const factualRow = z
   .object({
     employeeId,
+    employeeNumber: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).nullish(),
     businessDate: date,
     factualStatus: z.enum([
       'closed_session_evidence',
@@ -147,7 +148,15 @@ export function dashboardFor(selection: ReportSelection) {
     .object({
       metadata: reportMetadata,
       totals: factualTotals,
-      employees: z.array(z.object({ employeeId, totals: factualTotals })).max(25),
+      employees: z
+        .array(
+          z.object({
+            employeeId,
+            employeeNumber: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).nullish(),
+            totals: factualTotals,
+          }),
+        )
+        .max(25),
     })
     .refine(
       (result) =>
@@ -239,6 +248,7 @@ export const monthDetail = z.object({
   summaries: z.array(
     z.object({
       employeeId: id,
+      employeeNumber: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).nullish(),
       businessDate: date,
       summaryId: id,
       inputFingerprint: timeline,

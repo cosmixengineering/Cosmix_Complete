@@ -1,3 +1,4 @@
+import { employeeSearchTerm, formatEmployeeCode } from '@/utils/employee-code';
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -58,7 +59,13 @@ export function EmployeesPage() {
   const term = useDebouncedValue(search, 300);
   const query = useHrQuery(
     'employees' +
-      queryString({ page, pageSize: 25, search: term, status, ...employeeArchiveQuery(archive) }),
+      queryString({
+        page,
+        pageSize: 25,
+        search: employeeSearchTerm(term),
+        status,
+        ...employeeArchiveQuery(archive),
+      }),
     employeeArchivePageSchema,
     ['hr.employees.read'],
   );
@@ -191,7 +198,7 @@ export function EmployeesPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      #{String(r.employeeNumber).padStart(4, '0')}
+                      {formatEmployeeCode(r.employeeNumber)}
                     </span>
                   ),
                 },
@@ -225,7 +232,7 @@ export function EmployeesPage() {
                         >
                           {r.identityNumber
                             ? `CNIC: ${r.identityNumber}`
-                            : `Ref: ${r.id.slice(0, 8)}...`}
+                            : formatEmployeeCode(r.employeeNumber)}
                         </span>
                       </div>
                     </Link>

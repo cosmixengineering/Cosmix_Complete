@@ -133,7 +133,13 @@ export function preparedReviewValues(tab: PreparedTab, draft: PreparedDraft) {
               const value = row.values[field.id];
               return [
                 field.label,
-                typeof File !== 'undefined' && value instanceof File ? value.name : (value ?? null),
+                field.kind === 'reference' &&
+                field.reference === 'employees' &&
+                typeof value === 'string'
+                  ? { employeeId: value }
+                  : typeof File !== 'undefined' && value instanceof File
+                    ? value.name
+                    : (value ?? null),
               ];
             }),
         ),

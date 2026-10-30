@@ -1,7 +1,17 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, RefreshCw, Check, X, RotateCcw } from 'lucide-react';
-import { TextInput } from '@/components/forms/TextInput';
+import {
+  Plus,
+  RefreshCw,
+  Check,
+  X,
+  RotateCcw,
+  Clock,
+  ShieldCheck,
+  ArrowRight,
+  ArrowLeft,
+} from 'lucide-react';
 import { SelectInput } from '@/components/forms/SelectInput';
 import { useAttendanceAccess } from '../../hooks/use-attendance-access';
 import { useAttendanceQuery } from '../../hooks/use-attendance-query';
@@ -57,15 +67,30 @@ export function AttendanceOvertimePage() {
   const canReview =
     access.ready && supportedScopes(access.user, 'attendance.overtime.review').length > 0;
   return (
-    <>
-      {canReview && (
-        <p>
-          <Link to="/hr/overtime/review">Overtime Approvals</Link> — review submitted employee
-          requests and record authorized decisions.
-        </p>
-      )}
+    <div className="att-overtime-container">
+      <div className="att-overtime-banner">
+        <div className="att-overtime-banner-main">
+          <div className="att-overtime-banner-icon">
+            <Clock size={20} />
+          </div>
+          <div>
+            <h1 className="att-overtime-banner-title">Overtime Requests & Duty Proposals</h1>
+            <p className="att-overtime-banner-subtitle">
+              Manage overtime proposals, review captured shift records, and track authorization
+              decisions.
+            </p>
+          </div>
+        </div>
+        {canReview && (
+          <Link to="/hr/overtime/review" className="att-banner-review-link">
+            <ShieldCheck size={16} />
+            <span>Overtime Approvals Queue</span>
+            <ArrowRight size={14} />
+          </Link>
+        )}
+      </div>
       <RequestsPage workflow="overtime" />
-    </>
+    </div>
   );
 }
 export function MyAttendanceOvertimePage() {
@@ -149,23 +174,29 @@ function RequestSelection({
       />
     );
   return (
-    <>
+    <div className="att-requests-workspace">
       <SavedNotice message={notice} />
-      <Command
-        icon={Plus}
-        disabled={editing}
-        onClick={() => {
-          setNotice('');
-          openProposal(null);
-        }}
-      >
-        New request
-      </Command>
-      <RangeFilter
-        states={!(self && workflow === 'correction')}
-        onChange={setRange}
-        disabled={editing}
-      />
+      <div className="att-requests-toolbar">
+        <button
+          type="button"
+          className="att-primary-create-btn"
+          disabled={editing}
+          onClick={() => {
+            setNotice('');
+            openProposal(null);
+          }}
+        >
+          <Plus size={16} />
+          <span>New {workflow === 'overtime' ? 'Overtime' : ''} Request</span>
+        </button>
+      </div>
+      <div className="att-requests-filter-card">
+        <RangeFilter
+          states={!(self && workflow === 'correction')}
+          onChange={setRange}
+          disabled={editing}
+        />
+      </div>
       {range && (
         <RequestHistory
           key={`${epoch}:${JSON.stringify(range)}`}
@@ -178,7 +209,7 @@ function RequestSelection({
           onEditing={changeEditing}
         />
       )}
-    </>
+    </div>
   );
 }
 function ReviewPage({ workflow }: { workflow: Workflow }) {
@@ -194,30 +225,49 @@ function ReviewSelection({ workflow }: { workflow: Workflow }) {
   const [range, setRange] = useState<Range>();
   const [editing, setEditing] = useState(false);
   return (
-    <>
-      <h1>
-        {workflow === 'overtime' ? 'Overtime Approvals' : `${workflows[workflow].title} review`}
-      </h1>
-      {workflow === 'overtime' && (
-        <p>
-          Select an authority scope and date range, then choose Load history. Open a pending request
-          and select Review decision to approve, return or reject it with the required authority.
-        </p>
-      )}
+    <div className="att-review-workspace">
+      <div className="att-overtime-banner">
+        <div className="att-overtime-banner-main">
+          <div className="att-overtime-banner-icon">
+            <ShieldCheck size={20} />
+          </div>
+          <div>
+            <h1 className="att-overtime-banner-title">
+              {workflow === 'overtime'
+                ? 'Overtime Approvals Queue'
+                : `${workflows[workflow].title} review`}
+            </h1>
+            <p className="att-overtime-banner-subtitle">
+              Review submitted employee requests, verify punch source evidence, and record
+              authorized decisions.
+            </p>
+          </div>
+        </div>
+        {workflow === 'overtime' && (
+          <Link to="/hr/overtime" className="att-banner-review-link att-banner-back-link">
+            <ArrowLeft size={15} />
+            <span>Back to Overtime Requests</span>
+          </Link>
+        )}
+      </div>
       {workflow === 'overtime' &&
         supportedScopes(access.user, 'attendance.overtime.review').length === 0 && (
           <Denied>Overtime review permission for a supported scope is unavailable.</Denied>
         )}
-      <ScopeSelect
-        permission={workflows[workflow].permission + '.review'}
-        value={scope}
-        disabled={editing}
-        onChange={(s) => {
-          setScope(s);
-          setRange(undefined);
-        }}
-      />
-      <RangeFilter states onChange={setRange} disabled={editing} />
+      <div className="att-review-controls-card">
+        <div className="att-review-scope-picker">
+          <ScopeSelect
+            permission={workflows[workflow].permission + '.review'}
+            value={scope}
+            disabled={editing}
+            onChange={(s) => {
+              setScope(s);
+              setRange(undefined);
+            }}
+          />
+        </div>
+        <RangeFilter states onChange={setRange} disabled={editing} />
+      </div>
       {scope && range && (
         <RequestHistory
           key={`${JSON.stringify(scope)}:${JSON.stringify(range)}`}
@@ -230,7 +280,7 @@ function ReviewSelection({ workflow }: { workflow: Workflow }) {
           onEditing={setEditing}
         />
       )}
-    </>
+    </div>
   );
 }
 type RequestHistoryProps = {
@@ -294,53 +344,76 @@ function RequestHistory({
   }
   if (!allowed) return <Denied>Matching request history/review permission is unavailable.</Denied>;
   return (
-    <section className="attendance-section">
+    <section className="attendance-section att-history-section">
       <QueryState query={query} empty={data?.items.length === 0} />
       {!editingDetail && (
-        <Command icon={RefreshCw} variant="secondary" disabled={query.isFetching} onClick={reload}>
-          Reload requests
-        </Command>
+        <div className="att-history-header">
+          <div className="att-history-count">
+            {data ? (
+              <span>
+                Found <strong>{'totalCount' in data ? data.totalCount : data.items.length}</strong>{' '}
+                request records
+              </span>
+            ) : null}
+          </div>
+          <Command
+            icon={RefreshCw}
+            variant="secondary"
+            disabled={query.isFetching}
+            onClick={reload}
+          >
+            Reload requests
+          </Command>
+        </div>
       )}
       {!editingDetail && data && (
         <>
           <div style={{ overflowX: 'auto' }}>
-            <table className="attendance-table">
+            <table className="attendance-table att-modern-history-table">
               <thead>
                 <tr>
                   <th>Business date / employee</th>
                   <th>Kind / state</th>
                   <th>Retained result</th>
-                  <th>Review</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {data.items.map((row) => (
                   <tr key={row.id}>
                     <td>
-                      {'businessDate' in row ? row.businessDate : row.sourceBusinessDate}
-                      <br />
-                      {row.employeeId}
+                      <div className="att-hist-date">
+                        {'businessDate' in row ? row.businessDate : row.sourceBusinessDate}
+                      </div>
+                      <div className="att-hist-emp">
+                        <EmployeeReference employeeId={row.employeeId} />
+                      </div>
                     </td>
                     <td>
-                      {'kind' in row ? row.kind : 'Overtime'} / {row.state}
+                      <div className="att-hist-kind">{'kind' in row ? row.kind : 'Overtime'}</div>
+                      <span className={`att-state-pill att-state-${row.state.toLowerCase()}`}>
+                        {row.state}
+                      </span>
                     </td>
                     <td>
-                      {'routingStatus' in row ? row.routingStatus : row.durationState}
-                      <br />
-                      {'financialState' in row
-                        ? row.financialState
-                        : (row.interpretation ?? 'No applied interpretation returned')}
+                      <div className="att-hist-status">
+                        {'routingStatus' in row ? row.routingStatus : row.durationState}
+                      </div>
+                      <div className="att-hist-financial">
+                        {'financialState' in row ? row.financialState : (row.interpretation ?? '—')}
+                      </div>
                     </td>
-                    <td>
+                    <td style={{ textAlign: 'right' }}>
                       <button
                         type="button"
+                        className="att-open-req-btn"
                         disabled={query.isFetching}
                         onClick={() => {
                           setSelected({ id: row.id, employeeId: row.employeeId });
                           setEpoch((n) => n + 1);
                         }}
                       >
-                        Open {row.id}
+                        Open record →
                       </button>
                     </td>
                   </tr>
@@ -634,11 +707,10 @@ function RequestDetail({
         </Command>
       )}
       {!review && (
-        <TextInput
-          label="Record employee"
-          value={self ? 'Authenticated employee (/me)' : employeeId}
-          readOnly
-        />
+        <p>
+          Record employee:{' '}
+          {self ? 'Authenticated employee' : <EmployeeReference employeeId={employeeId} />}
+        </p>
       )}
     </section>
   );

@@ -1,3 +1,5 @@
+import { EmployeeReference, EmployeePicker } from '@/components/employees/EmployeeReference';
+import { formatEmployeeCode } from '@/utils/employee-code';
 import { useState, useMemo, type FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { z } from 'zod';
@@ -91,7 +93,7 @@ export function AttendanceCorrectionsHub({
         .slice(0, 2)
         .join('');
       const empNum = emp.employeeNumber;
-      const code = empNum ? `EMP-${String(empNum).padStart(4, '0')}` : 'EMP';
+      const code = formatEmployeeCode(empNum);
       map.set(emp.id.toLowerCase(), {
         name,
         code,
@@ -371,8 +373,7 @@ export function AttendanceCorrectionsHub({
                     {requestItems.map((row) => {
                       const emp = employeeMap.get(row.employeeId.toLowerCase());
                       const empName = emp?.name || (self ? 'My Account' : 'Staff Member');
-                      const empCode =
-                        emp?.code || (self ? 'Self' : `EMP-${row.employeeId.slice(0, 8)}`);
+                      const empCode = <EmployeeReference employeeId={row.employeeId} />;
                       const initials = emp?.initials || 'EM';
 
                       const kindLower = row.kind.toLowerCase();
@@ -517,7 +518,6 @@ export function AttendanceCorrectionsHub({
 function SubmitCorrectionWizard({
   self,
   routeEmployeeId,
-  employeeMap,
   employees,
   onSuccess,
   onCancel,
@@ -623,31 +623,12 @@ function SubmitCorrectionWizard({
                 <label style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>
                   Staff Member
                 </label>
-                <select
+                <EmployeePicker
+                  label="Employee"
                   value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
-                  style={{
-                    height: '32px',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '5px',
-                    padding: '0 8px',
-                    fontSize: '12px',
-                  }}
-                >
-                  {employees.map((emp) => {
-                    const info = employeeMap.get(emp.id.toLowerCase());
-                    const label = info
-                      ? `${info.name} [${info.code}]`
-                      : emp.name
-                        ? `${emp.name} [EMP-${emp.employeeNumber || '0'}]`
-                        : emp.id;
-                    return (
-                      <option key={emp.id} value={emp.id}>
-                        {label}
-                      </option>
-                    );
-                  })}
-                </select>
+                  onChange={setEmployeeId}
+                  required
+                />
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -961,7 +942,7 @@ function CorrectionDetailModal({
 
   const emp = employeeMap.get(employeeId.toLowerCase());
   const empName = emp?.name || (self ? 'My Account' : 'Staff Member');
-  const empCode = emp?.code || `EMP-${employeeId.slice(0, 8)}`;
+  const empCode = <EmployeeReference employeeId={employeeId} />;
 
   async function handleDecision(e: FormEvent) {
     e.preventDefault();

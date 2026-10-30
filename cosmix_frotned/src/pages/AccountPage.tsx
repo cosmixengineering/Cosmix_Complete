@@ -4,6 +4,7 @@ import { LogOut, RefreshCw, ShieldCheck, Laptop, CheckCircle2 } from 'lucide-rea
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/auth/use-auth';
 import { AuthenticatorSettings } from '@/auth/AuthenticatorSettings';
+import { workspaceHome, workspaceLabel } from '@/auth/workspace-access';
 
 export function AccountPage() {
   const { user, signOut, retrySession } = useAuth();
@@ -22,12 +23,25 @@ export function AccountPage() {
     }
   }
 
-  const displayName = user?.account?.displayName || 'User Profile';
-  const roleName = user?.grants.some((g: { permission: string }) =>
-    g.permission.startsWith('admin.'),
-  )
-    ? 'System Administrator'
-    : 'HR Officer / Employee';
+  const rawDisplayName = user?.account?.displayName || 'User Profile';
+  const roleName = workspaceLabel(user);
+  const home = workspaceHome(user);
+
+  // Parse clean name and custom role from parentheses if present, e.g. "Muhammad Rashid (Lead Engineer)"
+  const parenMatch = rawDisplayName.match(/^(.*?)\s*\((.*?)\)$/);
+  const displayName = parenMatch?.[1]?.trim() ?? rawDisplayName;
+  const customRole = parenMatch?.[2]?.trim() ?? null;
+
+  // Get 2-letter initials for avatar from clean name
+  const initials =
+    displayName
+      .replace(/^Engr\.\s+/, '')
+      .split(' ')
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || 'U';
 
   return (
     <div style={{ maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -37,6 +51,18 @@ export function AccountPage() {
           <h1>Account & Security</h1>
         </div>
       </div>
+
+      {home === '/account' ? (
+        <p className="hr-notice">
+          Your account is signed in. Available web workspaces appear in the navigation according to
+          your current permissions. Use the employee mobile application for personal attendance and
+          leave. Account security and session controls remain available here.
+        </p>
+      ) : (
+        <Link className="hr-link" to={home}>
+          Open {roleName} workspace
+        </Link>
+      )}
 
       <div
         style={{
@@ -56,23 +82,33 @@ export function AccountPage() {
               width: '44px',
               height: '44px',
               borderRadius: '50%',
+              aspectRatio: '1 / 1',
               background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
               color: '#ffffff',
-              fontSize: '18px',
+              fontSize: '16px',
               fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
+              letterSpacing: '0.5px',
             }}
           >
-            {displayName.charAt(0).toUpperCase()}
+            {initials}
           </div>
           <div>
             <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
               {displayName}
             </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginTop: '4px',
+                flexWrap: 'wrap',
+              }}
+            >
               <span
                 style={{
                   display: 'inline-flex',
@@ -80,7 +116,7 @@ export function AccountPage() {
                   gap: '4px',
                   padding: '2px 7px',
                   borderRadius: '4px',
-                  fontSize: '10.5px',
+                  fontSize: '11px',
                   fontWeight: 600,
                   background: '#eff6ff',
                   color: '#2563eb',
@@ -90,6 +126,23 @@ export function AccountPage() {
                 <ShieldCheck size={12} />
                 {roleName}
               </span>
+              {customRole && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '2px 7px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    background: '#f1f5f9',
+                    color: '#475569',
+                    border: '1px solid #e2e8f0',
+                  }}
+                >
+                  {customRole}
+                </span>
+              )}
               <span style={{ fontSize: '11px', color: '#64748b' }}>
                 Ref ID: {user?.account?.accountId?.slice(0, 12) ?? 'system'}
               </span>
@@ -168,27 +221,27 @@ export function AccountPage() {
           <Link
             className="button button--secondary"
             to="/account/sessions"
-            style={{ fontSize: '11.5px', padding: '5px 12px' }}
+            style={{ fontSize: '12px', padding: '0 12px', height: '32px' }}
           >
-            <Laptop size={14} />
+            <Laptop size={13} />
             <span>Sessions and devices</span>
           </Link>
           <Button
             variant="secondary"
             disabled={busy}
             onClick={() => void retrySession()}
-            style={{ fontSize: '11.5px', padding: '5px 12px' }}
+            style={{ fontSize: '12px', padding: '0 12px', height: '32px' }}
           >
-            <RefreshCw size={14} />
+            <RefreshCw size={13} />
             <span>Refresh access</span>
           </Button>
           <Button
             variant="ghost"
             disabled={busy}
             onClick={() => void logout()}
-            style={{ fontSize: '11.5px', padding: '5px 12px', color: '#ef4444' }}
+            style={{ fontSize: '12px', padding: '0 12px', height: '32px', color: '#ef4444' }}
           >
-            <LogOut size={14} />
+            <LogOut size={13} />
             <span>{busy ? 'Signing out...' : 'Sign out'}</span>
           </Button>
         </div>

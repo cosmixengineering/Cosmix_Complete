@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useEffect, useState } from 'react';
 import { Eye, Plus, Search, Undo2, Wrench } from 'lucide-react';
 import { TextInput } from '@/components/forms/TextInput';
@@ -93,7 +94,9 @@ function BenefitHistory({
   if (!allowed) return <Denied />;
   return (
     <>
-      <p>Employee: {employeeId}</p>
+      <p>
+        Employee: <EmployeeReference employeeId={employeeId} />
+      </p>
       {!canWrite && (
         <p role="status">
           {access.user?.account?.employeeId === employeeId

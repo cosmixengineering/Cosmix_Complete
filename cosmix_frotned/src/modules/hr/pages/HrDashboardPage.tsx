@@ -1,3 +1,8 @@
+import { useHrLifetime } from '../hooks/use-hr-lifetime';
+import { hrGet } from '../api/hr-api';
+import { errorMessage } from '../utils/messages';
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
+import { formatEmployeeCode } from '@/utils/employee-code';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -39,6 +44,8 @@ import '@/styles/hr-dashboard.css';
 interface ActivityItem {
   id: string;
   employeeName: string;
+  employeeId?: string;
+  employeeNumber?: number;
   avatarText: string;
   type: string;
   details: string;
@@ -71,6 +78,9 @@ function formatActivityDate(val?: string | null) {
 }
 
 export function HrDashboardPage() {
+  const lifetime = useHrLifetime();
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
   const navigate = useNavigate();
   const access = useHrAccess();
   const attendanceAccess = useAttendanceAccess();
@@ -202,7 +212,7 @@ export function HrDashboardPage() {
     if (activeTab === 'hiring') {
       if (submissionsQuery.data?.items?.length) {
         for (const sub of submissionsQuery.data.items) {
-          const empName = sub.name || `Employee #${sub.employeeNumber}`;
+          const empName = sub.name || formatEmployeeCode(sub.employeeNumber);
           const initials = sub.name
             ? sub.name
                 .split(' ')
@@ -211,13 +221,14 @@ export function HrDashboardPage() {
                 .join('')
                 .slice(0, 2)
                 .toUpperCase()
-            : `#${sub.employeeNumber}`;
+            : 'EM';
           list.push({
             id: `sub-${sub.id}`,
+            employeeNumber: sub.employeeNumber,
             employeeName: empName,
             avatarText: initials,
             type: 'Hiring approval',
-            details: `Employee #${sub.employeeNumber} • Submitted for review`,
+            details: `${formatEmployeeCode(sub.employeeNumber)} • Submitted for review`,
             date: sub.submittedAt ? formatActivityDate(sub.submittedAt) : 'Pending review',
             status: 'Pending',
             actionUrl: '/hr/approvals',
@@ -227,7 +238,7 @@ export function HrDashboardPage() {
 
       if (recentDraftsQuery.data?.items?.length) {
         for (const emp of recentDraftsQuery.data.items) {
-          const empName = emp.name || `Employee #${emp.employeeNumber}`;
+          const empName = emp.name || formatEmployeeCode(emp.employeeNumber);
           const initials = emp.name
             ? emp.name
                 .split(' ')
@@ -236,13 +247,14 @@ export function HrDashboardPage() {
                 .join('')
                 .slice(0, 2)
                 .toUpperCase()
-            : `#${emp.employeeNumber}`;
+            : 'EM';
           list.push({
             id: `draft-${emp.id}`,
+            employeeNumber: emp.employeeNumber,
             employeeName: empName,
             avatarText: initials,
             type: 'Onboarding Draft',
-            details: `Employee #${emp.employeeNumber} • Document completion pending`,
+            details: `${formatEmployeeCode(emp.employeeNumber)} • Document completion pending`,
             date: emp.createdAt ? formatActivityDate(emp.createdAt) : 'In progress',
             status: 'Pending',
             actionUrl: `/hr/employees/${emp.id}`,
@@ -255,7 +267,8 @@ export function HrDashboardPage() {
           const cancellationPending = lr.cancellations?.some((request) => request.state === 0);
           list.push({
             id: `leave-${lr.id}`,
-            employeeName: `Employee #${('employeeNumber' in lr ? lr.employeeNumber : undefined) ?? (lr.employeeId ? lr.employeeId.slice(0, 8) : 'Staff')}`,
+            employeeName: 'Unavailable',
+            employeeId: lr.employeeId,
             avatarText: 'LV',
             type: `${lr.typeName} Request`,
             details: `${lr.requestedMinutes} mins • ${lr.startDate} to ${lr.endDate}`,
@@ -270,49 +283,97 @@ export function HrDashboardPage() {
     return list;
   }, [activeTab, submissionsQuery.data, recentDraftsQuery.data, pendingLeavesQuery.data, year]);
 
-  const handleExportCSV = () => {
-    const csvContent = dashboardCsv([
-      ['Metric', 'Value', 'Details'],
-      [
-        'Employee directory',
-        String(totalEmployeesCount),
-        'Unarchived directory records; includes drafts.',
-      ],
-      ['Approved onboarding', String(approvedCount), 'Onboarding status.'],
-      ['Draft onboarding', String(draftsCount), 'Draft onboarding records.'],
-      ['Site directory', sites.label, 'Site records.'],
-      [
-        "Today's turnout",
-        attendanceData ? String(attendanceData.withAcceptedSessionEvidence) : attendance.label,
-        attendanceData
-          ? `Accepted attendance session evidence; ${attendanceData.unavailableSummaryEmployees} unavailable employee summaries excluded (${attendanceData.coverage}).`
-          : 'Attendance evidence unavailable; no turnout inferred.',
-      ],
-      ['Pending approvals', hiringCount, 'Hiring review queue'],
-      [
-        'Monthly salary summary',
-        payrollLabel,
-        'Effective salaries grouped by currency; not payment or settlement',
-      ],
-      [],
-      ['Employee', 'Request type', 'Details', 'Status', 'Date'],
-      ...dynamicActivities.map((a) => [a.employeeName, a.type, a.details, a.status, a.date]),
-    ]);
-    const url = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute(
-      'download',
-      `hr_summary_${attendanceData?.businessDate ?? payrollData?.businessDate ?? businessDate()}.csv`,
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const handleExportCSV = async () => {
+    if (exporting) return;
+    const signal = lifetime();
+    setExporting(true);
+    setExportError('');
+    try {
+      signal.throwIfAborted();
+      const unresolved = new Set(
+        dynamicActivities
+          .filter((item) => item.employeeId && item.employeeNumber == null)
+          .map((item) => item.employeeId!.toLowerCase()),
+      );
+      const resolved = new Map<string, { employeeNumber: number; name: string | null }>();
+      if (access.can('hr.employees.read')) {
+        let page = 1;
+        while (unresolved.size) {
+          const result = await hrGet(
+            `employees?page=${page}&pageSize=100&includeArchived=true`,
+            pageOf(employeeSchema),
+            signal,
+          );
+          signal.throwIfAborted();
+          if (result.page !== page || result.pageSize !== 100)
+            throw new Error('Employee directory page did not match the request.');
+          for (const employee of result.items) {
+            const id = employee.id.toLowerCase();
+            if (unresolved.delete(id))
+              resolved.set(id, { employeeNumber: employee.employeeNumber, name: employee.name });
+          }
+          if (!result.items.length || result.page * result.pageSize >= result.totalCount) break;
+          page += 1;
+        }
+      }
+      const csvContent = dashboardCsv([
+        ['Metric', 'Value', 'Details'],
+        [
+          'Employee directory',
+          String(totalEmployeesCount),
+          'Unarchived directory records; includes drafts.',
+        ],
+        ['Approved onboarding', String(approvedCount), 'Onboarding status.'],
+        ['Draft onboarding', String(draftsCount), 'Draft onboarding records.'],
+        ['Site directory', sites.label, 'Site records.'],
+        [
+          "Today's turnout",
+          attendanceData ? String(attendanceData.withAcceptedSessionEvidence) : attendance.label,
+          attendanceData
+            ? `Accepted attendance session evidence; ${attendanceData.unavailableSummaryEmployees} unavailable employee summaries excluded (${attendanceData.coverage}).`
+            : 'Attendance evidence unavailable; no turnout inferred.',
+        ],
+        ['Pending approvals', hiringCount, 'Hiring review queue'],
+        [
+          'Monthly salary summary',
+          payrollLabel,
+          'Effective salaries grouped by currency; not payment or settlement',
+        ],
+        [],
+        ['Employee Code', 'Employee Name', 'Request type', 'Details', 'Status', 'Date'],
+        ...dynamicActivities.map((a) => {
+          const employee = a.employeeId ? resolved.get(a.employeeId.toLowerCase()) : undefined;
+          return [
+            formatEmployeeCode(a.employeeNumber ?? employee?.employeeNumber),
+            employee?.name ?? a.employeeName,
+            a.type,
+            a.details,
+            a.status,
+            a.date,
+          ];
+        }),
+      ]);
+      const url = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute(
+        'download',
+        `hr_summary_${attendanceData?.businessDate ?? payrollData?.businessDate ?? businessDate()}.csv`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      if (!signal.aborted) setExportError(errorMessage(error));
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
     <div className="dash-exact-page">
+      {exportError && <p role="alert">{exportError}</p>}
       {/* 1. Header Bar matching Screenshot */}
       <div className="dash-exact-header">
         <div className="dash-exact-title-area">
@@ -333,9 +394,14 @@ export function HrDashboardPage() {
             <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
             <span>{refreshing ? 'Refreshing…' : 'Refresh'}</span>
           </button>
-          <button type="button" className="dash-exact-btn" onClick={handleExportCSV}>
+          <button
+            type="button"
+            className="dash-exact-btn"
+            disabled={exporting}
+            onClick={() => void handleExportCSV()}
+          >
             <FileSpreadsheet size={11} color="#16a34a" />
-            <span>CSV Summary</span>
+            <span>{exporting ? 'Preparing CSV…' : 'CSV Summary'}</span>
           </button>
           <button type="button" className="dash-exact-btn" onClick={() => window.print()}>
             <FileText size={11} color="#dc2626" />
@@ -662,7 +728,13 @@ export function HrDashboardPage() {
                     <div className="dash-col col-emp">
                       <div className="dash-emp-pill">
                         <div className="dash-emp-avatar">{act.avatarText}</div>
-                        <span className="dash-emp-name">{act.employeeName}</span>
+                        <span className="dash-emp-name">
+                          {act.employeeId ? (
+                            <EmployeeReference employeeId={act.employeeId} showName />
+                          ) : (
+                            act.employeeName
+                          )}
+                        </span>
                       </div>
                     </div>
                     <div className="dash-col col-type">

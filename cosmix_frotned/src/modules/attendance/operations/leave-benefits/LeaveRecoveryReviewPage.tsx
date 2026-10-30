@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Eye, Search, ClipboardCheck } from 'lucide-react';
 import { isSystemAdmin } from '@/auth/contracts';
@@ -139,7 +140,7 @@ function ClaimTable({
               <td>
                 {claim.id}
                 <br />
-                {claim.employeeId}
+                <EmployeeReference employeeId={claim.employeeId} />
               </td>
               <td>{claim.commitmentId}</td>
               <td>{claim.requestedMinutes}</td>

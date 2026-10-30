@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { z } from 'zod';
 import { ChevronLeft, ChevronRight, Edit, Plus, Shield, X } from 'lucide-react';
@@ -107,8 +108,13 @@ function ZoneDetail({
             assignments.data.map((a) => (
               <details key={a.id}>
                 <summary>
-                  {['', 'Employee', 'Role', 'Team', 'Site'][a.populationKind]}: {a.targetId} (
-                  {a.endId ? 'Ended' : 'Assigned'})
+                  {['', 'Employee', 'Role', 'Team', 'Site'][a.populationKind]}:{' '}
+                  {a.populationKind === 1 ? (
+                    <EmployeeReference employeeId={a.targetId} />
+                  ) : (
+                    a.targetId
+                  )}{' '}
+                  ({a.endId ? 'Ended' : 'Assigned'})
                 </summary>
                 <RecordFields
                   values={{

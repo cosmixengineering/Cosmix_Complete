@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { z } from 'zod';
 import { ClipboardCheck, RefreshCw } from 'lucide-react';
@@ -258,8 +259,10 @@ function EncashmentCard({ item }: { item: Encashment }) {
       </div>
       <dl className="hr-detail-grid">
         <div>
-          <dt>Employee ID</dt>
-          <dd>{item.employeeId}</dd>
+          <dt>Employee</dt>
+          <dd>
+            <EmployeeReference employeeId={item.employeeId} />
+          </dd>
         </div>
         <div>
           <dt>Application ID</dt>

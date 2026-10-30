@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, RefreshCw } from 'lucide-react';
@@ -89,7 +90,9 @@ function EmployeeAttendance({ employeeId, scope }: { employeeId: string; scope?:
       <header className="ead-header">
         <div className="ead-heading">
           <h2>Attendance records</h2>
-          <p style={{ overflowWrap: 'anywhere' }}>Employee ID: {employeeId}</p>
+          <p style={{ overflowWrap: 'anywhere' }}>
+            Employee: <EmployeeReference employeeId={employeeId} />
+          </p>
           <div className="ead-actions">
             {access.can('hr.employees.read') && (
               <Link className="ead-button" to={`/hr/employees/${employeeId}`}>

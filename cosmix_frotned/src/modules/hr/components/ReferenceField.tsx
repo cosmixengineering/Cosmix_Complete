@@ -1,3 +1,5 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
+import { employeeSearchTerm, formatEmployeeCode } from '@/utils/employee-code';
 import { useState } from 'react';
 import { SelectInput } from '@/components/forms/SelectInput';
 import { TextInput } from '@/components/forms/TextInput';
@@ -52,7 +54,7 @@ export function ReferenceField({
       queryString({
         page,
         pageSize: 100,
-        search: term,
+        search: employee ? employeeSearchTerm(term) : term,
         ...(employee ? { status: 2 } : { isActive: true }),
       }),
     employee ? pageOf(employeeSchema) : pageOf(masterSchema),
@@ -63,10 +65,19 @@ export function ReferenceField({
   );
   const options = [
     { value: '', label: 'Select ' + label.toLowerCase() },
-    ...rows.map((r) => ({ value: r.id, label: r.name ?? 'Unnamed record' })),
+    ...rows.map((r) => ({
+      value: r.id,
+      label:
+        'employeeNumber' in r
+          ? `${formatEmployeeCode(r.employeeNumber)} · ${r.name ?? 'Unnamed employee'}`
+          : (r.name ?? 'Unnamed record'),
+    })),
   ];
   if (value && !rows.some((r) => r.id === value))
-    options.push({ value, label: currentLabel ?? 'Current selection' });
+    options.push({
+      value,
+      label: employee ? 'Current employee selection' : (currentLabel ?? 'Current selection'),
+    });
   return (
     <div className="hr-reference" data-field={dataField}>
       <SelectInput
@@ -85,7 +96,8 @@ export function ReferenceField({
           );
         }}
       />
-      {enableFind && !disabled && access.can(permission) && (
+      {employee && value && <EmployeeReference employeeId={value} showName />}
+      {(enableFind || employee) && !disabled && access.can(permission) && (
         <details>
           <summary>Find {label.toLowerCase()}</summary>
           <TextInput

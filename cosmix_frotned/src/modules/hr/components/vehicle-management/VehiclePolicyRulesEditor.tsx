@@ -1,3 +1,4 @@
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/forms/TextInput';
@@ -19,6 +20,15 @@ export function VehiclePolicyRulesEditor({
   field?: VehiclePolicyField;
   label?: string;
 }) {
+  if (field.kind === 'id' && label === 'EmployeeId')
+    return (
+      <EmployeePicker
+        label="Employee"
+        value={typeof value === 'string' ? value : ''}
+        required
+        onChange={onChange}
+      />
+    );
   const name = label.replace(/([a-z])([A-Z])/g, '$1 $2');
   if (field.kind === 'constant')
     return (

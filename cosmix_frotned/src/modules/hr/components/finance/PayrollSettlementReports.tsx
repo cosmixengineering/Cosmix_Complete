@@ -1,3 +1,5 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
+import { formatEmployeeCode } from '@/utils/employee-code';
 import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useFinanceQuery } from '../../hooks/use-finance-queries';
@@ -155,7 +157,7 @@ export function PayrollSettlementReports({
                     {data.employees.map((employee) => (
                       <tr key={employee.employeeId}>
                         <th scope="row">
-                          {employee.employeeNumber} · {employee.employeeName}
+                          {formatEmployeeCode(employee.employeeNumber)} · {employee.employeeName}
                         </th>
                         <td>{money(employee.grossEarnings, data.currency)}</td>
                         <td>{money(employee.deductions, data.currency)}</td>
@@ -190,7 +192,7 @@ export function PayrollSettlementReports({
                     {data.employees.map((employee) => (
                       <tr key={employee.employeeId}>
                         <th scope="row">
-                          {employee.employeeNumber} · {employee.employeeName}
+                          {formatEmployeeCode(employee.employeeNumber)} · {employee.employeeName}
                         </th>
                         {[
                           employee.payments.posted,
@@ -233,9 +235,12 @@ export function PayrollSettlementReports({
                         return (
                           <tr key={index}>
                             <td>
-                              {employee
-                                ? `${employee.employeeNumber} · ${employee.employeeName}`
-                                : component.employeeId}
+                              <EmployeeReference
+                                employeeId={component.employeeId}
+                                employeeNumber={employee?.employeeNumber}
+                                employeeName={employee?.employeeName}
+                                showName
+                              />
                             </td>
                             <td>{component.component}</td>
                             <td>{money(component.amount, data.currency)}</td>

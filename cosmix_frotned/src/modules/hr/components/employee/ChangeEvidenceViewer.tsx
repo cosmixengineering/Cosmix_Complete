@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState, useMemo } from 'react';
 import {
   FileText,
@@ -78,10 +80,15 @@ function areEqualValues(a: unknown, b: unknown): boolean {
 const humanLabel = (key: string) =>
   key.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
 
-function formatValue(val: unknown): { text: string; isMuted: boolean; isCode?: boolean } {
+function formatValue(
+  key: string,
+  val: unknown,
+): { text: ReactNode; isMuted: boolean; isCode?: boolean } {
   if (isEmptyVal(val)) {
     return { text: 'Not set', isMuted: true };
   }
+  if (key === 'reportingManagerEmployeeId' && typeof val === 'string')
+    return { text: <EmployeeReference employeeId={val} showName />, isMuted: false };
   if (typeof val === 'boolean') {
     return { text: val ? 'Yes' : 'No', isMuted: false };
   }
@@ -179,8 +186,8 @@ export function ChangeEvidenceViewer({ data, section, onClose }: ChangeEvidenceV
             <div className="change-evidence-title-text">
               <h2>Change Evidence & Audit Slip</h2>
               <p>
-                Section: <strong>{section.label}</strong> &bull; Employee ID:{' '}
-                <code>{data.change.employeeId.slice(0, 8).toUpperCase()}</code>
+                Section: <strong>{section.label}</strong> &bull; Employee code:{' '}
+                <EmployeeReference employeeId={data.change.employeeId} />
               </p>
             </div>
           </div>
@@ -287,7 +294,7 @@ export function ChangeEvidenceViewer({ data, section, onClose }: ChangeEvidenceV
                     </div>
                     <div className="change-fields-list">
                       {group.fields.map((f) => {
-                        const fmt = formatValue(f.beforeVal);
+                        const fmt = formatValue(f.key, f.beforeVal);
                         const isPriorEmpty = isEmptyVal(f.beforeVal);
                         return (
                           <div key={f.key} className="change-field-row">
@@ -302,7 +309,11 @@ export function ChangeEvidenceViewer({ data, section, onClose }: ChangeEvidenceV
                                     ? 'change-field-value--muted'
                                     : ''
                               } ${fmt.isCode ? 'change-code-chip' : ''}`}
-                              title={String(f.beforeVal ?? '')}
+                              title={
+                                f.key === 'reportingManagerEmployeeId'
+                                  ? undefined
+                                  : String(f.beforeVal ?? '')
+                              }
                             >
                               {isPriorEmpty && f.isModified ? 'None' : fmt.text}
                             </span>
@@ -334,7 +345,7 @@ export function ChangeEvidenceViewer({ data, section, onClose }: ChangeEvidenceV
                     </div>
                     <div className="change-fields-list">
                       {group.fields.map((f) => {
-                        const fmt = formatValue(f.afterVal);
+                        const fmt = formatValue(f.key, f.afterVal);
                         return (
                           <div key={f.key} className="change-field-row">
                             <span className="change-field-label">{f.label}</span>
@@ -346,7 +357,11 @@ export function ChangeEvidenceViewer({ data, section, onClose }: ChangeEvidenceV
                                     ? 'change-field-value--muted'
                                     : ''
                               } ${fmt.isCode ? 'change-code-chip' : ''}`}
-                              title={String(f.afterVal ?? '')}
+                              title={
+                                f.key === 'reportingManagerEmployeeId'
+                                  ? undefined
+                                  : String(f.afterVal ?? '')
+                              }
                             >
                               {fmt.text}
                               {f.isModified && (
@@ -421,8 +436,8 @@ function GroupTableRows({ group }: { group: GroupDiff }) {
         <td colSpan={4}>{group.title}</td>
       </tr>
       {group.fields.map((f) => {
-        const fmtB = formatValue(f.beforeVal);
-        const fmtA = formatValue(f.afterVal);
+        const fmtB = formatValue(f.key, f.beforeVal);
+        const fmtA = formatValue(f.key, f.afterVal);
         const isPriorEmpty = isEmptyVal(f.beforeVal);
         return (
           <tr key={f.key} className={f.isModified ? 'change-row--modified' : ''}>

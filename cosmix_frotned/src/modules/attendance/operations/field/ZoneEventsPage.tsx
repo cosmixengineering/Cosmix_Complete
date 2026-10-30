@@ -1,3 +1,4 @@
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { z } from 'zod';
 import { useParams } from 'react-router-dom';
@@ -121,11 +122,11 @@ function EventsWorkspace({ siteId, own = false }: { siteId?: string; own?: boole
             }
           }}
         >
-          <TextInput
-            label="Employee ID (optional)"
+          <EmployeePicker
+            label="Employee (optional)"
             disabled={Boolean(edit)}
             value={employeeInput}
-            onChange={(e) => setEmployeeInput(e.target.value)}
+            onChange={setEmployeeInput}
           />
           <Command
             icon={Search}
@@ -326,12 +327,7 @@ function WindowsWorkspace({ siteId }: { siteId: string }) {
             if (id.safeParse(input).success) setChosen(input);
           }}
         >
-          <TextInput
-            label="Employee ID"
-            value={input}
-            required
-            onChange={(e) => setInput(e.target.value)}
-          />
+          <EmployeePicker label="Employee" value={input} required onChange={setInput} />
           <Command icon={Search} type="submit" disabled={!id.safeParse(input).success}>
             Read windows
           </Command>

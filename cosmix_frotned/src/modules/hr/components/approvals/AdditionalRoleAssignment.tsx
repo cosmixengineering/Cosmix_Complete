@@ -202,48 +202,70 @@ export function AdditionalRoleAssignment({
             value={to}
             onChange={(event) => setTo(event.target.value)}
           />
-          <Button
-            variant="secondary"
-            title="Use current local time"
-            onClick={() => {
-              const now = new Date();
-              setFrom(
-                new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-                  .toISOString()
-                  .slice(0, 19),
-              );
-            }}
-          >
-            <Clock size={16} /> Start now
-          </Button>
-          <Button
-            type="submit"
-            disabled={
-              !role ||
-              !scope ||
-              !from ||
-              !reason.trim() ||
-              (scope === '7' && !confirmAll) ||
-              (!!reference && !access.can(reference.permission))
-            }
-          >
-            <ShieldPlus size={16} /> Assign additional role
-          </Button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', gridColumn: '1 / -1', marginTop: '4px' }}>
+            <Button
+              variant="secondary"
+              className="access-btn"
+              title="Use current local time"
+              onClick={() => {
+                const now = new Date();
+                setFrom(
+                  new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+                    .toISOString()
+                    .slice(0, 19),
+                );
+              }}
+            >
+              <Clock size={14} /> <span>Start now</span>
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              className="access-btn"
+              disabled={
+                !role ||
+                !scope ||
+                !from ||
+                !reason.trim() ||
+                (scope === '7' && !confirmAll) ||
+                (!!reference && !access.can(reference.permission))
+              }
+            >
+              <ShieldPlus size={14} /> <span>Assign additional role</span>
+            </Button>
+          </div>
         </fieldset>
         {role && (
-          <ul>
-            {role.permissions.map((code) => {
-              const definition = catalog.find((item) => item.code === code);
-              return (
-                <li key={code}>
-                  {code}: {definition?.description ?? 'Unsupported permission'}
-                  {definition?.management ? ' (management)' : ''}
-                  {definition?.sensitive ? ' (sensitive)' : ''}
-                  {definition?.selfService ? ' (self-service)' : ''}
-                </li>
-              );
-            })}
-          </ul>
+          <details style={{ fontSize: '11.5px', color: '#64748b', marginTop: '10px' }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 550, color: '#2563eb' }}>
+              View {role.permissions.length} included permissions
+            </summary>
+            <div
+              style={{
+                maxHeight: '130px',
+                overflowY: 'auto',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '5px',
+                padding: '8px 10px',
+                marginTop: '6px',
+              }}
+            >
+              <ul style={{ margin: 0, paddingLeft: '16px' }}>
+                {role.permissions.map((code) => {
+                  const definition = catalog.find((item) => item.code === code);
+                  return (
+                    <li key={code}>
+                      <strong>{code}</strong>: {definition?.description ?? 'Unsupported permission'}
+                      {definition?.management ? ' (management)' : ''}
+                      {definition?.sensitive ? ' (sensitive)' : ''}
+                      {definition?.selfService ? ' (self-service)' : ''}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </details>
         )}
         {role &&
           !role.permissions.some(

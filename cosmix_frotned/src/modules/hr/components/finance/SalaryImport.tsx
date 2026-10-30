@@ -1,3 +1,5 @@
+import { formatEmployeeCode } from '@/utils/employee-code';
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import type { z } from 'zod';
 import { Button } from '@/components/ui/Button';
@@ -303,11 +305,16 @@ export function SalaryImport() {
                   {preview.rows.map((row) => (
                     <tr key={row.rowNumber}>
                       <td>{row.rowNumber}</td>
-                      <td>{row.employeeLabel ?? row.employeeId ?? 'Unresolved'}</td>
+                      <td>
+                        <EmployeeReference
+                          employeeId={row.employeeId}
+                          employeeNumber={row.employeeLabel}
+                        />
+                      </td>
                       <td>
                         {Object.entries(row.values).map(([key, value]) => (
                           <div key={key}>
-                            {key}: {value}
+                            {key}: {key === 'employeeNumber' ? formatEmployeeCode(value) : value}
                           </div>
                         ))}
                       </td>

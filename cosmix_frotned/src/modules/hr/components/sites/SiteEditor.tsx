@@ -224,7 +224,6 @@ function SiteForm({
                 label="Site Supervisor (Assigned Project Lead)"
                 kind="employees"
                 value={values.supervisorEmployeeId}
-                currentLabel={record?.supervisorEmployeeId ?? undefined}
                 onChange={(value) => change('supervisorEmployeeId', value)}
               />
             </div>

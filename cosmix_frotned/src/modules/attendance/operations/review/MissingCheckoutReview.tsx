@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { RefreshCw, AlertCircle, CheckCircle2, ArrowRight, Clock, Users } from 'lucide-react';
@@ -133,11 +134,9 @@ export function MissingCheckoutReview({ scope, range }: { scope: Scope; range: R
                         <span className="att-date-chip">{row.businessDate}</span>
                       </td>
                       <td>
-                        <span className="att-emp-chip" title={row.employeeId}>
+                        <span className="att-emp-chip">
                           <Users size={12} style={{ marginRight: 4 }} />
-                          {row.employeeId.length > 14
-                            ? `EMP-${row.employeeId.slice(0, 8)}`
-                            : row.employeeId}
+                          <EmployeeReference employeeId={row.employeeId} />
                         </span>
                       </td>
                       <td className="att-time-cell">

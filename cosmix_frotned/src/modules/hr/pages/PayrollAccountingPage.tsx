@@ -1,3 +1,4 @@
+import { EmployeeReference, useEmployeeCodes } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { FinanceLedgerPanel, PayrollCostPanel, BankReconciliationPanel } from '@/modules/accounts';
 import { z } from 'zod';
@@ -301,6 +302,7 @@ function ObligationRecords({
     z.array(entitlement),
     true,
   );
+  const employeeCodes = useEmployeeCodes((employees.data ?? []).map((item) => item.employeeId));
   const payments = useFinanceQuery(
     `/payroll-accounting/obligations/${obligationId}/payments`,
     z.array(payment),
@@ -401,7 +403,8 @@ function ObligationRecords({
         <h3>Employee entitlements</h3>
         {employees.data?.map((item) => (
           <p key={item.employeeId}>
-            {item.employeeId}: {money(item.netEntitlement, currency)} entitlement ·{' '}
+            <EmployeeReference employeeId={item.employeeId} />:{' '}
+            {money(item.netEntitlement, currency)} entitlement ·{' '}
             {money(item.disbursedAmount, currency)} allocated / reserved ·{' '}
             {money(item.remainingBalance, currency)} available to initiate
           </p>
@@ -448,7 +451,7 @@ function ObligationRecords({
                   onChange={onEmployeeSelect}
                   options={(employees.data ?? []).map((item) => ({
                     value: item.employeeId,
-                    label: `${item.employeeId} · available to initiate ${money(item.remainingBalance, currency)}`,
+                    label: `${employeeCodes[item.employeeId] ?? 'Unavailable'} · available to initiate ${money(item.remainingBalance, currency)}`,
                   }))}
                 />
                 <TextInput

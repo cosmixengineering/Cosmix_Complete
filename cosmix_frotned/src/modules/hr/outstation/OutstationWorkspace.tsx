@@ -1,8 +1,8 @@
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, Eye, Plus, RefreshCw, Search } from 'lucide-react';
 import { useAuth } from '@/auth/use-auth';
 import { Button } from '@/components/ui/Button';
-import { TextInput } from '@/components/forms/TextInput';
 import { Denied } from '../components/Feedback';
 import { RecordView } from '../components/RecordView';
 import { HasMorePager } from '../components/finance/FinanceChrome';
@@ -54,7 +54,7 @@ function Workspace({ onBusyChange }: { onBusyChange: (busy: boolean) => void }) 
           const parsed = deploymentId.safeParse(input.trim());
           if (!parsed.success) {
             setEmployeeId('');
-            setError('Enter a complete employee ID.');
+            setError('Select an employee.');
             return;
           }
           if (!canDeployment(user, 'read', parsed.data)) {
@@ -66,13 +66,13 @@ function Workspace({ onBusyChange }: { onBusyChange: (busy: boolean) => void }) 
           setEmployeeId(parsed.data.toLowerCase());
         }}
       >
-        <TextInput
-          label="Employee ID"
+        <EmployeePicker
+          label="Employee"
           required
-          value={input}
           disabled={busy}
-          onChange={(event) => {
-            setInput(event.target.value);
+          value={input}
+          onChange={(id) => {
+            setInput(id);
             setEmployeeId('');
             setError('');
           }}

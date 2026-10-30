@@ -1,3 +1,4 @@
+import { formatEmployeeCode } from '@/utils/employee-code';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
@@ -426,9 +427,12 @@ function SiteEvidence({ siteId }: { siteId: string }) {
     employeeNumber: number;
     designationName: string;
   }) =>
-    [worker.fullLegalName, String(worker.employeeNumber), worker.designationName].some((val) =>
-      val.toLowerCase().includes(term),
-    );
+    [
+      worker.fullLegalName,
+      formatEmployeeCode(worker.employeeNumber),
+      String(worker.employeeNumber),
+      worker.designationName,
+    ].some((val) => val.toLowerCase().includes(term));
 
   const filteredRecords = records.filter(matches);
   const filteredSessions = sessions.filter(matches);
@@ -730,7 +734,9 @@ function SiteEvidence({ siteId }: { siteId: string }) {
                             </div>
                             <div>
                               <div className="personnel-emp-name">{worker.fullLegalName}</div>
-                              <div className="personnel-emp-code">#{worker.employeeNumber}</div>
+                              <div className="personnel-emp-code">
+                                {formatEmployeeCode(worker.employeeNumber)}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -778,7 +784,9 @@ function SiteEvidence({ siteId }: { siteId: string }) {
                           </div>
                           <div>
                             <div className="personnel-emp-name">{worker.fullLegalName}</div>
-                            <div className="personnel-emp-code">#{worker.employeeNumber}</div>
+                            <div className="personnel-emp-code">
+                              {formatEmployeeCode(worker.employeeNumber)}
+                            </div>
                           </div>
                         </div>
                       </td>

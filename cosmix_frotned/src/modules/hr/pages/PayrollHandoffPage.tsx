@@ -1,3 +1,5 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
+import { formatEmployeeCode } from '@/utils/employee-code';
 import { useState, useMemo, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
@@ -96,7 +98,7 @@ export function PayrollHandoffPage() {
         .map((w: string) => w[0]?.toUpperCase() ?? '')
         .slice(0, 2)
         .join('');
-      const code = emp.identityNumber || `EMP-${emp.employeeNumber ?? ''}`;
+      const code = formatEmployeeCode(emp.employeeNumber);
       map.set(emp.id.toLowerCase(), {
         name,
         code,
@@ -642,7 +644,12 @@ function PayrollPreviewPanel({
                           {filteredLines.map((line: PayrollPreviewLine, idx: number) => {
                             const emp = employeeMap.get(line.employeeId.toLowerCase());
                             const name = emp?.name || 'Employee';
-                            const code = emp?.code || line.employeeId.slice(0, 8);
+                            const code = (
+                              <EmployeeReference
+                                employeeId={line.employeeId}
+                                employeeNumber={emp?.code}
+                              />
+                            );
                             const initials =
                               emp?.initials ||
                               name
@@ -767,8 +774,16 @@ function PayrollPreviewPanel({
                                     );
                                   }}
                                 />
-                                {employeeMap.get(employee.employeeId.toLowerCase())?.name ??
-                                  employee.employeeId}
+                                <EmployeeReference
+                                  employeeId={employee.employeeId}
+                                  employeeNumber={
+                                    employeeMap.get(employee.employeeId.toLowerCase())?.code
+                                  }
+                                  employeeName={
+                                    employeeMap.get(employee.employeeId.toLowerCase())?.name
+                                  }
+                                  showName
+                                />
                                 {' — '}
                                 {money(employee.netPay, activePreview.currency)}
                               </label>
@@ -1152,7 +1167,12 @@ function PayrollBatches({
                                       (line: PayrollPreviewLine, idx: number) => {
                                         const emp = employeeMap.get(line.employeeId.toLowerCase());
                                         const name = emp?.name || 'Employee';
-                                        const code = emp?.code || line.employeeId.slice(0, 8);
+                                        const code = (
+                                          <EmployeeReference
+                                            employeeId={line.employeeId}
+                                            employeeNumber={emp?.code}
+                                          />
+                                        );
                                         const initials =
                                           emp?.initials ||
                                           name

@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
@@ -91,7 +92,9 @@ export function SalaryPayslips({
           <tbody>
             {employees.map((employee) => (
               <tr key={employee.employeeId}>
-                <td>{employee.employeeId}</td>
+                <td>
+                  <EmployeeReference employeeId={employee.employeeId} />
+                </td>
                 <td>{money(employee.grossEarnings, currency)}</td>
                 <td>{money(employee.totalDeductions, currency)}</td>
                 <td>{money(employee.netPay, currency)}</td>

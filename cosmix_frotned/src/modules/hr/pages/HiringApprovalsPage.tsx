@@ -1,3 +1,4 @@
+import { formatEmployeeCode } from '@/utils/employee-code';
 import { useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -20,6 +21,7 @@ import { useHrQuery } from '../hooks/use-hr-queries';
 import { pageOf, employeeSchema } from '../schemas/contracts';
 import { submissionSummarySchema, type SubmissionSummary } from '../schemas/approvals';
 import { labelDate } from '../utils/messages';
+import { hiringSummaryNotice } from '../utils/hiring-summary';
 import { HiringSubmissionReview } from '../components/approvals/HiringSubmissionReview';
 import { EmployeeAccessSetup } from '../components/approvals/EmployeeAccessSetup';
 import { Denied, QueryState } from '../components/Feedback';
@@ -54,6 +56,10 @@ export function HiringApprovalsPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState<GenericApprovalItem | null>(null);
+  const summaryNotice = hiringSummaryNotice(
+    selectedItem?.statusVariant === 'draft',
+    isAdminReviewer,
+  );
 
   // Admin decision modal state
   const [adminSubmission, setAdminSubmission] = useState<SubmissionSummary | null>(null);
@@ -93,7 +99,7 @@ export function HiringApprovalsPage() {
     // Formal Submissions (if available)
     if (submissionsQuery.data?.items?.length) {
       for (const s of submissionsQuery.data.items) {
-        const empName = s.name || `Employee #${s.employeeNumber}`;
+        const empName = s.name || formatEmployeeCode(s.employeeNumber);
         const initials =
           empName
             .split(' ')
@@ -127,7 +133,7 @@ export function HiringApprovalsPage() {
         // Skip if already in formal submissions
         if (submissionsQuery.data?.items?.some((s) => s.employeeId === emp.id)) continue;
 
-        const empName = emp.name || `Draft Employee #${emp.employeeNumber}`;
+        const empName = emp.name || `Draft ${formatEmployeeCode(emp.employeeNumber)}`;
         const initials =
           empName
             .split(' ')
@@ -170,7 +176,9 @@ export function HiringApprovalsPage() {
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
         const matchesName = item.employeeName.toLowerCase().includes(query);
-        const matchesCode = String(item.employeeNumber).includes(query);
+        const matchesCode =
+          formatEmployeeCode(item.employeeNumber).toLowerCase().includes(query) ||
+          String(item.employeeNumber).includes(query);
         const matchesType = item.requestType.toLowerCase().includes(query);
         const matchesCnic = item.identityNumber?.toLowerCase().includes(query);
         if (!matchesName && !matchesCode && !matchesType && !matchesCnic) return false;
@@ -315,7 +323,7 @@ export function HiringApprovalsPage() {
                   <div className="hr-request-emp-name">
                     <span>{item.employeeName}</span>
                     <span className="hr-request-emp-code">
-                      #{String(item.employeeNumber).padStart(4, '0')}
+                      {formatEmployeeCode(item.employeeNumber)}
                     </span>
                   </div>
                   <div className="hr-request-desc">
@@ -342,10 +350,13 @@ export function HiringApprovalsPage() {
                 <span style={{ fontSize: '11px', color: '#334155' }}>{item.details}</span>
                 <div className="hr-request-date" style={{ marginTop: '2px' }}>
                   <Clock size={11} color="#94a3b8" />
-                  <span>Submitted: {item.submittedAt}</span>
+                  <span>
+                    {item.statusVariant === 'draft' ? 'Created' : 'Submitted'}: {item.submittedAt}
+                  </span>
                   <span style={{ margin: '0 4px', color: '#cbd5e1' }}>&bull;</span>
                   <span style={{ color: '#475569' }}>
-                    Assigned: <strong>{item.approverRole}</strong>
+                    {item.statusVariant === 'draft' ? 'Review stage' : 'Assigned'}:{' '}
+                    <strong>{item.approverRole}</strong>
                   </span>
                 </div>
               </div>
@@ -451,9 +462,15 @@ export function HiringApprovalsPage() {
         onOpenChange={(open) => {
           if (!open) setSelectedItem(null);
         }}
-        title="Pending Approval Details"
+        title={
+          selectedItem?.statusVariant === 'draft'
+            ? 'Onboarding Draft Details'
+            : 'Pending Approval Details'
+        }
         description={
-          selectedItem ? `${selectedItem.employeeName} • #${selectedItem.employeeNumber}` : ''
+          selectedItem
+            ? `${selectedItem.employeeName} • ${formatEmployeeCode(selectedItem.employeeNumber)}`
+            : ''
         }
       >
         {selectedItem && (
@@ -474,8 +491,7 @@ export function HiringApprovalsPage() {
             >
               <Shield size={16} color="#0f172a" style={{ flexShrink: 0 }} />
               <div>
-                <strong>HR Notice:</strong> As HR Desk, this view is read-only. Final authorization
-                decision is handled by <strong>{selectedItem.approverRole}</strong>.
+                <strong>{summaryNotice.label}:</strong> {summaryNotice.message}
               </div>
             </div>
 
@@ -513,7 +529,7 @@ export function HiringApprovalsPage() {
                 </div>
                 <div>
                   <span style={{ color: '#64748b' }}>Employee Code:</span>{' '}
-                  <strong>#{selectedItem.employeeNumber}</strong>
+                  <strong>{formatEmployeeCode(selectedItem.employeeNumber)}</strong>
                 </div>
                 <div>
                   <span style={{ color: '#64748b' }}>National ID (CNIC):</span>{' '}
@@ -563,11 +579,15 @@ export function HiringApprovalsPage() {
                   </span>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b' }}>Submission Date:</span>{' '}
+                  <span style={{ color: '#64748b' }}>
+                    {selectedItem.statusVariant === 'draft' ? 'Created Date' : 'Submission Date'}:
+                  </span>{' '}
                   <span>{selectedItem.submittedAt}</span>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b' }}>Assigned Approver:</span>{' '}
+                  <span style={{ color: '#64748b' }}>
+                    {selectedItem.statusVariant === 'draft' ? 'Review Stage' : 'Assigned Approver'}:
+                  </span>{' '}
                   <strong>{selectedItem.approverRole}</strong>
                 </div>
                 <div
@@ -618,7 +638,7 @@ export function HiringApprovalsPage() {
                   </Button>
                 )}
               <Link
-                to={`${basePath}/employees/${selectedItem.employeeId}`}
+                to={`${basePath}/employees/${selectedItem.employeeId}${selectedItem.statusVariant === 'draft' ? '/hiring' : ''}`}
                 className="button button--secondary"
                 style={{
                   textDecoration: 'none',
@@ -654,7 +674,7 @@ export function HiringApprovalsPage() {
           title="Hiring Decision Review"
           description={
             adminSubmission
-              ? `${adminSubmission.name ?? 'Employee'} · #${adminSubmission.employeeNumber}`
+              ? `${adminSubmission.name ?? 'Employee'} · ${formatEmployeeCode(adminSubmission.employeeNumber)}`
               : ''
           }
         >
@@ -704,7 +724,7 @@ export function HiringApprovalsPage() {
         title="Employee Roles &amp; System Access Setup"
         description={
           accessEmployee
-            ? `${accessEmployee.name} • #${String(accessEmployee.number).padStart(4, '0')}`
+            ? `${accessEmployee.name} • ${formatEmployeeCode(accessEmployee.number)}`
             : ''
         }
       >

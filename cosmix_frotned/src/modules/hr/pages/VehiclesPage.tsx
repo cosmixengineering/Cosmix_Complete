@@ -1,3 +1,4 @@
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useState, type FormEvent } from 'react';
 import {
   Calendar,
@@ -400,18 +401,14 @@ function VehicleTrips({ canManage, canVehicles }: { canManage: boolean; canVehic
           </div>
 
           <div className="veh-form-group">
-            <label className="veh-form-label">Employee ID (UUID)</label>
             <div style={{ position: 'relative' }}>
-              <input
-                type="text"
-                className="veh-input"
-                style={{ width: '100%', paddingRight: employeeId ? '28px' : '10px' }}
-                placeholder="Filter by employee..."
+              <EmployeePicker
+                label="Employee"
                 disabled={navigation.pending}
                 value={employeeId}
-                onChange={(e) => {
+                onChange={(id) => {
                   navigation.navigate(() => {
-                    setEmployeeId(e.target.value);
+                    setEmployeeId(id);
                     setPage(1);
                   });
                 }}
@@ -832,16 +829,11 @@ function VehicleFuel({
               <form onSubmit={(e) => void submitCommute(e)}>
                 <div className="veh-grid-3">
                   <div className="veh-form-group">
-                    <label className="veh-form-label">Employee ID (UUID) *</label>
-                    <input
-                      type="text"
-                      className="veh-input"
+                    <EmployeePicker
+                      label="Employee"
                       required
-                      placeholder="Employee UUID..."
                       value={commuteForm.employeeId}
-                      onChange={(e) =>
-                        setCommuteForm({ ...commuteForm, employeeId: e.target.value })
-                      }
+                      onChange={(id) => setCommuteForm({ ...commuteForm, employeeId: id })}
                     />
                   </div>
 
@@ -993,16 +985,12 @@ function VehicleFuel({
             </div>
 
             <div className="veh-form-group">
-              <label className="veh-form-label">Employee ID (UUID)</label>
               <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  className="veh-input"
-                  style={{ width: '100%', paddingRight: employeeId ? '28px' : '10px' }}
-                  placeholder="Filter by employee UUID..."
+                <EmployeePicker
+                  label="Employee"
                   value={employeeId}
-                  onChange={(e) => {
-                    setEmployeeId(e.target.value);
+                  onChange={(id) => {
+                    setEmployeeId(id);
                     setPage(1);
                   }}
                 />
@@ -1243,14 +1231,11 @@ function VehicleMaintenance({
         </div>
 
         <div className="veh-form-group">
-          <label className="veh-form-label">Employee ID (UUID)</label>
-          <input
-            type="text"
-            className="veh-input"
-            placeholder="Filter by employee..."
+          <EmployeePicker
+            label="Employee"
             value={employeeId}
-            onChange={(e) => {
-              setEmployeeId(e.target.value);
+            onChange={(id) => {
+              setEmployeeId(id);
               setPage(1);
             }}
           />
@@ -1649,14 +1634,11 @@ function VehicleCustodyPanel({
                   </select>
                 </div>
                 <div className="veh-form-group">
-                  <label className="veh-form-label">Employee ID (UUID) *</label>
-                  <input
-                    type="text"
-                    className="veh-input"
-                    placeholder="Employee UUID..."
+                  <EmployeePicker
+                    label="Employee"
                     required
                     value={issueForm.employeeId}
-                    onChange={(e) => setIssueForm({ ...issueForm, employeeId: e.target.value })}
+                    onChange={(id) => setIssueForm({ ...issueForm, employeeId: id })}
                   />
                 </div>
                 <div className="veh-form-group">
@@ -1762,13 +1744,10 @@ function VehicleCustodyPanel({
               />
             </div>
             <div className="veh-form-group">
-              <label className="veh-form-label">Employee ID</label>
-              <input
-                type="text"
-                className="veh-input"
-                placeholder="Filter by employee..."
+              <EmployeePicker
+                label="Employee"
                 value={employeeFilter}
-                onChange={(e) => setEmployeeFilter(e.target.value)}
+                onChange={(id) => setEmployeeFilter(id)}
               />
             </div>
           </div>

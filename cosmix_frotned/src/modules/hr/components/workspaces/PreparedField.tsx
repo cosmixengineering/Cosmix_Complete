@@ -1,3 +1,4 @@
+import { EmployeeReference, EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useId } from 'react';
 import { TextInput } from '@/components/forms/TextInput';
 import { SelectInput } from '@/components/forms/SelectInput';
@@ -27,7 +28,25 @@ export function PreparedField({
   const text = typeof value === 'string' ? value : '';
   let control;
   if (fixedEmployee && isOwnEmployeeField(field)) {
-    control = <TextInput label={field.label} value={fixedEmployee.name} readOnly />;
+    control = (
+      <div className="field">
+        <span>{field.label}</span>
+        <EmployeeReference
+          employeeId={fixedEmployee.id}
+          employeeName={fixedEmployee.name}
+          showName
+        />
+      </div>
+    );
+  } else if (field.kind === 'reference' && field.reference === 'employees') {
+    control = (
+      <EmployeePicker
+        label={field.label}
+        value={text}
+        required={field.required}
+        onChange={onChange}
+      />
+    );
   } else if (field.kind === 'reference' && fixedEmployee) {
     control = (
       <TextInput

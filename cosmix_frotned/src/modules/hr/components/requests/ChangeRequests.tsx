@@ -1,3 +1,5 @@
+import { formatEmployeeCode } from '@/utils/employee-code';
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -87,7 +89,9 @@ export function ChangeRequests({
     return query.data.items.filter((r) => {
       const emp = employeeMap.get(r.employeeId.toLowerCase());
       const nameMatch = emp?.name?.toLowerCase().includes(term);
-      const codeMatch = emp?.employeeNumber?.toString().includes(term);
+      const codeMatch =
+        formatEmployeeCode(emp?.employeeNumber).toLowerCase().includes(term) ||
+        emp?.employeeNumber?.toString().includes(term);
       const idMatch = r.id.toLowerCase().includes(term);
       return nameMatch || codeMatch || idMatch;
     });
@@ -206,10 +210,10 @@ export function ChangeRequests({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {items.map((r) => {
               const emp = employeeMap.get(r.employeeId.toLowerCase());
-              const empName = emp?.name || `Employee #${r.employeeId.slice(0, 8)}`;
-              const empCode = emp?.employeeNumber
-                ? `EMP-${String(emp.employeeNumber).padStart(4, '0')}`
-                : `ID-${r.employeeId.slice(0, 6)}`;
+              const empName = emp?.name || 'Employee name unavailable';
+              const empCode = (
+                <EmployeeReference employeeId={r.employeeId} employeeNumber={emp?.employeeNumber} />
+              );
               const initials = emp?.name
                 ? emp.name
                     .split(' ')
@@ -431,18 +435,27 @@ function ChangeRequestDetail({
   return (
     <QueryState query={query}>
       {query.data && (
-        <ChangeRequestReviewViewer
-          request={query.data.request}
-          section={section}
-          employee={employee}
-          reason={query.data.reason}
-          effectiveFrom={query.data.effectiveFrom}
-          beforeData={query.data.before.data}
-          proposedData={query.data.proposed}
-          decisions={query.data.decisions}
-          decisionFormSlot={decisionFormSlot}
-          onClose={onClose}
-        />
+        <>
+          {query.data.repairsIdentityEvidence && (
+            <p role="status" className="hr-message">
+              Identity evidence repair: the original proof is unavailable. Review the replacement
+              document and proposed identity carefully. Approval records a new identity version; it
+              does not certify the old missing proof.
+            </p>
+          )}
+          <ChangeRequestReviewViewer
+            request={query.data.request}
+            section={section}
+            employee={employee}
+            reason={query.data.reason}
+            effectiveFrom={query.data.effectiveFrom}
+            beforeData={query.data.before.data}
+            proposedData={query.data.proposed}
+            decisions={query.data.decisions}
+            decisionFormSlot={decisionFormSlot}
+            onClose={onClose}
+          />
+        </>
       )}
     </QueryState>
   );

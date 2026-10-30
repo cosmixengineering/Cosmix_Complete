@@ -1,3 +1,4 @@
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { TextInput } from '@/components/forms/TextInput';
 import { SelectInput } from '@/components/forms/SelectInput';
@@ -365,14 +366,24 @@ export function AssignmentForm({
               { value: '4', label: 'Site' },
             ]}
           />
-          {population !== '4' && (
-            <TextInput
-              label="Target ID"
+          {population === '1' ? (
+            <EmployeePicker
+              label="Employee"
               value={target}
               disabled={Boolean(replace)}
               required
-              onChange={(e) => setTarget(e.target.value)}
+              onChange={setTarget}
             />
+          ) : (
+            population !== '4' && (
+              <TextInput
+                label="Target ID"
+                value={target}
+                disabled={Boolean(replace)}
+                required
+                onChange={(e) => setTarget(e.target.value)}
+              />
+            )
           )}
           <TextInput
             label="Effective from (ISO date/time with offset)"

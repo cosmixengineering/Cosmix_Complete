@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useRef, useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
@@ -177,7 +178,9 @@ export function PayrollBankExports({
                             />
                           </td>
                           <td>{item.paymentReference}</td>
-                          <td>{item.employeeId}</td>
+                          <td>
+                            <EmployeeReference employeeId={item.employeeId} />
+                          </td>
                           <td>{money(item.amount, currency)}</td>
                         </tr>
                       ))}

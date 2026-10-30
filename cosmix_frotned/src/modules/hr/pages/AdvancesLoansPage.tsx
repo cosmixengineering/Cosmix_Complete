@@ -1,3 +1,5 @@
+import { formatEmployeeCode } from '@/utils/employee-code';
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useState, type FormEvent } from 'react';
 import {
   Coins,
@@ -80,7 +82,7 @@ export function AdvancesLoansPage() {
             <h1 className="adv-main-title">Advances and Loans</h1>
             <span className="adv-badge-live">
               <span className="adv-badge-live-dot" />
-              Live Payroll Linked
+              Advances & Loan Agreements
             </span>
           </div>
           <p className="adv-subtitle">
@@ -99,10 +101,13 @@ export function AdvancesLoansPage() {
           <div className="adv-kpi-content">
             <span className="adv-kpi-label">Pending Requests</span>
             <span className="adv-kpi-value">
-              {pendingRequestsQuery.data?.totalCount ??
-                (pendingRequestsQuery.isFetching ? '...' : 0)}
+              {pendingRequestsQuery.isError
+                ? 'Unavailable'
+                : pendingRequestsQuery.isFetching
+                  ? 'Loading…'
+                  : (pendingRequestsQuery.data?.totalCount ?? '—')}
             </span>
-            <span className="adv-kpi-sub">Awaiting HR Approval</span>
+            <span className="adv-kpi-sub">Awaiting authorized review</span>
           </div>
         </div>
 
@@ -113,8 +118,11 @@ export function AdvancesLoansPage() {
           <div className="adv-kpi-content">
             <span className="adv-kpi-label">Active Agreements</span>
             <span className="adv-kpi-value">
-              {activeAgreementsQuery.data?.totalCount ??
-                (activeAgreementsQuery.isFetching ? '...' : 0)}
+              {activeAgreementsQuery.isError
+                ? 'Unavailable'
+                : activeAgreementsQuery.isFetching
+                  ? 'Loading…'
+                  : (activeAgreementsQuery.data?.totalCount ?? '—')}
             </span>
             <span className="adv-kpi-sub">Ongoing Repayments</span>
           </div>
@@ -125,9 +133,9 @@ export function AdvancesLoansPage() {
             <CheckCircle2 size={16} />
           </div>
           <div className="adv-kpi-content">
-            <span className="adv-kpi-label">Payroll Sync</span>
-            <span className="adv-kpi-value">Automated</span>
-            <span className="adv-kpi-sub">Monthly Salary Deductions</span>
+            <span className="adv-kpi-label">Payroll deductions</span>
+            <span className="adv-kpi-value">Agreement ledger</span>
+            <span className="adv-kpi-sub">Review retained repayment entries</span>
           </div>
         </div>
 
@@ -136,9 +144,9 @@ export function AdvancesLoansPage() {
             <FileSignature size={16} />
           </div>
           <div className="adv-kpi-content">
-            <span className="adv-kpi-label">Policy Guard</span>
-            <span className="adv-kpi-value">Standard Terms</span>
-            <span className="adv-kpi-sub">Single Active Advance Limit</span>
+            <span className="adv-kpi-label">Repayment terms</span>
+            <span className="adv-kpi-value">Per agreement</span>
+            <span className="adv-kpi-sub">Review approved terms before processing</span>
           </div>
         </div>
       </div>
@@ -346,12 +354,11 @@ export function AdvanceRequests({
               setPage(1);
             }}
           />
-          <TextInput
-            label="Search by Employee ID or Code"
+          <EmployeePicker
+            label="Employee"
             value={employeeId}
-            placeholder="e.g. EMP-001 or UUID"
-            onChange={(event) => {
-              setEmployeeId(event.target.value);
+            onChange={(id) => {
+              setEmployeeId(id);
               setPage(1);
             }}
           />
@@ -400,11 +407,11 @@ export function AdvanceRequests({
                     </div>
                     <div>
                       <div className="adv-emp-name">
-                        {request.employeeName || request.employeeCode}
+                        {request.employeeName || formatEmployeeCode(request.employeeCode)}
                       </div>
                       <div className="adv-emp-meta">
-                        Code: <strong>{request.employeeCode}</strong> &bull; Kind:{' '}
-                        <span style={{ color: '#0369a1', fontWeight: 600 }}>{kindLabel}</span>
+                        Code: <strong>{formatEmployeeCode(request.employeeCode)}</strong> &bull;
+                        Kind: <span style={{ color: '#0369a1', fontWeight: 600 }}>{kindLabel}</span>
                       </div>
                     </div>
                   </div>
@@ -807,12 +814,11 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
         </div>
 
         <div className="adv-filter-grid">
-          <TextInput
-            label="Search by Employee ID"
+          <EmployeePicker
+            label="Employee"
             value={employeeId}
-            placeholder="e.g. EMP-001"
-            onChange={(event) => {
-              setEmployeeId(event.target.value);
+            onChange={(id) => {
+              setEmployeeId(id);
               setPage(1);
             }}
           />
@@ -880,11 +886,11 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
                     </div>
                     <div>
                       <div className="adv-emp-name">
-                        {agreement.employeeName || agreement.employeeCode}
+                        {agreement.employeeName || formatEmployeeCode(agreement.employeeCode)}
                       </div>
                       <div className="adv-emp-meta">
-                        Code: <strong>{agreement.employeeCode}</strong> &bull; Plan:{' '}
-                        <strong>{kindLabel}</strong> &bull; Effective:{' '}
+                        Code: <strong>{formatEmployeeCode(agreement.employeeCode)}</strong> &bull;
+                        Plan: <strong>{kindLabel}</strong> &bull; Effective:{' '}
                         <strong>{agreement.effectiveOn}</strong>
                       </div>
                     </div>

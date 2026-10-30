@@ -1,3 +1,5 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
+import { employeeSearchTerm, formatEmployeeCode } from '@/utils/employee-code';
 import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -48,7 +50,9 @@ function DocumentExpiryWorkspace() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [days, setDays] = useState('30');
-  const [selected, setSelected] = useState<Array<{ id: string; label: string; to: string }>>([]);
+  const [selected, setSelected] = useState<
+    Array<{ id: string; label: string; to: string; code: string }>
+  >([]);
   const [result, setResult] = useState<DocumentBatchResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -56,7 +60,8 @@ function DocumentExpiryWorkspace() {
   const term = useDebouncedValue(search, 300);
 
   const directory = useHrQuery(
-    'employees' + queryString({ search: term, page, pageSize: 25, includeArchived: true }),
+    'employees' +
+      queryString({ search: employeeSearchTerm(term), page, pageSize: 25, includeArchived: true }),
     employeePage,
     permissions,
   );
@@ -119,14 +124,14 @@ function DocumentExpiryWorkspace() {
   const handleSelectAllCurrentPage = () => {
     if (!directory.data?.items?.length) return;
     clearResult();
-    const newItems: Array<{ id: string; label: string; to: string }> = directory.data.items
-      .slice(0, 25)
-      .map((emp) => {
+    const newItems: Array<{ id: string; label: string; to: string; code: string }> =
+      directory.data.items.slice(0, 25).map((emp) => {
         const formattedLabel = emp.name
-          ? `${emp.name} (EMP-${String(emp.employeeNumber).padStart(4, '0')})`
-          : `Draft Employee #${emp.employeeNumber}`;
+          ? `${emp.name} (${formatEmployeeCode(emp.employeeNumber)})`
+          : `Draft ${formatEmployeeCode(emp.employeeNumber)}`;
         return {
           id: emp.id,
+          code: formatEmployeeCode(emp.employeeNumber),
           label: formattedLabel,
           to:
             emp.onboardingStatus === 2
@@ -142,9 +147,10 @@ function DocumentExpiryWorkspace() {
     if (!directory.data?.items?.length) return;
     const batch = directory.data.items.slice(0, 10).map((emp) => ({
       id: emp.id,
+      code: formatEmployeeCode(emp.employeeNumber),
       label: emp.name
-        ? `${emp.name} (EMP-${String(emp.employeeNumber).padStart(4, '0')})`
-        : `Draft Employee #${emp.employeeNumber}`,
+        ? `${emp.name} (${formatEmployeeCode(emp.employeeNumber)})`
+        : `Draft ${formatEmployeeCode(emp.employeeNumber)}`,
       to:
         emp.onboardingStatus === 2
           ? `/hr/employees/${emp.id}?section=files`
@@ -161,14 +167,14 @@ function DocumentExpiryWorkspace() {
   const handleExportCSV = () => {
     if (!result?.rows?.length) return;
     const headers = [
-      'Employee ID',
+      'Employee Code',
       'Missing Required Docs',
       'Expiring Documents',
       'Certifications',
       'Blockers',
     ];
     const rows = result.rows.map((row) => {
-      const empLabel = selected.find((e) => e.id === row.employeeId)?.label ?? row.employeeId;
+      const empLabel = selected.find((e) => e.id === row.employeeId)?.code ?? 'Unavailable';
       const missing =
         row.requiredDocuments
           .filter((d) => d.isMissing)
@@ -399,7 +405,7 @@ function DocumentExpiryWorkspace() {
                     {directory.data.items.map((emp) => {
                       const isChecked = selected.some((s) => s.id === emp.id);
                       const displayName = emp.name ? emp.name : `Draft Employee`;
-                      const empCode = `EMP-${String(emp.employeeNumber).padStart(4, '0')}`;
+                      const empCode = formatEmployeeCode(emp.employeeNumber);
                       const formattedLabel = `${displayName} (${empCode})`;
                       const initials =
                         displayName
@@ -425,6 +431,7 @@ function DocumentExpiryWorkspace() {
                                 ...prev,
                                 {
                                   id: emp.id,
+                                  code: formatEmployeeCode(emp.employeeNumber),
                                   label: formattedLabel,
                                   to:
                                     emp.onboardingStatus === 2
@@ -676,7 +683,9 @@ function DocumentExpiryWorkspace() {
                               gap: '4px',
                             }}
                           >
-                            <span>{empInfo?.label ?? row.employeeId}</span>
+                            <span>
+                              {empInfo?.label ?? <EmployeeReference employeeId={row.employeeId} />}
+                            </span>
                             <ExternalLink size={11} />
                           </Link>
                           {hasBlockers && (

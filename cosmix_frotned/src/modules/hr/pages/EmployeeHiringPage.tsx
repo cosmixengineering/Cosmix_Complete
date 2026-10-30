@@ -1,3 +1,4 @@
+import { formatEmployeeCode } from '@/utils/employee-code';
 import { useEffect, useRef, useState } from 'react';
 import {
   Link,
@@ -258,7 +259,7 @@ function HiringWorkspace({ employeeId }: { employeeId: string }) {
               <>
                 <div className="hr-page-heading">
                   <div>
-                    <p className="hr-kicker">EMPLOYEE {employee.employeeNumber}</p>
+                    <p className="hr-kicker">{formatEmployeeCode(employee.employeeNumber)}</p>
                     <h1>{employee.name ?? 'Employee draft'}</h1>
                   </div>
                   <span className="hr-status hr-status--neutral">

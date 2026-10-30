@@ -1,3 +1,4 @@
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useRef, useState } from 'react';
 import { z } from 'zod';
 import { Download, Eye, Plus, Trash2 } from 'lucide-react';
@@ -216,10 +217,10 @@ export function LeaveRequestForm({
           value={contact}
           onChange={(e) => setContact(e.target.value)}
         />
-        <TextInput
-          label="Reliever employee ID (optional)"
+        <EmployeePicker
+          label="Reliever employee (optional)"
           value={reliever}
-          onChange={(e) => setReliever(e.target.value)}
+          onChange={setReliever}
         />
       </div>
       <Notes label="Handover notes" value={handover} onChange={setHandover} />

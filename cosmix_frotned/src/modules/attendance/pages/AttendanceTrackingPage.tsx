@@ -1,3 +1,4 @@
+import { employeeSearchTerm, formatEmployeeCode } from '@/utils/employee-code';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -56,7 +57,12 @@ function TrackingWorkspace() {
   const allowed = access.can('hr.employees.read') && access.can('attendance.summaries.read');
   const directory = useAttendanceQuery(
     '/hr/employees' +
-      queryString({ page, pageSize: 10, ...approvedAttendanceFilter, search: filter }),
+      queryString({
+        page,
+        pageSize: 10,
+        ...approvedAttendanceFilter,
+        search: employeeSearchTerm(filter),
+      }),
     trackingEmployees,
     allowed,
   );
@@ -514,7 +520,7 @@ function EmployeeName({ employee }: { employee: TrackingEmployee }) {
   return (
     <div
       className="tracking-employee"
-      title={`${employee.name ?? 'Employee'} (EMP-${employee.employeeNumber})`}
+      title={`${employee.name ?? 'Employee'} (${formatEmployeeCode(employee.employeeNumber)})`}
     >
       <span className="tracking-avatar" aria-hidden="true">
         {(employee.name ?? 'Employee')
@@ -525,7 +531,7 @@ function EmployeeName({ employee }: { employee: TrackingEmployee }) {
       </span>
       <div>
         <strong>{employee.name ?? 'Employee'}</strong>
-        <small>EMP-{employee.employeeNumber}</small>
+        <small>{formatEmployeeCode(employee.employeeNumber)}</small>
       </div>
     </div>
   );
@@ -591,7 +597,9 @@ function TrackingDayDetails({
           <div>
             <h4 className="tracking-modal-emp-name">{row.employee.name ?? 'Employee'}</h4>
             <div className="tracking-modal-emp-meta">
-              <span className="tracking-modal-code">EMP-{row.employee.employeeNumber}</span>
+              <span className="tracking-modal-code">
+                {formatEmployeeCode(row.employee.employeeNumber)}
+              </span>
               <span className="tracking-modal-dot">•</span>
               <span className="tracking-modal-date-chip">
                 <Calendar size={12} />

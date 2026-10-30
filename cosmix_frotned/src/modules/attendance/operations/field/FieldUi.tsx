@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import { ArrowRight, RefreshCw } from 'lucide-react';
@@ -55,7 +56,15 @@ export function RecordFields({
       {Object.entries(values).map(([key, value]) => (
         <div key={key} style={{ display: 'contents' }}>
           <dt>{key}</dt>
-          <dd>{value === null ? 'Not supplied' : String(value)}</dd>
+          <dd>
+            {key === 'Employee' && typeof value === 'string' ? (
+              <EmployeeReference employeeId={value} />
+            ) : value === null ? (
+              'Not supplied'
+            ) : (
+              String(value)
+            )}
+          </dd>
         </div>
       ))}
     </dl>

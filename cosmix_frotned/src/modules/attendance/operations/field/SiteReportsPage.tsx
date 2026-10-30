@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ClipboardList, MessageSquare, Search, ShieldCheck, X } from 'lucide-react';
@@ -293,7 +294,7 @@ function ReportsWorkspace({ siteId, own = false }: { siteId?: string; own?: bool
                           <tr key={r.id}>
                             <td>{r.receivedAtUtc}</td>
                             <td>
-                              {r.employeeId}
+                              <EmployeeReference employeeId={r.employeeId} />
                               <br />
                               {r.siteId}
                             </td>

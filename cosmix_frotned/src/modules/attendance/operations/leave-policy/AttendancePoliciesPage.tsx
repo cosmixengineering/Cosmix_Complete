@@ -1,3 +1,4 @@
+import { EmployeeReference, EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -445,8 +446,13 @@ function PolicyDetail({ policyId }: { policyId: string }) {
                 {assignments.data.items.map((row) => (
                   <details key={row.id}>
                     <summary>
-                      {row.target}: {row.targetId}, {row.effectiveFrom} to{' '}
-                      {row.effectiveTo ?? 'open'}
+                      {row.target}:{' '}
+                      {row.target === 'employee' ? (
+                        <EmployeeReference employeeId={row.targetId} />
+                      ) : (
+                        row.targetId
+                      )}
+                      , {row.effectiveFrom} to {row.effectiveTo ?? 'open'}
                     </summary>
                     <EvidenceRecord value={row} />
                     {publish && !form && !row.endId && row.target !== 'role' && (
@@ -812,12 +818,23 @@ function AssignmentForm({
                   setTargetId('');
                 }}
               />
-              <TextInput
-                label="Explicit target ID"
-                required
-                value={targetId}
-                onChange={(e) => setTargetId(e.target.value)}
-              />
+              <>
+                {target === 'employee' ? (
+                  <EmployeePicker
+                    label="Employee"
+                    required
+                    value={targetId}
+                    onChange={setTargetId}
+                  />
+                ) : (
+                  <TextInput
+                    label="Explicit target ID"
+                    required
+                    value={targetId}
+                    onChange={(e) => setTargetId(e.target.value)}
+                  />
+                )}
+              </>
             </>
           )}
           <TextInput

@@ -1,3 +1,4 @@
+import { EmployeeReference, EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Eye, Filter, RefreshCw, Save } from 'lucide-react';
@@ -62,7 +63,9 @@ function SaveInputs({
     >
       <dl className="attendance-record">
         <dt>Employee</dt>
-        <dd>{source.employeeId}</dd>
+        <dd>
+          <EmployeeReference employeeId={source.employeeId} />
+        </dd>
         <dt>Month</dt>
         <dd>{source.monthStart}</dd>
         <dt>Expected revision</dt>
@@ -335,7 +338,7 @@ function PayrollRecord({
     <>
       <div className="attendance-heading">
         <h2>
-          {employee} / {period}
+          <EmployeeReference employeeId={employee} /> / {period}
         </h2>
         <Command
           icon={RefreshCw}
@@ -467,11 +470,12 @@ function PayrollContent() {
       >
         <fieldset disabled={editing}>
           <div className="attendance-grid">
-            <TextInput
-              label="Employee ID"
+            <EmployeePicker
+              label="Employee"
               value={employee}
               required
-              onChange={(event) => setEmployee(event.target.value.trim())}
+              disabled={editing}
+              onChange={setEmployee}
             />
             <TextInput
               label="Business month"

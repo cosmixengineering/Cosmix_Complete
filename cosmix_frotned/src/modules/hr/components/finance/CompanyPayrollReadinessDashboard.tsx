@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { useFinanceAccess } from '../../hooks/use-finance-access';
 import { useFinanceQuery } from '../../hooks/use-finance-queries';
@@ -439,9 +440,16 @@ export const CompanyPayrollReadinessDashboard = () => {
                           {issue.code}
                         </td>
                         <td style={{ padding: '0.75rem 1rem' }}>
-                          {issue.employeeName
-                            ? `${issue.employeeName} (${issue.employeeCode})`
-                            : 'System Wide'}
+                          {issue.employeeId || issue.employeeCode ? (
+                            <EmployeeReference
+                              employeeId={issue.employeeId}
+                              employeeNumber={issue.employeeCode}
+                              employeeName={issue.employeeName}
+                              showName
+                            />
+                          ) : (
+                            'System Wide'
+                          )}
                         </td>
                         <td style={{ padding: '0.75rem 1rem', color: '#374151' }}>
                           {issue.message}
@@ -501,9 +509,16 @@ export const CompanyPayrollReadinessDashboard = () => {
                           {warn.code}
                         </td>
                         <td style={{ padding: '0.75rem 1rem' }}>
-                          {warn.employeeName
-                            ? `${warn.employeeName} (${warn.employeeCode})`
-                            : 'System Wide'}
+                          {warn.employeeId || warn.employeeCode ? (
+                            <EmployeeReference
+                              employeeId={warn.employeeId}
+                              employeeNumber={warn.employeeCode}
+                              employeeName={warn.employeeName}
+                              showName
+                            />
+                          ) : (
+                            'System Wide'
+                          )}
                         </td>
                         <td style={{ padding: '0.75rem 1rem', color: '#374151' }}>
                           {warn.message}

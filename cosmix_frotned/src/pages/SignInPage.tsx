@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/feedback/LoadingState';
 import { TextInput } from '@/components/forms/TextInput';
 import { PasswordInput } from '@/components/forms/PasswordInput';
+import { SelectInput } from '@/components/forms/SelectInput';
 import { useAuth } from '@/auth/use-auth';
 import { authAdapter } from '@/auth/adapter';
 import { authErrorMessage } from '@/auth/messages';
 import { useChallengeTime } from '@/auth/ChallengeStatus';
-import { type OtpChallenge, isSystemAdmin } from '@/auth/contracts';
+import { type OtpChallenge } from '@/auth/contracts';
+import { workspaceHome } from '@/auth/workspace-access';
 import { LocalTestOtp } from '@/auth/LocalTestOtp';
 import logo from '@/assets/images/cosmix-logo.png';
 
@@ -83,9 +85,8 @@ export function SignInPage() {
     }
   }
 
-  const isAdmin = isSystemAdmin(user);
   if (status === 'authenticated') {
-    return <Navigate to={isAdmin ? '/admin/dashboard' : '/hr/dashboard'} replace />;
+    return <Navigate to={workspaceHome(user)} replace />;
   }
   if (status === 'loading') {
     return <LoadingState fullscreen message="Verifying secure enterprise session..." />;
@@ -168,19 +169,19 @@ export function SignInPage() {
                     required
                     maxLength={1024}
                   />
-                  <label className="hr-field">
-                    Verification method
-                    <select
-                      value={authenticator ? 'authenticator' : 'sms'}
-                      onChange={(event) => {
-                        setAuthenticator(event.target.value === 'authenticator');
-                        setRecoveryCode(false);
-                      }}
-                    >
-                      <option value="sms">SMS code</option>
-                      <option value="authenticator">Authenticator / recovery code</option>
-                    </select>
-                  </label>
+                  <SelectInput
+                    label="Verification method"
+                    name="verificationMethod"
+                    value={authenticator ? 'authenticator' : 'sms'}
+                    options={[
+                      { value: 'sms', label: 'SMS code' },
+                      { value: 'authenticator', label: 'Authenticator / recovery code' },
+                    ]}
+                    onChange={(event) => {
+                      setAuthenticator(event.target.value === 'authenticator');
+                      setRecoveryCode(false);
+                    }}
+                  />
                   <div className="auth-form-link">
                     <Link className="text-link" to="/forgot-password">
                       Forgot password?

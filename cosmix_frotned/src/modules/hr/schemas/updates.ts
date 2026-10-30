@@ -49,6 +49,7 @@ export const currentUpdateSchema = z.object({
   asOf: date,
   current: updateValueSchema,
   scheduled: updateValueSchema.nullable(),
+  evidenceIssue: z.string().nullish(),
 });
 export const changeSummarySchema = z.object({
   id,
@@ -79,6 +80,7 @@ export const changeRequestSchema = z.object({
   section: z.number(),
   before: updateValueSchema,
   proposed: updateDataSchema,
+  repairsIdentityEvidence: z.boolean().optional(),
   effectiveFrom: date.nullable(),
   reason: z.string(),
   decisions: z.array(

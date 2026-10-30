@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState, useMemo, type ReactNode } from 'react';
 import {
   FileText,
@@ -92,10 +93,12 @@ function formatDocumentType(val: unknown): string {
 function formatRequestValue(
   key: string,
   val: unknown,
-): { text: string; isMuted: boolean; isCode?: boolean; isDocType?: boolean } {
+): { text: ReactNode; isMuted: boolean; isCode?: boolean; isDocType?: boolean } {
   if (isEmptyVal(val)) {
     return { text: 'Not set', isMuted: true };
   }
+  if (key === 'reportingManagerEmployeeId' && typeof val === 'string')
+    return { text: <EmployeeReference employeeId={val} showName />, isMuted: false };
   if (typeof val === 'boolean') {
     return { text: val ? 'Yes' : 'No', isMuted: false };
   }
@@ -317,10 +320,10 @@ export function ChangeRequestReviewViewer({
 
   const totalModified = modifiedFields.length;
 
-  const empName = employee?.name || `Employee #${request.employeeId.slice(0, 8)}`;
-  const empCode = employee?.employeeNumber
-    ? `EMP-${String(employee.employeeNumber).padStart(4, '0')}`
-    : `ID-${request.employeeId.slice(0, 6)}`;
+  const empName = employee?.name || 'Employee name unavailable';
+  const empCode = (
+    <EmployeeReference employeeId={request.employeeId} employeeNumber={employee?.employeeNumber} />
+  );
 
   const getSectionIcon = () => {
     switch (section.name) {
@@ -504,7 +507,11 @@ export function ChangeRequestReviewViewer({
                                     ? 'change-field-value--muted'
                                     : ''
                               } ${fmt.isCode ? 'change-code-chip' : ''}`}
-                              title={String(f.beforeVal ?? '')}
+                              title={
+                                f.key === 'reportingManagerEmployeeId'
+                                  ? undefined
+                                  : String(f.beforeVal ?? '')
+                              }
                             >
                               {fmt.isDocType ? (
                                 <span className="hr-doc-type-chip">{fmt.text}</span>
@@ -554,7 +561,11 @@ export function ChangeRequestReviewViewer({
                                     ? 'change-field-value--muted'
                                     : ''
                               } ${fmt.isCode ? 'change-code-chip' : ''}`}
-                              title={String(f.proposedVal ?? '')}
+                              title={
+                                f.key === 'reportingManagerEmployeeId'
+                                  ? undefined
+                                  : String(f.proposedVal ?? '')
+                              }
                             >
                               {fmt.isDocType ? (
                                 <span className="hr-doc-type-chip">{fmt.text}</span>

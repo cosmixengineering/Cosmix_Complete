@@ -3,6 +3,50 @@ import { errorMessage } from '../utils/messages';
 // Server conflict/validation codes for allowances, advances, vehicles and payroll handoff.
 // Anything unknown still falls back to the shared status-based message.
 const codes: Record<string, string> = {
+  payroll_reconciliation_batch_required: 'Select a frozen payroll batch for the comparison.',
+  payroll_reconciliation_batch_period_mismatch:
+    'The frozen batch must cover the selected full month in PKR.',
+  payroll_reconciliation_mapping_required:
+    'Map all required fields to distinct existing source headers.',
+  payroll_reconciliation_single_sheet_required:
+    'Choose a source with exactly one nonempty worksheet and at most 5,000 rows.',
+  payroll_reconciliation_duplicate_header:
+    'The sheet contains duplicate column headers. Correct the source file.',
+  payroll_reconciliation_missing_cell:
+    'A required cell is missing. Supply an explicit amount, including zero where applicable.',
+  payroll_reconciliation_money_invalid:
+    'Use nonnegative plain PKR numbers with at most two decimal places in every amount cell.',
+  payroll_reconciliation_employee_code_invalid:
+    'Use the retained employee code in every source row.',
+  payroll_reconciliation_row_totals_invalid:
+    'Source gross, deduction, statutory and net amounts do not reconcile. Correct the sheet.',
+  payroll_reconciliation_duplicate_employee:
+    'The source contains a duplicate employee. Correct the sheet before comparing.',
+  payroll_reconciliation_population_mismatch:
+    'The sheet and frozen payroll have different employee populations. Resolve missing employees before approval.',
+  payroll_reconciliation_active_run_exists:
+    'This frozen batch already has an active parallel run. Open the saved run and its review history.',
+  payroll_reconciliation_version_conflict:
+    'This run changed. Reload the saved evidence and review its latest version.',
+  payroll_reconciliation_state_conflict:
+    'This review stage is no longer available. Reload the saved run.',
+  payroll_reconciliation_source_changed:
+    'The frozen payroll source changed. Review the source before proceeding.',
+  payroll_reconciliation_accrual_required:
+    'The salary accrual must be posted before Finance can approve this comparison.',
+  payroll_reconciliation_accrual_mismatch:
+    'Retained payroll accruals do not reconcile to the frozen salary. Review the accounting evidence.',
+  payroll_reconciliation_account_mismatch:
+    'Retained journal accounts do not match approved posting rules. Review the account mappings.',
+  payroll_reconciliation_finance_changed:
+    'Finance evidence changed since review. Resolve the changed accounting evidence before approval.',
+  payroll_reconciliation_explanation_invalid:
+    'Explain every variance using a valid root cause and a single paragraph of evidence. A nonzero variance cannot be an exact match.',
+  payroll_reconciliation_explanation_membership:
+    'The explanations must match every retained employee and component. Reload the run before reviewing.',
+  payroll_reconciliation_evidence_invalid:
+    'Retained comparison evidence could not be verified. Contact support with the run reference.',
+  payroll_reconciliation_not_found: 'The saved parallel payroll run could not be found.',
   salary_import_source_already_uploaded:
     'This file is already retained. Open Retained imports to resume its mapping or view its submission receipt.',
   salary_import_already_submitted:

@@ -1,3 +1,4 @@
+import { formatEmployeeCode } from '@/utils/employee-code';
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Primitive from '@radix-ui/react-dialog';
@@ -417,7 +418,7 @@ export function CreateWorksiteModal({ onClose, onSaved }: CreateWorksiteModalPro
                         { value: '', label: 'e.g. Engr. Imran Saeed' },
                         ...employees.map((emp) => ({
                           value: emp.id,
-                          label: `${emp.name ?? `Employee #${emp.employeeNumber}`} (#${emp.employeeNumber})`,
+                          label: `${formatEmployeeCode(emp.employeeNumber)} · ${emp.name ?? 'Unnamed employee'}`,
                         })),
                       ]}
                     />

@@ -1,7 +1,19 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-import { KeyRound, RefreshCw, ShieldCheck, Smartphone } from 'lucide-react';
+import {
+  KeyRound,
+  RefreshCw,
+  ShieldCheck,
+  Smartphone,
+  Globe,
+  Lock,
+  UserCheck,
+  CheckCircle2,
+  AlertCircle,
+  Shield,
+} from 'lucide-react';
 import { request } from '@/services/api/http-client';
 import { ApiError } from '@/services/api/api-error';
 import { Button } from '@/components/ui/Button';
@@ -24,8 +36,8 @@ import {
   mobileProvisioningResultSchema,
   accessAccountSchema,
   firstWebCredentialsSchema,
-  additionalRoleAssignmentSchema,
   initialRoleAssignmentSchema,
+  additionalRoleAssignmentSchema,
   accessReasonSchema,
   accessStatusLabels,
   type AccessRole,
@@ -126,11 +138,13 @@ function AccessSetupPanel({
   const [passwordDirty, setPasswordDirty] = useState(false);
   const [additionalDirty, setAdditionalDirty] = useState(false);
   const [additionalRevision, setAdditionalRevision] = useState(0);
+
   const canRead =
     approved &&
     z.uuid().safeParse(employeeId).success &&
     access.can('hr.employees.submissions.review', 'access.accounts.read');
   const canRoles = access.can('access.roles.read');
+
   const query = useQuery({
     queryKey: ['hr-access-setup', access.subject, access.user?.grants, employeeId, canRoles],
     queryFn: async ({ signal }) => {
@@ -168,17 +182,21 @@ function AccessSetupPanel({
     refetchOnReconnect: false,
     refetchOnMount: 'always',
   });
+
   const dirty =
     !!roleId || !!reason || !!email || passwordDirty || additionalDirty || uncertainAssignment;
   useDirtyForm(dirty || pending);
+
   useEffect(() => {
     onDirty?.(dirty);
     return () => onDirty?.(false);
   }, [dirty, onDirty]);
+
   useEffect(() => {
     onBusy?.(pending);
     return () => onBusy?.(false);
   }, [pending, onBusy]);
+
   const data = query.data;
   const setup = data?.setup;
   const account = setup?.account;
@@ -186,7 +204,7 @@ function AccessSetupPanel({
     employeeId === access.user?.account?.employeeId ||
     (!!account && account.id === access.user?.account?.accountId);
   const role = data?.roles.find((item) => item.id === roleId);
-  // Session self-service grants are capped to Self; only the server can prove original All delegation.
+
   const mayDelegate = (code: string) => {
     const definition = data?.catalog.find((item) => item.code === code);
     return (
@@ -196,6 +214,7 @@ function AccessSetupPanel({
           !!access.user?.grants.some((grant) => grant.permission === code)))
     );
   };
+
   const selectable =
     data?.roles.filter(
       (item) =>
@@ -205,6 +224,7 @@ function AccessSetupPanel({
         item.permissions.length > 0 &&
         item.permissions.every(mayDelegate),
     ) ?? [];
+
   const systemTarget = data?.assignments.some((assignment) => {
     const assignedRole = data.roles.find((item) => item.id === assignment.roleId);
     return (
@@ -213,6 +233,7 @@ function AccessSetupPanel({
       (!assignment.effectiveTo || Date.parse(assignment.effectiveTo) > data.readAt)
     );
   });
+
   const delegatedTarget =
     canRoles &&
     !systemTarget &&
@@ -236,6 +257,7 @@ function AccessSetupPanel({
         const assignedRole = data.roles.find((item) => item.id === assignment.roleId);
         return !!assignedRole && assignedRole.permissions.every(mayDelegate);
       });
+
   const locked =
     pending ||
     query.isFetching ||
@@ -245,6 +267,7 @@ function AccessSetupPanel({
     mustReload ||
     self ||
     !access.user?.account;
+
   const canAssign =
     !locked &&
     !!account &&
@@ -253,6 +276,7 @@ function AccessSetupPanel({
     access.can('access.accounts.assign', 'access.roles.permissions.manage') &&
     accessReasonSchema.safeParse(reason).success &&
     selectable.some((item) => item.id === roleId);
+
   const canMobile =
     !locked &&
     !!account &&
@@ -262,6 +286,7 @@ function AccessSetupPanel({
     (account.status === 1 || account.status === 3) &&
     delegatedTarget &&
     access.can('access.accounts.mobile.manage', 'access.roles.permissions.manage');
+
   const canWeb =
     !locked &&
     !!account &&
@@ -270,6 +295,7 @@ function AccessSetupPanel({
     (account.status === 1 || account.status === 3) &&
     delegatedTarget &&
     access.can('access.accounts.web.manage', 'access.roles.permissions.manage');
+
   const canAdditional =
     !locked &&
     canRoles &&
@@ -344,26 +370,12 @@ function AccessSetupPanel({
       body = assignment.data;
       assignmentIntent.current = { path, body, key: crypto.randomUUID(), additional };
     }
-    if (additional && !retryAssignment) {
-      const assignment = additionalRoleAssignmentSchema.safeParse(body);
-      if (
-        !assignment.success ||
-        (assignment.data.effectiveTo && Date.parse(assignment.data.effectiveTo) <= Date.now())
-      ) {
-        setError(
-          'The additional assignment is invalid or its end date is no longer in the future.',
-        );
-        return false;
-      }
-    }
     active.current = true;
     setPending(true);
     setMustReload(true);
     setError('');
     setMessage('');
     try {
-      // Only assignment payloads/keys remain in memory for an explicit identical retry.
-      // Credential payloads are never retained or replayed.
       const response = await request(path, {
         method: 'POST',
         body,
@@ -417,349 +429,888 @@ function AccessSetupPanel({
   if (!approved)
     return <p className="hr-notice">Access setup requires an approved hiring employee.</p>;
   if (!canRead) return <Denied />;
+
+  const rolePermissions = role ? role.permissions : [];
+
   return (
-    <section aria-label="Employee access setup">
-      <div className="hr-actions">
-        <h2>Employee access</h2>
+    <section className="emp-access-container" aria-label="Employee access setup">
+      {/* Header */}
+      <div className="emp-access-header">
+        <div className="emp-access-header-left">
+          <h2 className="emp-access-title">Employee Access & Channels</h2>
+          <p className="emp-access-subtitle">
+            Configure baseline role, login credentials (Web portal & Mobile app), and delegated scopes.
+          </p>
+        </div>
         <Button
           variant="secondary"
+          className="access-btn"
           disabled={pending || query.isFetching}
           onClick={() => void reload()}
         >
-          <RefreshCw size={16} /> Refresh
+          <RefreshCw size={13} className={query.isFetching ? 'animate-spin' : ''} />
+          <span>{query.isFetching ? 'Refreshing…' : 'Refresh'}</span>
         </Button>
       </div>
-      {query.isPending && <p role="status">Loading current access...</p>}
+
+      {query.isPending && (
+        <p role="status" style={{ fontSize: '12.5px', color: '#64748b', margin: 0 }}>
+          Loading current access setup…
+        </p>
+      )}
       {query.isError && (
-        <p role="alert" className="hr-message hr-message--error">
+        <p role="alert" className="hr-message hr-message--error" style={{ margin: 0 }}>
           {errorMessage(query.error)}
         </p>
       )}
       {error && (
-        <p role="alert" className="hr-message hr-message--error">
+        <p role="alert" className="hr-message hr-message--error" style={{ margin: 0 }}>
           {error}
         </p>
       )}
-      {uncertainAssignment && (
-        <Button
-          variant="secondary"
-          disabled={pending || query.isFetching}
-          onClick={() => {
-            const intent = assignmentIntent.current;
-            if (intent)
-              void write(
-                intent.path,
-                intent.body,
-                initialAccessResultSchema,
-                'Assignment confirmed and current access reloaded.',
-                intent.additional,
-                true,
-              );
-          }}
-        >
-          Retry same assignment
-        </Button>
-      )}
       {message && (
-        <p role="status" className="hr-message">
+        <p role="status" className="hr-message hr-message--success" style={{ margin: 0 }}>
           {message}
         </p>
       )}
-      {setup && !query.isError && (
-        <>
-          <dl className="hr-dl">
-            <div>
-              <dt>Account status</dt>
-              <dd>{account ? accessStatusLabels[account.status] : 'No existing account'}</dd>
-            </div>
-            <div>
-              <dt>Initial access assigned</dt>
-              <dd>{setup.initialAccessAssigned ? 'Yes' : 'No'}</dd>
-            </div>
-            <div>
-              <dt>Mobile requested in hiring</dt>
-              <dd>{setup.mobileAccessRequested ? 'Yes' : 'No'}</dd>
-            </div>
-            <div>
-              <dt>Phone enrolled</dt>
-              <dd>{setup.mobilePhoneEnrolled ? 'Yes' : 'No'}</dd>
-            </div>
-            <div>
-              <dt>Mobile channel</dt>
-              <dd>{account?.mobileAccessEnabled ? 'Enabled on server' : 'Not enabled'}</dd>
-            </div>
-            <div>
-              <dt>Web channel</dt>
-              <dd>{account?.webAccessEnabled ? 'Enabled on server' : 'Not enabled'}</dd>
-            </div>
-            <div>
-              <dt>MFA required</dt>
-              <dd>{account?.mfaRequired ? 'Yes' : 'No'}</dd>
-            </div>
-          </dl>
-          {!account && (
-            <p className="hr-notice">
-              No existing account is available. Account creation requires the approved backend
-              handoff.
-            </p>
-          )}
-          {self && (
-            <p className="hr-notice">
-              Administrators cannot configure their own onboarding access.
-            </p>
-          )}
-          {!access.user?.account && (
-            <p className="hr-notice">
-              Current administrator identity is unavailable. Reload your session before configuring
-              access.
-            </p>
-          )}
-          {query.isStale && (
-            <p className="hr-notice">
-              This access snapshot is stale. Refresh before configuring access.
-            </p>
-          )}
-          {data?.assignments.map((assignment) => (
-            <p key={assignment.id}>
-              {assignment.roleCode} &middot; {assignment.revokedAt ? 'Revoked' : 'Assigned'}{' '}
-              &middot; Effective {assignment.effectiveFrom}
-              {assignment.effectiveTo ? ` to ${assignment.effectiveTo}` : ''} &middot; Scopes{' '}
-              {assignment.scopes
-                .map(
-                  (scope) =>
-                    `${['', 'Self', 'Employee', 'Department', 'Team', 'Site', 'Project', 'All'][scope.kind]}${scope.targetId ? ` (${scope.targetId})` : ''}`,
-                )
-                .join(', ')}
-            </p>
-          ))}
-          <h3>Initial role</h3>
-          {!canRoles ? (
-            <p className="hr-notice">Role catalogue access requires access.roles.read.</p>
-          ) : (
-            <>
-              <SelectInput
-                label="Existing role"
-                value={roleId}
-                disabled={locked || !!setup.initialAccessAssigned || !account}
-                options={[
-                  { value: '', label: 'Select a role' },
-                  ...selectable.map((item) => ({
-                    value: item.id,
-                    label: `${item.name} (${item.code})`,
-                  })),
-                ]}
-                onChange={(event) => setRoleId(event.target.value)}
-              />
-              {!selectable.length && (
-                <p className="hr-notice">
-                  No active non-system role with delegable catalogue permissions is available.
-                </p>
-              )}
-              {role && (
-                <ul>
-                  {role.permissions.map((code) => {
-                    const definition = data?.catalog.find((item) => item.code === code);
-                    return (
-                      <li key={code}>
-                        {code}: {definition?.description ?? 'Unsupported permission'}
-                        {definition?.sensitive ? ' (sensitive)' : ''}
-                        {definition?.management ? ' (management)' : ''}
-                        {definition?.selfService ? ' (self-service)' : ''}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-              <p className="muted">
-                Initial access uses Self scope. Additional role access is configured separately
-                below. System-role assignment requires separate access administration. The server
-                verifies All-scope delegation for every role permission.
-              </p>
-              <TextInput
-                label="Reason for initial access"
-                required
-                maxLength={1000}
-                value={reason}
-                disabled={locked || !!setup.initialAccessAssigned || !account}
-                onChange={(event) => setReason(event.target.value)}
-              />
-              <Button
-                disabled={!canAssign}
-                onClick={() => {
-                  if (!canAssign || !account || !role) return;
-                  void write(
-                    `/access/accounts/${account.id}/assignments`,
-                    {
-                      roleId: role.id,
-                      scopes: [{ kind: 1, targetId: null }],
-                      effectiveFrom: new Date().toISOString(),
-                      effectiveTo: null,
-                      expectedAccountVersion: account.version,
-                      expectedRoleVersion: role.version,
-                      configureAsInitialAccess: true,
-                      reason,
-                    },
-                    initialAccessResultSchema,
-                    'Initial Self access saved and current access reloaded.',
-                  );
-                }}
-              >
-                <ShieldCheck size={16} /> Assign initial access
-              </Button>
-            </>
-          )}
-          {account && setup.initialAccessAssigned && data && (
-            <AdditionalRoleAssignment
-              key={additionalRevision}
-              account={account}
-              roles={selectable}
-              catalog={data.catalog}
-              disabled={!canAdditional}
-              onDirty={setAdditionalDirty}
-              onAssign={async (payload) => {
-                if (!canAdditional) return false;
-                if (
-                  (email || passwordDirty) &&
-                  !window.confirm('Discard unsaved web credentials and assign the additional role?')
-                )
-                  return false;
-                clearPasswords();
-                setEmail('');
-                return write(
-                  `/access/accounts/${account.id}/assignments`,
-                  payload,
+
+      {uncertainAssignment && (
+        <div
+          style={{
+            background: '#fffbeb',
+            border: '1px solid #fde68a',
+            borderRadius: '6px',
+            padding: '12px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}
+        >
+          <span style={{ fontSize: '12px', color: '#92400e' }}>
+            Previous assignment status could not be verified. Retry with identical saved key or refresh.
+          </span>
+          <Button
+            variant="secondary"
+            className="access-btn"
+            disabled={pending || query.isFetching}
+            onClick={() => {
+              const intent = assignmentIntent.current;
+              if (intent)
+                void write(
+                  intent.path,
+                  intent.body,
                   initialAccessResultSchema,
-                  'Additional role assignment saved and current access reloaded. Login channels are unchanged.',
+                  'Assignment confirmed and current access reloaded.',
+                  intent.additional,
                   true,
                 );
+            }}
+          >
+            Retry same assignment
+          </Button>
+        </div>
+      )}
+
+      {setup && !query.isError && (
+        <>
+          {/* 1. Account & Channels Overview Cards */}
+          <div className="access-overview-grid">
+            {/* Stat 1: Account Status */}
+            <div className="access-stat-card">
+              <div className="access-stat-top">
+                <div className="access-stat-icon access-stat-icon--account">
+                  <UserCheck size={14} />
+                </div>
+                <span className="access-stat-label">Account</span>
+              </div>
+              <div className="access-stat-value">
+                {account ? (
+                  account.status === 0 ? (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        background: '#fffbeb',
+                        color: '#b45309',
+                        border: '1px solid #fde68a',
+                        padding: '2px 7px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Pending Setup
+                    </span>
+                  ) : account.status === 1 ? (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        background: '#eff6ff',
+                        color: '#2563eb',
+                        border: '1px solid #dbeafe',
+                        padding: '2px 7px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Ready for Invite
+                    </span>
+                  ) : account.status === 3 ? (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        background: '#ecfdf5',
+                        color: '#047857',
+                        border: '1px solid #a7f3d0',
+                        padding: '2px 7px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Active
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        background: '#f8fafc',
+                        color: '#475569',
+                        border: '1px solid #e2e8f0',
+                        padding: '2px 7px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {accessStatusLabels[account.status]}
+                    </span>
+                  )
+                ) : (
+                  <span style={{ fontSize: '11.5px', color: '#94a3b8' }}>No account</span>
+                )}
+              </div>
+            </div>
+
+            {/* Stat 2: Initial Role */}
+            <div className="access-stat-card">
+              <div className="access-stat-top">
+                <div className="access-stat-icon access-stat-icon--role">
+                  <ShieldCheck size={14} />
+                </div>
+                <span className="access-stat-label">Initial Role</span>
+              </div>
+              <div className="access-stat-value">
+                {setup.initialAccessAssigned ? (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: '#ecfdf5',
+                      color: '#047857',
+                      border: '1px solid #a7f3d0',
+                      padding: '2px 7px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <CheckCircle2 size={11} /> Assigned (Self)
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: '#fef2f2',
+                      color: '#b91c1c',
+                      border: '1px solid #fecaca',
+                      padding: '2px 7px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <AlertCircle size={11} /> Not Assigned
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Stat 3: Web Channel */}
+            <div className="access-stat-card">
+              <div className="access-stat-top">
+                <div className="access-stat-icon access-stat-icon--web">
+                  <Globe size={14} />
+                </div>
+                <span className="access-stat-label">Web Portal</span>
+              </div>
+              <div className="access-stat-value">
+                {account?.webAccessEnabled ? (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: '#ecfdf5',
+                      color: '#047857',
+                      border: '1px solid #a7f3d0',
+                      padding: '2px 7px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <CheckCircle2 size={11} /> Active
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: '#f8fafc',
+                      color: '#64748b',
+                      border: '1px solid #e2e8f0',
+                      padding: '2px 7px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Disabled
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Stat 4: Mobile App */}
+            <div className="access-stat-card">
+              <div className="access-stat-top">
+                <div className="access-stat-icon access-stat-icon--mobile">
+                  <Smartphone size={14} />
+                </div>
+                <span className="access-stat-label">Mobile App</span>
+              </div>
+              <div className="access-stat-value">
+                {account?.mobileAccessEnabled ? (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: '#ecfdf5',
+                      color: '#047857',
+                      border: '1px solid #a7f3d0',
+                      padding: '2px 7px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <CheckCircle2 size={11} /> Active
+                  </span>
+                ) : setup.mobileAccessRequested ? (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: '#eff6ff',
+                      color: '#2563eb',
+                      border: '1px solid #dbeafe',
+                      padding: '2px 7px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Requested
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: '#f8fafc',
+                      color: '#64748b',
+                      border: '1px solid #e2e8f0',
+                      padding: '2px 7px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Not Requested
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {!account && (
+            <div className="hr-notice" style={{ margin: 0 }}>
+              No existing account is available. Account creation requires the approved backend handoff.
+            </div>
+          )}
+          {self && (
+            <div className="hr-notice" style={{ margin: 0 }}>
+              Administrators cannot configure their own onboarding access.
+            </div>
+          )}
+          {!access.user?.account && (
+            <div className="hr-notice" style={{ margin: 0 }}>
+              Current administrator identity is unavailable. Reload your session before configuring access.
+            </div>
+          )}
+
+          {/* 2. Active Role Assignments List */}
+          {data?.assignments && data.assignments.length > 0 && (
+            <div className="access-step-card">
+              <div className="access-card-head">
+                <div className="access-card-head-left">
+                  <div className="access-card-icon-badge">
+                    <ShieldCheck size={16} />
+                  </div>
+                  <div>
+                    <h3 className="access-card-title">
+                      Currently Assigned Roles ({data.assignments.length})
+                    </h3>
+                    <p className="access-card-desc">
+                      Active and historical role assignments for this employee
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="access-assignments-list">
+                {data.assignments.map((assignment) => (
+                  <div key={assignment.id} className="access-assignment-item">
+                    <div className="access-assignment-left">
+                      <span className="access-assignment-code">{assignment.roleCode}</span>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          padding: '2px 7px',
+                          borderRadius: '4px',
+                          background: assignment.revokedAt ? '#fef2f2' : '#ecfdf5',
+                          color: assignment.revokedAt ? '#dc2626' : '#047857',
+                          border: `1px solid ${assignment.revokedAt ? '#fecaca' : '#a7f3d0'}`,
+                        }}
+                      >
+                        {assignment.revokedAt ? 'Revoked' : 'Active'}
+                      </span>
+                      {assignment.scopes.map((scope, index) => (
+                        <span key={index} className="access-assignment-scope">
+                          {
+                            ['', 'Self', 'Employee', 'Department', 'Team', 'Site', 'Project', 'All'][
+                              scope.kind
+                            ]
+                          }
+                          {scope.targetId && (
+                            <>
+                              {' '}
+                              (
+                              {scope.kind === 2 ? (
+                                <EmployeeReference employeeId={scope.targetId} />
+                              ) : (
+                                `${scope.targetId.slice(0, 8)}…`
+                              )}
+                              )
+                            </>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="access-assignment-date">
+                      Effective: {new Date(assignment.effectiveFrom).toLocaleDateString()}
+                      {assignment.effectiveTo
+                        ? ` – ${new Date(assignment.effectiveTo).toLocaleDateString()}`
+                        : ' (Permanent)'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 3. Step 1: Initial Role Assignment */}
+          <div className="access-step-card">
+            <div className="access-card-head">
+              <div className="access-card-head-left">
+                <div className="access-card-icon-badge">
+                  <ShieldCheck size={16} />
+                </div>
+                <div>
+                  <h3 className="access-card-title">Step 1: Baseline Initial Role</h3>
+                  <p className="access-card-desc">
+                    Assign the initial Self-service role required to unlock web portal and mobile app channels.
+                  </p>
+                </div>
+              </div>
+              {setup.initialAccessAssigned && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    background: '#ecfdf5',
+                    color: '#047857',
+                    border: '1px solid #a7f3d0',
+                    padding: '3px 8px',
+                    borderRadius: '12px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                  }}
+                >
+                  <CheckCircle2 size={12} /> Assigned
+                </span>
+              )}
+            </div>
+
+            {!canRoles ? (
+              <p className="hr-notice" style={{ margin: 0 }}>
+                Role catalogue access requires access.roles.read permission.
+              </p>
+            ) : setup.initialAccessAssigned ? (
+              <div
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                  padding: '12px 14px',
+                  fontSize: '12.5px',
+                  color: '#334155',
+                }}
+              >
+                <CheckCircle2
+                  size={15}
+                  style={{
+                    color: '#16a34a',
+                    display: 'inline',
+                    marginRight: '6px',
+                    verticalAlign: 'middle',
+                  }}
+                />
+                <strong>Initial baseline role is already assigned.</strong> You can now configure web
+                login credentials, mobile access, or grant additional scoped roles below.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                    gap: '12px 16px',
+                    alignItems: 'flex-start',
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <SelectInput
+                      label="Existing baseline role"
+                      value={roleId}
+                      disabled={locked || !account}
+                      options={[
+                        { value: '', label: 'Select a role (e.g. Employee Self Service)' },
+                        ...selectable.map((item) => ({
+                          value: item.id,
+                          label: `${item.name} (${item.code})`,
+                        })),
+                      ]}
+                      onChange={(event) => setRoleId(event.target.value)}
+                    />
+                    {role && (
+                      <details style={{ fontSize: '11.5px', color: '#64748b', marginTop: '2px' }}>
+                        <summary style={{ cursor: 'pointer', fontWeight: 550, color: '#2563eb' }}>
+                          View {rolePermissions.length} included permissions
+                        </summary>
+                        <div
+                          style={{
+                            maxHeight: '130px',
+                            overflowY: 'auto',
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '5px',
+                            padding: '8px 10px',
+                            marginTop: '6px',
+                          }}
+                        >
+                          <ul style={{ margin: 0, paddingLeft: '16px' }}>
+                            {rolePermissions.map((code) => {
+                              const definition = data?.catalog.find((item) => item.code === code);
+                              return (
+                                <li key={code}>
+                                  <strong>{code}</strong>:{' '}
+                                  {definition?.description ?? 'Standard permission'}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      </details>
+                    )}
+                  </div>
+
+                  <TextInput
+                    label="Reason for initial access"
+                    required
+                    maxLength={1000}
+                    placeholder="e.g. Baseline onboarding self-service access"
+                    value={reason}
+                    disabled={locked || !account}
+                    onChange={(event) => setReason(event.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: '4px' }}>
+                  <Button
+                    variant="primary"
+                    className="access-btn"
+                    disabled={!canAssign}
+                    onClick={() => {
+                      if (!canAssign || !account || !role) return;
+                      void write(
+                        `/access/accounts/${account.id}/assignments`,
+                        {
+                          roleId: role.id,
+                          scopes: [{ kind: 1, targetId: null }],
+                          effectiveFrom: new Date().toISOString(),
+                          effectiveTo: null,
+                          expectedAccountVersion: account.version,
+                          expectedRoleVersion: role.version,
+                          configureAsInitialAccess: true,
+                          reason,
+                        },
+                        initialAccessResultSchema,
+                        'Initial Self access saved and current access reloaded.',
+                      );
+                    }}
+                  >
+                    <ShieldCheck size={14} />
+                    <span>Assign Initial Role</span>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 4. Step 2: Access Channels (Web & Mobile) */}
+          <div className="access-step-card">
+            <div className="access-card-head">
+              <div className="access-card-head-left">
+                <div
+                  className="access-card-icon-badge"
+                  style={{ background: '#f5f3ff', color: '#7c3aed', borderColor: '#ede9fe' }}
+                >
+                  <KeyRound size={16} />
+                </div>
+                <div>
+                  <h3 className="access-card-title">Step 2: Sign-In Channels & Credentials</h3>
+                  <p className="access-card-desc">
+                    Configure web login credentials and provision mobile app enrollment.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {!setup.initialAccessAssigned ? (
+              <div
+                style={{
+                  background: '#f8fafc',
+                  border: '1px dashed #cbd5e1',
+                  borderRadius: '6px',
+                  padding: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                }}
+              >
+                <Lock size={18} style={{ color: '#94a3b8', flexShrink: 0 }} />
+                <span style={{ fontSize: '12.5px', color: '#64748b' }}>
+                  Web credentials and mobile access will become available immediately once an initial
+                  baseline role is assigned in Step 1 above.
+                </span>
+              </div>
+            ) : (
+              <div className="access-channels-grid">
+                {/* Channel A: Web Portal */}
+                <div className="access-channel-box">
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Globe size={15} style={{ color: '#2563eb' }} />
+                      <strong style={{ fontSize: '13px', color: '#0f172a' }}>
+                        Web Portal Access
+                      </strong>
+                    </div>
+                    {account?.webAccessEnabled && (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: '#ecfdf5',
+                          color: '#047857',
+                          border: '1px solid #a7f3d0',
+                          padding: '2px 7px',
+                          borderRadius: '10px',
+                          fontSize: '10.5px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        <CheckCircle2 size={11} /> Enabled
+                      </span>
+                    )}
+                  </div>
+
+                  {account?.webAccessEnabled ? (
+                    <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
+                      Web access is active on the server. Existing web credentials cannot be
+                      overwritten from this onboarding panel.
+                    </p>
+                  ) : (
+                    <form
+                      ref={bindCredentialForm}
+                      style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        const fields = new FormData(event.currentTarget);
+                        const password = String(fields.get('password') ?? '');
+                        const confirmation = String(fields.get('confirmation') ?? '');
+                        clearPasswords();
+                        if (!canWeb || !account) return;
+                        const payload = firstWebCredentialsSchema.safeParse({
+                          email: email.trim(),
+                          password,
+                          expectedAccountVersion: account.version,
+                        });
+                        if (!payload.success || password !== confirmation) {
+                          setError(
+                            'Enter a valid email and matching non-empty passwords (maximum 1024 characters). The server enforces its configured password policy.',
+                          );
+                          return;
+                        }
+                        void write(
+                          `/access/accounts/${account.id}/web-credentials`,
+                          payload.data,
+                          accessAccountSchema,
+                          'First web credentials accepted and current access reloaded. Login eligibility and SMS verification are checked at sign-in.',
+                        );
+                      }}
+                    >
+                      <TextInput
+                        label="Web login email"
+                        name="email"
+                        type="email"
+                        autoComplete="off"
+                        required
+                        maxLength={320}
+                        placeholder="work.email@cosmix.invalid"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                      />
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <PasswordInput
+                          label="First password"
+                          name="password"
+                          autoComplete="new-password"
+                          required
+                          maxLength={1024}
+                          placeholder="Temporary password"
+                          onChange={() => setPasswordDirty(true)}
+                        />
+                        <PasswordInput
+                          label="Confirm password"
+                          name="confirmation"
+                          autoComplete="new-password"
+                          required
+                          maxLength={1024}
+                          placeholder="Confirm password"
+                          onChange={() => setPasswordDirty(true)}
+                        />
+                      </div>
+                      <div style={{ paddingTop: '4px' }}>
+                        <Button
+                          type="submit"
+                          variant="primary"
+                          className="access-btn"
+                          disabled={!canWeb}
+                        >
+                          <KeyRound size={13} />
+                          <span>Set Web Credentials</span>
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+
+                {/* Channel B: Mobile App */}
+                <div className="access-channel-box">
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Smartphone size={15} style={{ color: '#ea580c' }} />
+                      <strong style={{ fontSize: '13px', color: '#0f172a' }}>
+                        Mobile App Enrollment
+                      </strong>
+                    </div>
+                    {account?.mobileAccessEnabled && (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: '#ecfdf5',
+                          color: '#047857',
+                          border: '1px solid #a7f3d0',
+                          padding: '2px 7px',
+                          borderRadius: '10px',
+                          fontSize: '10.5px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        <CheckCircle2 size={11} /> Enabled
+                      </span>
+                    )}
+                  </div>
+
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: '12px',
+                      color: '#64748b',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Enrollment uses the approved hiring phone number. Verification and device
+                    activation occur through the mobile sign-in flow.
+                  </p>
+
+                  <div style={{ marginTop: 'auto', paddingTop: '8px' }}>
+                    <Button
+                      variant="secondary"
+                      className="access-btn"
+                      disabled={!canMobile}
+                      onClick={() => {
+                        if (canMobile) {
+                          if (
+                            (email || passwordDirty) &&
+                            !window.confirm(
+                              'Discard unsaved web credentials and provision mobile access?',
+                            )
+                          )
+                            return;
+                          clearPasswords();
+                          setEmail('');
+                          void write(
+                            `/hr/employees/${employeeId}/mobile-provisioning`,
+                            undefined,
+                            mobileProvisioningResultSchema,
+                            'Mobile provisioning completed and current access reloaded.',
+                          );
+                        }
+                      }}
+                    >
+                      <Smartphone size={13} />
+                      <span>Provision Mobile Access</span>
+                    </Button>
+                  </div>
+
+                  {setup.mobilePhoneEnrolled && !account?.mobileAccessEnabled && (
+                    <p className="hr-notice" style={{ margin: '8px 0 0', fontSize: '11.5px' }}>
+                      Phone enrollment already exists. Mobile channel recovery requires separate access
+                      administration.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 5. Additional Role Assignments (Delegated Scopes) */}
+          {account && setup.initialAccessAssigned && data && (
+            <div className="access-step-card">
+              <div className="access-card-head">
+                <div className="access-card-head-left">
+                  <div className="access-card-icon-badge">
+                    <Shield size={16} />
+                  </div>
+                  <div>
+                    <h3 className="access-card-title">Additional Roles & Custom Scopes</h3>
+                    <p className="access-card-desc">
+                      Assign elevated roles with Department, Site, Team, or All scope if this employee
+                      requires management rights.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <AdditionalRoleAssignment
+                key={additionalRevision}
+                account={account}
+                roles={selectable}
+                catalog={data.catalog}
+                disabled={!canAdditional}
+                onDirty={setAdditionalDirty}
+                onAssign={async (payload) => {
+                  if (!canAdditional) return false;
+                  if (
+                    (email || passwordDirty) &&
+                    !window.confirm(
+                      'Discard unsaved web credentials and assign the additional role?',
+                    )
+                  )
+                    return false;
+                  clearPasswords();
+                  setEmail('');
+                  return write(
+                    `/access/accounts/${account.id}/assignments`,
+                    payload,
+                    initialAccessResultSchema,
+                    'Additional role assignment saved and current access reloaded. Login channels are unchanged.',
+                    true,
+                  );
+                }}
+              />
+            </div>
+          )}
+
+          {/* 6. Two-Factor / Authenticator Reset */}
+          {account && (
+            <AuthenticatorReset
+              accountId={account.id}
+              employeeId={account.employeeId}
+              version={account.version}
+              enabled={account.authenticatorRequired}
+              onSaved={() => {
+                setMustReload(true);
+                onSaved?.();
               }}
             />
           )}
-          <h3>Mobile enrollment</h3>
-          <p className="muted">
-            Enrollment uses the approved hiring phone. Employee verification and activation still
-            occur through the mobile sign-in flow.
-          </p>
-          <Button
-            disabled={!canMobile}
-            onClick={() => {
-              if (canMobile) {
-                if (
-                  (email || passwordDirty) &&
-                  !window.confirm('Discard unsaved web credentials and provision mobile access?')
-                )
-                  return;
-                clearPasswords();
-                setEmail('');
-                void write(
-                  `/hr/employees/${employeeId}/mobile-provisioning`,
-                  undefined,
-                  mobileProvisioningResultSchema,
-                  'Mobile provisioning completed and current access reloaded.',
-                );
-              }
-            }}
-          >
-            <Smartphone size={16} /> Provision mobile access
-          </Button>
-          {setup.mobilePhoneEnrolled && !account?.mobileAccessEnabled && (
-            <p className="hr-notice">
-              Phone enrollment already exists. Mobile channel recovery or re-enablement requires
-              separate access administration.
-            </p>
-          )}
-          <h3>First web credentials</h3>
-          <p className="muted">
-            This sets the first email and password only. Approved phone, joining date, employment,
-            invitation and credential checks remain server-controlled. Web login still requires SMS
-            verification; Self access does not grant broader management access.
-          </p>
-          {!delegatedTarget && (
-            <p className="hr-notice">
-              Credential and mobile setup require the role catalogue, known non-system assignments
-              and delegation of all assigned permissions. System-account setup requires separate
-              SuperAdmin administration.
-            </p>
-          )}
-          {account?.webAccessEnabled ? (
-            <p>
-              Web access is enabled on the server. Existing credentials cannot be replaced here.
-            </p>
-          ) : (
-            <form
-              ref={bindCredentialForm}
-              onSubmit={(event) => {
-                event.preventDefault();
-                const fields = new FormData(event.currentTarget);
-                const password = String(fields.get('password') ?? '');
-                const confirmation = String(fields.get('confirmation') ?? '');
-                clearPasswords();
-                if (!canWeb || !account) return;
-                const payload = firstWebCredentialsSchema.safeParse({
-                  email: email.trim(),
-                  password,
-                  expectedAccountVersion: account.version,
-                });
-                if (!payload.success || password !== confirmation) {
-                  setError(
-                    'Enter a valid email and matching non-empty passwords (maximum 1024 characters). The server enforces its configured password policy.',
-                  );
-                  return;
-                }
-                void write(
-                  `/access/accounts/${account.id}/web-credentials`,
-                  payload.data,
-                  accessAccountSchema,
-                  'First web credentials accepted and current access reloaded. Login eligibility and SMS verification are checked at sign-in.',
-                );
-              }}
-            >
-              <fieldset disabled={!canWeb} className="hr-form-grid">
-                <TextInput
-                  label="Web login email"
-                  name="email"
-                  type="email"
-                  autoComplete="off"
-                  required
-                  maxLength={320}
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                />
-                <PasswordInput
-                  label="First password"
-                  name="password"
-                  autoComplete="new-password"
-                  required
-                  maxLength={1024}
-                  onChange={() => setPasswordDirty(true)}
-                />
-                <PasswordInput
-                  label="Confirm first password"
-                  name="confirmation"
-                  autoComplete="new-password"
-                  required
-                  maxLength={1024}
-                  onChange={() => setPasswordDirty(true)}
-                />
-                <Button type="submit">
-                  <KeyRound size={16} /> Set first web credentials
-                </Button>
-              </fieldset>
-            </form>
-          )}
         </>
-      )}
-      {account && (
-        <AuthenticatorReset
-          accountId={account.id}
-          employeeId={account.employeeId}
-          version={account.version}
-          enabled={account.authenticatorRequired}
-          onSaved={() => {
-            setMustReload(true);
-            onSaved?.();
-          }}
-        />
       )}
     </section>
   );

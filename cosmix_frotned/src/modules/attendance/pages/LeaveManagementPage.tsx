@@ -1,4 +1,7 @@
+import { EmployeeReference, EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
+import { employeeSearchTerm, formatEmployeeCode } from '@/utils/employee-code';
+import { ScopeSelect } from '../operations/review/ReviewUi';
 import { Link, useParams } from 'react-router-dom';
 import {
   Award,
@@ -23,13 +26,7 @@ import { useAttendanceAccess } from '../hooks/use-attendance-access';
 import { useAttendanceQuery } from '../hooks/use-attendance-query';
 import { queryString } from '../api/attendance-api';
 import { date, id, pageOf } from '../schemas/common';
-import {
-  canEmployee,
-  scopeKey,
-  scopeNames,
-  supportedScopes,
-  type Scope,
-} from '../operations/review/access';
+import { canEmployee, scopeNames, supportedScopes, type Scope } from '../operations/review/access';
 import { canAll } from '../operations/leave-policy/inputs';
 import { monthRange, today, validRange } from '../operations/review/helpers';
 import {
@@ -81,7 +78,7 @@ function LeaveManagementWorkspace() {
   const directoryQuery = useAttendanceQuery(
     '/hr/employees' +
       queryString({
-        search: submittedSearch.trim(),
+        search: employeeSearchTerm(submittedSearch),
         page: 1,
         pageSize: 100,
         ...approvedAttendanceFilter,
@@ -248,7 +245,7 @@ function LeaveManagementWorkspace() {
               <option value="">-- Choose an employee to load calendar --</option>
               {employees.map((emp) => (
                 <option key={emp.id} value={emp.id}>
-                  {emp.name ?? 'Employee'} (EMP-{emp.employeeNumber})
+                  {emp.name ?? 'Employee'} ({formatEmployeeCode(emp.employeeNumber)})
                 </option>
               ))}
             </select>
@@ -266,7 +263,7 @@ function LeaveManagementWorkspace() {
                 className={`leave-chip ${selectedEmployeeId === emp.id ? 'is-active' : ''}`}
                 onClick={() => setSelectedEmployeeId(emp.id)}
               >
-                {emp.name ?? 'Employee'} <small>(EMP-{emp.employeeNumber})</small>
+                {emp.name ?? 'Employee'} <small>({formatEmployeeCode(emp.employeeNumber)})</small>
               </button>
             ))}
           </div>
@@ -274,37 +271,23 @@ function LeaveManagementWorkspace() {
 
         {/* Advanced manual ID & scope entry */}
         <details className="leave-advanced-details">
-          <summary>Manual employee ID & authority scope</summary>
+          <summary>Employee selection & authority scope</summary>
           <div className="leave-advanced-form">
             <div className="leave-picker-field">
-              <label htmlFor="leave-manual-id">Employee ID (GUID)</label>
-              <input
-                id="leave-manual-id"
-                type="text"
-                placeholder="e.g. 9e896a44-0728-48cb-8ca6-4d387b551db2"
+              <EmployeePicker
+                label="Employee"
                 value={selectedEmployeeId}
-                onChange={(e) => setSelectedEmployeeId(e.target.value.trim())}
+                onChange={setSelectedEmployeeId}
               />
             </div>
 
             {scopes.length > 1 && !scopes.some((grant) => grant.kind === 7) && (
               <div className="leave-picker-field">
-                <label htmlFor="leave-scope-select">Authority scope</label>
-                <select
-                  id="leave-scope-select"
-                  value={customScope ? scopeKey(customScope) : ''}
-                  onChange={(e) =>
-                    setCustomScope(scopes.find((s) => scopeKey(s) === e.target.value))
-                  }
-                >
-                  <option value="">Select granted scope</option>
-                  {scopes.map((s) => (
-                    <option key={scopeKey(s)} value={scopeKey(s)}>
-                      {scopeNames[s.kind]}
-                      {s.targetId ? ': ' + s.targetId : ''}
-                    </option>
-                  ))}
-                </select>
+                <ScopeSelect
+                  permission={permission}
+                  value={customScope}
+                  onChange={setCustomScope}
+                />
               </div>
             )}
           </div>
@@ -416,7 +399,10 @@ function LeaveCalendarView({
           </span>
           <div className="leave-employee-text">
             <strong>{employeeName ?? 'Employee'}</strong>
-            <small>{employeeNumber ? `EMP-${employeeNumber}` : employeeId} · Leave Calendar</small>
+            <small>
+              <EmployeeReference employeeId={employeeId} employeeNumber={employeeNumber} /> · Leave
+              Calendar
+            </small>
           </div>
         </div>
 

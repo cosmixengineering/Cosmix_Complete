@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { Filter, RefreshCw, ShieldAlert, SearchX, Eye, Users } from 'lucide-react';
 import { useAttendanceAccess } from '../../hooks/use-attendance-access';
@@ -219,16 +220,13 @@ function ExceptionsHistory({ self, scope, range }: { self: boolean; scope?: Scop
                       </td>
                       <td>
                         <div className="att-emp-notice-cell">
-                          <span
-                            className="att-emp-chip"
-                            title={'employeeId' in row ? row.employeeId : undefined}
-                          >
+                          <span className="att-emp-chip">
                             <Users size={12} style={{ marginRight: 4 }} />
-                            {'employeeId' in row
-                              ? row.employeeId.length > 14
-                                ? `EMP-${row.employeeId.slice(0, 8)}`
-                                : row.employeeId
-                              : 'My notice'}
+                            {'employeeId' in row ? (
+                              <EmployeeReference employeeId={row.employeeId} />
+                            ) : (
+                              'My notice'
+                            )}
                           </span>
                           <span className="att-kind-badge">
                             {'kind' in row ? row.kind : row.noticeCode}

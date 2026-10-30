@@ -1,3 +1,4 @@
+import { formatEmployeeCode } from '@/utils/employee-code';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Camera, MoreHorizontal, Navigation, Pencil, Upload, User } from 'lucide-react';
@@ -197,7 +198,7 @@ export function EmployeeProfileHeader({
         <div className="emp-header-info">
           <h1 className="emp-header-name">{fullName}</h1>
           <div className="emp-badges-row">
-            {employeeNo && <span className="emp-badge-code">{employeeNo}</span>}
+            {employeeNo && <span className="emp-badge-code">{formatEmployeeCode(employeeNo)}</span>}
             {statusLabel && (
               <span className={`emp-badge-status ${statusIndex === 2 ? 'active' : 'inactive'}`}>
                 <span className="emp-badge-dot" />

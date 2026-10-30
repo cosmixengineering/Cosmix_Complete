@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/auth/use-auth';
@@ -55,8 +56,13 @@ export function PayrollCostPanel({ batchId }: { batchId: string }) {
     );
   const data = query.data;
   if (!data) return null;
-  const employeeName = (id: string) =>
-    data.employees.find((row) => row.employeeId === id)?.employeeName ?? id;
+  const employeeName = (id: string) => (
+    <EmployeeReference
+      employeeId={id}
+      employeeName={data.employees.find((row) => row.employeeId === id)?.employeeName}
+      showName
+    />
+  );
   const targetName = (projectId: string | null, siteId: string | null) =>
     siteId
       ? (data.targets.sites.find((row) => row.id === siteId)?.name ?? siteId)
@@ -311,11 +317,17 @@ function CostDraft({
                 const employee = data.employees.find((item) => item.employeeId === row.employeeId)!;
                 return (
                   <tr key={row.key}>
-                    <td>{employee.employeeName ?? employee.employeeId}</td>
+                    <td>
+                      <EmployeeReference
+                        employeeId={employee.employeeId}
+                        employeeName={employee.employeeName}
+                        showName
+                      />
+                    </td>
                     <td>{amount(employee.amount, employee.currency)}</td>
                     <td>
                       <select
-                        aria-label={`Destination for ${employee.employeeName ?? employee.employeeId}`}
+                        aria-label={`Destination for ${employee.employeeName ?? 'selected employee'}`}
                         value={row.target}
                         onChange={(event) =>
                           setRows(
@@ -335,7 +347,7 @@ function CostDraft({
                     </td>
                     <td>
                       <input
-                        aria-label={`Allocation percentage for ${employee.employeeName ?? employee.employeeId}`}
+                        aria-label={`Allocation percentage for ${employee.employeeName ?? 'selected employee'}`}
                         type="number"
                         min="0.01"
                         max="100"

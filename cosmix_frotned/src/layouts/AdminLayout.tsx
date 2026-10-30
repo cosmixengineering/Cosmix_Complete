@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/auth/use-auth';
 import { isSystemAdmin } from '@/auth/contracts';
+import { canOpenWorkspace, workspaceHome } from '@/auth/workspace-access';
 import { hasAttendancePermission } from '@/modules/attendance';
 import { hrConfigurationNavigation } from '@/modules/hr/policy-navigation';
 import { Button } from '@/components/ui/Button';
@@ -65,9 +66,9 @@ export function AdminLayout() {
     hasAttendancePermission(user, 'hr.employees.read') &&
     hasAttendancePermission(user, 'attendance.summaries.read');
 
-  // If user is authenticated but not an admin, redirect to HR dashboard
+  // Keep non-admin deep links within the user's assigned workspace.
   if (status === 'authenticated' && user && !isAdmin) {
-    return <Navigate to="/hr/dashboard" replace />;
+    return <Navigate to={workspaceHome(user)} replace />;
   }
 
   const displayName = user?.account?.displayName || 'Admin User';
@@ -85,6 +86,9 @@ export function AdminLayout() {
     { to: '/admin/panel', label: 'My Panel', icon: User },
     { to: '/admin/employees', label: 'Employees', icon: Users },
     { to: '/hr/attendance', label: 'Attendance', icon: Clock },
+    ...(canOpenWorkspace(user, '/hr/payroll-reconciliation')
+      ? [{ to: '/hr/payroll-reconciliation', label: 'Payroll Comparison', icon: ClipboardCheck }]
+      : []),
     ...(user?.grants.some(
       (g) => g.permission === 'attendance.face.manage' || g.permission === 'attendance.face.read',
     )

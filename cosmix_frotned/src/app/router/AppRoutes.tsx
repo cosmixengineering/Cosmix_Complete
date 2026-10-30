@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '@/auth/use-auth';
-import { isSystemAdmin } from '@/auth/contracts';
+import { workspaceHome } from '@/auth/workspace-access';
 import { LoadingState } from '@/components/feedback/LoadingState';
 import { RequireAuth } from '@/auth/RequireAuth';
 import { SignInPage } from '@/pages/SignInPage';
@@ -58,8 +58,7 @@ function RootRedirect() {
     return <LoadingState fullscreen message="Starting Cosmix ERP..." />;
   }
   if (status !== 'authenticated') return <Navigate to="/sign-in" replace />;
-  const isAdmin = isSystemAdmin(user);
-  return <Navigate to={isAdmin ? '/admin/dashboard' : '/hr/dashboard'} replace />;
+  return <Navigate to={workspaceHome(user)} replace />;
 }
 
 export function AppRoutes() {
@@ -71,7 +70,7 @@ export function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route path="/account" element={<AccountPage />} />
           <Route path="/account/sessions" element={<AccountSessionsPage />} />
-          <Route path="/self-service" element={<Navigate to="/hr/dashboard" replace />} />
+          <Route path="/self-service" element={<Navigate to="/account" replace />} />
           <Route path="/hr/dashboard" element={<HrDashboardPage />} />
           <Route path="/hr/employees" element={<EmployeesPage />} />
           <Route path="/hr/biometrics" element={<BiometricRegistrationPage />} />
@@ -137,7 +136,7 @@ export function AppRoutes() {
             <Route key={id} path={`/hr/workspaces/${id}`} element={<Navigate to={to} replace />} />
           ))}
           <Route path="/hr/workspaces/:workspaceId" element={<HrPreparedWorkspacePage />} />
-          <Route path="/hr" element={<Navigate to="/hr/dashboard" replace />} />
+          <Route path="/hr" element={<RootRedirect />} />
         </Route>
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
@@ -161,8 +160,8 @@ export function AppRoutes() {
           <Route path="operations" element={<AdminModulePage moduleKey="operations" />} />
           <Route path="projects" element={<AdminModulePage moduleKey="projects" />} />
           <Route path="reports" element={<AdminModulePage moduleKey="reports" />} />
-          <Route path="users" element={<RolesPermissionsPage />} />
-          <Route path="roles" element={<RolesPermissionsPage />} />
+          <Route path="users" element={<RolesPermissionsPage key="accounts" />} />
+          <Route path="roles" element={<RolesPermissionsPage key="roles" />} />
           <Route path="departments" element={<AdminModulePage moduleKey="departments" />} />
           <Route path="settings" element={<AdminModulePage moduleKey="settings" />} />
           <Route path="attendance" element={<Navigate to="/hr/attendance" replace />} />

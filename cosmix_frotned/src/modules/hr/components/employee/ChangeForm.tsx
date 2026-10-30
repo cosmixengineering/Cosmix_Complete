@@ -117,6 +117,10 @@ export function ChangeForm({
   const [reason, setReason] = useState<string | null>(null);
   const [effectiveFrom, setEffectiveFrom] = useState('');
   const [sent, setSent] = useState(false);
+  const repairsIdentityEvidence =
+    section.name === 'identity' &&
+    current.evidenceIssue === 'identity_document_evidence_unavailable';
+  const [repairAcknowledged, setRepairAcknowledged] = useState(false);
   const action = useHrAction();
   useDirtyForm(!sent && (JSON.stringify(data) !== baseline || !!reason || !!effectiveFrom));
   const documents = useHrQuery(
@@ -143,7 +147,7 @@ export function ChangeForm({
       className="org-modal-form"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!reason?.trim()) return;
+        if (!reason?.trim() || (repairsIdentityEvidence && !repairAcknowledged)) return;
         void (async () => {
           const path =
             section.name === 'basic'
@@ -154,6 +158,7 @@ export function ChangeForm({
               ? { expectedVersion: current.version, data: data.basic, reason: reason.trim() }
               : {
                   section: section.number,
+                  repairIdentityEvidence: repairsIdentityEvidence && repairAcknowledged,
                   expectedVersion: current.version,
                   data,
                   effectiveFrom: section.dated ? effectiveFrom : null,
@@ -182,6 +187,19 @@ export function ChangeForm({
           className="org-modal-fieldset"
           style={{ border: 'none', padding: 0, margin: 0 }}
         >
+          {repairsIdentityEvidence && (
+            <label className="hr-message">
+              <input
+                type="checkbox"
+                required
+                checked={repairAcknowledged}
+                onChange={(e) => setRepairAcknowledged(e.target.checked)}
+              />{' '}
+              Request identity evidence repair. I acknowledge the old proof is unavailable. A
+              verified replacement document and independent Admin approval are required; the
+              original history will remain unchanged.
+            </label>
+          )}
           {data.basic && (
             <>
               <AddressFields

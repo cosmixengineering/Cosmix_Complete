@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
@@ -229,7 +230,7 @@ function ContributionEntries() {
                     {item.entries?.map((line) => (
                       <tr key={line.id}>
                         <td>
-                          {line.employeeId}
+                          <EmployeeReference employeeId={line.employeeId} />
                           <br />
                           {line.registrationNumber}
                         </td>
@@ -430,8 +431,8 @@ function ContributionEntries() {
         </form>
         {entries.map((line, index) => (
           <p key={line.employeeId}>
-            {line.employeeId}: employee {line.employeeContributionAmount} · employer{' '}
-            {line.employerContributionAmount}{' '}
+            <EmployeeReference employeeId={line.employeeId} />: employee{' '}
+            {line.employeeContributionAmount} · employer {line.employerContributionAmount}{' '}
             <Button
               variant="secondary"
               onClick={() => setEntries((rows) => rows.filter((_, i) => index !== i))}

@@ -47,6 +47,8 @@ import {
   type ReportFilter,
 } from '../schemas/report-contracts';
 import '@/styles/hr-reports.css';
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
+import { formatEmployeeCode } from '@/utils/employee-code';
 
 const permissions = { read: 'hr.reports.read', export: 'hr.reports.export' };
 
@@ -304,7 +306,13 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
 
   const columns = useMemo(() => {
     const first = result?.rows[0];
-    return first ? Object.keys(first) : [];
+    if (!first) return [];
+    // Show the human-facing employee number instead of duplicating the internal UUID.
+    return Object.keys(first).filter(
+      (column) =>
+        !column.toLowerCase().endsWith('employeeid') ||
+        !Object.hasOwn(first, column.slice(0, -2) + 'Number'),
+    );
   }, [result]);
 
   // Quick Preset Handlers
@@ -387,14 +395,16 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
     }
   }
 
-  async function runExport(event: FormEvent) {
-    event.preventDefault();
+  async function runExport(event?: FormEvent, selection?: { format: '1' | '2'; reason: string }) {
+    event?.preventDefault();
+    const selectedFormat = selection?.format ?? exportFormat;
+    const selectedReason = selection?.reason ?? exportReason;
     if (exportInFlight.current || !canExport || !result) return;
     const errors: Record<string, string> = {};
-    if (!exportReason.trim()) errors.reason = 'An audit reason is required.';
-    else if (exportReason.length > 1000)
+    if (!selectedReason.trim()) errors.reason = 'An audit reason is required.';
+    else if (selectedReason.length > 1000)
       errors.reason = 'The reason must be at most 1000 characters.';
-    else if (!isValidReportExportReason(exportReason))
+    else if (!isValidReportExportReason(selectedReason))
       errors.reason = 'Enter the reason on one line without control characters.';
 
     setFieldErrors(errors);
@@ -409,13 +419,13 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
     try {
       const blob = await exportReportPage(
         result.metadata.reportType,
-        Number(exportFormat),
-        exportReason.trim(),
+        Number(selectedFormat),
+        selectedReason.trim(),
         result.requestedFilter,
         signal,
       );
       if (signal.aborted) return;
-      const extension = exportFormat === '1' ? 'csv' : 'xlsx';
+      const extension = selectedFormat === '1' ? 'csv' : 'xlsx';
       saveReportBlob(
         blob,
         `${result.metadata.reportType}-${new Date().toISOString().slice(0, 10)}.${extension}`,
@@ -854,8 +864,10 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
                   onClick={() => {
                     setExportFormat('2');
                     setExportReason(`Executive Excel export of ${result.metadata.reportTitle}`);
-                    const event = { preventDefault: () => {} } as FormEvent;
-                    void runExport(event);
+                    void runExport(undefined, {
+                      format: '2',
+                      reason: 'Excel export of ' + result.metadata.reportTitle,
+                    });
                   }}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
@@ -868,8 +880,10 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
                   onClick={() => {
                     setExportFormat('1');
                     setExportReason(`CSV export of ${result.metadata.reportTitle}`);
-                    const event = { preventDefault: () => {} } as FormEvent;
-                    void runExport(event);
+                    void runExport(undefined, {
+                      format: '1',
+                      reason: 'CSV export of ' + result.metadata.reportTitle,
+                    });
                   }}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
@@ -1014,6 +1028,8 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
 
 // Convert camelCase or snake_case key into clean Title Case
 function formatHeader(key: string): string {
+  if (key.toLowerCase().endsWith('employeenumber')) key = key.slice(0, -6) + 'Id';
+  if (key === 'employeeId') return 'Employee ID';
   return key
     .replace(/([A-Z])/g, ' $1')
     .replace(/[_-]/g, ' ')
@@ -1034,6 +1050,30 @@ function renderCell(column: string, value: unknown) {
 
   const str = String(value);
   const lowerCol = column.toLowerCase();
+
+  if (lowerCol.endsWith('employeenumber')) {
+    return formatEmployeeCode(
+      typeof value === 'number' || typeof value === 'string' ? value : null,
+    );
+  }
+
+  if (lowerCol.endsWith('employeeid') && typeof value === 'string') {
+    return <EmployeeReference employeeId={value} />;
+  }
+  if (lowerCol.endsWith('employeeids') && Array.isArray(value)) {
+    return (
+      <>
+        {value.map((id, index) =>
+          typeof id === 'string' ? (
+            <span key={id}>
+              {index > 0 ? ', ' : ''}
+              <EmployeeReference employeeId={id} />
+            </span>
+          ) : null,
+        )}
+      </>
+    );
+  }
 
   // Highlight status values
   if (lowerCol.includes('status') || lowerCol.includes('state')) {

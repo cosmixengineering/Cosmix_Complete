@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useId, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { SelectInput } from '@/components/forms/SelectInput';
@@ -59,14 +60,27 @@ export function Notes({
     </div>
   );
 }
-export function EvidenceRecord({ value }: { value: unknown }) {
+export function EvidenceRecord({ value, field }: { value: unknown; field?: string }) {
+  if (field && /^(?:employeeId|.*EmployeeId)$/.test(field))
+    return <EmployeeReference employeeId={typeof value === 'string' ? value : null} />;
+  if (field === 'employeeNumber')
+    return (
+      <EmployeeReference
+        employeeNumber={typeof value === 'number' || typeof value === 'string' ? value : null}
+      />
+    );
   if (value === null || value === undefined) return <span>Unavailable</span>;
   if (Array.isArray(value))
     return (
       <ul>
         {value.map((item, index) => (
           <li key={index}>
-            <EvidenceRecord value={item} />
+            <EvidenceRecord
+              value={item}
+              field={
+                field && /^(?:employeeIds|.*EmployeeIds)$/.test(field) ? 'employeeId' : undefined
+              }
+            />
           </li>
         ))}
       </ul>
@@ -78,7 +92,14 @@ export function EvidenceRecord({ value }: { value: unknown }) {
           <div key={key} style={{ display: 'contents' }}>
             <dt>{human(key)}</dt>
             <dd>
-              <EvidenceRecord value={item} />
+              <EvidenceRecord
+                value={item}
+                field={
+                  key === 'targetId' && 'target' in value && value.target === 'employee'
+                    ? 'employeeId'
+                    : key
+                }
+              />
             </dd>
           </div>
         ))}

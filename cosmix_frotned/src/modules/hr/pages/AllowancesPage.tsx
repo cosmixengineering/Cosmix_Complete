@@ -1,3 +1,4 @@
+import { EmployeeReference, EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useMemo, useState, type FormEvent } from 'react';
 import { z } from 'zod';
 import {
@@ -349,7 +350,7 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
             <span>Review Queue & Claims Filter</span>
           </h2>
           <p className="allowance-card-desc">
-            Filter intake receipts by verification state, business dates, and scoped employee IDs.
+            Filter intake receipts by verification state, business dates, and employees.
           </p>
         </div>
       </div>
@@ -445,16 +446,12 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
           </div>
 
           <div className="allowance-form-group">
-            <label className="allowance-form-label">Employee ID (UUID)</label>
             <div style={{ position: 'relative' }}>
-              <input
-                type="text"
-                className="allowance-input"
-                style={{ width: '100%', paddingRight: employeeId ? '28px' : '10px' }}
-                placeholder="Search by Employee UUID..."
+              <EmployeePicker
+                label="Employee"
                 value={employeeId}
-                onChange={(e) => {
-                  setEmployeeId(e.target.value);
+                onChange={(id) => {
+                  setEmployeeId(id);
                   setPage(1);
                 }}
               />
@@ -484,7 +481,7 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
             </div>
             {!employeeFilterValid && (
               <span style={{ fontSize: '10.5px', color: '#dc2626', marginTop: '2px' }}>
-                Enter a complete UUID or leave blank.
+                Select an employee or leave the filter blank.
               </span>
             )}
           </div>
@@ -561,9 +558,11 @@ function AllowanceReview({ canDecide, canSettle }: { canDecide: boolean; canSett
                           flexWrap: 'wrap',
                         }}
                       >
-                        <span className="claim-emp-badge" title={`Employee: ${claim.employeeId}`}>
+                        <span className="claim-emp-badge">
                           <Users size={12} color="#475569" />
-                          <span>{claim.employeeId.slice(0, 8)}...</span>
+                          <span>
+                            <EmployeeReference employeeId={claim.employeeId} />
+                          </span>
                         </span>
                         <span className="claim-kind-pill">{kindLabel}</span>
                         <span

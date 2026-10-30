@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Eye, Plus, X } from 'lucide-react';
@@ -182,7 +183,7 @@ function LeaveList({ admin }: { admin: boolean }) {
                         <thead>
                           <tr>
                             <th>Type</th>
-                            {admin && <th>Employee ID</th>}
+                            {admin && <th>Employee</th>}
                             <th>Dates</th>
                             <th>Server minutes</th>
                             <th>State</th>
@@ -193,7 +194,11 @@ function LeaveList({ admin }: { admin: boolean }) {
                           {query.data.items.map((row) => (
                             <tr key={row.id}>
                               <td>{row.typeName}</td>
-                              {admin && <td>{row.employeeId}</td>}
+                              {admin && (
+                                <td>
+                                  <EmployeeReference employeeId={row.employeeId} />
+                                </td>
+                              )}
                               <td>
                                 {row.startDate} to {row.endDate}
                               </td>

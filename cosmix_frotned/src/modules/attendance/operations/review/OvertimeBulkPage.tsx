@@ -1,3 +1,4 @@
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useState } from 'react';
 import { Plus, RefreshCw, X } from 'lucide-react';
 import { z } from 'zod';
@@ -306,12 +307,7 @@ function BulkCandidate({
               setLoaded({ employeeId, requestId, businessDate, scope });
           }}
         >
-          <TextInput
-            label="Employee ID"
-            value={employeeId}
-            required
-            onChange={(e) => setEmployee(e.target.value.trim())}
-          />
+          <EmployeePicker label="Employee" value={employeeId} required onChange={setEmployee} />
           <ScopeSelect permission={readPermission} value={scope} onChange={setScope} />
           {decide ? (
             <TextInput

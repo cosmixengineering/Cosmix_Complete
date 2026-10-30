@@ -1,3 +1,4 @@
+import { EmployeeReference } from '@/components/employees/EmployeeReference';
 import { CalendarPlus, History, Replace, StopCircle, Undo2, Users } from 'lucide-react';
 import type { SiteRosterHistory as RosterHistory } from '../../schemas/site-rosters';
 import { businessToday } from '../../utils/messages';
@@ -23,7 +24,9 @@ export function StaffManifest({
       {ids.length ? (
         <ul className="attendance-manifest">
           {ids.map((id) => (
-            <li key={id}>{id}</li>
+            <li key={id}>
+              <EmployeeReference employeeId={id} />
+            </li>
           ))}
         </ul>
       ) : (

@@ -1,3 +1,4 @@
+import { EmployeeReference, EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { Download, FilePlus2, Filter, RefreshCw } from 'lucide-react';
@@ -273,7 +274,12 @@ function ReportResults({
               <tbody>
                 {totals.data.employees.map((row) => (
                   <tr key={row.employeeId}>
-                    <td>{row.employeeId}</td>
+                    <td>
+                      <EmployeeReference
+                        employeeId={row.employeeId}
+                        employeeNumber={row.employeeNumber}
+                      />
+                    </td>
                     <td>{row.totals.employeeDays}</td>
                     <td>{row.totals.workedSeconds}</td>
                     <td>{row.totals.openSessions}</td>
@@ -303,7 +309,10 @@ function ReportResults({
               {data.rows.map((row) => (
                 <tr key={row.employeeId + row.businessDate}>
                   <td>
-                    {row.employeeId}
+                    <EmployeeReference
+                      employeeId={row.employeeId}
+                      employeeNumber={row.employeeNumber}
+                    />
                     <br />
                     {row.businessDate}
                   </td>
@@ -340,7 +349,16 @@ function ReportResults({
             <tbody>
               {selection.employeeIds.map((employee) => (
                 <tr key={employee}>
-                  <th>{employee}</th>
+                  <th>
+                    <EmployeeReference
+                      employeeId={employee}
+                      employeeNumber={
+                        data.rows.find(
+                          (row) => row.employeeId.toLowerCase() === employee.toLowerCase(),
+                        )?.employeeNumber
+                      }
+                    />
+                  </th>
                   {dates.map((value) => {
                     const row = cells.get(employee.toLowerCase() + ':' + value)!;
                     return (
@@ -372,7 +390,7 @@ function ReportsContent() {
   const access = useAttendanceAccess();
   const canRead = hasReportGrant(access.user, 'attendance.reports.read');
   const canExport = hasReportGrant(access.user, 'attendance.reports.export');
-  const [employees, setEmployees] = useState('');
+  const [employees, setEmployees] = useState<string[]>([]);
   const [from, setFrom] = useState(businessToday());
   const [to, setTo] = useState(businessToday());
   const [selection, setSelection] = useState<ReportSelection | null>(null);
@@ -385,10 +403,7 @@ function ReportsContent() {
     try {
       setSelection(
         reportSelection.parse({
-          employeeIds: employees
-            .trim()
-            .split(/[\s,]+/)
-            .filter(Boolean),
+          employeeIds: employees,
           from,
           to,
         }),
@@ -412,16 +427,34 @@ function ReportsContent() {
         }}
       >
         <fieldset disabled={creating}>
-          <label className="field">
-            Employee IDs
-            <textarea
-              value={employees}
-              maxLength={2000}
-              rows={3}
-              required
-              onChange={(event) => setEmployees(event.target.value)}
-            />
-          </label>
+          <EmployeePicker
+            label="Add employee (up to 25)"
+            value=""
+            disabled={creating || employees.length >= 25}
+            onChange={(uuid) => {
+              if (uuid)
+                setEmployees((current) =>
+                  current.some((item) => item.toLowerCase() === uuid.toLowerCase()) ||
+                  current.length >= 25
+                    ? current
+                    : [...current, uuid],
+                );
+            }}
+          />
+          <ul className="attendance-manifest">
+            {employees.map((uuid) => (
+              <li key={uuid}>
+                <EmployeeReference employeeId={uuid} showName />{' '}
+                <button
+                  type="button"
+                  disabled={creating}
+                  onClick={() => setEmployees((current) => current.filter((item) => item !== uuid))}
+                >
+                  Remove employee
+                </button>
+              </li>
+            ))}
+          </ul>
           <div className="attendance-grid">
             <TextInput
               label="From"

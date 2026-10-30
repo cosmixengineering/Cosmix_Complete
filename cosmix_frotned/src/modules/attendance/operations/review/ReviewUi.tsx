@@ -3,21 +3,26 @@ import {
   EmployeePicker,
   useEmployeeCodes,
 } from '@/components/employees/EmployeeReference';
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import { employeeSearchTerm, formatEmployeeCode } from '@/utils/employee-code';
 import { useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowLeftRight,
   RefreshCw,
   Search,
   Users,
+  User,
+  Shield,
   ShieldCheck,
   Calendar,
   Clock,
   Scale,
   History,
   Layers,
+  Info,
+  CheckCircle2,
 } from 'lucide-react';
 import { z } from 'zod';
 import { TextInput } from '@/components/forms/TextInput';
@@ -532,78 +537,169 @@ function EmployeeSelection({
           content
         ) : (
           <section className="att-register-empty" aria-label="Attendance selection">
-            <Users size={26} aria-hidden="true" />
+            <div className="att-empty-icon-wrap">
+              <Users size={26} aria-hidden="true" />
+            </div>
             <h2>Select an employee to view attendance</h2>
             <p>
-              Search by name or employee number above. Then review their dates, recorded hours and
-              daily details.
+              Search by employee name or code above to inspect daily working hours, biometric
+              check-in logs, and monthly summary records.
             </p>
+            <div className="att-empty-tags">
+              <span className="att-empty-tag">
+                <CheckCircle2 size={12} style={{ color: '#16a34a' }} />
+                <span>Monthly Hours & Overtime</span>
+              </span>
+              <span className="att-empty-tag">
+                <CheckCircle2 size={12} style={{ color: '#16a34a' }} />
+                <span>Biometric Check-in/Out Logs</span>
+              </span>
+              <span className="att-empty-tag">
+                <CheckCircle2 size={12} style={{ color: '#16a34a' }} />
+                <span>Factual Exception Audits</span>
+              </span>
+            </div>
           </section>
         )}
       </>
     );
   return (
     <div className="att-employee-workspace-card">
-      <div className="att-workspace-header">
-        <h1 className="att-workspace-title">{title}</h1>
-        <p className="att-workspace-subtitle">
-          Find employee to review records, submit duty adjustments or request factual corrections.
-        </p>
-      </div>
-      <div className="att-employee-lookup-box">
-        <EmployeeLookup
-          approvedOnly={approvedOnly}
-          disabled={editing}
-          selected={employee}
-          onSelect={(value) => {
-            setSelection(null);
-            setEmployee(value);
-          }}
-        />
-        <form
-          className="att-employee-scope-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (valid && !editing) setSelection({ employee, scope });
-          }}
-        >
-          <div className="att-form-row">
-            <EmployeePicker
-              label="Employee"
-              required
-              disabled={editing}
-              value={employee}
-              onChange={(uuid) => {
-                setSelection(null);
-                setEmployee(uuid);
-              }}
-            />
-            <ScopeSelect
-              permission={permission}
-              value={scope}
-              disabled={editing}
-              onChange={(value) => {
-                setSelection(null);
-                setScope(value);
-              }}
-            />
-            <div className="att-form-submit-cell">
-              <Command icon={Search} type="submit" disabled={editing || !valid}>
-                Open employee
-              </Command>
+      {selection ? (
+        <div className="att-selected-employee-bar">
+          <div className="att-selected-employee-info">
+            <div className="att-selected-avatar">
+              <User size={18} />
+            </div>
+            <div className="att-selected-details">
+              <div className="att-selected-name-row">
+                <span className="att-selected-name">
+                  <EmployeeReference employeeId={selection.employee} showName />
+                </span>
+                <span className="att-selected-badge">Active Record</span>
+              </div>
+              <div className="att-selected-sub">
+                <Shield size={12} />
+                <span>
+                  Authority Grant:{' '}
+                  {selection.scope
+                    ? `${scopeNames[selection.scope.kind]}`
+                    : 'Standard Attendance Authority'}
+                </span>
+              </div>
             </div>
           </div>
-        </form>
-      </div>
-      {!id.safeParse(employee).success ? (
-        <p className="att-workspace-hint">Select an employee by name or employee code above.</p>
-      ) : !valid ? (
-        <Denied>
-          Choose a matching grant for this employee or historical resource. Membership is checked by
-          the server.
-        </Denied>
-      ) : null}
-      {content}
+
+          <div className="att-selected-actions">
+            {scopes.length > 1 && !scopes.some((grant) => grant.kind === 7) && (
+              <ScopeSelect
+                permission={permission}
+                value={selection.scope}
+                disabled={editing}
+                onChange={(value) => {
+                  setScope(value);
+                  setSelection({ employee: selection.employee, scope: value });
+                }}
+              />
+            )}
+            <button
+              type="button"
+              className="att-switch-employee-btn"
+              disabled={editing}
+              onClick={() => {
+                setSelection(null);
+                setEmployee('');
+              }}
+            >
+              <ArrowLeftRight size={13} />
+              <span>Change Employee</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="att-employee-search-container">
+          <div className="att-workspace-header">
+            <div className="att-workspace-header-text">
+              <h2 className="att-workspace-title">{title}</h2>
+              <p className="att-workspace-subtitle">
+                Search or select an employee to view history, review duty hours, or record overtime requests.
+              </p>
+            </div>
+          </div>
+
+          <div className="att-employee-lookup-box">
+            <EmployeeLookup
+              approvedOnly={approvedOnly}
+              disabled={editing}
+              selected={employee}
+              onSelect={(value) => {
+                const nextScope = scope ?? suggestedScope(value);
+                setEmployee(value);
+                if (value && canEmployee(access.user, permission, value, nextScope)) {
+                  setScope(nextScope);
+                  setSelection({ employee: value, scope: nextScope });
+                } else {
+                  setSelection(null);
+                }
+              }}
+            />
+
+            <details
+              className="att-register-advanced"
+              open={!access.can('hr.employees.read') || (Boolean(employee) && !valid)}
+            >
+              <summary>Advanced Employee ID / Scope Grants</summary>
+              <form
+                className="att-register-access"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (valid && !editing) setSelection({ employee, scope: effectiveScope });
+                }}
+              >
+                <EmployeePicker
+                  label="Employee"
+                  required
+                  disabled={editing}
+                  value={employee}
+                  onChange={(uuid) => {
+                    setSelection(null);
+                    setEmployee(uuid);
+                  }}
+                />
+                {scopes.length > 1 && !scopes.some((grant) => grant.kind === 7) && (
+                  <ScopeSelect
+                    permission={permission}
+                    value={effectiveScope}
+                    disabled={editing}
+                    onChange={(value) => {
+                      setSelection(null);
+                      setScope(value);
+                    }}
+                  />
+                )}
+                <Command icon={Search} type="submit" disabled={editing || !valid}>
+                  Open employee
+                </Command>
+              </form>
+              {employee && !valid && (
+                <Denied>Select an access area assigned to you for this employee.</Denied>
+              )}
+            </details>
+          </div>
+
+          <section className="att-register-empty" aria-label="Attendance selection">
+            <div className="att-empty-icon-wrap">
+              <Users size={26} aria-hidden="true" />
+            </div>
+            <h2>Select an employee to manage records</h2>
+            <p>
+              Search by name or EMP code above to view or submit requests for that employee.
+            </p>
+          </section>
+        </div>
+      )}
+
+      {selection && content}
     </div>
   );
 }
@@ -630,7 +726,7 @@ function EmployeeLookup({
 }) {
   const access = useAttendanceAccess();
   const [search, setSearch] = useState('');
-  const [submitted, setSubmitted] = useState<string | null>(compact ? '' : null);
+  const [submitted, setSubmitted] = useState<string | null>('');
   const allowed = access.can('hr.employees.read');
   const query = useAttendanceQuery(
     '/hr/employees' +
@@ -675,42 +771,58 @@ function EmployeeLookup({
           Search
         </Command>
       </form>
+
+      <div className="att-register-select-box">
+        <SelectInput
+          label={
+            compact
+              ? query.data
+                ? `Select employee (${query.data.items.length} loaded)`
+                : 'Select employee'
+              : 'Employee search results'
+          }
+          value={query.data?.items.some((employee) => employee.id === selected) ? selected : ''}
+          disabled={disabled || query.isFetching || !query.data}
+          options={[
+            {
+              value: '',
+              label: query.isFetching ? 'Loading employees…' : 'Choose an employee',
+            },
+            ...(query.data?.items.map((employee) => ({
+              value: employee.id,
+              label: `${employee.name ?? 'Employee'} · ${formatEmployeeCode(employee.employeeNumber)}`,
+            })) ?? []),
+          ]}
+          onChange={(event) => {
+            onSelect(event.target.value);
+          }}
+        />
+      </div>
+
+      {submitted !== null && (
+        <div style={{ gridColumn: '1 / -1' }}>
+          <QueryState
+            query={query}
+            empty={query.data?.items.length === 0}
+            emptyText={approvedOnly ? 'No approved employees match this search.' : undefined}
+          />
+        </div>
+      )}
+
       {approvedOnly && (
         <p className="att-register-help">
-          Only approved employees are listed, including former and archived staff for historical
-          review. Complete hiring and approval in the employee record if someone is missing.
+          <Info size={13} style={{ flexShrink: 0, color: '#94a3b8' }} />
+          <span>
+            Only approved employees are listed, including former and archived staff for historical
+            review. Complete hiring and approval in the employee record if someone is missing.
+          </span>
         </p>
       )}
-      {submitted !== null && (
-        <QueryState
-          query={query}
-          empty={query.data?.items.length === 0}
-          emptyText={approvedOnly ? 'No approved employees match this search.' : undefined}
-        />
-      )}
-      {!query.isError && query.data && (
-        <>
-          <SelectInput
-            label={compact ? 'Employee' : 'Employee search results'}
-            value={query.data.items.some((employee) => employee.id === selected) ? selected : ''}
-            disabled={disabled || query.isFetching}
-            options={[
-              { value: '', label: 'Choose an employee' },
-              ...query.data.items.map((employee) => ({
-                value: employee.id,
-                label: `${employee.name ?? 'Employee'} · ${formatEmployeeCode(employee.employeeNumber)}`,
-              })),
-            ]}
-            onChange={(event) => {
-              onSelect(event.target.value);
-            }}
-          />
-          {query.data.totalCount > 25 && (
-            <p className="att-register-help">
-              Showing 25 matches. Search by name or number to narrow the list.
-            </p>
-          )}
-        </>
+
+      {!query.isError && query.data && query.data.totalCount > 25 && (
+        <p className="att-register-help" style={{ marginTop: '-4px' }}>
+          Showing 25 matches. Search by name or number to narrow the list.
+        </p>
       )}
     </section>
   );
@@ -733,24 +845,32 @@ export function RangeFilter({
   const [state, setState] = useState(0);
   const [kind, setKind] = useState('');
   const valid = validRange(from, to);
+
+  useEffect(() => {
+    if (valid && !disabled) {
+      onChange({ from, to, pageSize, state, kind: kind ? Number(kind) : undefined });
+    }
+  }, []);
+
   return (
     <form
+      className="att-range-filter-form"
       onSubmit={(e) => {
         e.preventDefault();
         if (valid && !disabled)
           onChange({ from, to, pageSize, state, kind: kind ? Number(kind) : undefined });
       }}
     >
-      <fieldset className="attendance-grid" disabled={disabled}>
+      <fieldset className="att-range-filter-fieldset" disabled={disabled}>
         <TextInput
-          label="From (inclusive business date)"
+          label="From date"
           type="date"
           required
           value={from}
           onChange={(e) => setFrom(e.target.value)}
         />
         <TextInput
-          label="To (exclusive business date)"
+          label="To date"
           type="date"
           required
           value={to}
@@ -781,10 +901,12 @@ export function RangeFilter({
             onChange={(e) => setKind(e.target.value)}
           />
         )}
-        <Command icon={Search} type="submit" disabled={!valid}>
-          Load history
-        </Command>
-        {!valid && <p role="alert">Choose an exclusive range of 1 to 366 days.</p>}
+        <div className="att-filter-submit-wrap">
+          <Command icon={Search} type="submit" disabled={!valid}>
+            Filter history
+          </Command>
+        </div>
+        {!valid && <p role="alert" className="att-filter-error">Choose an exclusive range of 1 to 366 days.</p>}
       </fieldset>
     </form>
   );

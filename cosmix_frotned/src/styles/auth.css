@@ -106,7 +106,90 @@
 .auth-form-link {
   display: flex;
   justify-content: flex-end;
-  margin-top: -5px;
+  margin-top: -6px;
+  margin-bottom: 2px;
+}
+
+/* Custom Select in Auth Form */
+.auth-form .custom-select-container {
+  width: 100%;
+}
+
+.auth-form .custom-select-container > label {
+  font-size: 13px;
+  color: #303b43;
+  font-weight: 550;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.auth-form .custom-select-trigger {
+  min-height: 46px !important;
+  height: 46px !important;
+  border: 1px solid #cdd4d9 !important;
+  border-radius: 8px !important;
+  padding: 0 14px !important;
+  font-size: 14px !important;
+  background: #ffffff !important;
+  color: #1e293b !important;
+  font-weight: 500 !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.auth-form .custom-select-trigger:hover {
+  border-color: #94a3b8 !important;
+  background: #fcfdfd !important;
+}
+
+.auth-form .custom-select-trigger:focus,
+.auth-form .custom-select-trigger.is-open {
+  border-color: #287767 !important;
+  box-shadow: 0 0 0 3px rgba(40, 119, 103, 0.18) !important;
+}
+
+.auth-form .custom-select-chevron {
+  color: #64748b !important;
+}
+
+.auth-form .custom-select-trigger.is-open .custom-select-chevron {
+  color: #287767 !important;
+}
+
+.auth-form .custom-select-popover {
+  border-radius: 8px !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow:
+    0 10px 25px -5px rgba(15, 23, 42, 0.15),
+    0 8px 10px -6px rgba(15, 23, 42, 0.08) !important;
+  background: #ffffff !important;
+  z-index: 1000 !important;
+  top: calc(100% + 6px) !important;
+}
+
+.auth-form .custom-select-option {
+  padding: 10px 14px !important;
+  font-size: 13.5px !important;
+  color: #1e293b !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  transition: background 0.12s ease !important;
+}
+
+.auth-form .custom-select-option:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.auth-form .custom-select-option.is-selected {
+  background: #eef7f5 !important;
+  color: #1b5347 !important;
+  font-weight: 600 !important;
+}
+
+.auth-form .custom-select-check {
+  color: #287767 !important;
 }
 .auth-form .text-link,
 .auth-back {

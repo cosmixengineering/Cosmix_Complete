@@ -1,3 +1,4 @@
+import { EmployeePicker } from '@/components/employees/EmployeeReference';
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Eye, Search, Send } from 'lucide-react';
@@ -83,13 +84,12 @@ export function VehicleMonthlyManagement() {
               onChange={(event) => setForm({ ...form, vehicleId: event.target.value })}
               placeholder="e.g. VEH-001"
             />
-            <TextInput
-              label="Employee ID"
-              disabled={navigation.pending}
+            <EmployeePicker
+              label="Employee"
               required
+              disabled={navigation.pending}
               value={form.employeeId}
-              onChange={(event) => setForm({ ...form, employeeId: event.target.value })}
-              placeholder="e.g. EMP-101"
+              onChange={(id) => setForm({ ...form, employeeId: id })}
             />
             <TextInput
               label="Completed month"
