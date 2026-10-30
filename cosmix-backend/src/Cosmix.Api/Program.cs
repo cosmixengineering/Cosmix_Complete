@@ -2,6 +2,7 @@ using Cosmix.Api.Authentication;
 using Cosmix.Api.Attendance;
 using Cosmix.Api.BackgroundJobs;
 using Cosmix.Api.Health;
+using Cosmix.Api.Hosting;
 using Cosmix.Api.Middleware;
 using Cosmix.Api.OpenApi;
 using Cosmix.Api.Development;
@@ -53,10 +54,10 @@ Cosmix.Api.Controllers.Attendance.WorkTreatmentProtection.AddWorkTreatmentSource
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-CSRF-TOKEN";
-    options.Cookie.Name = "__Host-Cosmix.Csrf";
+    options.Cookie.Name = "Cosmix.Csrf";
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
     options.Cookie.Path = "/";
 });
 builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
@@ -173,6 +174,7 @@ app.UseStatusCodePages();
 if (!app.Environment.IsDevelopment())
     app.UseHsts();
 app.UseHttpsRedirection();
+app.UseCosmixFrontend();
 app.UseCors();
 if (app.Environment.IsDevelopment())
 {
@@ -218,6 +220,7 @@ app.MapHealthChecks("/health/payroll-ready", new HealthCheckOptions
     }
 }).AllowAnonymous();
 app.MapControllers();
+app.MapCosmixFrontend();
 app.Run();
 
 public partial class Program;

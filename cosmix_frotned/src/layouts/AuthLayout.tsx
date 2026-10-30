@@ -22,17 +22,6 @@ export function AuthLayout({
           <div className="auth-banner-photo">
             <img src={engineeringBanner} alt="Cosmix Engineering Facility" fetchPriority="high" />
           </div>
-
-          <div className="auth-banner-caption">
-            <div className="auth-banner-accent" aria-hidden="true" />
-            <h2>Cosmix Engineering.</h2>
-            <p>Expertise that keeps everything running.</p>
-            <div className="auth-banner-services" aria-label="Our services">
-              <span>HVAC &amp; MEP</span>
-              <span>Installation</span>
-              <span>Maintenance</span>
-            </div>
-          </div>
         </aside>
 
         <div className="auth-panel">

@@ -179,7 +179,7 @@ Check(await legacy.Service.SubmitAsync(legacyProposal, "correction-key-001", leg
     "exact old receipt reconciles without source proof or duplicate write");
 legacy.Grants.Clear();
 await Fails(() => legacy.Service.SubmitAsync(legacyProposal, "correction-key-001", legacy.Context, default), "access_denied");
-legacy.Grants.Add(new(CorrectionPermissions.Self,false,Guid.NewGuid(),AccessScopeKind.Self,legacy.Actor.EmployeeId));
+legacy.Grants.Add(CorrectionFixture.Grant(CorrectionPermissions.Self,false,Guid.NewGuid(),AccessScopeKind.Self,legacy.Actor.EmployeeId));
 var legacyReference = JsonSerializer.Deserialize<PrivateFileReference>(legacy.Records[0].Correction.PrivateEvidenceReference)!;
 var retained = legacy.Files[legacyReference.StorageKey];
 var legacySnapshot = JsonNode.Parse(retained.Bytes)!;
@@ -205,12 +205,23 @@ frozenFixture.Files[frozenReference.StorageKey] = (frozenBytes.Purpose,JsonSeria
 await Fails(() => frozenFixture.Service.DetailAsync(frozenResponse.Id,frozenFixture.Context,default), "correction_evidence_unavailable");
 var apply = new CorrectionFixture(); apply.EnableValidDuty();
 var submitted = await apply.Submit();
+Check(submitted.State == "Pending" && !submitted.ChangesAttendance && apply.Sessions.Count == 1 &&
+    apply.Sessions.Single().EndsAtUtc is null && apply.Decisions.Count == 0 && apply.Summary.Revision == 1,
+    "Missing-checkout submission must not close duty or replace the summary before HR approval");
+var openFacts = AttendanceFacts.Calculate(apply.EmployeeId, apply.Proposal.BusinessDate, apply.Sessions);
+Check(openFacts.OpenSessions == 1 && openFacts.WorkedMinutes == 0,
+    "An open session never uses current time to credit hours spent at home");
 var source3 = await apply.Service.SourcesAsync(apply.Proposal.BusinessDate,null,apply.Context,default);
 Check(source3.DutyProofs?.Single().HistoricallyVerified == true && source3.RoutingStatus == "hr_review_required", "associated valid CheckIn proof frozen on missing checkout source");
 apply.BecomeReviewer(); var baseline=apply.Transactions;
 var applied=await apply.Decide(submitted);
 Check(applied.Request.ChangesAttendance && applied.AppliedSessionRevisionId==apply.Sessions.Last().Id && applied.AppliedSummaryRevisionId==apply.Summary.Id, "HR missing checkout applies session and summary provenance");
 Check(apply.Sessions.Last().CheckOutPunchId is null && apply.Sessions.Last().CorrectionId==submitted.Id && apply.Sessions[0].EndsAtUtc is null, "missing checkout adds interpretation revision without fake raw checkout");
+Check(apply.Sessions.Last().EndsAtUtc == apply.Proposal.RequestedTimeUtc,
+    "Approved missing checkout uses the evidenced requested time, not approval time or current time");
+var correctedFacts = AttendanceFacts.Calculate(apply.EmployeeId, apply.Proposal.BusinessDate, apply.Sessions);
+Check(correctedFacts.OpenSessions == 0 && correctedFacts.WorkedMinutes == 480,
+    "Only the HR-approved eight-hour revision counts; the superseded open session adds no home hours");
 Check(apply.Summary.PayableMinutes is null && apply.Summary.LateMinutes is null && apply.Summary.OvertimeMinutes is null, "approval does not fabricate financial results");
 Check(apply.Transactions==baseline+1 && apply.TransactionDepth==0 && apply.Decisions.Count==1, "approval and internal summary use one caller-owned transaction");
 Check(await apply.Decide(submitted)==applied && apply.Sessions.Count==2 && apply.Notifications.Count==1, "decision retry replays original evidence without duplicate revision or notification");
@@ -254,7 +265,7 @@ Check(failedNotification.Decisions.Count==0 && failedNotification.Sessions.Count
 var returned=new CorrectionFixture();returned.EnableValidDuty();var returnRow=await returned.Submit();var originalActor=returned.Actor;returned.BecomeReviewer();
 var returnResult=await returned.Decide(returnRow,ApprovalState.Returned);
 Check(returnResult.Request.State=="Returned" && !returnResult.Request.ChangesAttendance && returned.Sessions.Count==1,"return closes request without changing attendance");
-returned.Actor=originalActor;returned.Grants=[new(CorrectionPermissions.Self,false,Guid.NewGuid(),AccessScopeKind.Self,originalActor.EmployeeId)];
+returned.Actor=originalActor;returned.Grants=[CorrectionFixture.Grant(CorrectionPermissions.Self,false,Guid.NewGuid(),AccessScopeKind.Self,originalActor.EmployeeId)];
 var resubmission=await returned.Submit(returned.Proposal with {ResubmissionOfCorrectionId=returnRow.Id},"resubmit-key-001");
 Check(resubmission.Id!=returnRow.Id && returned.Records.Count==2,"returned request resubmits as distinct immutable linked request");
 var v2Review=new CorrectionFixture();var v2Row=await v2Review.Submit();v2Review.BecomeReviewer();
@@ -262,7 +273,7 @@ await Fails(()=>v2Review.Decide(v2Row),"correction_legacy_source_refresh_require
 var queue=new CorrectionFixture();queue.EnableValidDuty();var queueRow=await queue.Submit();queue.BecomeReviewer();
 var queueResult=await queue.Review.QueueAsync(new(queue.Range.From,queue.Range.To,CorrectionQueueScope.All),queue.Context,default);
 Check(queueResult.Items.Count==1 && !JsonSerializer.Serialize(queueResult).Contains("TotalCount"),"queue returns only scoped items and no unauthorized count");
-queue.Grants=[new(CorrectionPermissions.Review,true,Guid.NewGuid(),AccessScopeKind.Site,Guid.NewGuid())];
+queue.Grants=[CorrectionFixture.Grant(CorrectionPermissions.Review,true,Guid.NewGuid(),AccessScopeKind.Site,Guid.NewGuid())];
 await Fails(()=>queue.Review.QueueAsync(new(queue.Range.From,queue.Range.To,CorrectionQueueScope.All),queue.Context,default),"access_denied");
 var supervisor=new CorrectionFixture();supervisor.EnableValidDuty();supervisor.BecomeReviewer();
 var supervisorPreview=await supervisor.Review.SourcesAsync(supervisor.EmployeeId,supervisor.Proposal.BusinessDate,null,supervisor.Context,default);
@@ -412,7 +423,7 @@ Check((await altFailure.Review.DecideAsync(altFailure.EmployeeId,altFailureRow.I
 var altScoped = new CorrectionFixture(); altScoped.EnableOfficeManual();
 altScoped.Proposal = altScoped.Proposal with { AlternativeKind = CorrectionAlternativeKind.Medical, ExpectedAlternativePolicyId = altScoped.AlternativePolicyId };
 var altScopedRow=await altScoped.Submit();altScoped.BecomeAlternativeAdmin();
-altScoped.Grants=[new(CorrectionPermissions.AlternativesDecide,true,Guid.NewGuid(),AccessScopeKind.Site,Guid.NewGuid())];
+altScoped.Grants=[CorrectionFixture.Grant(CorrectionPermissions.AlternativesDecide,true,Guid.NewGuid(),AccessScopeKind.Site,Guid.NewGuid())];
 await Fails(()=>altScoped.Review.DecideAsync(altScoped.EmployeeId,altScopedRow.Id,new(altScopedRow.Version,ApprovalState.Approved,"Wrong scope",CorrectionAlternativeKind.Medical),
     "alternative-scoped-denial",altScoped.Context,default),"access_denied");
 var freshTime = new CorrectionFixture(); freshTime.EnableOfficeManual();
@@ -531,6 +542,10 @@ public class CorrectionProxy : DispatchProxy
 }
 public sealed class CorrectionFixture
 {
+    // Explicit synthetic effective authority; production rejects missing validity evidence.
+    public static PermissionGrant Grant(string permission, bool sensitive, Guid assignment, AccessScopeKind scope, Guid? target) =>
+        new(permission, sensitive, assignment, scope, target) { AuthorityTimingKnown = true,
+            ValidFromUtc = new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero) };
     public static void Set(object entity, string name, object? value) => entity.GetType().GetProperty(name)!.SetValue(entity, value);
     public CorrectionClock Clock = new();
     public AuthenticatedAccount Actor = new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1, SessionClient.Mobile, false);
@@ -583,7 +598,7 @@ public sealed class CorrectionFixture
         Proposal = new(new(2026, 10, 8), AttendanceCorrectionKind.CheckInTime, Raw.Id, Assessment.Id, Summary.Id,
             Raw.ReceivedAtUtc.AddMinutes(-5), null, null, "Correct my submitted time", "My contemporaneous written explanation.");
         foreach (var code in new[] { CorrectionPermissions.Self, CorrectionPermissions.ExceptionsSelf })
-            Grants.Add(new(code, false, Guid.NewGuid(), AccessScopeKind.Self, Actor.EmployeeId));
+            Grants.Add(Grant(code, false, Guid.NewGuid(), AccessScopeKind.Self, Actor.EmployeeId));
         var current = CorrectionProxy.Make<ICurrentAuthentication>((m, a) => Actor);
         var access = CorrectionProxy.Make<IAccountAccessReader>((m, a) => { Clock.Now += AccessReadAdvance;
             return Task.FromResult<IReadOnlyList<PermissionGrant>>(Grants.ToArray()); });
@@ -815,7 +830,7 @@ public sealed class CorrectionFixture
     {
         Actor=new(sameRequester?Actor.AccountId:Guid.NewGuid(),Guid.NewGuid(),Guid.NewGuid(),1,SessionClient.Web,true);
         Grants.Clear();foreach(var permission in new[]{CorrectionPermissions.Submit,CorrectionPermissions.Review,CorrectionPermissions.Decide})
-            Grants.Add(new(permission,true,Guid.NewGuid(),AccessScopeKind.All,null));
+            Grants.Add(Grant(permission,true,Guid.NewGuid(),AccessScopeKind.All,null));
     }
     public void BecomeAlternativeAdmin()
     {
@@ -843,7 +858,7 @@ public sealed class CorrectionFixture
     {
         Actor = new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1, SessionClient.Web, true);
         RoleCode = "SyntheticSupervisor";
-        Grants = [new(CorrectionPermissions.Submit, true, Guid.NewGuid(), AccessScopeKind.All, null)];
+        Grants = [Grant(CorrectionPermissions.Submit, true, Guid.NewGuid(), AccessScopeKind.All, null)];
         var source = await Review.SourcesAsync(EmployeeId, Proposal.BusinessDate, Proposal.RawPunchId, Context, default);
         Proposal = Proposal with { ExpectedSourceFingerprint = source.SourceFingerprint };
         return await Review.SubmitAsync(EmployeeId, Proposal, "supervisor-correction-submit", Context, default);

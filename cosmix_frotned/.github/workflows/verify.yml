@@ -16,4 +16,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run verify
+      - run: node --test scripts/evidence-record.test.mjs scripts/payroll-readiness.test.mjs
       - run: npm audit --audit-level=high

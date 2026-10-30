@@ -1,0 +1,187 @@
+name: Cosmix ERP Continuous Integration
+
+on:
+  push:
+    branches: [main, develop, 'codex/**', 'feature/**']
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-regression:
+    name: Backend Unit & Regression Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cosmix-backend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore locked dependencies
+        run: dotnet restore tests/Cosmix.Tests/Cosmix.Tests.csproj --locked-mode
+
+      - name: Build backend
+        run: dotnet build tests/Cosmix.Tests/Cosmix.Tests.csproj --configuration Release --no-restore
+
+      - name: Execute safe regression suite (isolated from company DBs)
+        run: >-
+          dotnet test tests/Cosmix.Tests/Cosmix.Tests.csproj -c Release --no-build --no-restore
+          --filter 'Category!=SqlIntegration&FullyQualifiedName!~AcceptanceExecutionSuite&FullyQualifiedName!~PayrollMonthAcceptanceTests&FullyQualifiedName!~PayrollPaymentsAcceptanceTests'
+          --logger 'trx;LogFileName=regression.trx' --results-directory TestResults
+
+      - name: Execute .NET dependency vulnerability audit
+        shell: pwsh
+        run: ./scripts/Test-DependencyAudit.ps1
+
+      - name: Operational monitor regression
+        shell: pwsh
+        run: ./scripts/Test-OperationalHealth.Tests.ps1
+
+      - name: Upload backend test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: cosmix-backend/TestResults/
+          retention-days: 14
+
+  backend-sql-schema:
+    name: Backend SQL Schema & Migration Verification
+    runs-on: windows-2025
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: cosmix-backend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Initialize disposable LocalDB instance
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ('MSSQLLocalDB' -notin @(& SqlLocalDB info)) {
+            & SqlLocalDB create MSSQLLocalDB
+            if ($LASTEXITCODE -ne 0) { throw 'LocalDB creation failed.' }
+          }
+          & SqlLocalDB start MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { throw 'LocalDB start failed.' }
+          "COSMIX_CI_SQL_CONNECTION=Server=(localdb)\MSSQLLocalDB;Database=Cosmix_Payroll_CI_${env:GITHUB_RUN_ID}_${env:GITHUB_RUN_ATTEMPT};Integrated Security=true;TrustServerCertificate=true" >> $env:GITHUB_ENV
+          "COSMIX_PAYROLL_VERIFICATION_CONNECTION=Server=(localdb)\MSSQLLocalDB;Database=Cosmix_Payroll_CI_${env:GITHUB_RUN_ID}_${env:GITHUB_RUN_ATTEMPT};Integrated Security=true;TrustServerCertificate=true" >> $env:GITHUB_ENV
+          "COSMIX_DR_SQL_CONNECTION=Server=(localdb)\MSSQLLocalDB;Database=master;Integrated Security=true;TrustServerCertificate=true" >> $env:GITHUB_ENV
+
+      - name: Restore locked dependencies
+        run: dotnet restore tests/Cosmix.Tests/Cosmix.Tests.csproj --locked-mode
+
+      - name: Execute disposable database migration and boundary tests
+        run: >-
+          dotnet test tests/Cosmix.Tests/Cosmix.Tests.csproj -c Release --no-restore
+          --filter FullyQualifiedName~CiSqlSchemaTests
+          --logger 'trx;LogFileName=sql-schema.trx' --results-directory TestResults
+
+      - name: Disposable backup recovery and company readiness SQL queries
+        run: >-
+          dotnet test tests/Cosmix.Tests/Cosmix.Tests.csproj -c Release --no-build --no-restore
+          --filter 'FullyQualifiedName~BackupDisasterRecoveryTests|FullyQualifiedName~CompanyPayrollReadinessTests.SQL_persistence'
+          --logger 'trx;LogFileName=sql-recovery-readiness.trx' --results-directory TestResults
+
+      - name: Payroll ledger and project costs on a fresh disposable SQL database
+        env:
+          COSMIX_FINANCE_SQL_CONNECTION: 'Server=(localdb)\MSSQLLocalDB;Database=master;Integrated Security=true;TrustServerCertificate=true'
+          COSMIX_FINANCE_SQL_EVIDENCE: '${{ runner.temp }}/cosmix-finance-sql'
+        run: >-
+          dotnet test tests/Cosmix.Tests/Cosmix.Tests.csproj -c Release --no-build --no-restore
+          --filter FullyQualifiedName~PayrollFinanceSqlIntegrationTests
+          --logger 'trx;LogFileName=sql-finance-integration.trx' --results-directory TestResults
+
+      - name: Attendance capture and history on a fresh disposable SQL database
+        env:
+          COSMIX_ATTENDANCE_SQL_CONNECTION: 'Server=(localdb)\MSSQLLocalDB;Database=master;Integrated Security=true;TrustServerCertificate=true'
+          COSMIX_ATTENDANCE_SQL_WORKDIR: '${{ runner.temp }}/cosmix-attendance-sql'
+        run: >-
+          dotnet test tests/Cosmix.Tests/Cosmix.Tests.csproj -c Release --no-build --no-restore
+          --filter FullyQualifiedName~AttendanceSqlIntegrationTests
+          --logger 'trx;LogFileName=sql-attendance-integration.trx' --results-directory TestResults
+
+      - name: Upload SQL schema test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-sql-schema-results
+          path: cosmix-backend/TestResults/
+          retention-days: 14
+
+  frontend-verify:
+    name: Web Frontend Build, Lint & Typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cosmix_frotned
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: cosmix_frotned/package-lock.json
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Typecheck and lint frontend
+        run: npm run verify
+
+      - name: Production bundle build
+        run: npm run build
+
+      - name: Payroll readiness and evidence regression
+        run: node --test scripts/evidence-record.test.mjs scripts/payroll-readiness.test.mjs
+
+      - name: High-severity dependency vulnerability audit
+        run: npm audit --audit-level=high
+
+  mobile-verify:
+    name: Mobile App Configuration, Signing & Release Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cosmix_mobile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: cosmix_mobile/package-lock.json
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Lint and typecheck mobile source
+        run: npm run verify
+
+      - name: Run release security configuration tests (SPKI Pinning & Origin)
+        run: node --test scripts/release-config.test.mjs
+
+      - name: Dependency vulnerability audit
+        run: npm audit --audit-level=high

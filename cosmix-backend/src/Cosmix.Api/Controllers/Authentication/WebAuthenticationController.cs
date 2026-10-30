@@ -53,7 +53,7 @@ public sealed class WebAuthenticationController(WebAuthenticationService service
     [AllowAnonymous, HttpPost("refresh")]
     public async Task<ActionResult<BrowserSessionResponse>> Refresh(CancellationToken ct)
     {
-        var secret = Request.Cookies[WebSessionCookies.Refresh] ?? string.Empty;
+        var secret = WebSessionCookies.GetCookie(HttpContext, WebSessionCookies.Refresh, WebSessionCookies.PlainRefresh);
         var result = await service.RefreshResultAsync(new WebRefreshRequest(secret,
             WebSessionCookies.RequireBrowser(HttpContext)), Context(), ct);
         if ((result.Error is not null || result.Value is null) && result.StatusCode == 401)

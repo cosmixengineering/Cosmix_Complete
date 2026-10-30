@@ -175,7 +175,7 @@ function VehiclesManagementWorkspace() {
       <div className="veh-kpis-grid">
         <div className="veh-kpi-card">
           <div className="veh-kpi-icon-wrap veh-bg-blue">
-            <Car size={20} />
+            <Car size={16} />
           </div>
           <div className="veh-kpi-content">
             <span className="veh-kpi-label">Registered Fleet</span>
@@ -192,7 +192,7 @@ function VehiclesManagementWorkspace() {
 
         <div className="veh-kpi-card">
           <div className="veh-kpi-icon-wrap veh-bg-amber">
-            <Route size={20} />
+            <Route size={16} />
           </div>
           <div className="veh-kpi-content">
             <span className="veh-kpi-label">Pending Trips</span>
@@ -209,7 +209,7 @@ function VehiclesManagementWorkspace() {
 
         <div className="veh-kpi-card">
           <div className="veh-kpi-icon-wrap veh-bg-emerald">
-            <Fuel size={20} />
+            <Fuel size={16} />
           </div>
           <div className="veh-kpi-content">
             <span className="veh-kpi-label">Fuel Claims</span>
@@ -226,7 +226,7 @@ function VehiclesManagementWorkspace() {
 
         <div className="veh-kpi-card">
           <div className="veh-kpi-icon-wrap veh-bg-purple">
-            <KeyRound size={20} />
+            <KeyRound size={16} />
           </div>
           <div className="veh-kpi-content">
             <span className="veh-kpi-label">Active Custody</span>

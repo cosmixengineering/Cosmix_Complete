@@ -7,6 +7,8 @@ using Cosmix.Domain.Attendance.Overtime;
 using Cosmix.Domain.Common.Approvals;
 using Cosmix.Application.Attendance.Overtime;
 using Cosmix.Application.Attendance.Rosters;
+using Cosmix.Application.HR.Policies;
+using Cosmix.Domain.HR.Policies;
 
 // Synthetic domain checks only. No connection, file storage, provider or financial calculation.
 // Prepared before the nullable pending-intake implementation; execution is root-coordinated.
@@ -89,4 +91,43 @@ Check(nonNine is { Status: "overtime_non_nine_hour_schedule_unavailable", Schedu
 var open = await evaluator.EvaluateAsync(employee, date, [Session(start, start.AddHours(11)) with { EndsAtUtc = null }], roster, default);
 Check(open is { Status: "overtime_valid_closed_duty_required", ScheduledDutyCompleted: null }
     && open.EligibleIntervals.Count == 0, "Open sessions cannot produce completed duty or eligible OT intervals");
+// Exact user scenario: noon-to-21:00 Pakistan shift, valid checkout at midnight.
+// Exercise the registered configurable evaluator, not just the legacy nine-hour adapter.
+var noon = new DateTimeOffset(2026, 10, 9, 12, 0, 0, TimeSpan.FromHours(5));
+var eveningRoster = roster with { StartsAt = noon, EndsAt = noon.AddHours(9) };
+var otRules = new AttendanceOvertimeRules(9 * 3600, AttendanceDeductionSalaryBasis.BaseSalary,
+    AttendanceSalaryDivisor.ActualCalendarMonthDays, null, 1m,
+    AttendanceDeductionRounding.WholeCurrencyUnitHalfUp, AttendanceBreakTreatment.CountAllBreaks);
+var resolver = new SyntheticOtPolicyResolver(otRules);
+var configuredEvaluator = new ConfiguredOvertimeDurationPolicy(resolver);
+var forgotten = await configuredEvaluator.EvaluateAsync(employee, date,
+    [Session(noon, noon.AddHours(12)) with { EndsAtUtc = null }], eveningRoster, default);
+Check(forgotten.Status == "overtime_valid_closed_duty_required" && forgotten.EligibleIntervals.Count == 0,
+    "Missing checkout at 21:00 cannot turn home hours into eligible OT under configured policy");
+var extraThree = await configuredEvaluator.EvaluateAsync(employee, date,
+    [Session(noon, noon.AddHours(12))], eveningRoster, default);
+Check(extraThree.ScheduledDutyCompleted == true && extraThree.PolicyVersionId == resolver.Version &&
+    extraThree.EligibleIntervals.Single() == new OvertimeEligibleInterval(noon.AddHours(9).ToUniversalTime(), noon.AddHours(12).ToUniversalTime()),
+    "Valid midnight checkout retains exactly 180 eligible minutes after 21:00 on original business date");
+var atEnd = await configuredEvaluator.EvaluateAsync(employee, date,
+    [Session(noon, noon.AddHours(9))], eveningRoster, default);
+Check(atEnd.ScheduledDutyCompleted == true && atEnd.EligibleIntervals.Count == 0,
+    "Actual departure at shift end earns no OT after HR closes at the evidenced time");
+var lateThree = await configuredEvaluator.EvaluateAsync(employee, date,
+    [Session(noon.AddHours(1), noon.AddHours(12))], eveningRoster, default);
+Check(lateThree.EligibleIntervals.Single() == new OvertimeEligibleInterval(noon.AddHours(10).ToUniversalTime(), noon.AddHours(12).ToUniversalTime()),
+    "One-hour late arrival must first complete nine worked hours; midnight earns two, not three, OT hours");
+var eightHourRoster = eveningRoster with { EndsAt = noon.AddHours(8) };
+var configuredEight = new ConfiguredOvertimeDurationPolicy(new SyntheticOtPolicyResolver(otRules with { StandardDutySeconds = 8 * 3600 }));
+var dynamicExtra = await configuredEight.EvaluateAsync(employee, date, [Session(noon, noon.AddHours(11))], eightHourRoster, default);
+Check(dynamicExtra.EligibleIntervals.Single() == new OvertimeEligibleInterval(noon.AddHours(8).ToUniversalTime(), noon.AddHours(11).ToUniversalTime()),
+    "Configured eight-hour duty also yields exactly three extra hours without hardcoding nine");
 Console.WriteLine($"PASS overtime domain checks: {checks}");
+
+sealed class SyntheticOtPolicyResolver(AttendanceOvertimeRules rules) : IAttendancePolicyResolver
+{
+    public Guid Version { get; } = Guid.NewGuid();
+    public Task<AttendancePolicyResolution> ResolveAsync(Guid employeeId, DateOnly businessDate, CancellationToken ct) =>
+        Task.FromResult(new AttendancePolicyResolution("effective", Version, [],
+            new AttendancePolicyRules(3, null, null, null, Overtime: rules), null, new string('A', 64)));
+}

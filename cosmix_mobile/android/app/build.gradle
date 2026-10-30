@@ -87,6 +87,22 @@ android {
         versionCode 1
         versionName "1.0"
         buildConfigField "String", "COSMIX_API_BASE_URL", groovy.json.JsonOutput.toJson(cosmixReleaseConfig.apiBaseUrl ?: "")
+        if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")) {
+            externalNativeBuild {
+                cmake { arguments "-DCMAKE_OBJECT_PATH_MAX=240" }
+            }
+        }
+    }
+    if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")) {
+        // Ninja still encounters MAX_PATH on generated React Native object files.
+        // Keep checkouts separate while moving native intermediates out of the long source path.
+        def checkoutId = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(rootProject.projectDir.canonicalPath.getBytes("UTF-8")).encodeHex().toString().take(12)
+        externalNativeBuild {
+            cmake {
+                buildStagingDirectory new File(gradle.gradleUserHomeDir, "cosmix-native/${checkoutId}")
+            }
+        }
     }
     buildFeatures { buildConfig true }
     signingConfigs {

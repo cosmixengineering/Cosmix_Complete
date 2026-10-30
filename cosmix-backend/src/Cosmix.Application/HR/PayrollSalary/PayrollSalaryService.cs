@@ -10,6 +10,11 @@ namespace Cosmix.Application.HR.PayrollSalary;
 
 public sealed class PayrollSalaryService(AttendanceOperation operation,IPayrollSalaryRepository repository,IPrivateFileStore files)
 {
+    public Task<CompanyPayrollReadinessReport> ReadinessAsync(CompanyPayrollReadinessService readiness,
+        int year, int month, AuthRequestContext context, CancellationToken ct) =>
+        operation.ReadAsync(PayrollSalaryPermissions.Read, "payroll.company-readiness.read", null, context,
+            (_, token) => readiness.EvaluateAsync(year, month, token), ct, concurrentRead: true);
+
     public const string ComponentRequestType="payroll.salary-component";
     public const string PolicyRequestType="payroll.salary-policy";
     public Task<PayrollSalaryComponentPage> ComponentsAsync(Guid? employeeId,int page,int pageSize,AuthRequestContext context,CancellationToken ct)

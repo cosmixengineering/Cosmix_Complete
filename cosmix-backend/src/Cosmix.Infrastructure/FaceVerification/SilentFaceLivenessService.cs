@@ -21,7 +21,7 @@ public sealed class SilentFaceLivenessService : IDisposable
     public SilentFaceLivenessService(SilentFaceOptions options)
     {
         timeoutSeconds = options.TimeoutSeconds;
-        if (!options.Enabled || timeoutSeconds is < 1 or > 30 || options.Models is null || options.Models.Count is < 1 or > 4) return;
+        if (!options.Enabled || timeoutSeconds is < 1 or > 60 || options.Models is null || options.Models.Count is < 1 or > 4) return;
         try
         {
             var contracts = options.Models.ToArray();

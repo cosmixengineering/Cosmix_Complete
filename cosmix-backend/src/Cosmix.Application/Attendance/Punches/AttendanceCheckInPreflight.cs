@@ -26,17 +26,7 @@ public sealed partial class AttendanceCaptureService
             {
                 RequireFreshLocation(request, actor.Now);
                 var employeeId = actor.Identity.EmployeeId;
-                if (locationConsent is null)
-                    throw new AuthenticationFailure("location_policy_check_unavailable", 503);
-                var notice = await locationConsent.GetActivePolicyAsync(token);
-                if (notice is null)
-                    throw AttendanceOperation.Invalid("location_notice_not_configured");
-                if (!notice.IsActive || notice.PublishedAt is null || notice.PublishedAt > actor.Now)
-                    throw new AuthenticationFailure("location_policy_check_unavailable", 503);
-                var consent = await locationConsent.GetConsentAsync(employeeId, notice.Version, token);
-                if (consent is null || consent.EmployeeId != employeeId || consent.NoticePolicyId != notice.Id ||
-                    consent.NoticePolicyVersion != notice.Version || consent.AcceptedAtUtc > actor.Now)
-                    throw AttendanceOperation.Conflict("location_consent_required_before_gps_submission");
+                await RequireLocationConsentAsync(employeeId, token);
                 var active = await repository.ActiveSessionsAsync(employeeId, token);
                 if (active.Count != 0) throw AttendanceOperation.Conflict("check_in_active_session");
                 var roster = await SelectRosterAsync(employeeId, active, actor.Now, token);
@@ -100,5 +90,22 @@ public sealed partial class AttendanceCaptureService
         var age = now - request.DeviceCapturedAtUtc;
         if (age > TimeSpan.FromSeconds(30) || age < TimeSpan.FromSeconds(-5))
             throw AttendanceOperation.Invalid("check_in_location_stale");
+    }
+
+    // Preflight is only guidance. Direct Check In/Out calls must enforce the same current,
+    // employee-bound published notice before retaining any coordinates or business evidence.
+    private async Task RequireLocationConsentAsync(Guid employeeId, CancellationToken ct)
+    {
+        if (locationConsent is null)
+            throw new AuthenticationFailure("location_policy_check_unavailable", 503);
+        var notice = await locationConsent.GetActivePolicyAsync(ct);
+        if (notice is null)
+            throw AttendanceOperation.Invalid("location_notice_not_configured");
+        if (!notice.IsActive || notice.PublishedAt is null || notice.PublishedAt > clock.GetUtcNow())
+            throw new AuthenticationFailure("location_policy_check_unavailable", 503);
+        var consent = await locationConsent.GetConsentAsync(employeeId, notice.Version, ct);
+        if (consent is null || consent.EmployeeId != employeeId || consent.NoticePolicyId != notice.Id ||
+            consent.NoticePolicyVersion != notice.Version || consent.AcceptedAtUtc > clock.GetUtcNow())
+            throw AttendanceOperation.Conflict("location_consent_required_before_gps_submission");
     }
 }

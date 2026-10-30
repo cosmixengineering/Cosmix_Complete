@@ -5,6 +5,7 @@ import { VehiclesPage } from './VehiclesPage';
 import { PayrollHandoffPage } from './PayrollHandoffPage';
 import { PayrollAccountingPage } from './PayrollAccountingPage';
 import { StatutoryContributionsPage } from './StatutoryContributionsPage';
+import { CompanyPayrollReadinessDashboard } from '../components/finance/CompanyPayrollReadinessDashboard';
 
 export const financeRoutes: RouteObject[] = [
   { path: '/hr/allowances', element: <AllowancesPage /> },
@@ -13,4 +14,5 @@ export const financeRoutes: RouteObject[] = [
   { path: '/hr/payroll-handoff', element: <PayrollHandoffPage /> },
   { path: '/hr/payroll-accounting', element: <PayrollAccountingPage /> },
   { path: '/hr/statutory-contributions', element: <StatutoryContributionsPage /> },
+  { path: '/hr/payroll-readiness', element: <CompanyPayrollReadinessDashboard /> },
 ];

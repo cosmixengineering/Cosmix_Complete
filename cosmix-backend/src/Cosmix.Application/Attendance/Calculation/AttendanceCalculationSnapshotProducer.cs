@@ -157,7 +157,16 @@ public sealed class AttendanceCalculationSnapshotProducer(IAttendancePolicyResol
             if (await corrections.OverlapsAsync(employeeId, session.SessionKey, session.StartsAtUtc, session.EndsAtUtc.Value, ct))
                 throw AttendanceOperation.Conflict("attendance_cross_date_session_overlap");
             if (session.CorrectionId.HasValue)
-                correctionProofs.Add(await ValidateCorrection(employeeId, date, session, row, officeSource, roster.Taxonomy, ct));
+            {
+                try
+                {
+                    correctionProofs.Add(await ValidateCorrection(employeeId, date, session, row, officeSource, roster.Taxonomy, ct));
+                }
+                catch (AuthenticationFailure failure) when (failure.StatusCode == 503)
+                {
+                    return Missing("correction_evidence_unavailable");
+                }
+            }
         }
         if (leave.Effects.Count > 512 || leave.Effects.Select(x => x.AllocationId).Distinct().Count() != leave.Effects.Count ||
             leave.Effects.Any(x => x.Date != date || x.LeaveRequestId == Guid.Empty || x.AllocationId == Guid.Empty ||

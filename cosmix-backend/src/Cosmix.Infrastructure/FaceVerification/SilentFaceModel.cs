@@ -37,7 +37,7 @@ public sealed record SilentFaceOptions
     public const string SectionName = "SelfHostedFace:SilentFace";
     public bool Enabled { get; init; }
     public IReadOnlyList<SilentFaceModel> Models { get; init; } = Array.Empty<SilentFaceModel>();
-    public int TimeoutSeconds { get; init; } = 10;
+    public int TimeoutSeconds { get; init; } = 30;
 }
 
 public sealed record SilentFaceModelScore(string ModelSha256, double LiveProbability, bool Passed);

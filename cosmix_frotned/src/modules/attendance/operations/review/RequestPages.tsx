@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Plus, RefreshCw, Check, X, RotateCcw } from 'lucide-react';
 import { TextInput } from '@/components/forms/TextInput';
 import { SelectInput } from '@/components/forms/SelectInput';
@@ -14,7 +15,7 @@ import {
 } from '../../components/SchedulingUi';
 import { queryString } from '../../api/attendance-api';
 import { id } from '../../schemas/common';
-import { canEmployee, canScope, canSelf, queueScopes, type Scope } from './access';
+import { canEmployee, canScope, canSelf, queueScopes, supportedScopes, type Scope } from './access';
 import { cancelInput, decisionInput, overtimeFinancial } from './contracts';
 import {
   CursorControls,
@@ -31,15 +32,16 @@ import {
 import { ProposalForm } from './ProposalForm';
 import { overtimeReady } from './helpers';
 import { historySchema, reviewPath, workflowPaths, workflows, type Workflow } from './workflows';
+import { AttendanceCorrectionsHub } from './AttendanceCorrectionsHub';
 
 export function AttendanceCorrectionsPage() {
-  return <RequestsPage workflow="correction" />;
+  return <AttendanceCorrectionsHub initialTab="queue" />;
 }
 export function MyAttendanceCorrectionsPage() {
-  return <RequestsPage workflow="correction" self />;
+  return <AttendanceCorrectionsHub initialTab="queue" self />;
 }
 export function AttendanceCorrectionReviewPage() {
-  return <ReviewPage workflow="correction" />;
+  return <AttendanceCorrectionsHub initialTab="queue" />;
 }
 export function AttendanceCarryForwardPage() {
   return <RequestsPage workflow="carry" />;
@@ -51,7 +53,20 @@ export function AttendanceCarryForwardReviewPage() {
   return <ReviewPage workflow="carry" />;
 }
 export function AttendanceOvertimePage() {
-  return <RequestsPage workflow="overtime" />;
+  const access = useAttendanceAccess();
+  const canReview =
+    access.ready && supportedScopes(access.user, 'attendance.overtime.review').length > 0;
+  return (
+    <>
+      {canReview && (
+        <p>
+          <Link to="/hr/overtime/review">Overtime Approvals</Link> — review submitted employee
+          requests and record authorized decisions.
+        </p>
+      )}
+      <RequestsPage workflow="overtime" />
+    </>
+  );
 }
 export function MyAttendanceOvertimePage() {
   return <RequestsPage workflow="overtime" self />;
@@ -174,12 +189,25 @@ function ReviewPage({ workflow }: { workflow: Workflow }) {
   );
 }
 function ReviewSelection({ workflow }: { workflow: Workflow }) {
+  const access = useAttendanceAccess();
   const [scope, setScope] = useState<Scope>();
   const [range, setRange] = useState<Range>();
   const [editing, setEditing] = useState(false);
   return (
     <>
-      <h1>{workflows[workflow].title} review</h1>
+      <h1>
+        {workflow === 'overtime' ? 'Overtime Approvals' : `${workflows[workflow].title} review`}
+      </h1>
+      {workflow === 'overtime' && (
+        <p>
+          Select an authority scope and date range, then choose Load history. Open a pending request
+          and select Review decision to approve, return or reject it with the required authority.
+        </p>
+      )}
+      {workflow === 'overtime' &&
+        supportedScopes(access.user, 'attendance.overtime.review').length === 0 && (
+          <Denied>Overtime review permission for a supported scope is unavailable.</Denied>
+        )}
       <ScopeSelect
         permission={workflows[workflow].permission + '.review'}
         value={scope}

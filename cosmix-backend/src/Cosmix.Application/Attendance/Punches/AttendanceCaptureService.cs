@@ -58,19 +58,8 @@ public sealed partial class AttendanceCaptureService(AttendanceOperation operati
             "Employee submitted mobile attendance evidence", context, async (actor, token) =>
             {
                 var employeeId = actor.Identity.EmployeeId;
-                if ((request.Latitude.HasValue || request.Longitude.HasValue) && locationConsent is not null)
-                {
-                    var activePolicy = await locationConsent.GetActivePolicyAsync(token);
-                    if (activePolicy is null || !activePolicy.IsActive)
-                    {
-                        throw AttendanceOperation.Invalid("location_notice_not_configured");
-                    }
-                    var consent = await locationConsent.GetConsentAsync(employeeId, activePolicy.Version, token);
-                    if (consent is null)
-                    {
-                        throw AttendanceOperation.Invalid("location_consent_required_before_gps_submission");
-                    }
-                }
+                if (request.Latitude.HasValue || request.Longitude.HasValue)
+                    await RequireLocationConsentAsync(employeeId, token);
                 var fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { actor.DeviceId, payload = requestEvidence })));
                 // This unique evidence key outlives the short-lived protected HTTP receipt.
                 var duplicate = await repository.FindPunchAsync(employeeId, key, token);

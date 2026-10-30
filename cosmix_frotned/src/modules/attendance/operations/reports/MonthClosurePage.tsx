@@ -16,6 +16,16 @@ import { reason } from '../../schemas/common';
 import { businessToday } from '../../utils/messages';
 import { monthDetailFor, monthLockFor, monthPreview, monthPreviewFor } from './schemas';
 
+const setupIssues: Readonly<Record<string, string>> = {
+  staff_taxonomy_category_not_configured:
+    'Staff category mapping is missing. HR must publish an approved mapping covering this date.',
+  staff_taxonomy_taxonomy_not_effective:
+    'No staff category policy is effective on this date. Review the approved policy dates.',
+  employee_assignment_unavailable:
+    'Employment assignment is missing for this date. Review the employee assignment and roster.',
+  attendance_month_not_finished: 'This month has not ended yet; it cannot be finalized.',
+};
+
 function FinalizeForm({
   preview,
   path,
@@ -142,7 +152,7 @@ function MonthRecord({
                 <tbody>
                   {query.data.issues.map((issue, index) => (
                     <tr key={`${issue.code}:${issue.employeeId}:${issue.businessDate}:${index}`}>
-                      <td>{issue.code}</td>
+                      <td>{setupIssues[issue.code] ?? issue.code}</td>
                       <td>{issue.employeeId ?? 'Month-wide'}</td>
                       <td>{issue.businessDate ?? 'Period'}</td>
                     </tr>

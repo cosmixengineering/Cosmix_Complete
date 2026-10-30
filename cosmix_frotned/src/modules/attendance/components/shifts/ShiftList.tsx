@@ -58,7 +58,7 @@ function TimingPanel({ version }: { version: ScheduleVersion }) {
         <span className="sw-label">Start time</span>
         <strong>{displayTime(version.startTime)}</strong>
       </div>
-      <ArrowRight size={17} aria-hidden="true" />
+      <ArrowRight size={13} aria-hidden="true" />
       <div>
         <span className="sw-label">End time{version.endDayOffset === 1 ? ' · next day' : ''}</span>
         <strong>{displayTime(version.endTime)}</strong>
@@ -134,7 +134,7 @@ function ShiftItem({
       onClick={() => onOpen(shift.id)}
     >
       {canManage ? 'Manage' : 'View details'}
-      <ArrowRight size={15} aria-hidden="true" />
+      <ArrowRight size={12} aria-hidden="true" />
     </button>
   );
 
@@ -188,7 +188,7 @@ function ShiftItem({
           <>
             <TimingPanel version={version} />
             <div className="sw-scheduled">
-              <Timer size={15} aria-hidden="true" />
+              <Timer size={12} aria-hidden="true" />
               <strong>{version.scheduledMinutes} min</strong>
               <span>scheduled</span>
             </div>
@@ -307,7 +307,7 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
           <p>Manage shift timings and weekly schedules.</p>
         </div>
         <span className="sw-date">
-          <Clock3 size={15} aria-hidden="true" />
+          <Clock3 size={13} aria-hidden="true" />
           {today}
           <span>Asia/Karachi</span>
         </span>
@@ -323,14 +323,14 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
               <span className="sw-metric-note">{note}</span>
             </div>
             <span className={`sw-metric-icon sw-tone-${tone}`}>
-              <Icon size={21} aria-hidden="true" />
+              <Icon size={16} aria-hidden="true" />
             </span>
           </div>
         ))}
       </div>
       <div className="sw-toolbar">
         <label className="sw-search">
-          <Search size={17} aria-hidden="true" />
+          <Search size={14} aria-hidden="true" />
           <span className="sw-sr-only">Search shifts by code or name</span>
           <input
             type="search"
@@ -344,7 +344,7 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
           />
         </label>
         <label className="sw-status-filter">
-          <ListFilter size={16} aria-hidden="true" />
+          <ListFilter size={13} aria-hidden="true" />
           <span className="sw-sr-only">Filter by status</span>
           <select
             value={status}
@@ -360,11 +360,11 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
         </label>
         <div className="sw-view-toggle" role="group" aria-label="Display shifts as">
           <button type="button" aria-pressed={view === 'cards'} onClick={() => setView('cards')}>
-            <LayoutGrid size={15} aria-hidden="true" />
+            <LayoutGrid size={13} aria-hidden="true" />
             Cards
           </button>
           <button type="button" aria-pressed={view === 'table'} onClick={() => setView('table')}>
-            <Table2 size={15} aria-hidden="true" />
+            <Table2 size={13} aria-hidden="true" />
             Table
           </button>
         </div>
@@ -374,7 +374,7 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
           disabled={query.isFetching}
           onClick={() => void query.refetch()}
         >
-          <RefreshCw size={15} aria-hidden="true" />
+          <RefreshCw size={13} aria-hidden="true" />
           Reload
         </button>
         {canManage && (
@@ -383,7 +383,7 @@ export function ShiftList({ onOpen }: { onOpen: (id: string) => void }) {
             className="sw-button sw-button-primary"
             onClick={() => setIsCreating(true)}
           >
-            <Plus size={17} aria-hidden="true" />
+            <Plus size={14} aria-hidden="true" />
             Add shift
           </button>
         )}

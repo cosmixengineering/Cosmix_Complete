@@ -87,6 +87,7 @@ public static class DependencyInjection
         services.AddAllowancesInfrastructure();
         services.AddScoped<PayrollHandoffRepository>();
         services.AddScoped<Cosmix.Application.HR.PayrollSalary.IPayrollSalaryRepository, PayrollSalaryRepository>();
+        services.AddScoped<Cosmix.Application.HR.PayrollSalary.ICompanyPayrollReadinessRepository, Cosmix.Infrastructure.Repositories.HR.CompanyPayrollReadinessRepository>();
         services.AddScoped<Cosmix.Application.HR.PayrollImports.IPayrollImportRepository, PayrollImportRepository>();
         services.AddScoped<Cosmix.Application.HR.Payslips.IPayslipRepository, PayslipRepository>();
         services.AddScoped<Cosmix.Application.HR.PayrollSalary.IPayrollStatutorySourceReader, PayrollStatutorySourceReader>();
@@ -195,6 +196,9 @@ public static class DependencyInjection
         services.AddScoped<Cosmix.Application.Finance.Costing.PayrollCostService>();
         services.AddScoped<IStatutoryContributionRepository, StatutoryContributionRepository>();
         services.AddScoped<StatutoryContributionService>();
+        services.AddScoped<Cosmix.Infrastructure.Repositories.HR.PayrollReconciliationRepository>();
+        services.AddScoped<Cosmix.Application.HR.PayrollReconciliation.IHistoricalPayrollRepository>(sp => sp.GetRequiredService<Cosmix.Infrastructure.Repositories.HR.PayrollReconciliationRepository>());
+        services.AddScoped<Cosmix.Application.HR.PayrollReconciliation.IParallelPayrollRepository>(sp => sp.GetRequiredService<Cosmix.Infrastructure.Repositories.HR.PayrollReconciliationRepository>());
 
         return services;
     }

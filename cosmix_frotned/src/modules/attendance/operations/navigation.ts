@@ -74,7 +74,7 @@ export function attendanceOperationalNavigation(user: SessionUser | null) {
     },
     {
       to: '/hr/overtime/review',
-      label: 'Overtime review',
+      label: 'Overtime Approvals',
       allowed: scoped(user, 'attendance.overtime.review'),
     },
     {
@@ -100,7 +100,7 @@ export function attendanceOperationalNavigation(user: SessionUser | null) {
     },
     {
       to: '/hr/overtime',
-      label: 'Overtime',
+      label: 'Overtime Requests',
       allowed: scoped(user, 'attendance.overtime.submit'),
     },
     {

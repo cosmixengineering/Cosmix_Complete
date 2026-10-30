@@ -21,6 +21,7 @@ import {
   ChevronRight,
   LogOut,
   CalendarCheck,
+  ClipboardCheck,
   UserPlus,
   BarChart3,
   Building2,
@@ -28,7 +29,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/auth/use-auth';
-import { hasAttendancePermission } from '@/modules/attendance';
+import { attendanceOperationalNavigation, hasAttendancePermission } from '@/modules/attendance';
 import { NotificationBellToggle } from '@/components/notifications/NotificationBellToggle';
 import { hrConfigurationNavigation } from '@/modules/hr/policy-navigation';
 import logo from '@/assets/images/cosmix-logo.png';
@@ -37,6 +38,12 @@ import '@/styles/hr-dashboard.css';
 export function AppLayout() {
   const { user, signOut, status } = useAuth();
   const configurationLinks = hrConfigurationNavigation(user, status).filter((link) => link.allowed);
+  const overtimeLinks = attendanceOperationalNavigation(user).filter(
+    (link) =>
+      status === 'authenticated' &&
+      link.allowed &&
+      (link.to === '/hr/overtime' || link.to === '/hr/overtime/review'),
+  );
   const canTrackAttendance =
     status === 'authenticated' &&
     hasAttendancePermission(user, 'hr.employees.read') &&
@@ -61,22 +68,29 @@ export function AppLayout() {
   const [error] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const displayName = user?.account?.displayName || 'Engr. Tariq Mehmood';
+  const rawDisplayName = user?.account?.displayName || 'Account';
   const roleName = user?.grants.some((g) => g.permission.startsWith('access.'))
     ? 'System Administrator'
     : user?.grants.some((g) => g.permission.startsWith('hr.'))
       ? 'HR Desk'
       : 'User Desk';
 
-  // Get Initials for avatar
+  // Parse clean name and custom role from parentheses if present, e.g. "Muhammad Rashid (Lead Engineer)"
+  const parenMatch = rawDisplayName.match(/^(.*?)\s*\((.*?)\)$/);
+  const displayName = parenMatch?.[1]?.trim() ?? rawDisplayName;
+  const customRole = parenMatch?.[2]?.trim() ?? null;
+  const displayRole = customRole ? customRole : roleName;
+
+  // Get Initials for avatar from clean name
   const initials =
     displayName
+      .replace(/^Engr\.\s+/, '')
       .split(' ')
       .filter(Boolean)
       .map((part) => part[0])
       .join('')
       .slice(0, 2)
-      .toUpperCase() || 'ET';
+      .toUpperCase() || 'A';
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,19 +161,21 @@ export function AppLayout() {
       return isLeaveWorkspace;
     }
 
-    // Overtime & Allowances:
-    if (label === 'Overtime & Allowances' || to === '/hr/allowances') {
+    if (to === '/hr/overtime/review') {
+      return pathname === to || pathname.startsWith(`${to}/`);
+    }
+    if (to === '/hr/overtime') {
+      return pathname === to || /^\/hr\/overtime\/employees\/[^/]+\/?$/.test(pathname);
+    }
+
+    // Allowances:
+    if (to === '/hr/allowances') {
       return pathname === '/hr/allowances' || pathname.startsWith('/hr/allowances/');
     }
 
     // Claims & Advances:
     if (label === 'Claims & Advances' || to === '/hr/advances-loans') {
-      return (
-        pathname === '/hr/advances-loans' ||
-        pathname.startsWith('/hr/advances-loans/') ||
-        pathname === '/hr/requests' ||
-        pathname.startsWith('/hr/requests/')
-      );
+      return pathname === '/hr/advances-loans' || pathname.startsWith('/hr/advances-loans/');
     }
 
     // Vehicles & Fuel:
@@ -195,6 +211,15 @@ export function AppLayout() {
       return pathname.startsWith('/hr/reports/hr') || pathname === '/hr/reports/analytics';
     }
 
+    // Requests & Approvals Queue:
+    if (label === 'Requests & Approvals' || to === '/hr/requests') {
+      return (
+        pathname.startsWith('/hr/requests') ||
+        pathname.startsWith('/admin/approvals') ||
+        pathname === '/hr/approvals'
+      );
+    }
+
     if (to === '/account') {
       return pathname === '/account' || pathname === '/account/sessions';
     }
@@ -218,6 +243,11 @@ export function AppLayout() {
       to: '/hr/employees',
       label: 'Employee Master',
       icon: Users,
+    },
+    {
+      to: '/hr/requests',
+      label: 'Requests & Approvals',
+      icon: ClipboardCheck,
     },
     ...(status === 'authenticated' &&
     user?.grants.some(
@@ -263,9 +293,13 @@ export function AppLayout() {
     },
     {
       to: '/hr/allowances',
-      label: 'Overtime & Allowances',
+      label: 'Allowances',
       icon: Banknote,
     },
+    ...overtimeLinks.map((link) => ({
+      ...link,
+      icon: link.to === '/hr/overtime/review' ? ClipboardCheck : Clock,
+    })),
     {
       to: '/hr/advances-loans',
       label: 'Claims & Advances',
@@ -498,11 +532,16 @@ export function AppLayout() {
             <NotificationBellToggle />
 
             {/* Current User Chip matching Screenshot */}
-            <Link to="/account" className="hr-user-chip" style={{ textDecoration: 'none' }}>
+            <Link
+              to="/account"
+              className="hr-user-chip"
+              style={{ textDecoration: 'none' }}
+              title={`${rawDisplayName} (${roleName})`}
+            >
               <div className="hr-user-avatar">{initials}</div>
               <div className="hr-user-info">
                 <span className="hr-user-name">{displayName}</span>
-                <span className="hr-user-role">{roleName}</span>
+                <span className="hr-user-role">{displayRole}</span>
               </div>
             </Link>
           </div>

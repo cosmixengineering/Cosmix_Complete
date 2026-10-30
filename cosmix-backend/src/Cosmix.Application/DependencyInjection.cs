@@ -95,6 +95,7 @@ public static class DependencyInjection
         services.AddScoped<Cosmix.Application.HR.Allowances.DeploymentService>();
         services.AddScoped<PayrollHandoffService>();
         services.AddScoped<Cosmix.Application.HR.PayrollSalary.PayrollSalaryService>();
+        services.AddScoped<Cosmix.Application.HR.PayrollSalary.CompanyPayrollReadinessService>();
         services.AddScoped<Cosmix.Application.HR.PayrollSalary.PayrollSalaryProjection>();
         services.AddScoped<Cosmix.Application.HR.PayrollSalary.IPayrollFrozenBatchReader, Cosmix.Application.HR.PayrollSalary.PayrollFrozenBatchReader>();
         services.AddScoped<Cosmix.Application.HR.PayrollImports.PayrollImportService>();
@@ -177,6 +178,8 @@ public static class DependencyInjection
         services.AddScoped<OtpDispatchService>();
         services.AddScoped<EmployeeSelfService>();
         services.AddScoped<IEmployeeMobileProvisioner, EmployeeMobileProvisioningService>();
+        services.AddScoped<Cosmix.Application.HR.PayrollReconciliation.HistoricalPayrollReconciliationService>();
+        services.AddScoped<Cosmix.Application.HR.PayrollReconciliation.ParallelPayrollService>();
         services.AddSingleton(TimeProvider.System);
         return services;
     }

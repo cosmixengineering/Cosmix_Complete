@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, ArrowRight, X, CalendarCheck2 } from 'lucide-react';
 import { z } from 'zod';
 import { TextInput } from '@/components/forms/TextInput';
 import { SelectInput } from '@/components/forms/SelectInput';
@@ -19,6 +19,9 @@ import { EvidenceField, SourceFacts } from './ReviewUi';
 import { overtimeReady, today } from './helpers';
 import { workflowPaths, workflows, type Workflow } from './workflows';
 import { reviewedOvertime } from './intents';
+import '@/styles/attendance.css';
+import '@/styles/attendance-register.css';
+import '@/styles/attendance-corrections.css';
 
 type Source =
   z.infer<typeof correctionSource> | z.infer<typeof carrySource> | z.infer<typeof overtimeSource>;
@@ -64,10 +67,23 @@ export function ProposalForm({
       />
     );
   return (
-    <section className="attendance-section">
-      <h2>{resubmission ? 'Fresh resubmission source' : 'New request source'}</h2>
+    <div className="att-proposal-source-card">
+      <div className="att-proposal-header">
+        <div className="att-proposal-icon-box">
+          <CalendarCheck2 size={18} />
+        </div>
+        <div>
+          <h2 className="att-proposal-title">
+            {resubmission ? 'Fresh resubmission source' : 'New request source'}
+          </h2>
+          <p className="att-proposal-sub">
+            Query the attendance engine for historical roster, punches, and biometric logs.
+          </p>
+        </div>
+      </div>
+
       <form
-        className="attendance-grid"
+        className="att-source-form-grid"
         onSubmit={(e) => {
           e.preventDefault();
           if (valid)
@@ -97,39 +113,58 @@ export function ProposalForm({
             }}
           />
         )}
-        <Command icon={RefreshCw} type="submit" disabled={!allowed || !valid || query.isFetching}>
-          Load source
-        </Command>
-      </form>
-      {preview && (
-        <>
-          <QueryState query={query} />
-          <Command
-            icon={RefreshCw}
-            variant="secondary"
-            disabled={query.isFetching}
-            onClick={() => void query.refetch()}
-          >
-            Reload source
+        <div className="att-source-form-actions">
+          <Command icon={RefreshCw} type="submit" disabled={!allowed || !valid || query.isFetching}>
+            Load source
           </Command>
+          {preview && (
+            <Command
+              icon={RefreshCw}
+              variant="secondary"
+              disabled={query.isFetching}
+              onClick={() => void query.refetch()}
+            >
+              Reload source
+            </Command>
+          )}
+        </div>
+      </form>
+
+      {preview && (
+        <div className="att-source-preview-area">
+          <QueryState query={query} />
           {!query.isError && query.data && !query.isFetching && (
             <>
               <SourceFacts value={query.data} />
-              <Command
-                icon={RefreshCw}
-                disabled={!allowed}
-                onClick={() => setSource(structuredClone(query.data))}
-              >
-                Review proposal against this source
-              </Command>
+              <div className="att-source-bottom-actions">
+                <button
+                  type="button"
+                  className="att-btn-primary"
+                  disabled={!allowed}
+                  onClick={() => setSource(structuredClone(query.data))}
+                >
+                  <ArrowRight size={14} />
+                  <span>Review proposal against this source</span>
+                </button>
+                <button type="button" className="att-btn-secondary" onClick={onClose}>
+                  <X size={14} />
+                  <span>Close source selection</span>
+                </button>
+              </div>
             </>
           )}
-        </>
+        </div>
       )}
-      <button type="button" onClick={onClose}>
-        Close source selection
-      </button>
-    </section>
+
+      {!preview && (
+        <div className="att-source-bottom-actions" style={{ marginTop: '12px' }}>
+          <button type="button" className="att-btn-secondary" onClick={onClose}>
+            <X size={14} />
+            <span>Close source selection</span>
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 function PinnedProposal({

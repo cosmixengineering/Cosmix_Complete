@@ -26,7 +26,7 @@ public sealed class AttendanceMonthLockFinancialReader(AttendancePayrollInputSer
         {
             AttendancePayrollMonthSource source;
             try { source = await inputs.ReadForMonthLockAsync(employee, start, actor, ct); }
-            catch (AuthenticationFailure failure) when (failure.StatusCode == 409 && failure.Code == "employee_assignment_unavailable")
+            catch (AuthenticationFailure failure) when (MonthLockSetup.IsMissingConfiguration(failure))
             {
                 issues.Add(new(failure.Code, employee));
                 fingerprints.Add(MonthLockEvidence.Fingerprint(new { employee, unavailable = failure.Code }));

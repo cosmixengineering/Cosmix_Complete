@@ -109,10 +109,14 @@ export function SelectInput({
 
   return (
     <div
-      className={`field custom-select-field ${compact ? 'is-compact' : ''} ${className ?? ''}`}
+      className={`field custom-select-field ${compact ? 'is-compact' : ''} ${isOpen ? 'is-open' : ''} ${className ?? ''}`}
       ref={containerRef}
       data-field={dataField}
-      style={{ position: 'relative', ...style }}
+      style={{
+        position: 'relative',
+        zIndex: isOpen ? 9999 : undefined,
+        ...style,
+      }}
     >
       {label && (
         <label htmlFor={inputId}>

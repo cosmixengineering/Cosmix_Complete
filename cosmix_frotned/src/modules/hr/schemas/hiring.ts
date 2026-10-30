@@ -137,3 +137,7 @@ export const hiringDecisionsSchema = z.array(
     decidedAt: time,
   }),
 );
+
+export type Profile = z.infer<typeof profileSchema>;
+export type FinancialSection = z.infer<typeof financialSchema>;
+export type MedicalSection = z.infer<typeof medicalSchema>;

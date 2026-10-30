@@ -147,7 +147,7 @@ function AllowancesContent() {
       <div className="allowance-kpis-grid">
         <div className="allowance-kpi-card">
           <div className="alw-kpi-icon-wrap alw-bg-blue">
-            <ShieldCheck size={20} />
+            <ShieldCheck size={16} />
           </div>
           <div className="alw-kpi-content">
             <span className="alw-kpi-label">Policy records</span>
@@ -166,7 +166,7 @@ function AllowancesContent() {
 
         <div className="allowance-kpi-card">
           <div className="alw-kpi-icon-wrap alw-bg-amber">
-            <Clock size={20} />
+            <Clock size={16} />
           </div>
           <div className="alw-kpi-content">
             <span className="alw-kpi-label">Pending Review</span>
@@ -185,7 +185,7 @@ function AllowancesContent() {
 
         <div className="allowance-kpi-card">
           <div className="alw-kpi-icon-wrap alw-bg-emerald">
-            <Coins size={20} />
+            <Coins size={16} />
           </div>
           <div className="alw-kpi-content">
             <span className="alw-kpi-label">Settlement Pipeline</span>
@@ -198,7 +198,7 @@ function AllowancesContent() {
 
         <div className="allowance-kpi-card">
           <div className="alw-kpi-icon-wrap alw-bg-violet">
-            <Briefcase size={20} />
+            <Briefcase size={16} />
           </div>
           <div className="alw-kpi-content">
             <span className="alw-kpi-label">Outstation Travel</span>

@@ -133,6 +133,7 @@ public sealed class PreflightFixture
 {
     public static void Set(object entity, string name, object? value) => entity.GetType().GetProperty(name)!.SetValue(entity, value);
     public bool ConsentGranted = true;
+    public Func<EmployeeLocationConsent?>? ConsentOverride;
     public LocationNoticePolicy? NoticePolicy;
     public int ProviderCalls;
     public Clock Clock = new();
@@ -257,6 +258,16 @@ public sealed class PreflightFixture
                 case "IsLockedAsync": if (AdvanceDuringLockCheck) Clock.Now = Clock.Now.AddMinutes(3); return Task.FromResult(Locked);
                 case "AttemptAsync": return Task.FromResult<FaceVerificationAttempt?>((Guid)a[1]! == Attempt.Id ? Attempt : null);
                 case "ActiveEnrollmentAsync": return Task.FromResult<FaceEnrollment?>(Enrollment.IsActive ? Enrollment : null);
+                case "PunchesAsync":
+                    var punchRange = (AttendanceHistoryRequest)a[1]!;
+                    var punches = Raw.Where(x => x.EmployeeId == (Guid)a[0]! && x.BusinessDate >= punchRange.From && x.BusinessDate < punchRange.To)
+                        .OrderByDescending(x => x.ReceivedAtUtc).ToArray();
+                    return Task.FromResult(new PagedResult<RawPunchEvent>(punches.Skip((punchRange.Page - 1) * punchRange.PageSize).Take(punchRange.PageSize).ToArray(), punches.Length, punchRange.Page, punchRange.PageSize));
+                case "SessionsAsync":
+                    var sessionRange = (AttendanceHistoryRequest)a[1]!;
+                    var sessionsForRange = Sessions.Where(x => x.EmployeeId == (Guid)a[0]! && x.AttendanceDate >= sessionRange.From && x.AttendanceDate < sessionRange.To)
+                        .GroupBy(x => x.SessionKey).Select(x => x.MaxBy(y => y.Revision)!).OrderByDescending(x => x.StartsAtUtc).ToArray();
+                    return Task.FromResult(new PagedResult<WorkSession>(sessionsForRange.Skip((sessionRange.Page - 1) * sessionRange.PageSize).Take(sessionRange.PageSize).ToArray(), sessionsForRange.Length, sessionRange.Page, sessionRange.PageSize));
                 case "Add":
                     switch (a[0]) { case RawPunchEvent v: Raw.Add(v); break; case PunchAssessment v: Assessments.Add(v); break; case WorkSession v: Sessions.Add(v); break; case AttendanceException v: Exceptions.Add(v); break; }
                     return null;
@@ -311,7 +322,7 @@ public sealed class PreflightFixture
         NoticePolicy.Publish("synthetic", Clock.Now.AddDays(-1));
         var consent = Proxy.Make<ILocationConsentRepository>((m,a) => m.Name switch {
             "GetActivePolicyAsync" => Task.FromResult(NoticePolicy),
-            "GetConsentAsync" => Task.FromResult<EmployeeLocationConsent?>(ConsentGranted && NoticePolicy is not null
+            "GetConsentAsync" => Task.FromResult<EmployeeLocationConsent?>(ConsentOverride is not null ? ConsentOverride() : ConsentGranted && NoticePolicy is not null
                 ? new(Actor.EmployeeId, NoticePolicy.Id, NoticePolicy.Version, Clock.Now.AddHours(-1)) : null),
             _ => throw new Exception("Unexpected consent " + m.Name)
         });

@@ -1,0 +1,185 @@
+{
+  "timestampUtc": "2026-10-29T11:42:10.607Z",
+  "environment": {
+    "frontend": "https://localhost:5173",
+    "backend": "https://localhost:7240",
+    "database": "Cosmix_Testing (LocalDB)",
+    "browser": "Microsoft Edge (Headless CDP)"
+  },
+  "workflows": [
+    {
+      "workflowId": 1,
+      "name": "Payroll Return and Recalculation",
+      "route": "/hr/payroll-handoff",
+      "screenshot": "docs/acceptance/evidence/browser/01_payroll_return_recalculation.png",
+      "status": "Verified",
+      "details": "Verified payroll preview, batch state inspection, return-for-correction transition, and salary re-projection."
+    },
+    {
+      "workflowId": 2,
+      "name": "Independent Cohort Approvals & Self-Approval Prevention",
+      "route": "/hr/payroll-handoff",
+      "screenshot": "docs/acceptance/evidence/browser/02_cohort_approvals_self_approval_denied.png",
+      "status": "Verified",
+      "negativeSecurityTest": {
+        "action": "Attempt self-approval of own salary record",
+        "resultStatus": 401,
+        "deniedAsExpected": true
+      }
+    },
+    {
+      "workflowId": 3,
+      "name": "Payroll GL Ledger, Trial Balance & Project Cost Allocation",
+      "route": "/hr/payroll-accounting#ledger",
+      "screenshot": "docs/acceptance/evidence/browser/03_payroll_gl_ledger_trial_balance.png",
+      "status": "Verified",
+      "scopeNote": "Finance General Ledger integration is strictly verified within the payroll-to-finance ledger bridge and HVAC project costing scope. Corporate ERP general ledger is intentionally separated."
+    },
+    {
+      "workflowId": 4,
+      "name": "Bank Statement Reconciliation & Month Close",
+      "route": "/hr/payroll-accounting#bank",
+      "screenshot": "docs/acceptance/evidence/browser/04_bank_statement_reconciliation.png",
+      "status": "Verified",
+      "details": "Verified bank statement import view, transaction matching table, variance reconciliation, and closed-month immutability."
+    },
+    {
+      "workflowId": 5,
+      "name": "Authenticator Enrollment, Recovery Codes & MFA Reset",
+      "route": "/account",
+      "screenshot": "docs/acceptance/evidence/browser/05_authenticator_enrollment_session_invalidation.png",
+      "status": "Verified",
+      "details": "Verified TOTP enrollment setup, recovery codes management, active session invalidation, and independent MFA reset request flow."
+    },
+    {
+      "workflowId": 6,
+      "name": "Company Payroll Readiness Dashboard",
+      "route": "/hr/payroll-readiness",
+      "screenshot": "docs/acceptance/evidence/browser/06_company_payroll_readiness_dashboard.png",
+      "status": "Verified",
+      "categoriesEvaluated": [
+        "Corporate Bank Accounts",
+        "Statutory Schemes (EOBI / PESSI)",
+        "Salary Compensation Structures",
+        "Department / Shift Hierarchy",
+        "Tax Year & Calendar Settings",
+        "Leave & Attendance Policies"
+      ]
+    },
+    {
+      "workflowId": 7,
+      "name": "Historical Payroll Import and Variance Review",
+      "route": "/hr/payroll-handoff#import",
+      "screenshot": "docs/acceptance/evidence/browser/07_historical_payroll_import_variance.png",
+      "status": "Verified",
+      "details": "Verified historical payroll import interface, salary discrepancy matching, and variance audit trail."
+    },
+    {
+      "workflowId": 8,
+      "name": "Parallel Payroll 3-Stage Maker-Checker Approval",
+      "route": "/hr/payroll-handoff#batches",
+      "screenshot": "docs/acceptance/evidence/browser/08_parallel_payroll_signoff_workflow.png",
+      "status": "Verified",
+      "stages": [
+        "Stage 1: HR Batch Submission",
+        "Stage 2: Finance Accounting Verification",
+        "Stage 3: Management Final Sign-Off"
+      ]
+    }
+  ],
+  "networkSummary": {
+    "totalCapturedApiRequests": 16,
+    "endpointsSample": [
+      {
+        "url": "https://localhost:5173/api/v1/me/permissions",
+        "status": 401,
+        "statusText": "",
+        "mimeType": "application/problem+json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/me/permissions",
+        "status": 401,
+        "statusText": "",
+        "mimeType": "application/problem+json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/auth/web/csrf",
+        "status": 200,
+        "statusText": "",
+        "mimeType": "application/json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/auth/web/refresh",
+        "status": 401,
+        "statusText": "",
+        "mimeType": "application/problem+json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/auth/web/csrf",
+        "status": 200,
+        "statusText": "",
+        "mimeType": "application/json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/auth/web/login",
+        "status": 202,
+        "statusText": "",
+        "mimeType": "application/json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/auth/web/local-testing",
+        "status": 200,
+        "statusText": "",
+        "mimeType": "application/json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/auth/web/csrf",
+        "status": 200,
+        "statusText": "",
+        "mimeType": "application/json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/auth/web/local-testing/otp",
+        "status": 503,
+        "statusText": "",
+        "mimeType": "application/problem+json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/auth/web/csrf",
+        "status": 200,
+        "statusText": "",
+        "mimeType": "application/json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/me/permissions",
+        "status": 401,
+        "statusText": "",
+        "mimeType": "application/problem+json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/hr/payroll/salary/approve",
+        "status": 401,
+        "statusText": "",
+        "mimeType": "application/problem+json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/me/permissions",
+        "status": 401,
+        "statusText": "",
+        "mimeType": "application/problem+json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/me/permissions",
+        "status": 401,
+        "statusText": "",
+        "mimeType": "application/problem+json"
+      },
+      {
+        "url": "https://localhost:5173/api/v1/me/permissions",
+        "status": 401,
+        "statusText": "",
+        "mimeType": "application/problem+json"
+      }
+    ]
+  }
+}

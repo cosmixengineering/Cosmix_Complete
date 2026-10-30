@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ComponentProps } from 'react';
 import { Link, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -31,9 +31,13 @@ import { ApiError } from '@/services/api/api-error';
 import { Button } from '@/components/ui/Button';
 import { useHrAccess } from '../hooks/use-hr-access';
 import { useHrQuery } from '../hooks/use-hr-queries';
-import { id, pageOf } from '../schemas/contracts';
+import { id, pageOf, employeeSchema, type EmployeeSummary } from '../schemas/contracts';
 import { masterSchema } from '../schemas/organization';
-import { profileResponse } from '../schemas/hiring';
+import {
+  useEmployeeProfile,
+  employeeProfileEvidenceMessage,
+  type EmployeeProfileValues,
+} from '../hooks/use-employee-profile';
 import { currentUpdateSchema, basicSchema, identitySchema } from '../schemas/updates';
 import { sections, type Section } from '../types/updates';
 import { labelDate } from '../utils/messages';
@@ -83,9 +87,7 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
   const section = sections.find((s) => s.name === name);
 
   const canReadProfile = access.can('hr.employees.read');
-  const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
-    'hr.employees.read',
-  ]);
+  const details = useEmployeeProfile(employeeId);
 
   const deptsQuery = useHrQuery('departments?pageSize=100', pageOf(masterSchema), [
     'hr.organization.read',
@@ -100,8 +102,7 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
   if (!canReadProfile) return <Denied />;
 
   const isOverview = !rawName || rawName === 'overview';
-  const profile = profileQuery.data?.profile;
-  const employee = profileQuery.data?.employee;
+  const { profile, employee } = details;
 
   return (
     <div className="emp-page-container">
@@ -112,130 +113,237 @@ function EmployeeWorkspace({ employeeId }: { employeeId: string }) {
       </Link>
 
       {/* Main Profile Header Card */}
-      <EmployeeProfileHeader employeeId={employeeId} />
-
-      {/* Modern Tabs Bar */}
-      <nav className="emp-nav-tabs" aria-label="Employee navigation">
-        <Link to="?section=overview" className={`emp-nav-tab ${isOverview ? 'active' : ''}`}>
-          <User size={13} />
-          Overview
-        </Link>
-        <Link
-          to="?section=basic"
-          className={`emp-nav-tab ${name === 'basic' || name === 'identity' ? 'active' : ''}`}
-        >
-          <FileText size={13} />
-          Personal details
-        </Link>
-        <Link
-          to="?section=employment"
-          className={`emp-nav-tab ${name === 'employment' ? 'active' : ''}`}
-        >
-          <Briefcase size={13} />
-          Employment
-        </Link>
-        <Link to="?section=bank" className={`emp-nav-tab ${name === 'bank' ? 'active' : ''}`}>
-          <Landmark size={13} />
-          Bank details
-        </Link>
-        {access.can('hr.employees.compensation.read') && (
-          <Link
-            to="?section=compensation"
-            className={`emp-nav-tab ${name === 'compensation' ? 'active' : ''}`}
-          >
-            <Receipt size={13} />
-            Salary
-          </Link>
+      <ProfileQueryState query={details.query} skeleton="card">
+        {details.query.isSuccess && (
+          <EmployeeProfileHeader
+            employeeId={employeeId}
+            employee={employee}
+            profile={profile}
+            approved={details.approved}
+            directoryName={details.directoryName}
+            designationName={
+              desigsQuery.data?.items.find((item) => item.id === profile.designationId)?.name
+            }
+            onRefresh={details.refresh}
+            refreshing={
+              details.query.isFetching ||
+              details.directory.isFetching ||
+              details.identity.isFetching ||
+              details.employment.isFetching
+            }
+          />
         )}
-        <Link
-          to="?section=files"
-          className={`emp-nav-tab ${name === 'files' || name === 'medical-files' ? 'active' : ''}`}
-        >
-          <FileText size={13} />
-          Documents
-        </Link>
-        <Link
-          to="?section=assignments"
-          className={`emp-nav-tab ${name === 'assignments' || name === 'tracking' || name === 'biometrics' ? 'active' : ''}`}
-        >
-          <MapPin size={13} />
-          Attendance &amp; sites
-        </Link>
-        {access.can('hr.employees.submissions.review', 'access.accounts.read') && (
-          <Link to="?section=access" className={`emp-nav-tab ${name === 'access' ? 'active' : ''}`}>
-            <ShieldCheck size={13} />
-            Roles &amp; Access
-          </Link>
-        )}
-      </nav>
-
-      {/* Workspace Area */}
-      {isOverview ? (
-        <EmployeeOverview employeeId={employeeId} />
-      ) : (
-        <div className="emp-workspace-layout">
-          <main className="emp-workspace-main">
-            {name === 'access' ? (
-              access.can('hr.employees.submissions.review', 'access.accounts.read') ? (
-                <CurrentAccess key={employeeId} employeeId={employeeId} />
-              ) : (
-                <Denied />
-              )
-            ) : name === 'assignments' ? (
-              access.can('hr.sites.read') ? (
-                <EmployeeSiteAssignments key={employeeId} employeeId={employeeId} />
-              ) : (
-                <Denied />
-              )
-            ) : name === 'tracking' ? (
-              <EmployeeMapTracking key={employeeId} employeeId={employeeId} />
-            ) : name === 'biometrics' ? (
-              <EmployeeBiometricSection key={employeeId} employeeId={employeeId} />
-            ) : section ? (
-              access.can(...section.read) ? (
-                <CurrentSection
-                  key={section.name}
-                  employeeId={employeeId}
-                  section={section}
-                  edit={params.get('edit') === '1'}
-                />
-              ) : (
-                <Denied />
-              )
-            ) : name === 'compensation' ? (
-              <SalaryWorkspace
-                key={name}
-                employeeId={employeeId}
-                edit={params.get('edit') === '1'}
-              />
-            ) : name === 'lifecycle' ? (
-              <StatusWorkspace
-                key={name}
-                employeeId={employeeId}
-                edit={params.get('edit') === '1'}
-              />
-            ) : name === 'files' || name === 'medical-files' ? (
-              <CurrentFiles key={name} employeeId={employeeId} medical={name === 'medical-files'} />
-            ) : (
-              <p role="alert">Employee section not found.</p>
-            )}
-          </main>
-
-          {/* Right Quick Section Rail */}
-          <aside className="emp-quick-rail">
-            <EmployeeQuickRail
-              currentSection={name}
-              employee={employee}
-              profile={profile}
-              departments={deptsQuery.data?.items}
-              designations={desigsQuery.data?.items}
-              branches={branchesQuery.data?.items}
-              canCompensation={access.can('hr.employees.compensation.read')}
-              canAccess={access.can('hr.employees.submissions.review', 'access.accounts.read')}
-            />
-          </aside>
-        </div>
+      </ProfileQueryState>
+      {details.approved && (
+        <>
+          {access.can('hr.employees.identity.read') ? (
+            <ProfileReadNotice label="Current identity" query={details.identity} />
+          ) : (
+            <p className="muted">Identity details are restricted by your current permissions.</p>
+          )}
+          <ProfileReadNotice label="Current employment" query={details.employment} />
+          {details.directory.isError && !profile.fullLegalName && (
+            <ProfileReadNotice label="Directory name" query={details.directory} />
+          )}
+        </>
       )}
+      {details.unapproved && details.draft.isSuccess && (
+        <section className="hr-notice">
+          <h2>Employee onboarding</h2>
+          <p>
+            This employee has no approved current record. Continue in the hiring workspace to view
+            or edit the draft.
+          </p>
+          <Link to={`${basePath}/employees/${employeeId}/hiring`}>Open hiring record</Link>
+        </section>
+      )}
+      {details.approved && (
+        <>
+          {/* Modern Tabs Bar */}
+          <nav className="emp-nav-tabs" aria-label="Employee navigation">
+            <Link to="?section=overview" className={`emp-nav-tab ${isOverview ? 'active' : ''}`}>
+              <User size={13} />
+              Overview
+            </Link>
+            <Link
+              to="?section=basic"
+              className={`emp-nav-tab ${name === 'basic' || name === 'identity' ? 'active' : ''}`}
+            >
+              <FileText size={13} />
+              Personal details
+            </Link>
+            <Link
+              to="?section=employment"
+              className={`emp-nav-tab ${name === 'employment' ? 'active' : ''}`}
+            >
+              <Briefcase size={13} />
+              Employment
+            </Link>
+            <Link to="?section=bank" className={`emp-nav-tab ${name === 'bank' ? 'active' : ''}`}>
+              <Landmark size={13} />
+              Bank details
+            </Link>
+            {access.can('hr.employees.compensation.read') && (
+              <Link
+                to="?section=compensation"
+                className={`emp-nav-tab ${name === 'compensation' ? 'active' : ''}`}
+              >
+                <Receipt size={13} />
+                Salary
+              </Link>
+            )}
+            <Link
+              to="?section=files"
+              className={`emp-nav-tab ${name === 'files' || name === 'medical-files' ? 'active' : ''}`}
+            >
+              <FileText size={13} />
+              Documents
+            </Link>
+            <Link
+              to="?section=assignments"
+              className={`emp-nav-tab ${name === 'assignments' || name === 'tracking' || name === 'biometrics' ? 'active' : ''}`}
+            >
+              <MapPin size={13} />
+              Attendance &amp; sites
+            </Link>
+            {access.can('hr.employees.submissions.review', 'access.accounts.read') && (
+              <Link
+                to="?section=access"
+                className={`emp-nav-tab ${name === 'access' ? 'active' : ''}`}
+              >
+                <ShieldCheck size={13} />
+                Roles &amp; Access
+              </Link>
+            )}
+          </nav>
+
+          {/* Workspace Area */}
+          {isOverview ? (
+            <EmployeeOverview profile={profile} asOf={details.basic.data?.asOf} />
+          ) : (
+            <div className="emp-workspace-layout">
+              <main className="emp-workspace-main">
+                {name === 'access' ? (
+                  access.can('hr.employees.submissions.review', 'access.accounts.read') ? (
+                    <CurrentAccess key={employeeId} employeeId={employeeId} />
+                  ) : (
+                    <Denied />
+                  )
+                ) : name === 'assignments' ? (
+                  access.can('hr.sites.read') ? (
+                    <EmployeeSiteAssignments key={employeeId} employeeId={employeeId} />
+                  ) : (
+                    <Denied />
+                  )
+                ) : name === 'tracking' ? (
+                  <EmployeeMapTracking key={employeeId} employeeId={employeeId} />
+                ) : name === 'biometrics' ? (
+                  <EmployeeBiometricSection key={employeeId} employeeId={employeeId} />
+                ) : section ? (
+                  access.can(...section.read) ? (
+                    <CurrentSection
+                      key={section.name}
+                      employeeId={employeeId}
+                      section={section}
+                      edit={params.get('edit') === '1'}
+                      profile={profile}
+                      currentQuery={
+                        section.name === 'basic'
+                          ? details.basic
+                          : section.name === 'identity'
+                            ? details.identity
+                            : section.name === 'employment'
+                              ? details.employment
+                              : undefined
+                      }
+                      onSaved={details.refresh}
+                    />
+                  ) : (
+                    <Denied />
+                  )
+                ) : name === 'compensation' ? (
+                  <SalaryWorkspace
+                    key={name}
+                    employeeId={employeeId}
+                    edit={params.get('edit') === '1'}
+                  />
+                ) : name === 'lifecycle' ? (
+                  <StatusWorkspace
+                    key={name}
+                    employeeId={employeeId}
+                    edit={params.get('edit') === '1'}
+                  />
+                ) : name === 'files' || name === 'medical-files' ? (
+                  <CurrentFiles
+                    key={name}
+                    employeeId={employeeId}
+                    medical={name === 'medical-files'}
+                  />
+                ) : (
+                  <p role="alert">Employee section not found.</p>
+                )}
+              </main>
+
+              {/* Right Quick Section Rail */}
+              <aside className="emp-quick-rail">
+                <EmployeeQuickRail
+                  currentSection={name}
+                  employee={employee}
+                  profile={profile}
+                  departments={deptsQuery.data?.items}
+                  designations={desigsQuery.data?.items}
+                  branches={branchesQuery.data?.items}
+                  canCompensation={access.can('hr.employees.compensation.read')}
+                  canAccess={access.can('hr.employees.submissions.review', 'access.accounts.read')}
+                />
+              </aside>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function ProfileQueryState(props: ComponentProps<typeof QueryState>) {
+  const message = props.query.isError
+    ? employeeProfileEvidenceMessage(props.query.error)
+    : undefined;
+  if (!message) return <QueryState {...props} />;
+  return (
+    <div className="hr-notice" role="alert">
+      <p>{message}</p>
+      <Button variant="secondary" onClick={() => void props.query.refetch()}>
+        Check again
+      </Button>
+    </div>
+  );
+}
+
+function ProfileReadNotice({
+  label,
+  query,
+}: {
+  label: string;
+  query: { isPending: boolean; isError: boolean; error: unknown; refetch: () => unknown };
+}) {
+  if (query.isPending) return <p role="status">Loading {label.toLowerCase()}…</p>;
+  if (!query.isError) return null;
+  return (
+    <div className="hr-notice" role="alert">
+      <p>
+        {label}{' '}
+        {query.error instanceof ApiError && query.error.status === 404
+          ? 'was not found.'
+          : 'is unavailable.'}
+      </p>
+      {query.error instanceof ApiError && (
+        <p>
+          Code: {query.error.code || 'not supplied'}
+          {query.error.correlationId && ` · Reference: ${query.error.correlationId}`}
+        </p>
+      )}
+      <ProfileQueryState query={query}>{null}</ProfileQueryState>
     </div>
   );
 }
@@ -251,14 +359,16 @@ function EmployeeQuickRail({
   canAccess,
 }: {
   currentSection: string;
-  employee?: z.infer<typeof profileResponse>['employee'];
-  profile?: z.infer<typeof profileResponse>['profile'];
+  employee?: EmployeeSummary;
+  profile?: EmployeeProfileValues;
   departments?: { id: string; name: string }[];
   designations?: { id: string; name: string }[];
   branches?: { id: string; name: string }[];
   canCompensation: boolean;
   canAccess: boolean;
 }) {
+  const access = useHrAccess();
+  const canIdentity = access.can('hr.employees.identity.read');
   const deptName =
     departments?.find((d) => d.id === profile?.departmentId)?.name || profile?.departmentId || '—';
   const desigName =
@@ -402,14 +512,16 @@ function EmployeeQuickRail({
         <div className="emp-rail-header">
           <span className="emp-rail-title">
             <Info size={12} />
-            Hiring Profile Snapshot
+            Current profile
           </span>
           {employee?.employeeNumber && (
             <span className="emp-rail-badge">{employee.employeeNumber}</span>
           )}
         </div>
         <div className="emp-rail-snapshot-box">
-          <p className="muted">Hiring values may differ from current approved records.</p>
+          <p className="muted">
+            Values from authorized current records. Unavailable fields are shown as —.
+          </p>
           <div className="emp-rail-snapshot-row">
             <span className="emp-rail-snapshot-lbl">Designation</span>
             <span className="emp-rail-snapshot-val" title={desigName}>
@@ -422,24 +534,30 @@ function EmployeeQuickRail({
               {deptName}
             </span>
           </div>
-          <div className="emp-rail-snapshot-row">
-            <span className="emp-rail-snapshot-lbl">CNIC</span>
-            <span className="emp-rail-snapshot-val">
-              {profile?.identityDocumentNumber ? formatCnic(profile.identityDocumentNumber) : '—'}
-            </span>
-          </div>
-          <div className="emp-rail-snapshot-row">
-            <span className="emp-rail-snapshot-lbl">Mobile</span>
-            <span className="emp-rail-snapshot-val">
-              {profile?.personalPhone || profile?.loginPhoneNumber || '—'}
-            </span>
-          </div>
-          <div className="emp-rail-snapshot-row">
-            <span className="emp-rail-snapshot-lbl">Work Email</span>
-            <span className="emp-rail-snapshot-val" title={profile?.officialEmail || ''}>
-              {profile?.officialEmail || '—'}
-            </span>
-          </div>
+          {canIdentity && (
+            <div className="emp-rail-snapshot-row">
+              <span className="emp-rail-snapshot-lbl">CNIC</span>
+              <span className="emp-rail-snapshot-val">
+                {profile?.identityDocumentNumber ? formatCnic(profile.identityDocumentNumber) : '—'}
+              </span>
+            </div>
+          )}
+          {canIdentity && (
+            <div className="emp-rail-snapshot-row">
+              <span className="emp-rail-snapshot-lbl">Mobile</span>
+              <span className="emp-rail-snapshot-val">
+                {profile?.personalPhone || profile?.loginPhoneNumber || '—'}
+              </span>
+            </div>
+          )}
+          {canIdentity && (
+            <div className="emp-rail-snapshot-row">
+              <span className="emp-rail-snapshot-lbl">Work Email</span>
+              <span className="emp-rail-snapshot-val" title={profile?.officialEmail || ''}>
+                {profile?.officialEmail || '—'}
+              </span>
+            </div>
+          )}
           <div className="emp-rail-snapshot-row">
             <span className="emp-rail-snapshot-lbl">Office</span>
             <span className="emp-rail-snapshot-val" title={branchName}>
@@ -457,26 +575,7 @@ function EmployeeQuickRail({
   );
 }
 
-function EmployeeOverview({
-  employeeId,
-  employee: _employee,
-  profile: initialProfile,
-  departments: _departments,
-  designations: _designations,
-  branches: _branches,
-}: {
-  employeeId: string;
-  employee?: z.infer<typeof profileResponse>['employee'];
-  profile?: z.infer<typeof profileResponse>['profile'];
-  departments?: { id: string; name: string }[];
-  designations?: { id: string; name: string }[];
-  branches?: { id: string; name: string }[];
-}) {
-  const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
-    'hr.employees.read',
-  ]);
-  const profile = profileQuery.data?.profile || initialProfile;
-
+function EmployeeOverview({ profile, asOf }: { profile: EmployeeProfileValues; asOf?: string }) {
   const currentAddress = profile?.currentAddress;
   const currentAddressStr = currentAddress?.line1
     ? `${currentAddress.line1}${currentAddress.city ? `, ${currentAddress.city}` : ''}${currentAddress.province ? `, ${currentAddress.province}` : ''}`
@@ -491,11 +590,7 @@ function EmployeeOverview({
 
   return (
     <div className="emp-overview-container">
-      {/* The hiring profile is not the current-value endpoint. */}
-      <div className="emp-overview-timestamp">
-        Hiring profile snapshot — these values may differ from current approved records. Open
-        Personal details, Identity or Employment for current values.
-      </div>
+      <div className="emp-overview-timestamp">Current basic details as of {asOf ?? '—'}.</div>
 
       <div className="emp-overview-grid">
         {/* Left Column: Personal Information Card */}
@@ -705,9 +800,9 @@ function CurrentAccess({ employeeId }: { employeeId: string }) {
     'hr.employees.read',
   ]);
   return (
-    <QueryState query={query}>
+    <ProfileQueryState query={query}>
       {query.data && <EmployeeAccessSetup employeeId={employeeId} approved />}
-    </QueryState>
+    </ProfileQueryState>
   );
 }
 
@@ -719,17 +814,25 @@ function StructuredSectionDisplay({
   departments,
   designations,
   branches,
+  staffCategories,
+  employmentTypes,
+  employees,
   profile,
 }: {
   section: Section;
   data: Record<string, unknown> | null | undefined;
   canWrite: boolean;
   onEdit: () => void;
-  departments?: { id: string; name: string }[];
-  designations?: { id: string; name: string }[];
-  branches?: { id: string; name: string }[];
-  profile?: z.infer<typeof profileResponse>['profile'];
+  departments?: { id: string; name: string; code?: string }[];
+  designations?: { id: string; name: string; code?: string }[];
+  branches?: { id: string; name: string; code?: string }[];
+  staffCategories?: { id: string; name: string; code?: string }[];
+  employmentTypes?: { id: string; name: string; code?: string }[];
+  employees?: EmployeeSummary[];
+  profile?: EmployeeProfileValues;
 }) {
+  const access = useHrAccess();
+  const canIdentity = access.can('hr.employees.identity.read');
   if (!data && !profile) {
     return (
       <div className="emp-card">
@@ -779,38 +882,52 @@ function StructuredSectionDisplay({
           </div>
 
           <div className="emp-kv-grid">
-            <div className="emp-kv-item">
-              <span className="emp-kv-label">Full Legal Name</span>
-              <span className="emp-kv-value">{profile?.fullLegalName || '—'}</span>
-            </div>
-            <div className="emp-kv-item">
-              <span className="emp-kv-label">Father / Spouse Name</span>
-              <span className="emp-kv-value">{profile?.fatherOrSpouseName || '—'}</span>
-            </div>
-            <div className="emp-kv-item">
-              <span className="emp-kv-label">Date of Birth &amp; Age</span>
-              <span className="emp-kv-value">{calculateAge(profile?.dateOfBirth)}</span>
-            </div>
-            <div className="emp-kv-item">
-              <span className="emp-kv-label">Gender</span>
-              <span className="emp-kv-value">{profile?.gender || '—'}</span>
-            </div>
+            {canIdentity && (
+              <div className="emp-kv-item">
+                <span className="emp-kv-label">Full Legal Name</span>
+                <span className="emp-kv-value">{profile?.fullLegalName || '—'}</span>
+              </div>
+            )}
+            {canIdentity && (
+              <div className="emp-kv-item">
+                <span className="emp-kv-label">Father / Spouse Name</span>
+                <span className="emp-kv-value">{profile?.fatherOrSpouseName || '—'}</span>
+              </div>
+            )}
+            {canIdentity && (
+              <div className="emp-kv-item">
+                <span className="emp-kv-label">Date of Birth &amp; Age</span>
+                <span className="emp-kv-value">{calculateAge(profile?.dateOfBirth)}</span>
+              </div>
+            )}
+            {canIdentity && (
+              <div className="emp-kv-item">
+                <span className="emp-kv-label">Gender</span>
+                <span className="emp-kv-value">{profile?.gender || '—'}</span>
+              </div>
+            )}
             <div className="emp-kv-item">
               <span className="emp-kv-label">Marital Status</span>
               <span className="emp-kv-value">
                 {basic?.maritalStatus || profile?.maritalStatus || '—'}
               </span>
             </div>
-            <div className="emp-kv-item">
-              <span className="emp-kv-label">CNIC / ID Document</span>
-              <span className="emp-kv-value">
-                {profile?.identityDocumentNumber ? formatCnic(profile.identityDocumentNumber) : '—'}
-              </span>
-            </div>
-            <div className="emp-kv-item">
-              <span className="emp-kv-label">Document Expiry</span>
-              <span className="emp-kv-value">{profile?.identityDocumentExpiresOn || '—'}</span>
-            </div>
+            {canIdentity && (
+              <div className="emp-kv-item">
+                <span className="emp-kv-label">CNIC / ID Document</span>
+                <span className="emp-kv-value">
+                  {profile?.identityDocumentNumber
+                    ? formatCnic(profile.identityDocumentNumber)
+                    : '—'}
+                </span>
+              </div>
+            )}
+            {canIdentity && (
+              <div className="emp-kv-item">
+                <span className="emp-kv-label">Document Expiry</span>
+                <span className="emp-kv-value">{profile?.identityDocumentExpiresOn || '—'}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -831,26 +948,32 @@ function StructuredSectionDisplay({
                 <span>Communication Channels</span>
               </div>
               <div className="emp-emergency-table" style={{ marginLeft: 0, marginTop: '4px' }}>
-                <div className="emp-emergency-row">
-                  <span className="emp-emergency-label">Work Email</span>
-                  <span className="emp-emergency-val">{profile?.officialEmail || '—'}</span>
-                </div>
+                {canIdentity && (
+                  <div className="emp-emergency-row">
+                    <span className="emp-emergency-label">Work Email</span>
+                    <span className="emp-emergency-val">{profile?.officialEmail || '—'}</span>
+                  </div>
+                )}
                 <div className="emp-emergency-row">
                   <span className="emp-emergency-label">Personal Email</span>
                   <span className="emp-emergency-val">
                     {basic?.personalEmail || profile?.personalEmail || '—'}
                   </span>
                 </div>
-                <div className="emp-emergency-row">
-                  <span className="emp-emergency-label">Personal Mobile</span>
-                  <span className="emp-emergency-val">
-                    {profile?.personalPhone || profile?.loginPhoneNumber || '—'}
-                  </span>
-                </div>
-                <div className="emp-emergency-row">
-                  <span className="emp-emergency-label">Company Phone</span>
-                  <span className="emp-emergency-val">{profile?.companyPhone || '—'}</span>
-                </div>
+                {canIdentity && (
+                  <div className="emp-emergency-row">
+                    <span className="emp-emergency-label">Personal Mobile</span>
+                    <span className="emp-emergency-val">
+                      {profile?.personalPhone || profile?.loginPhoneNumber || '—'}
+                    </span>
+                  </div>
+                )}
+                {canIdentity && (
+                  <div className="emp-emergency-row">
+                    <span className="emp-emergency-label">Company Phone</span>
+                    <span className="emp-emergency-val">{profile?.companyPhone || '—'}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -956,7 +1079,9 @@ function StructuredSectionDisplay({
             <span className="emp-kv-value">
               {(identity?.identityDocumentType ?? profile?.identityDocumentType) === 2
                 ? 'Passport'
-                : 'CNIC / Smart Card'}
+                : (identity?.identityDocumentType ?? profile?.identityDocumentType) === 1
+                  ? 'CNIC / Smart Card'
+                  : '—'}
             </span>
           </div>
           <div className="emp-kv-item">
@@ -1013,21 +1138,53 @@ function StructuredSectionDisplay({
 
   if (section.name === 'employment') {
     const rawEmp = data && !('status' in data) ? data : {};
-    const empData: Partial<z.infer<typeof profileResponse>['profile']> = {
+    const empData: Partial<EmployeeProfileValues> = {
       ...profile,
       ...rawEmp,
     };
 
+    const dept = departments?.find(
+      (d) => d.id.toLowerCase() === empData.departmentId?.toLowerCase(),
+    );
     const deptName =
-      departments?.find((d) => d.id === empData.departmentId)?.name ||
-      empData.departmentId ||
-      'Not assigned';
+      dept?.name ||
+      (empData.departmentId
+        ? empData.departmentId.length > 20
+          ? `Dept (${empData.departmentId.slice(0, 8)})`
+          : empData.departmentId
+        : 'Not assigned');
+
+    const desig = designations?.find(
+      (d) => d.id.toLowerCase() === empData.designationId?.toLowerCase(),
+    );
     const desigName =
-      designations?.find((d) => d.id === empData.designationId)?.name ||
-      empData.designationId ||
-      'Not assigned';
+      desig?.name ||
+      (empData.designationId
+        ? empData.designationId.length > 20
+          ? `Desig (${empData.designationId.slice(0, 8)})`
+          : empData.designationId
+        : 'Not assigned');
+
+    const branch = branches?.find((b) => b.id.toLowerCase() === empData.branchId?.toLowerCase());
     const branchName =
-      branches?.find((b) => b.id === empData.branchId)?.name || empData.branchId || 'Head Office';
+      branch?.name ||
+      (empData.branchId
+        ? empData.branchId.length > 20
+          ? `Branch (${empData.branchId.slice(0, 8)})`
+          : empData.branchId
+        : 'Not provided');
+
+    const manager = employees?.find(
+      (e) => e.id.toLowerCase() === empData.reportingManagerEmployeeId?.toLowerCase(),
+    );
+
+    const empType = employmentTypes?.find(
+      (t) => t.id.toLowerCase() === empData.employmentTypeId?.toLowerCase(),
+    );
+
+    const staffCat = staffCategories?.find(
+      (c) => c.id.toLowerCase() === empData.staffCategoryId?.toLowerCase(),
+    );
 
     return (
       <div className="emp-card">
@@ -1047,30 +1204,175 @@ function StructuredSectionDisplay({
         <div className="emp-kv-grid">
           <div className="emp-kv-item">
             <span className="emp-kv-label">Department</span>
-            <span className="emp-kv-value">{deptName}</span>
+            <span
+              className="emp-kv-value"
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}
+            >
+              <span>{deptName}</span>
+              {dept?.code && (
+                <span className="emp-short-id-chip" title={`Department Code: ${dept.code}`}>
+                  {dept.code}
+                </span>
+              )}
+              {empData.departmentId && (
+                <span className="emp-short-id-chip" title={`UUID: ${empData.departmentId}`}>
+                  {empData.departmentId.slice(0, 8)}
+                </span>
+              )}
+            </span>
           </div>
+
           <div className="emp-kv-item">
             <span className="emp-kv-label">Designation</span>
-            <span className="emp-kv-value">{desigName}</span>
+            <span
+              className="emp-kv-value"
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}
+            >
+              <span>{desigName}</span>
+              {desig?.code && (
+                <span className="emp-short-id-chip" title={`Designation Code: ${desig.code}`}>
+                  {desig.code}
+                </span>
+              )}
+              {empData.designationId && (
+                <span className="emp-short-id-chip" title={`UUID: ${empData.designationId}`}>
+                  {empData.designationId.slice(0, 8)}
+                </span>
+              )}
+            </span>
           </div>
+
           <div className="emp-kv-item">
             <span className="emp-kv-label">Work Office / Branch</span>
-            <span className="emp-kv-value">{branchName}</span>
+            <span
+              className="emp-kv-value"
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}
+            >
+              <span>{branchName}</span>
+              {branch?.code && (
+                <span className="emp-short-id-chip" title={`Branch Code: ${branch.code}`}>
+                  {branch.code}
+                </span>
+              )}
+              {empData.branchId && (
+                <span className="emp-short-id-chip" title={`UUID: ${empData.branchId}`}>
+                  {empData.branchId.slice(0, 8)}
+                </span>
+              )}
+            </span>
           </div>
+
           <div className="emp-kv-item">
             <span className="emp-kv-label">Reporting Manager</span>
             <span className="emp-kv-value">
-              {empData.reportingManagerEmployeeId || 'Not assigned'}
+              {manager ? (
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}
+                >
+                  <Link
+                    to={`/hr/employees/${manager.id}`}
+                    className="emp-manager-link"
+                    title="Click to view manager profile"
+                  >
+                    {manager.name}
+                  </Link>
+                  <span className="emp-code-chip" title="Employee Number">
+                    EMP-{String(manager.employeeNumber).padStart(4, '0')}
+                  </span>
+                  <span className="emp-short-id-chip" title={`Manager UUID: ${manager.id}`}>
+                    {manager.id.slice(0, 8)}
+                  </span>
+                </div>
+              ) : empData.reportingManagerEmployeeId ? (
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}
+                >
+                  <span>Manager #{empData.reportingManagerEmployeeId.slice(0, 8)}</span>
+                  <span
+                    className="emp-short-id-chip"
+                    title={`Full UUID: ${empData.reportingManagerEmployeeId}`}
+                  >
+                    {empData.reportingManagerEmployeeId.slice(0, 8)}
+                  </span>
+                </div>
+              ) : (
+                <span className="muted" style={{ fontStyle: 'italic', fontWeight: 500 }}>
+                  Not assigned
+                </span>
+              )}
             </span>
           </div>
+
           <div className="emp-kv-item">
             <span className="emp-kv-label">Employment Type</span>
-            <span className="emp-kv-value">{empData.employmentTypeId || 'Full-Time'}</span>
+            <span className="emp-kv-value">
+              {empType ? (
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}
+                >
+                  <span className="emp-type-pill">{empType.name}</span>
+                  {empType.code && (
+                    <span className="emp-short-id-chip" title={`Type Code: ${empType.code}`}>
+                      {empType.code}
+                    </span>
+                  )}
+                  <span className="emp-short-id-chip" title={`Type UUID: ${empType.id}`}>
+                    {empType.id.slice(0, 8)}
+                  </span>
+                </div>
+              ) : empData.employmentTypeId ? (
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}
+                >
+                  <span className="emp-type-pill">Not provided</span>
+                  <span
+                    className="emp-short-id-chip"
+                    title={`Type UUID: ${empData.employmentTypeId}`}
+                  >
+                    {empData.employmentTypeId.slice(0, 8)}
+                  </span>
+                </div>
+              ) : (
+                <span className="emp-type-pill">Not provided</span>
+              )}
+            </span>
           </div>
+
           <div className="emp-kv-item">
             <span className="emp-kv-label">Staff Category</span>
-            <span className="emp-kv-value">{empData.staffCategoryId || 'Standard Staff'}</span>
+            <span className="emp-kv-value">
+              {staffCat ? (
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}
+                >
+                  <span className="emp-category-pill">{staffCat.name}</span>
+                  {staffCat.code && (
+                    <span className="emp-short-id-chip" title={`Category Code: ${staffCat.code}`}>
+                      {staffCat.code}
+                    </span>
+                  )}
+                  <span className="emp-short-id-chip" title={`Category UUID: ${staffCat.id}`}>
+                    {staffCat.id.slice(0, 8)}
+                  </span>
+                </div>
+              ) : empData.staffCategoryId ? (
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}
+                >
+                  <span className="emp-category-pill">Not provided</span>
+                  <span
+                    className="emp-short-id-chip"
+                    title={`Category UUID: ${empData.staffCategoryId}`}
+                  >
+                    {empData.staffCategoryId.slice(0, 8)}
+                  </span>
+                </div>
+              ) : (
+                <span className="emp-category-pill">Not provided</span>
+              )}
+            </span>
           </div>
+
           <div className="emp-kv-item">
             <span className="emp-kv-label">Joining Date</span>
             <span className="emp-kv-value">
@@ -1175,14 +1477,18 @@ function CurrentSection({
   employeeId,
   section,
   edit,
+  profile,
+  currentQuery,
+  onSaved,
 }: {
   employeeId: string;
   section: Section;
   edit: boolean;
+  profile: EmployeeProfileValues;
+  currentQuery?: ReturnType<typeof useEmployeeProfile>['basic'];
+  onSaved: () => void;
 }) {
   const access = useHrAccess();
-  const location = useLocation();
-  const basePath = location.pathname.startsWith('/admin') ? '/admin' : '/hr';
   const [params, setParams] = useSearchParams();
   const [revision, setRevision] = useState(0);
   const [historyRevision, setHistoryRevision] = useState(0);
@@ -1206,15 +1512,13 @@ function CurrentSection({
     setIsEditModalOpen(true);
   };
 
-  const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
-    'hr.employees.read',
-  ]);
-  const query = useHrQuery(`employees/${employeeId}/current/${section.name}`, currentUpdateSchema, [
-    'hr.employees.read',
-    ...section.read,
-  ]);
-  const unapproved =
-    query.error instanceof ApiError && query.error.code === 'employee_not_approved';
+  const sectionQuery = useHrQuery(
+    `employees/${employeeId}/current/${section.name}`,
+    currentUpdateSchema,
+    ['hr.employees.read', ...section.read],
+    !currentQuery,
+  );
+  const query = currentQuery ?? sectionQuery;
   const canWrite = access.can(...section.read, ...section.write);
 
   const deptsQuery = useHrQuery('departments?pageSize=100', pageOf(masterSchema), [
@@ -1226,77 +1530,15 @@ function CurrentSection({
   const branchesQuery = useHrQuery('branches?pageSize=100', pageOf(masterSchema), [
     'hr.organization.read',
   ]);
-
-  if (unapproved) {
-    const isDraft = profileQuery.data?.employee.onboardingStatus === 0;
-    const statusLabel = isDraft ? 'Draft (Incomplete)' : 'Pending Approval';
-    return (
-      <div className="emp-section-wrapper">
-        <div
-          style={{
-            padding: '8px 12px',
-            background: '#fefce8',
-            border: '1px solid #fef08a',
-            borderRadius: '6px',
-            marginBottom: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '8px',
-          }}
-        >
-          <div>
-            <div
-              style={{ fontWeight: 650, fontSize: '12px', color: '#854d0e', marginBottom: '1px' }}
-            >
-              Employee Onboarding in Progress ({statusLabel})
-            </div>
-            <div style={{ fontSize: '11px', color: '#a16207' }}>
-              Formal version trees and live change requests become active after the employee
-              onboarding is approved.
-            </div>
-          </div>
-          <Link
-            to={`${basePath}/employees/${employeeId}/hiring`}
-            style={{
-              padding: '4px 10px',
-              borderRadius: '5px',
-              background: '#0f172a',
-              color: '#ffffff',
-              fontSize: '11px',
-              fontWeight: 600,
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
-          >
-            Edit / Continue Onboarding
-          </Link>
-        </div>
-        {profileQuery.data?.profile ? (
-          <StructuredSectionDisplay
-            section={section}
-            data={profileQuery.data.profile}
-            profile={profileQuery.data.profile}
-            departments={deptsQuery.data?.items}
-            designations={desigsQuery.data?.items}
-            branches={branchesQuery.data?.items}
-            canWrite={false}
-            onEdit={() => {}}
-          />
-        ) : (
-          <div className="emp-card">
-            <p className="muted" style={{ margin: 0, fontSize: '11.5px' }}>
-              Draft record pending onboarding completion ({statusLabel})
-            </p>
-          </div>
-        )}
-        <ChangeHistory employeeId={employeeId} section={section} key={historyRevision} />
-      </div>
-    );
-  }
+  const staffCatsQuery = useHrQuery('staff-categories?pageSize=100', pageOf(masterSchema), [
+    'hr.organization.read',
+  ]);
+  const empTypesQuery = useHrQuery('employment-types?pageSize=100', pageOf(masterSchema), [
+    'hr.organization.read',
+  ]);
+  const employeesQuery = useHrQuery('employees?pageSize=100', pageOf(employeeSchema), [
+    'hr.employees.read',
+  ]);
 
   return (
     <div className="emp-section-wrapper">
@@ -1348,16 +1590,19 @@ function CurrentSection({
           Saved successfully.
         </p>
       )}
-      <QueryState query={query}>
+      <ProfileQueryState query={query}>
         {query.data && (
           <>
             <StructuredSectionDisplay
               section={section}
               data={query.data.current.data[section.name]}
-              profile={profileQuery.data?.profile}
+              profile={section.name === 'basic' ? profile : undefined}
               departments={deptsQuery.data?.items}
               designations={desigsQuery.data?.items}
               branches={branchesQuery.data?.items}
+              staffCategories={staffCatsQuery.data?.items}
+              employmentTypes={empTypesQuery.data?.items}
+              employees={employeesQuery.data?.items}
               canWrite={canWrite && !query.data.scheduled}
               onEdit={handleOpenModal}
             />
@@ -1401,6 +1646,12 @@ function CurrentSection({
                 <StructuredSectionDisplay
                   section={section}
                   data={query.data.scheduled.data[section.name]}
+                  departments={deptsQuery.data?.items}
+                  designations={desigsQuery.data?.items}
+                  branches={branchesQuery.data?.items}
+                  staffCategories={staffCatsQuery.data?.items}
+                  employmentTypes={empTypesQuery.data?.items}
+                  employees={employeesQuery.data?.items}
                   canWrite={false}
                   onEdit={() => {}}
                 />
@@ -1415,6 +1666,7 @@ function CurrentSection({
                 current={query.data}
                 section={section}
                 onSaved={() => {
+                  onSaved();
                   setSaved(true);
                   setRevision((r) => r + 1);
                   void query.refetch();
@@ -1423,7 +1675,7 @@ function CurrentSection({
             )}
           </>
         )}
-      </QueryState>
+      </ProfileQueryState>
       <ChangeHistory
         key={`history-${revision}-${historyRevision}`}
         employeeId={employeeId}
@@ -1435,6 +1687,7 @@ function CurrentSection({
           employeeId={employeeId}
           section={section}
           onDecided={() => {
+            onSaved();
             void query.refetch();
             setHistoryRevision((v) => v + 1);
           }}
@@ -1460,7 +1713,7 @@ function CurrentFiles({ employeeId, medical }: { employeeId: string; medical: bo
   if (!access.can(...permissions)) return <Denied />;
   return (
     <div className="emp-section-wrapper" style={{ marginTop: '16px' }}>
-      <QueryState query={query}>
+      <ProfileQueryState query={query}>
         {query.data && (
           <>
             {saved && (
@@ -1481,7 +1734,7 @@ function CurrentFiles({ employeeId, medical }: { employeeId: string; medical: bo
             />
           </>
         )}
-      </QueryState>
+      </ProfileQueryState>
     </div>
   );
 }

@@ -61,12 +61,14 @@ public static class AuthenticationExtensions
                 OnMessageReceived = context =>
                 {
                     // Never reinterpret a mobile bearer token as browser authentication.
-                    if (!context.Request.Headers.ContainsKey("Authorization") &&
-                        context.Request.Cookies.TryGetValue(WebSessionCookies.Access, out var token))
+                    if (!context.Request.Headers.ContainsKey("Authorization"))
                     {
-                        if (!context.Request.IsHttps) { context.Fail("HTTPS is required."); return Task.CompletedTask; }
-                        context.Token = token;
-                        context.HttpContext.Items["cosmix:web-cookie"] = true;
+                        var token = context.Request.Cookies[WebSessionCookies.Access] ?? context.Request.Cookies[WebSessionCookies.PlainAccess];
+                        if (!string.IsNullOrEmpty(token))
+                        {
+                            context.Token = token;
+                            context.HttpContext.Items["cosmix:web-cookie"] = true;
+                        }
                     }
                     return Task.CompletedTask;
                 },
@@ -84,7 +86,7 @@ public static class AuthenticationExtensions
                         var identity = cookieTransport
                             ? await context.HttpContext.RequestServices.GetRequiredService<WebAuthenticationService>()
                                 .ValidateBrowserSessionAsync(accountId, sessionId, version,
-                                    context.Request.Cookies[WebSessionCookies.Browser] ?? string.Empty, context.HttpContext.RequestAborted)
+                                    WebSessionCookies.GetCookie(context.HttpContext, WebSessionCookies.Browser, WebSessionCookies.PlainBrowser), context.HttpContext.RequestAborted)
                             : await context.HttpContext.RequestServices.GetRequiredService<MobileAuthenticationService>()
                                 .ValidateSessionAsync(accountId, sessionId, version, context.HttpContext.RequestAborted);
                         if (identity is null || principal?.FindFirst("employee_id")?.Value != identity.EmployeeId.ToString() ||

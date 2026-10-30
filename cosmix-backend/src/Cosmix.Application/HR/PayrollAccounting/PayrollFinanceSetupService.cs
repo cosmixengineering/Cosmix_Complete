@@ -89,9 +89,7 @@ public sealed class PayrollFinanceSetupService(IPayrollFinanceRepository reposit
         var period = await RequirePeriodAsync(postingDate.Value, currency, ct);
         if (sourceStart < period.PeriodStart || sourceEnd > period.PeriodEndExclusive) throw Conflict("payroll_source_outside_accounting_period");
         var profile = await repository.ProfileAsync(profileId.Value, ct) ?? throw Missing();
-        if (sourceEnd <= sourceStart || profile.State != PayrollFinanceApprovalState.Approved || profile.ApprovedAt is null || string.IsNullOrWhiteSpace(profile.ApprovedByUserId) || profile.ApprovedByUserId == profile.CreatedByUserId ||
-            profile.Currency != currency || profile.EffectiveFrom > sourceStart ||
-            (profile.EffectiveToExclusive.HasValue && profile.EffectiveToExclusive.Value < sourceEnd)) throw Conflict("payroll_posting_profile_not_applicable");
+        if (!IsProfileApplicable(profile, currency, sourceStart, sourceEnd)) throw Conflict("payroll_posting_profile_not_applicable");
         var rules = Rules(profile); await ValidateRulesAsync(rules, ct);
         return (period, profile, rules);
     }
@@ -118,7 +116,16 @@ public sealed class PayrollFinanceSetupService(IPayrollFinanceRepository reposit
         if (!isApprovedDisbursement) throw Conflict("payroll_account_not_approved_disbursement");
     }
 
-    private async Task ValidateRulesAsync(PayrollPostingRules rules, CancellationToken ct)
+    public static bool IsProfileApplicable(PayrollPostingProfile profile, string currency,
+        DateOnly sourceStart, DateOnly sourceEnd) => sourceEnd > sourceStart &&
+        profile.State == PayrollFinanceApprovalState.Approved && profile.ApprovedAt is not null &&
+        !string.IsNullOrWhiteSpace(profile.ApprovedByUserId) && profile.ApprovedByUserId != profile.CreatedByUserId &&
+        profile.Currency == currency && profile.EffectiveFrom <= sourceStart &&
+        (profile.EffectiveToExclusive is null || profile.EffectiveToExclusive >= sourceEnd);
+
+    /// <summary>Transaction-local read-only validation shared by actual posting and configuration readiness.
+    /// The caller owns authorization; this method never posts or approves anything.</summary>
+    public async Task ValidateRulesAsync(PayrollPostingRules rules, CancellationToken ct)
     {
         if (rules.Deductions is null || rules.Statutory is null || rules.Deductions.Count > 30 || rules.Statutory.Count > 3 ||
             rules.Deductions.Select(x => x.Component).Distinct(StringComparer.Ordinal).Count() != rules.Deductions.Count ||

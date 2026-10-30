@@ -1051,3 +1051,26 @@
     padding: 16px 14px 28px;
   }
 }
+
+/* Quick Action Navigation Bar in Admin Dashboard */
+.admin-dashboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.admin-quick-nav-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -12px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 900px) {
+  .admin-quick-nav-bar {
+    margin-top: -8px;
+    margin-bottom: 10px;
+  }
+}

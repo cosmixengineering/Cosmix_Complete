@@ -9,8 +9,8 @@ export function AdminDashboardPage() {
       (grant) => grant.permission === code && grant.scopeKind === 7 && grant.targetId === null,
     );
   return (
-    <section aria-label="Administration dashboard">
-      <nav className="attendance-commands" aria-label="Administration actions">
+    <section aria-label="Administration dashboard" className="admin-dashboard-wrapper">
+      <nav className="admin-quick-nav-bar" aria-label="Administration actions">
         {has('hr.employees.submissions.review') && (
           <Link className="button button--secondary" to="/admin/approvals?type=hiring">
             Hiring review

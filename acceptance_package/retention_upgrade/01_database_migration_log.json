@@ -118,5 +118,37 @@
   {
     "MigrationId": "20261028071931_CompleteSalaryRunAndStatutoryEntries",
     "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261028114154_ProtectPayrollPaymentSettlementAndBankExports",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261028150542_ReturnApprovedPayrollForCorrection",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261028153149_TrackStatutoryEmployeePostingCoverage",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261028154436_ExposeSharedFinanceLedger",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261028161132_AddApprovedPayrollCostAllocation",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261028164326_AddBankStatementReconciliation",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261029051812_AddWebAuthenticatorRecovery",
+    "ProductVersion": "10.0.12"
+  },
+  {
+    "MigrationId": "20261029140000_HardenClosedBankMonthTrigger",
+    "ProductVersion": "10.0.12"
   }
 ]

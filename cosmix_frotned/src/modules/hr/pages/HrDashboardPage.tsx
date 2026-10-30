@@ -26,12 +26,14 @@ import { pageOf, employeeSchema } from '../schemas/contracts';
 import { siteSchema } from '../schemas/sites';
 import { submissionSummarySchema } from '../schemas/approvals';
 import { isSystemAdmin } from '@/auth/contracts';
+import { attendanceOperationalNavigation } from '@/modules/attendance';
 import { useAttendanceAccess } from '@/modules/attendance/hooks/use-attendance-access';
 import { useAttendanceQuery } from '@/modules/attendance/hooks/use-attendance-query';
 import { leavePage } from '@/modules/attendance/operations/leave-policy/contracts';
 import { dashboardCount, dashboardCsv, dashboardMoney, dashboardRead } from '../utils/dashboard';
 import { dashboardAttendanceSummary, dashboardPayrollSummary } from '../schemas/dashboard';
 import { businessDate } from '@/utils/format';
+import { canDeployment } from '../outstation/contracts';
 import '@/styles/hr-dashboard.css';
 
 interface ActivityItem {
@@ -81,6 +83,14 @@ export function HrDashboardPage() {
   const canReadHiring =
     isAdmin && access.can('hr.employees.read', 'hr.employees.submissions.review');
   const canReadLeaves = isAdmin && attendanceAccess.can('attendance.leaves.review');
+  const overtimeApprovalLink = attendanceOperationalNavigation(access.user).find(
+    (link) => access.ready && link.allowed && link.to === '/hr/overtime/review',
+  );
+  const canReadAllowances =
+    access.ready &&
+    (access.can('attendance.allowances.review') ||
+      access.can('attendance.allowances.policy') ||
+      canDeployment(access.user, 'read'));
   const canReadAttendance = access.can('attendance.reports.read');
   const canReadPayroll = access.can(
     'hr.employees.compensation.read',
@@ -434,7 +444,7 @@ export function HrDashboardPage() {
         </div>
       </div>
 
-      {/* 4. HR Workspace 8-Card Grid matching Screenshot */}
+      {/* 4. HR Workspace */}
       <div className="dash-exact-workspace-section">
         <h2 className="dash-exact-section-title">HR workspace</h2>
         <div className="dash-exact-workspace-grid">
@@ -522,19 +532,37 @@ export function HrDashboardPage() {
             <ChevronRight size={12} className="dash-exact-card-arrow" />
           </Link>
 
-          {/* Card 7: Overtime & Allowances */}
-          <Link to="/hr/allowances" className="dash-exact-workspace-card">
-            <div className="dash-exact-card-left">
-              <div className="dash-exact-card-icon-wrap">
-                <Banknote size={13} />
+          {overtimeApprovalLink && (
+            <Link to={overtimeApprovalLink.to} className="dash-exact-workspace-card">
+              <div className="dash-exact-card-left">
+                <div className="dash-exact-card-icon-wrap">
+                  <ClipboardList size={13} />
+                </div>
+                <div className="dash-exact-card-text">
+                  <span className="dash-exact-card-title">{overtimeApprovalLink.label}</span>
+                  <span className="dash-exact-card-sub">Review overtime requests & decisions</span>
+                </div>
               </div>
-              <div className="dash-exact-card-text">
-                <span className="dash-exact-card-title">Overtime & Allowances</span>
-                <span className="dash-exact-card-sub">Overtime, meals & travel</span>
+              <ChevronRight size={12} className="dash-exact-card-arrow" />
+            </Link>
+          )}
+
+          {canReadAllowances && (
+            <Link to="/hr/allowances" className="dash-exact-workspace-card">
+              <div className="dash-exact-card-left">
+                <div className="dash-exact-card-icon-wrap">
+                  <Banknote size={13} />
+                </div>
+                <div className="dash-exact-card-text">
+                  <span className="dash-exact-card-title">Allowances</span>
+                  <span className="dash-exact-card-sub">
+                    Claims, policies & outstation management
+                  </span>
+                </div>
               </div>
-            </div>
-            <ChevronRight size={12} className="dash-exact-card-arrow" />
-          </Link>
+              <ChevronRight size={12} className="dash-exact-card-arrow" />
+            </Link>
+          )}
 
           {/* Card 8: Claims & Advances */}
           <Link to="/hr/advances-loans" className="dash-exact-workspace-card">

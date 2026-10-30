@@ -1128,11 +1128,17 @@
     0 1px 3px 0 rgba(0, 0, 0, 0.04),
     0 1px 2px -1px rgba(0, 0, 0, 0.02) !important;
   margin-bottom: 18px !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   padding: 18px 22px !important;
+  position: relative !important;
   transition:
     box-shadow 0.2s ease,
     border-color 0.2s ease !important;
+}
+
+.hr-form-section:has(.is-open),
+.hr-form-section:has(.custom-select-popover) {
+  z-index: 50 !important;
 }
 
 .hr-form-section:has(.hr-section-header) {
@@ -1155,6 +1161,8 @@
   padding: 12px 20px !important;
   border-bottom: 1px solid #e2e8f0 !important;
   margin-bottom: 0 !important;
+  border-top-left-radius: 9px !important;
+  border-top-right-radius: 9px !important;
 }
 
 .hr-section-title {
@@ -1638,6 +1646,11 @@
 }
 
 /* Popover Dropdown */
+.custom-select-field.is-open {
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
 .custom-select-popover {
   position: absolute;
   top: calc(100% + 5px);
@@ -1647,9 +1660,9 @@
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   box-shadow:
-    0 10px 25px -5px rgba(0, 0, 0, 0.1),
-    0 8px 10px -6px rgba(0, 0, 0, 0.04);
-  z-index: 1050;
+    0 12px 28px -5px rgba(15, 23, 42, 0.15),
+    0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  z-index: 99999 !important;
   overflow: hidden;
   animation: dropdownPop 0.15s ease-out;
 }

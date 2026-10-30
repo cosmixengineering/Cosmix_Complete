@@ -1,7 +1,18 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw, Search, Users } from 'lucide-react';
+import {
+  CalendarDays,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Eye,
+  RefreshCw,
+  Search,
+  Users,
+} from 'lucide-react';
+import { Dialog } from '@/components/ui/Dialog';
 import { TextInput } from '@/components/forms/TextInput';
 import { ApiError } from '@/services/api/api-error';
 import { Command, Denied, PrivateWorkspace, QueryState } from '../components/SchedulingUi';
@@ -133,7 +144,7 @@ function TrackingWorkspace() {
           <p>Monthly team register and daily attendance log.</p>
         </div>
         <Link className="tracking-link-button" to="/hr/attendance">
-          <CalendarDays size={15} /> Employee details & reviews
+          <CalendarDays size={13} /> Employee details & reviews
         </Link>
       </header>
       <section className="tracking-filters" aria-label="Tracking filters">
@@ -184,7 +195,7 @@ function TrackingWorkspace() {
       </section>
       <div className="tracking-context">
         <span>
-          <Users size={14} /> Approved employees · page {page}
+          <Users size={13} /> Approved employees · page {page}
           {directory.data ? ` of ${pageCount}` : ''}
         </span>
         <span>
@@ -424,13 +435,13 @@ function TrackingWorkspace() {
                         <td>{row.day?.exceptionCount ?? 'Unavailable'}</td>
                         <td>
                           <button
+                            type="button"
                             className="tracking-detail-button"
-                            onClick={() =>
-                              setDetails(details === row.employee.id ? null : row.employee.id)
-                            }
-                            aria-expanded={details === row.employee.id}
+                            onClick={() => setDetails(row.employee.id)}
+                            aria-label={`View daily attendance for ${row.employee.name ?? 'employee'}`}
                           >
-                            {details === row.employee.id ? 'Close' : 'View day'}
+                            <Eye size={12} />
+                            <span>View day</span>
                           </button>
                         </td>
                       </tr>
@@ -440,17 +451,32 @@ function TrackingWorkspace() {
               </table>
             </div>
           )}
-          {details &&
-            selectedDate <= currentDate &&
-            rows.find((row) => row.employee.id === details) && (
-              <TrackingDayDetails
-                key={`${details}:${selectedDate}`}
-                row={rows.find((row) => row.employee.id === details)!}
-                date={selectedDate}
-              />
-            )}
         </section>
       )}
+
+      {details && selectedDate <= currentDate && (() => {
+        const selectedRow = rows.find((row) => row.employee.id === details);
+        if (!selectedRow) return null;
+        return (
+          <Dialog
+            open={Boolean(details)}
+            onOpenChange={(open) => {
+              if (!open) setDetails(null);
+            }}
+            title={`Daily Attendance Record · ${selectedRow.employee.name ?? 'Employee'}`}
+            description={`Detailed punch sessions, worked hours, and tracking breakdown for ${selectedDate}.`}
+            className="tracking-modal"
+          >
+            <TrackingDayDetails
+              key={`${details}:${selectedDate}`}
+              row={selectedRow}
+              date={selectedDate}
+              onClose={() => setDetails(null)}
+            />
+          </Dialog>
+        );
+      })()}
+
       {directory.data && !directory.isError && (
         <footer className="tracking-pagination">
           <span>10 employees per page · Counts apply to this page, not the whole company.</span>
@@ -462,7 +488,7 @@ function TrackingWorkspace() {
                 setDetails(null);
               }}
             >
-              <ChevronLeft size={15} /> Previous
+              <ChevronLeft size={13} /> Previous
             </button>
             <span>
               {page} / {pageCount}
@@ -474,7 +500,7 @@ function TrackingWorkspace() {
                 setDetails(null);
               }}
             >
-              Next <ChevronRight size={15} />
+              Next <ChevronRight size={13} />
             </button>
           </div>
         </footer>
@@ -484,7 +510,10 @@ function TrackingWorkspace() {
 }
 function EmployeeName({ employee }: { employee: TrackingEmployee }) {
   return (
-    <div className="tracking-employee">
+    <div
+      className="tracking-employee"
+      title={`${employee.name ?? 'Employee'} (EMP-${employee.employeeNumber})`}
+    >
       <span className="tracking-avatar" aria-hidden="true">
         {(employee.name ?? 'Employee')
           .split(' ')
@@ -501,7 +530,7 @@ function EmployeeName({ employee }: { employee: TrackingEmployee }) {
 }
 function TrackingStat({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
-    <div>
+    <div title={`${label}: ${value} (${detail})`}>
       <span>{label}</span>
       <strong>{value}</strong>
       <small>{detail}</small>
@@ -520,10 +549,19 @@ function clockTime(value: string | null | undefined, timeZone: string) {
     return 'Time unavailable';
   }
 }
-function TrackingDayDetails({ row, date }: { row: TrackingRow; date: string }) {
+function TrackingDayDetails({
+  row,
+  date,
+  onClose,
+}: {
+  row: TrackingRow;
+  date: string;
+  onClose?: () => void;
+}) {
   const access = useAttendanceAccess();
   const day = availableDay(row.days.find((entry) => entry.businessDate === date));
   const allowed = access.can('attendance.punches.read') && Boolean(day);
+  const status = trackingStatus(day);
   const sessions = useQuery({
     queryKey: ['attendance', access.subject, 'tracking-sessions', row.employee.id, date],
     queryFn: ({ signal }) => {
@@ -535,86 +573,184 @@ function TrackingDayDetails({ row, date }: { row: TrackingRow; date: string }) {
     gcTime: 0,
     refetchOnWindowFocus: false,
   });
+
   return (
-    <section className="tracking-day-detail">
-      <h3>
-        {row.employee.name ?? 'Employee'} · {date}
-      </h3>
-      <Link to={`/hr/attendance/employees/${row.employee.id}`}>
-        Open employee attendance record
-      </Link>
+    <div className="tracking-modal-body">
+      {/* Employee & Record Header Card */}
+      <div className="tracking-modal-header-card">
+        <div className="tracking-modal-emp-info">
+          <span className="tracking-modal-avatar" aria-hidden="true">
+            {(row.employee.name ?? 'Employee')
+              .split(' ')
+              .slice(0, 2)
+              .map((part) => part[0])
+              .join('')}
+          </span>
+          <div>
+            <h4 className="tracking-modal-emp-name">{row.employee.name ?? 'Employee'}</h4>
+            <div className="tracking-modal-emp-meta">
+              <span className="tracking-modal-code">EMP-{row.employee.employeeNumber}</span>
+              <span className="tracking-modal-dot">•</span>
+              <span className="tracking-modal-date-chip">
+                <Calendar size={12} />
+                {date}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <Link
+          to={`/hr/attendance/employees/${row.employee.id}`}
+          className="tracking-modal-profile-btn"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <span>Employee Profile</span>
+          <ExternalLink size={12} />
+        </Link>
+      </div>
+
+      {/* KPI Stats Grid */}
+      <div className="tracking-modal-kpi-grid">
+        <div className="tracking-modal-kpi">
+          <span className="tracking-modal-kpi-label">ATTENDANCE STATUS</span>
+          <div className="tracking-modal-kpi-val">
+            <span className={`tracking-mark ${status.tone}`}>{status.code}</span>
+            <span className="tracking-modal-status-text">{status.label}</span>
+          </div>
+        </div>
+        <div className="tracking-modal-kpi">
+          <span className="tracking-modal-kpi-label">TOTAL WORKED</span>
+          <strong className="tracking-modal-kpi-val">
+            {trackingDuration(day?.facts.workedMinutes)}
+          </strong>
+        </div>
+        <div className="tracking-modal-kpi">
+          <span className="tracking-modal-kpi-label">LATE MINUTES</span>
+          <strong className="tracking-modal-kpi-val">
+            {trackingDuration(day?.policy.lateMinutes)}
+          </strong>
+        </div>
+        <div className="tracking-modal-kpi">
+          <span className="tracking-modal-kpi-label">OVERTIME</span>
+          <strong className="tracking-modal-kpi-val">
+            {trackingDuration(day?.policy.overtimeMinutes)}
+          </strong>
+        </div>
+      </div>
+
+      {/* Notice / Setup Warnings if any */}
       {row.errorCode === 'employee_not_approved' ? (
         <AttendanceSetupNotice employeeId={row.employee.id} hiring />
       ) : row.errorCode === 'employee_assignment_unavailable' || needsAttendanceSetup(day) ? (
         <AttendanceSetupNotice employeeId={row.employee.id} />
       ) : row.error ? (
-        <p role="alert">{row.error}</p>
+        <div className="tracking-modal-alert" role="alert">
+          {row.error}
+        </div>
       ) : null}
-      {!day ? (
-        <p>
-          The retained attendance record is unavailable for this date. No absence or hours have been
-          assumed.
-        </p>
-      ) : (
-        <>
-          <p>
-            {day.isLocked ? 'Locked record' : 'Open record'} · {day.timeZone} ·{' '}
-            {trackingDuration(day.facts.workedMinutes)} closed-session time
-          </p>
-          {!allowed ? (
-            <p>Recorded check-in/out times require attendance punch-read permission.</p>
-          ) : (
-            <>
-              <QueryState
-                query={sessions}
-                empty={sessions.data?.items.length === 0}
-                emptyText="No visible current session was returned for this day."
-              />
-              {!sessions.isError && sessions.data && (
-                <>
-                  <table className="tracking-session-table">
-                    <thead>
+
+      {/* Sessions Table Section */}
+      <div className="tracking-modal-section">
+        <div className="tracking-modal-section-title">
+          <span>Recorded Shift Sessions</span>
+          {day && (
+            <span className="tracking-modal-badge">
+              {day.isLocked ? 'Locked record' : 'Open session'} · {day.timeZone}
+            </span>
+          )}
+        </div>
+
+        {!day ? (
+          <div className="tracking-modal-empty">
+            No retained attendance record exists for this date. No absence or hours assumed.
+          </div>
+        ) : !allowed ? (
+          <div className="tracking-modal-empty">
+            Recorded check-in/out times require attendance punch-read permission.
+          </div>
+        ) : (
+          <>
+            <QueryState
+              query={sessions}
+              empty={sessions.data?.items.length === 0}
+              emptyText="No recorded sessions returned for this date."
+            />
+            {!sessions.isError && sessions.data && (
+              <div className="tracking-modal-table-wrap">
+                <table className="tracking-modal-table">
+                  <thead>
+                    <tr>
+                      <th>SESSION START</th>
+                      <th>SESSION END</th>
+                      <th>RECORDED DURATION</th>
+                      <th>STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sessions.data.items.length === 0 ? (
                       <tr>
-                        <th>Session start</th>
-                        <th>Session end</th>
-                        <th>Recorded duration</th>
+                        <td
+                          colSpan={4}
+                          style={{ textAlign: 'center', padding: '24px 12px', color: '#94a3b8' }}
+                        >
+                          No punches or sessions recorded for this day.
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {sessions.data.items.map(({ session }) => (
+                    ) : (
+                      sessions.data.items.map(({ session }) => (
                         <tr key={session.id}>
                           <td>{clockTime(session.startsAtUtc, day.timeZone)}</td>
                           <td>
-                            {session.endsAtUtc
-                              ? clockTime(session.endsAtUtc, day.timeZone)
-                              : 'Still open'}
+                            {session.endsAtUtc ? (
+                              clockTime(session.endsAtUtc, day.timeZone)
+                            ) : (
+                              <span className="tracking-live-tag">Still open</span>
+                            )}
                           </td>
-                          <td>{trackingDuration(session.factualWorkedMinutes)}</td>
+                          <td>
+                            <span className="tracking-dur-chip">
+                              {trackingDuration(session.factualWorkedMinutes)}
+                            </span>
+                          </td>
+                          <td>
+                            <span
+                              className={`tracking-session-tag ${
+                                session.endsAtUtc ? 'closed' : 'open'
+                              }`}
+                            >
+                              {session.endsAtUtc ? 'Completed' : 'Active'}
+                            </span>
+                          </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {sessions.data.nextCursor && (
-                    <p>
-                      More session revisions exist. Open the employee record for the complete audit.
-                    </p>
-                  )}
-                </>
-              )}
-            </>
-          )}
-          {day.policy.explanations.length > 0 && (
-            <details>
-              <summary>Calculation notes</summary>
-              <ul>
-                {day.policy.explanations.map((note, index) => (
-                  <li key={index}>{note}</li>
-                ))}
-              </ul>
-            </details>
-          )}
-        </>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Calculation Notes if present */}
+      {day && day.policy.explanations.length > 0 && (
+        <details className="tracking-modal-details">
+          <summary>Calculation & Policy Rules Applied</summary>
+          <ul>
+            {day.policy.explanations.map((note, index) => (
+              <li key={index}>{note}</li>
+            ))}
+          </ul>
+        </details>
       )}
-    </section>
+
+      {/* Footer Actions */}
+      <div className="tracking-modal-footer">
+        <button type="button" className="tracking-modal-close-btn" onClick={onClose}>
+          Close
+        </button>
+      </div>
+    </div>
   );
 }

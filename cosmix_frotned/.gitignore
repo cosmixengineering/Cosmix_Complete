@@ -12,3 +12,5 @@ dist/
 !.vscode/settings.json
 *.log
 artifacts/
+*.rar
+*.zip

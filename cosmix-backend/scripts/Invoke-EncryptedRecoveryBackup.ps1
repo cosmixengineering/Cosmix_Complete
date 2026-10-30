@@ -1,4 +1,4 @@
-#requires -Version 7.0
+#requires -Version 5.1
 <# Backup a coordinated, immutable recovery set. SQL .bak and private-evidence snapshots
 must be created during the same quiesced maintenance window. Live application files,
 application keys and signing credentials are deliberately not discovered or copied.
@@ -82,6 +82,6 @@ try {
         repositoryIntegrityChecked=$true; providerGeographyVerified=$false; restoredByThisRun=$false;
         manifestSha256=(Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant() }
     $stream = [IO.File]::Open($output, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
-    try { $bytes=[Text.Encoding]::UTF8.GetBytes(($report | ConvertTo-Json)); $stream.Write($bytes) } finally { $stream.Dispose() }
+    try { $bytes=[Text.Encoding]::UTF8.GetBytes(($report | ConvertTo-Json)); $stream.Write($bytes, 0, $bytes.Length) } finally { $stream.Dispose() }
     'Encrypted recovery snapshot and repository integrity verified. Restore acceptance is a separate check.'
 } finally { $sqlLock.Dispose(); $lock.Dispose(); $raw = $null }

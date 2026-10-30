@@ -33,7 +33,8 @@ public static class FinanceTrialBalanceProjection
         }).OrderBy(x => x.Currency, StringComparer.Ordinal).ThenBy(x => x.AccountCode, StringComparer.Ordinal).ToArray();
         if (accounts.GroupBy(x => x.Currency).Any(group => group.Sum(x => x.ClosingBalance) != 0))
             throw AttendanceOperation.Conflict("finance_ledger_unbalanced");
-        return new(from, untilExclusive, accounts, ["Payroll"]);
+        return new(from, untilExclusive, accounts,
+            selected.Select(x => x.SourceType).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray());
     }
 
     public static void ValidatePeriod(DateOnly from, DateOnly untilExclusive)

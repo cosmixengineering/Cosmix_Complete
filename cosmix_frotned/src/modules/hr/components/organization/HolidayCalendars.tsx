@@ -112,13 +112,18 @@ export function HolidayCalendars() {
                     query.data.items.map((r) => (
                       <tr key={r.id}>
                         <td>
-                          <button
-                            type="button"
-                            className="org-table-name-btn"
-                            onClick={() => setSelectedId(r.id)}
-                          >
-                            {r.name}
-                          </button>
+                          <div className="org-entity-cell">
+                            <span className="org-entity-icon-box" aria-hidden="true">
+                              <CalendarDays size={14} strokeWidth={2} />
+                            </span>
+                            <button
+                              type="button"
+                              className="org-table-name-btn"
+                              onClick={() => setSelectedId(r.id)}
+                            >
+                              {r.name}
+                            </button>
+                          </div>
                         </td>
                         <td>
                           <span className="org-table-code">{r.code}</span>
@@ -129,12 +134,13 @@ export function HolidayCalendars() {
                         <td>
                           <span
                             style={{
-                              fontSize: '11.5px',
+                              fontSize: '11px',
                               fontWeight: 600,
-                              color: '#64748b',
+                              color: '#475569',
                               background: '#f1f5f9',
-                              padding: '2px 7px',
+                              padding: '2.5px 7px',
                               borderRadius: '4px',
+                              border: '1px solid #e2e8f0',
                             }}
                           >
                             Rev {r.revision}
@@ -160,7 +166,7 @@ export function HolidayCalendars() {
                               aria-label={`View ${r.name} details`}
                               onClick={() => setSelectedId(r.id)}
                             >
-                              <Eye size={14} />
+                              <Eye size={13} strokeWidth={2} />
                             </button>
                           </div>
                         </td>

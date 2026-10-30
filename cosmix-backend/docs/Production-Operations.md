@@ -36,6 +36,8 @@ The manifest describes performed checks; the upload command cannot independently
 
 Schedule backup only after the production host, maintenance snapshot process, off-site destination, retention and RPO/RTO are approved. Schedule `Test-OperationalHealth.ps1` against the approved HTTPS origin every minute and alert on nonzero exit/missed execution through the organization's monitoring system. Schedule recurring full recovery drills. Neither a local task nor a message to an external monitoring service has been created without those deployment details.
 
+The monitor requires HTTP 200, `text/plain` and the exact ASP.NET Core `Healthy` response for every endpoint, with redirects disabled, normal TLS validation, a ten-second per-request timeout and a bounded response size. A catch-all frontend/IIS page must not become a false healthy signal. `scripts/Test-OperationalHealth.Tests.ps1` uses isolated loopback doubles for healthy, HTML fallback, degraded, incorrect-body, unavailable and oversized responses; it runs in backend CI. These are monitor regression tests, not production endpoint or alert-delivery acceptance.
+
 ## Dynamic company setup and acceptance
 
 HR/Admin must publish their own effective-dated shifts, rosters, attendance/grace/OT/leave/deduction rules, salary proration and approval routing. Salary master, earning/deduction revisions and statutory applicability require actual employee inputs and independent approval. Finance must approve ledger accounts, open accounting periods, effective posting mappings and the selected HBL formats. No sample policy, equal statutory allocation or sample salary is promoted into real company configuration.

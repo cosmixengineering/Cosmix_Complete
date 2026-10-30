@@ -1,5 +1,7 @@
 # Overtime — implemented local backend, 12 October 2026
 
+Latest focused verification: [30 October missing-checkout and three-hour OT checks](Missing-Checkout-OT-Verification-20261030.md). The current registered evaluator uses explicit published OT rules; the nine-hour formula below describes the earlier confirmed contract. Open duty cannot produce eligible OT, and daily totals use approved awards rather than automatically awarding every post-shift minute.
+
 Twenty-three registered operations implement request/review, separate financial reads and dated
 eligibility settings. These APIs have synthetic service, offline SQL translation and anonymous
 HTTP verification. They are **not yet accepted against authenticated SQL or enabled for real staff**.

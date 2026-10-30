@@ -7,6 +7,11 @@ namespace Cosmix.Api.Controllers.HR;
 [ApiController,Authorize,Route("api/v1/hr/payroll/salary"),ResponseCache(NoStore=true,Location=ResponseCacheLocation.None)]
 public sealed class PayrollSalaryController(PayrollSalaryService service):ControllerBase
 {
+    [HttpGet("readiness")]
+    [ProducesResponseType<CompanyPayrollReadinessReport>(200)]
+    public Task<CompanyPayrollReadinessReport> Readiness([FromQuery, Range(1, 9998)] int year, [FromQuery, Range(1, 12)] int month, [FromServices] CompanyPayrollReadinessService readinessService, CancellationToken ct) =>
+        service.ReadinessAsync(readinessService, year, month, Context(), ct);
+
     [HttpGet("components")]
     public Task<PayrollSalaryComponentPage> Components(CancellationToken ct,Guid? employeeId=null,int page=1,int pageSize=25)=>service.ComponentsAsync(employeeId,page,pageSize,Context(),ct);
     [HttpPost("components"),RequestSizeLimit(16384)]

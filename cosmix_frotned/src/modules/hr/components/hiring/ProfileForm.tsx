@@ -849,6 +849,8 @@ export function ProfileForm({
                 borderRadius: '10px',
                 border: '1px solid #e2e8f0',
                 marginBottom: '8px',
+                position: 'relative',
+                zIndex: 10,
               }}
             >
               <ReferenceField

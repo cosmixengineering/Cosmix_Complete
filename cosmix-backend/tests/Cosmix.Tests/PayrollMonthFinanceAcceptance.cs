@@ -23,7 +23,7 @@ namespace Cosmix.Tests;
 internal sealed class PayrollMonthFinanceAcceptance
 {
     private const string Reason = "SYNTHETIC TEST ONLY: September 2026 single-employee acceptance; no payment or legal rate approval";
-    private const string OutputDirectory = "D:/CosmixPayrollAcceptance20261028";
+    private readonly string OutputDirectory;
     private readonly Guid maker = Guid.NewGuid(), reviewer = Guid.NewGuid();
     private readonly PayrollFinanceSetupService setup;
     private readonly StatutoryContributionService statutory;
@@ -36,6 +36,7 @@ internal sealed class PayrollMonthFinanceAcceptance
 
     private PayrollMonthFinanceAcceptance(PayrollMonthAcceptanceFixture f)
     {
+        OutputDirectory = f.ScenarioRoot;
         f.AddPermissions(["payroll.accounting.configure", "payroll.accounting.configure.approve", "payroll.accounting.accrue",
             "statutory.contributions.manage", "statutory.contributions.approve"]);
         var sensitive = new SensitiveComplianceOperation(f.Current, f.Access, f.Authorization, f.Journal, f.Clock);
@@ -129,7 +130,7 @@ internal sealed class PayrollMonthFinanceAcceptance
         finally { f.ActorId = originalActor; }
     }
 
-    public async Task<PayrollMonthFinanceResult> FinalizeAndReconcileAsync(PayrollMonthAcceptanceFixture f, Guid batchId)
+    public async Task<PayrollMonthFinanceResult> FinalizeAndReconcileAsync(PayrollMonthAcceptanceFixture f, Guid batchId, bool closePeriod = true)
     {
         var originalActor = f.ActorId;
         var context = PayrollMonthAcceptanceFixture.Context;
@@ -204,11 +205,14 @@ internal sealed class PayrollMonthFinanceAcceptance
             await File.WriteAllBytesAsync(Path.Combine(OutputDirectory, "SYNTHETIC-" + schedule.FileName), schedule.Bytes);
             checks.Add("Actual service employee/month schedule exports 300 employee + 1500 employer = 1800; salary remains entirely unpaid.");
 
+            if (closePeriod)
+            {
             period = await setup.DecidePeriodAsync(period.Id, new(period.Version, Reason), true, "month-period-close", context, default);
             var closed = await Assert.ThrowsAsync<AuthenticationFailure>(() => accounting.PostAccrualJournalAsync(accrue, "month-accrual-closed-period", context, default));
             Assert.Equal("payroll_accounting_period_not_open", closed.Code);
             Assert.Equal(4, await f.Db.PayrollJournalEntries.CountAsync(x => x.ObligationId == obligation.Id));
             checks.Add("After closing the period, a fresh posting request is rejected and the four persisted journals remain unchanged.");
+            }
 
             var result = new PayrollMonthFinanceResult(obligation.Id, contribution.Id, profile.Id, period.Id, source.Fingerprint,
                 obligation.TotalGrossAmount, obligation.TotalDeductions, obligation.TotalNetAmount, contribution.EmployeeContributionAmount,

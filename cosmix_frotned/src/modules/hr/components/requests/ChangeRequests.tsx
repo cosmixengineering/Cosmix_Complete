@@ -33,8 +33,8 @@ import type { Section } from '../../types/updates';
 import { queryString } from '../../api/hr-api';
 import { labelDate } from '../../utils/messages';
 import { ActionMessage, QueryState } from '../Feedback';
-import { RecordView } from '../RecordView';
 import { RequestDecisionForm, type DecisionGuard } from './RequestDecisionForm';
+import { ChangeRequestReviewViewer } from './ChangeRequestReviewViewer';
 import '@/styles/hr-requests.css';
 
 export function ChangeRequests({
@@ -309,11 +309,13 @@ export function ChangeRequests({
         }}
         title={`${section.label} Change Request`}
         description="Inspect existing record against proposed changes and submit administrative authorization"
+        className="change-evidence-dialog-wide"
       >
         {selected && (
           <ChangeRequestDetail
             key={selected.id}
             employeeId={selected.employeeId}
+            employee={employeeMap.get(selected.employeeId.toLowerCase())}
             requestId={selected.id}
             section={section}
             onSaved={() => {
@@ -322,6 +324,7 @@ export function ChangeRequests({
             }}
             onGuardChange={setDecisionGuard}
             onCorrectedRequest={() => setSelected(null)}
+            onClose={() => setSelected(null)}
           />
         )}
       </Dialog>
@@ -331,18 +334,22 @@ export function ChangeRequests({
 
 function ChangeRequestDetail({
   employeeId,
+  employee,
   requestId,
   section,
   onSaved,
   onGuardChange,
   onCorrectedRequest,
+  onClose,
 }: {
   employeeId: string;
+  employee?: EmployeeSummary | null;
   requestId: string;
   section: Section;
   onSaved: () => void;
   onGuardChange: (guard: DecisionGuard) => void;
   onCorrectedRequest: () => void;
+  onClose: () => void;
 }) {
   const access = useHrAccess();
   const action = useHrAction();
@@ -357,155 +364,85 @@ function ChangeRequestDetail({
   ];
   const query = useHrQuery(path, changeRequestSchema, ['hr.employees.read', ...section.read]);
 
+  const decisionFormSlot = query.data ? (
+    <div>
+      {query.data.request.state === 0 && (
+        <RequestDecisionForm
+          key={access.subject + ':' + query.data.request.version}
+          request={query.data.request}
+          path={path}
+          currentPath={`employees/${employeeId}/current/${section.name}`}
+          currentSchema={currentUpdateSchema}
+          permissions={reviewPermissions}
+          onGuardChange={onGuardChange}
+          onSaved={() => {
+            void query.refetch();
+            onSaved();
+          }}
+        />
+      )}
+
+      {query.data.request.state === 2 && access.can(...section.write) && (
+        <div style={{ marginTop: '12px' }}>
+          <Link
+            className="button button--secondary"
+            to={`/hr/employees/${employeeId}?section=${section.name}&edit=1`}
+            onClick={onCorrectedRequest}
+          >
+            New corrected request
+          </Link>
+        </div>
+      )}
+
+      {query.data.request.state === 0 &&
+        query.data.request.requesterId === access.user?.account?.accountId &&
+        access.can(...section.write) && (
+          <div style={{ marginTop: '12px' }}>
+            <Button
+              variant="secondary"
+              disabled={action.pending}
+              onClick={() => {
+                if (window.confirm('Cancel your pending change request?'))
+                  void action
+                    .run(
+                      path + '/cancel',
+                      { expectedRequestVersion: query.data!.request.version },
+                      'POST',
+                      writeResult,
+                    )
+                    .then((r) => {
+                      if (r) {
+                        void query.refetch();
+                        onSaved();
+                      }
+                    });
+              }}
+            >
+              <Ban size={16} />
+              Cancel request
+            </Button>
+          </div>
+        )}
+
+      <ActionMessage action={action} />
+    </div>
+  ) : null;
+
   return (
     <QueryState query={query}>
       {query.data && (
-        <div className="hr-req-modal-content">
-          <div className="hr-req-modal-header-strip">
-            <span className="hr-request-meta-badge">
-              ID: {query.data.request.id.slice(0, 8).toUpperCase()}
-            </span>
-            <span
-              className={`hr-status-pill ${
-                query.data.request.state === 1
-                  ? 'hr-status-pill--approved'
-                  : query.data.request.state === 3
-                    ? 'hr-status-pill--rejected'
-                    : query.data.request.state === 2
-                      ? 'hr-status-pill--returned'
-                      : 'hr-status-pill--pending'
-              }`}
-            >
-              {approvalLabels[query.data.request.state]}
-            </span>
-          </div>
-
-          {query.data.reason && (
-            <div className="hr-req-reason-quote">
-              <strong>Stated Justification / Reason:</strong>
-              <p style={{ margin: '4px 0 0' }}>{query.data.reason}</p>
-            </div>
-          )}
-
-          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-            Effective: {query.data.effectiveFrom ?? 'Immediately upon approval'}
-          </div>
-
-          <div className="hr-req-diff-grid">
-            <div className="hr-req-diff-card hr-req-diff-card--before">
-              <div className="hr-req-diff-title">Current Record (Before)</div>
-              <RecordView value={query.data.before.data[section.name] ?? {}} />
-            </div>
-            <div className="hr-req-diff-card hr-req-diff-card--proposed">
-              <div className="hr-req-diff-title">Proposed Modifications</div>
-              <RecordView value={query.data.proposed[section.name] ?? {}} />
-            </div>
-          </div>
-
-          <div>
-            <h4 style={{ margin: '0 0 10px', fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
-              Audit Trail & Recorded Decisions
-            </h4>
-            {!query.data.decisions.length ? (
-              <p className="muted" style={{ fontSize: '13px', margin: 0 }}>
-                No prior decisions recorded yet. Request is currently awaiting administrator review.
-              </p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {query.data.decisions.map((d) => (
-                  <div
-                    key={d.id}
-                    style={{
-                      padding: '12px',
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <strong style={{ fontSize: '13px', color: '#0f172a' }}>
-                        {approvalLabels[d.decision]}
-                      </strong>
-                      <span style={{ fontSize: '11px', color: '#64748b' }}>
-                        {labelDate(d.decidedAt)}
-                      </span>
-                    </div>
-                    {d.reason && (
-                      <p style={{ margin: '6px 0', fontSize: '13px', color: '#334155' }}>
-                        {d.reason}
-                      </p>
-                    )}
-                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                      Decided by {d.roleCode} &bull; {d.actorId}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {query.data.request.state === 0 && (
-            <RequestDecisionForm
-              key={access.subject + ':' + query.data.request.version}
-              request={query.data.request}
-              path={path}
-              currentPath={`employees/${employeeId}/current/${section.name}`}
-              currentSchema={currentUpdateSchema}
-              permissions={reviewPermissions}
-              onGuardChange={onGuardChange}
-              onSaved={() => {
-                void query.refetch();
-                onSaved();
-              }}
-            />
-          )}
-
-          {query.data.request.state === 2 && access.can(...section.write) && (
-            <Link
-              className="button button--secondary"
-              to={`/hr/employees/${employeeId}?section=${section.name}&edit=1`}
-              onClick={onCorrectedRequest}
-            >
-              New corrected request
-            </Link>
-          )}
-
-          {query.data.request.state === 0 &&
-            query.data.request.requesterId === access.user?.account?.accountId &&
-            access.can(...section.write) && (
-              <Button
-                variant="secondary"
-                disabled={action.pending}
-                onClick={() => {
-                  if (window.confirm('Cancel your pending change request?'))
-                    void action
-                      .run(
-                        path + '/cancel',
-                        { expectedRequestVersion: query.data!.request.version },
-                        'POST',
-                        writeResult,
-                      )
-                      .then((r) => {
-                        if (r) {
-                          void query.refetch();
-                          onSaved();
-                        }
-                      });
-                }}
-              >
-                <Ban size={16} />
-                Cancel request
-              </Button>
-            )}
-
-          <ActionMessage action={action} />
-        </div>
+        <ChangeRequestReviewViewer
+          request={query.data.request}
+          section={section}
+          employee={employee}
+          reason={query.data.reason}
+          effectiveFrom={query.data.effectiveFrom}
+          beforeData={query.data.before.data}
+          proposedData={query.data.proposed}
+          decisions={query.data.decisions}
+          decisionFormSlot={decisionFormSlot}
+          onClose={onClose}
+        />
       )}
     </QueryState>
   );

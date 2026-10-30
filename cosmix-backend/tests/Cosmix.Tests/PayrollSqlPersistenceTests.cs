@@ -81,8 +81,17 @@ public sealed class PayrollSqlPersistenceTests
         Assert.Equal(closed.Id, (await repo.ClosedAsync(bank, "PKR", month, default))!.Id);
         Assert.True(await repo.HashExistsAsync(bank, "PKR", month, new('A', 64), default));
         Assert.Contains(await repo.ListAsync(1, default), x => x.Id == statement.Id);
+
+        // Verification A: Tampering with closed bank reconciliation record fails
         db.Entry(closed).Property(x => x.ProofReference).CurrentValue = "tampered";
         await Assert.ThrowsAsync<InvalidOperationException>(() => db.SaveChangesAsync()); db.Entry(closed).State = EntityState.Detached;
+
+        // EF Core ChangeTracker Append-Only Guard blocks mutation/deletion of journal entries
+        db.Entry(entry).Property(x => x.Amount).CurrentValue = 999m;
+        var efUpdateError = await Assert.ThrowsAsync<InvalidOperationException>(() => db.SaveChangesAsync());
+        Assert.Contains("append-only", efUpdateError.Message);
+        db.Entry(entry).State = EntityState.Unchanged;
+
         var late = new PayrollJournalEntry(obligation.Id, JournalEntryKind.SalaryPayment, "SQL-PAYABLE", bank, 1m, "PKR", "Late SQL fixture", "bank-fixture", now);
         late.BindPosting(month, Guid.NewGuid(), null, "SQL-LATE-" + Guid.NewGuid().ToString("N"));
         await Assert.ThrowsAsync<Cosmix.Application.HR.PayrollAccounting.PayrollFinanceConflictException>(() => new PayrollAccountingRepository(db).AddJournalEntryAsync(late, default));
@@ -90,6 +99,53 @@ public sealed class PayrollSqlPersistenceTests
         var error = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
         Assert.Equal(51016, Assert.IsType<SqlException>(error.InnerException).Number);
         await transaction.RollbackAsync();
+    }
+
+    [PayrollSqlFact]
+    public async Task Bank_reconciliation_trigger_rejects_raw_sql_updates_and_deletes_on_closed_month()
+    {
+        await using var db = Context(); await using var transaction = await db.Database.BeginTransactionAsync();
+        var now = DateTimeOffset.UtcNow; var bank = "SQL-BANK-M-" + Guid.NewGuid().ToString("N");
+        var month = new DateOnly(2098, 5, 1);
+        var batch = new PayrollHandoffBatch("SQL-BANK-M-" + Guid.NewGuid().ToString("N"), month, month.AddMonths(1), "PKR", "bank-fixture", now);
+        var obligation = new PayrollObligation(batch.Id, 200m, 200m, "PKR", "bank-fixture", now);
+        var entry1 = new PayrollJournalEntry(obligation.Id, JournalEntryKind.SalaryPayment, "SQL-PAYABLE", bank, 100m, "PKR", "Entry 1", "bank-fixture", now);
+        entry1.BindPosting(month, Guid.NewGuid(), null, "SQL-BANK-M1-" + Guid.NewGuid().ToString("N"));
+        var entry2 = new PayrollJournalEntry(obligation.Id, JournalEntryKind.SalaryPayment, "SQL-PAYABLE", bank, 100m, "PKR", "Entry 2", "bank-fixture", now);
+        entry2.BindPosting(month, Guid.NewGuid(), null, "SQL-BANK-M2-" + Guid.NewGuid().ToString("N"));
+        db.AddRange(batch, obligation, entry1, entry2); await db.SaveChangesAsync();
+
+        var repo = new Cosmix.Infrastructure.Finance.BankReconciliationRepository(db);
+        var statement = new Cosmix.Domain.Finance.BankStatementSnapshot(Guid.NewGuid(), bank, "PKR", month, 1, new('B', 64), "sql-source", "maker", Guid.NewGuid(), now);
+        var proposal = new Cosmix.Domain.Finance.BankReconciliationProposal(Guid.NewGuid(), statement.Id, 1, "sql-matches", "maker", statement.CreatedByEmployeeId, now);
+        var closed = new Cosmix.Domain.Finance.BankReconciliationClose(Guid.NewGuid(), statement, proposal, "sql-close", "reviewer", Guid.NewGuid(), now);
+        repo.Add(statement); repo.Add(proposal); repo.Add(closed); await repo.SaveChangesAsync(default);
+
+        // Raw SQL UPDATE on entry1 is blocked by trigger TR_PayrollJournal_ClosedBankMonth
+        var rawUpdateError = await Assert.ThrowsAsync<SqlException>(() =>
+            db.Database.ExecuteSqlInterpolatedAsync($"UPDATE [hr].[PayrollJournalEntries] SET Amount = 888 WHERE Id = {entry1.Id}"));
+        Assert.Equal(51016, rawUpdateError.Number);
+
+        // Raw SQL DELETE on entry2 in a fresh transaction is blocked by trigger TR_PayrollJournal_ClosedBankMonth
+        await transaction.RollbackAsync();
+
+        await using var transaction2 = await db.Database.BeginTransactionAsync();
+        var batch2 = new PayrollHandoffBatch("SQL-BANK-D-" + Guid.NewGuid().ToString("N"), month, month.AddMonths(1), "PKR", "bank-fixture", now);
+        var obligation2 = new PayrollObligation(batch2.Id, 100m, 100m, "PKR", "bank-fixture", now);
+        var entry3 = new PayrollJournalEntry(obligation2.Id, JournalEntryKind.SalaryPayment, "SQL-PAYABLE", bank, 100m, "PKR", "Entry 3", "bank-fixture", now);
+        entry3.BindPosting(month, Guid.NewGuid(), null, "SQL-BANK-D-" + Guid.NewGuid().ToString("N"));
+        db.AddRange(batch2, obligation2, entry3); await db.SaveChangesAsync();
+
+        var statement2 = new Cosmix.Domain.Finance.BankStatementSnapshot(Guid.NewGuid(), bank, "PKR", month, 2, new('C', 64), "sql-source", "maker", Guid.NewGuid(), now);
+        var proposal2 = new Cosmix.Domain.Finance.BankReconciliationProposal(Guid.NewGuid(), statement2.Id, 1, "sql-matches", "maker", statement2.CreatedByEmployeeId, now);
+        var closed2 = new Cosmix.Domain.Finance.BankReconciliationClose(Guid.NewGuid(), statement2, proposal2, "sql-close", "reviewer", Guid.NewGuid(), now);
+        db.AddRange(statement2, proposal2, closed2); await db.SaveChangesAsync();
+
+        var rawDeleteError = await Assert.ThrowsAsync<SqlException>(() =>
+            db.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM [hr].[PayrollJournalEntries] WHERE Id = {entry3.Id}"));
+        Assert.Equal(51016, rawDeleteError.Number);
+
+        await transaction2.RollbackAsync();
     }
 
     [PayrollSqlFact]
@@ -142,6 +198,34 @@ public sealed class PayrollSqlPersistenceTests
             batch.PeriodStart, batch.PeriodEnd, default)).Batches);
         Assert.DoesNotContain((await new EmployeeSelfServiceRepository(db, TimeProvider.System)
             .GetPayrollHistoryAsync(employee, 1, 100, default)).Items, row => row.BatchId == batch.Id);
+
+        // Verify replacement batch for same employee & period can be prepared, reviewed, and locked
+        var replacementBatch = new PayrollHandoffBatch("SQL-CORRECTED-" + Guid.NewGuid().ToString("N"), period.PeriodStart,
+            period.PeriodEndExclusive, "PKR", "return-fixture-maker", now.AddMinutes(5));
+        replacementBatch.Lines.Add(new(replacementBatch.Id, employee, PayrollComponentKind.BaseCompensation, "attendance.payroll-salary.base",
+            Guid.NewGuid(), 1, locked.Id, 1200m, "PKR", null, null, "synthetic-line-corrected", Guid.NewGuid().ToString("N")));
+        replacementBatch.SetSalaryEvidence(new('C', 64), new('D', 64), "synthetic-salary-corrected");
+        db.Add(replacementBatch); await db.SaveChangesAsync();
+
+        var replacementHr = new ApprovalRequest("payroll-handoff.hr-review", replacementBatch.Id, replacementBatch.PreparedByUserId, "synthetic-hr-2", 1, now.AddMinutes(10));
+        db.AddRange(replacementHr, replacementHr.Decide(ApprovalState.Approved, "independent-hr-2", "HR", "Approved replacement", now.AddMinutes(10)));
+        replacementBatch.ReviewSalary(replacementHr.Id, "independent-hr-2", now.AddMinutes(10), true);
+        await db.SaveChangesAsync();
+
+        var replacementLock = new ApprovalRequest("payroll-handoff.lock", replacementBatch.Id, replacementBatch.PreparedByUserId, "synthetic-mgmt", 1, now.AddMinutes(15));
+        db.AddRange(replacementLock, replacementLock.Decide(ApprovalState.Approved, "independent-mgmt", "Management", "Locked replacement", now.AddMinutes(15)));
+        replacementBatch.Lock(replacementLock.Id, "independent-mgmt", now.AddMinutes(15));
+        await db.SaveChangesAsync();
+
+        var persistedReplacement = await db.PayrollHandoffBatches.Include(x => x.Lines).SingleAsync(x => x.Id == replacementBatch.Id);
+        Assert.Equal("locked", persistedReplacement.ReviewState);
+        Assert.Equal(1200m, Assert.Single(persistedReplacement.Lines).Amount);
+        Assert.True(await repository.PeriodPreparedAsync(batch.PeriodStart, batch.PeriodEnd, default));
+        Assert.True(await repository.EmployeesPreparedAsync(batch.PeriodStart, batch.PeriodEnd, [employee], default));
+
+        // Original returned batch cannot be locked
+        Assert.Throws<InvalidOperationException>(() => batch.Lock(Guid.NewGuid(), "attacker", now));
+
         await transaction.RollbackAsync();
     }
 

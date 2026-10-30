@@ -1,45 +1,482 @@
+/* ==========================================================================
+   COSMIX ERP - HIRING SUBMISSION REVIEW MODAL & QUEUE STYLING
+   Modern Horizontal Split-Pane Layout & Enterprise Approval Experience
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Queue & Table Actions
+   -------------------------------------------------------------------------- */
 .hiring-queue .hr-page-heading {
   flex-wrap: wrap;
 }
+
 .hiring-queue .hr-page-heading h1 {
-  font-size: 24px;
+  font-size: 20px;
 }
+
 .hiring-row-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
 }
+
 .hiring-queue .hr-request-row > div {
   min-width: 0;
 }
+
 .hiring-queue .hr-text-button {
   overflow-wrap: anywhere;
   text-align: left;
 }
-.hiring-review-dialog {
-  width: min(960px, calc(100% - 32px));
-  border-radius: 8px;
+
+/* --------------------------------------------------------------------------
+   Horizontal Dialog Container
+   -------------------------------------------------------------------------- */
+.dialog-content.hiring-review-horizontal-dialog {
+  width: min(1180px, calc(100vw - 32px)) !important;
+  max-width: 1180px !important;
+  height: min(840px, calc(100vh - 40px)) !important;
+  max-height: calc(100vh - 40px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
+  border: 1px solid #cbd5e1 !important;
+  z-index: 9999 !important;
 }
-.hiring-review-dialog .hr-dl dd {
+
+.hiring-review-horizontal-dialog .dialog-heading {
+  padding: 12px 18px 4px !important;
+  margin-bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: #ffffff !important;
+}
+
+.hiring-review-horizontal-dialog .dialog-heading h2 {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 !important;
+}
+
+.hiring-review-horizontal-dialog > p {
+  padding: 0 18px 8px !important;
+  margin: 0 !important;
+  font-size: 11px !important;
+  color: #64748b !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+}
+
+/* --------------------------------------------------------------------------
+   Two-Pane Horizontal Layout
+   -------------------------------------------------------------------------- */
+.hiring-horizontal-layout {
+  display: grid;
+  grid-template-columns: 1fr 370px;
+  flex: 1;
+  min-height: 0;
+  height: calc(100% - 62px);
+  overflow: hidden;
+  background: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   Left Pane: Evidence & Profile (Scrollable)
+   -------------------------------------------------------------------------- */
+.hiring-evidence-pane {
+  overflow-y: auto;
+  padding: 14px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #ffffff;
+}
+
+.hiring-emp-summary-strip {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.hiring-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px 12px;
+}
+
+.hiring-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.hiring-summary-item dt {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.hiring-summary-item dd {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tab Navigation */
+.hiring-evidence-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
+  overflow-x: auto;
+}
+
+.hiring-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+
+.hiring-tab-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.hiring-tab-btn.active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+/* Card Sections */
+.hiring-info-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.hiring-info-card-header {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hiring-key-val-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px 14px;
+}
+
+.hiring-field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.hiring-field-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hiring-field-value {
+  font-size: 11.5px;
+  color: #0f172a;
+  font-weight: 500;
   overflow-wrap: anywhere;
-  min-width: 0;
 }
-.hiring-review-dialog .hr-tabs {
-  flex-wrap: wrap;
+
+.hiring-field-value.is-muted {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 10.5px;
 }
-.hiring-review-dialog .hr-form-section > fieldset {
-  min-width: 0;
+
+.hiring-pill-badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  width: fit-content;
 }
-.hiring-review-dialog .hr-form-section fieldset > .field,
-.hiring-review-dialog .hr-form-section fieldset > .hr-reference {
-  margin-bottom: 16px;
+
+/* --------------------------------------------------------------------------
+   Right Pane: Decision & Site Placement Dock
+   -------------------------------------------------------------------------- */
+.hiring-decision-pane {
+  background: #f8fafc;
+  border-left: 1px solid #e2e8f0;
+  padding: 14px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
 }
-@media (max-width: 600px) {
-  .hiring-review-dialog {
-    padding: 20px;
+
+.hiring-dock-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.hiring-dock-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hiring-dock-sub {
+  font-size: 10.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Readiness Checklist Strip */
+.hiring-readiness-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 6px 10px;
+}
+
+.hiring-readiness-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10.5px;
+}
+
+.hiring-readiness-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.hiring-readiness-status.is-ready {
+  color: #16a34a;
+}
+
+.hiring-readiness-status.is-warning {
+  color: #d97706;
+}
+
+/* 3-Button Decision Selector */
+.hiring-decision-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.hiring-decision-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 4px;
+  border-radius: 5px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.hiring-decision-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.hiring-decision-btn.is-active-approve {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+  box-shadow: 0 0 0 1px #16a34a;
+}
+
+.hiring-decision-btn.is-active-return {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #b45309;
+  box-shadow: 0 0 0 1px #d97706;
+}
+
+.hiring-decision-btn.is-active-reject {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+  box-shadow: 0 0 0 1px #dc2626;
+}
+
+/* Attestation Checkbox Box */
+.hiring-attest-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.hiring-attest-box input[type='checkbox'] {
+  margin-top: 2px !important;
+  cursor: pointer !important;
+}
+
+.hiring-attest-box span {
+  font-size: 10.5px;
+  color: #334155;
+  line-height: 1.35;
+}
+
+/* Submission Primary Action Button */
+.hiring-submit-action-btn {
+  height: 32px !important;
+  min-height: 32px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border-radius: 5px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+}
+
+.hiring-submit-action-btn.btn-approve {
+  background: #16a34a !important;
+  color: #ffffff !important;
+  border: 1px solid #15803d !important;
+}
+
+.hiring-submit-action-btn.btn-approve:hover:not(:disabled) {
+  background: #15803d !important;
+}
+
+.hiring-submit-action-btn.btn-return {
+  background: #d97706 !important;
+  color: #ffffff !important;
+  border: 1px solid #b45309 !important;
+}
+
+.hiring-submit-action-btn.btn-return:hover:not(:disabled) {
+  background: #b45309 !important;
+}
+
+.hiring-submit-action-btn.btn-reject {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border: 1px solid #b91c1c !important;
+}
+
+.hiring-submit-action-btn.btn-reject:hover:not(:disabled) {
+  background: #b91c1c !important;
+}
+
+.hiring-submit-action-btn:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+}
+
+/* Form Controls Density in Decision Dock */
+.hiring-decision-pane .field label {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  margin-bottom: 2px !important;
+}
+
+.hiring-decision-pane .field textarea {
+  min-height: 52px !important;
+  max-height: 80px !important;
+  font-size: 11px !important;
+  padding: 4px 6px !important;
+  border-radius: 4px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  outline: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.hiring-decision-pane .field textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 1.5px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile Responsive Fallback
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .hiring-horizontal-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow-y: auto;
   }
-  .hiring-row-actions {
-    width: 100%;
+  .hiring-decision-pane {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-left: none !important;
+    border-top: 1px solid #e2e8f0 !important;
   }
 }

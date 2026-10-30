@@ -23,6 +23,7 @@ using Cosmix.Application.HR.PayrollAccounting;
 using Cosmix.Application.HR.StatutoryContributions;
 using Cosmix.Domain.Attendance.LocationConsent;
 using Cosmix.Domain.Attendance.MonthLocks;
+using Cosmix.Domain.Attendance.DailySummaries;
 using Cosmix.Domain.Attendance.Punches;
 using Cosmix.Domain.Authentication;
 using Cosmix.Domain.Common.Approvals;
@@ -565,17 +566,16 @@ public class AcceptanceExecutionSuite
             var employeeAId = empA.Id;
             var employeeBId = empB.Id;
 
-            // Seed valid attendance period lock & approval event
+            // Seed valid attendance period lock & direct lock event
             var periodLock = new AttendancePeriodLock(new DateOnly(2026, 10, 1), new DateOnly(2026, 11, 1));
-            db.AttendancePeriodLocks.Add(periodLock);
-            await db.SaveChangesAsync();
-
-            var approvalLock = new ApprovalRequest("AttendanceLock", Guid.NewGuid(), "admin", "evidence", 1, now);
-            db.ApprovalRequests.Add(approvalLock);
-            await db.SaveChangesAsync();
-
-            var lockEvent = periodLock.RecordDecision(true, approvalLock.Id, "admin", "Lock period for payroll", now);
-            db.AttendancePeriodLockEvents.Add(lockEvent);
+            var lockEvent = periodLock.RecordDirectLock(Guid.NewGuid(), "admin", "Lock period for payroll", now, "demo-evidence");
+            var summaryA = new DailyAttendanceSummary(employeeAId, periodLock.PeriodStart, 1, AttendanceDayStatus.Unverified,
+                null, null, "synthetic-demo-a", new('A', 64), 0, 0, null, null, null, 0, now);
+            var summaryB = new DailyAttendanceSummary(employeeBId, periodLock.PeriodStart, 1, AttendanceDayStatus.Unverified,
+                null, null, "synthetic-demo-b", new('B', 64), 0, 0, null, null, null, 0, now);
+            db.AddRange(periodLock, lockEvent, summaryA, summaryB,
+                new AttendancePeriodSummary(periodLock, lockEvent, summaryA),
+                new AttendancePeriodSummary(periodLock, lockEvent, summaryB));
             await db.SaveChangesAsync();
 
             // Seed Finance Accounts, Period and Profile via REAL SQL Server PayrollFinanceRepository
@@ -2238,8 +2238,8 @@ public class AcceptanceExecutionSuite
                 Assert.Contains("PayrollPostingProfiles", verifiedFinanceTables);
                 Assert.Contains("EmployeeStatutoryCoverages", verifiedFinanceTables);
 
-                // Step D4: Apply migration 20261028071931_CompleteSalaryRunAndStatutoryEntries
-                await migrator.MigrateAsync("20261028071931_CompleteSalaryRunAndStatutoryEntries");
+                // Step D4: Apply all migrations up to latest
+                await migrator.MigrateAsync();
             }
 
             // Step E: Create, reload across disposed DbContext, approve, post, and export statutory contribution

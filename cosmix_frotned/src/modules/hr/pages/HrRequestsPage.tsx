@@ -16,6 +16,10 @@ import {
   XCircle,
   Search,
   ChevronRight,
+  Send,
+  Calendar,
+  Coins,
+  Car,
 } from 'lucide-react';
 import { useHrAccess } from '../hooks/use-hr-access';
 import { sections } from '../types/updates';
@@ -23,6 +27,7 @@ import { ChangeRequests } from '../components/requests/ChangeRequests';
 import { WorkflowRequests } from '../components/requests/WorkflowRequests';
 import { Denied } from '../components/Feedback';
 import { ReferenceField } from '../components/ReferenceField';
+import { SendChangeRequestModal } from '../components/requests/SendChangeRequestModal';
 import '@/styles/hr-requests.css';
 
 export function HrRequestsPage() {
@@ -33,6 +38,8 @@ export function HrRequestsPage() {
   const tab = params.get('type') ?? 'employment';
   const state = params.get('state') ?? '';
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSendModalOpen, setIsSendModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const tabs = [
     ...sections
@@ -107,7 +114,52 @@ export function HrRequestsPage() {
               </p>
             </div>
           </div>
+
+          <div className="hr-requests-header-actions">
+            <button
+              type="button"
+              className="btn-send-change-request"
+              onClick={() => setIsSendModalOpen(true)}
+              title="Propose a record modification and send to admin for approval"
+            >
+              <Send size={13} />
+              <span>+ Send Change Request</span>
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Ecosystem Modules Strip - Centralized Approvals Hub */}
+      <div className="hr-requests-ecosystem-bar">
+        <span className="hr-requests-ecosystem-label">All Approval Modules:</span>
+        <button
+          type="button"
+          className="hr-requests-ecosystem-chip active"
+          title="Currently viewing Employee Record Changes"
+        >
+          <Layers size={13} />
+          <span>Record Changes ({tabs.length})</span>
+        </button>
+        <Link to="/hr/attendance/leaves" className="hr-requests-ecosystem-chip">
+          <Calendar size={13} />
+          <span>Leave Requests</span>
+        </Link>
+        <Link to="/hr/advances-loans" className="hr-requests-ecosystem-chip">
+          <Coins size={13} />
+          <span>Loans & Advances</span>
+        </Link>
+        <Link to="/hr/allowances" className="hr-requests-ecosystem-chip">
+          <Clock size={13} />
+          <span>Overtime & Allowances</span>
+        </Link>
+        <Link to="/hr/vehicles" className="hr-requests-ecosystem-chip">
+          <Car size={13} />
+          <span>Vehicles & Fuel</span>
+        </Link>
+        <Link to="/hr/approvals" className="hr-requests-ecosystem-chip">
+          <UserCheck size={13} />
+          <span>Hiring Approvals</span>
+        </Link>
       </div>
 
       {/* KPI Status Filter Cards Grid */}
@@ -284,15 +336,28 @@ export function HrRequestsPage() {
       {!tabs.some((t) => t.key === tab) ? (
         <Denied />
       ) : section ? (
-        <ChangeRequests key={tab + state} section={section} state={state} search={searchTerm} />
+        <ChangeRequests
+          key={`${tab}-${state}-${refreshKey}`}
+          section={section}
+          state={state}
+          search={searchTerm}
+        />
       ) : (
         <WorkflowRequests
-          key={tab + state}
+          key={`${tab}-${state}-${refreshKey}`}
           kind={tab === 'compensation' ? 'compensation' : 'lifecycle'}
           state={state}
           search={searchTerm}
         />
       )}
+
+      {/* Send Employee Change Request Modal */}
+      <SendChangeRequestModal
+        open={isSendModalOpen}
+        onClose={() => setIsSendModalOpen(false)}
+        initialSection={tab}
+        onSuccess={() => setRefreshKey((k) => k + 1)}
+      />
     </div>
   );
 }

@@ -1,0 +1,843 @@
+/* ==========================================================================
+   COSMIX ERP - APPROVAL ROUTING & GOVERNANCE STYLING
+   Compact Enterprise Density & Thin Professional Form Controls
+   ========================================================================== */
+
+.approval-routing-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 24px;
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   Hero / Header Banner
+   -------------------------------------------------------------------------- */
+.approval-hero-banner {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+}
+
+.approval-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.approval-hero-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.approval-kicker {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.approval-hero-title h1 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.25;
+}
+
+.approval-title-icon {
+  color: #2563eb;
+}
+
+.approval-hero-title p {
+  font-size: 11px;
+  color: #64748b;
+  margin: 1px 0 0;
+  line-height: 1.35;
+}
+
+.approval-hero-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.approval-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.approval-badge--mfa {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.approval-badge--neutral {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+/* --------------------------------------------------------------------------
+   Navigation Tabs
+   -------------------------------------------------------------------------- */
+.approval-nav-tabs {
+  display: flex;
+  gap: 4px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 8px;
+  overflow-x: auto;
+}
+
+.approval-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+
+.approval-tab-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.approval-tab-btn.active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+/* --------------------------------------------------------------------------
+   Category Quick Pills
+   -------------------------------------------------------------------------- */
+.approval-category-pills {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.approval-cat-pill {
+  padding: 2px 8px !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  height: 22px !important;
+  line-height: 20px !important;
+  border-radius: 4px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #f8fafc !important;
+  color: #475569 !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+}
+
+.approval-cat-pill:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.approval-cat-pill.active {
+  background: #2563eb !important;
+  border-color: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+/* --------------------------------------------------------------------------
+   Visual Pipeline Ribbon
+   -------------------------------------------------------------------------- */
+.approval-pipeline-ribbon {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.approval-pipeline-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.approval-ribbon-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.approval-pipeline-steps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0;
+}
+
+.approval-pipeline-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 4px 8px;
+  min-width: 120px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.approval-pipeline-step.is-published {
+  border-left: 3px solid #16a34a;
+}
+
+.approval-pipeline-step.is-placeholder {
+  border: 1px dashed #cbd5e1;
+  background: #fafafa;
+}
+
+.approval-pipeline-step.is-missing {
+  border-left: 3px solid #dc2626;
+  background: #fef2f2;
+}
+
+.approval-step-num {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.approval-pipeline-step.is-published .approval-step-num {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.approval-pipeline-step.is-missing .approval-step-num {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.approval-step-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.approval-step-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.approval-step-desc {
+  font-size: 9.5px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Card Layouts
+   -------------------------------------------------------------------------- */
+.approval-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+}
+
+.approval-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.approval-card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.approval-card-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.approval-card-sub {
+  font-size: 10.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.approval-card-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.approval-type-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.approval-type-picker label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Info & Alert Banners
+   -------------------------------------------------------------------------- */
+.approval-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #3b82f6;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #475569;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.approval-info-banner svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #3b82f6;
+}
+
+.approval-alert-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-left: 3px solid #f59e0b;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #92400e;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.approval-alert-banner svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #d97706;
+}
+
+/* --------------------------------------------------------------------------
+   Empty State
+   -------------------------------------------------------------------------- */
+.approval-empty-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 22px 16px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  text-align: left;
+  margin: 6px 0;
+}
+
+.approval-empty-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.approval-empty-text h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0 2px;
+}
+
+.approval-empty-text p {
+  font-size: 11px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.approval-empty-text code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10.5px;
+  background: #e2e8f0;
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: #0f172a;
+}
+
+/* --------------------------------------------------------------------------
+   Route Items List
+   -------------------------------------------------------------------------- */
+.approval-routes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.approval-route-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  background: #ffffff;
+  overflow: hidden;
+  transition: all 0.12s ease;
+}
+
+.approval-route-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.approval-route-card.is-latest {
+  border-left: 3px solid #16a34a;
+}
+
+.approval-route-card-header {
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 6px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.approval-route-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.approval-stage-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #1e3a8a;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.approval-code-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0f172a;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.approval-version-pill {
+  font-size: 10px;
+  font-weight: 600;
+  color: #475569;
+  background: #e2e8f0;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.approval-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.approval-status--latest,
+.approval-status--active {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.approval-status--history,
+.approval-status--unconfigured {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.approval-status--broken {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.approval-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.approval-route-props-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px 12px;
+  padding: 8px 10px;
+  background: #ffffff;
+}
+
+.approval-prop-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.approval-prop-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.approval-prop-val {
+  font-size: 11px;
+  color: #0f172a;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.approval-perm-tag {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  padding: 1px 5px;
+  border-radius: 3px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.approval-muted {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 10.5px;
+}
+
+.approval-tech-details {
+  border-top: 1px solid #f1f5f9;
+  padding: 4px 10px;
+  background: #fafafa;
+}
+
+.approval-tech-details summary {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  user-select: none;
+}
+
+.approval-tech-details summary:hover {
+  color: #2563eb;
+}
+
+.approval-tech-details .hr-dl {
+  margin-top: 6px;
+  gap: 6px 12px;
+}
+
+.approval-tech-details .hr-dl dt {
+  font-size: 10.5px;
+  margin-bottom: 2px;
+}
+
+.approval-tech-details .hr-dl dd {
+  font-size: 11px;
+}
+
+/* --------------------------------------------------------------------------
+   Ultra-Thin Professional Form Controls (24px Height)
+   Overriding all global styles with absolute precision
+   -------------------------------------------------------------------------- */
+.approval-routing-container input,
+.approval-routing-container select,
+.approval-routing-container .custom-select-trigger,
+.approval-routing-container input[type='text'],
+.approval-routing-container input[type='number'],
+.approval-routing-container input[type='date'],
+.approval-routing-container input[type='datetime-local'],
+.approval-card .field input,
+.approval-card .field select,
+.approval-form-grid .field input,
+.approval-form-grid .field select,
+.approval-form-grid .custom-select-trigger,
+.approval-type-picker select,
+.approval-type-picker .custom-select-trigger {
+  height: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  padding: 0 6px !important;
+  border-radius: 4px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  font-size: 11px !important;
+  color: #0f172a !important;
+  outline: none !important;
+  line-height: 22px !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.12s ease !important;
+}
+
+.approval-routing-container input:focus,
+.approval-routing-container select:focus,
+.approval-routing-container .custom-select-trigger.is-open,
+.approval-card .field input:focus,
+.approval-card .field select:focus,
+.approval-form-grid .field input:focus,
+.approval-form-grid .field select:focus,
+.approval-form-grid .custom-select-trigger.is-open {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 1.5px rgba(37, 99, 235, 0.15) !important;
+}
+
+.approval-routing-container label,
+.approval-card .field label,
+.approval-form-grid .field label {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  margin-bottom: 2px !important;
+  line-height: 1.2 !important;
+}
+
+.approval-routing-container textarea,
+.approval-card .field textarea,
+.approval-form-grid .field textarea {
+  height: auto !important;
+  min-height: 44px !important;
+  max-height: 72px !important;
+  padding: 4px 6px !important;
+  font-size: 11px !important;
+  color: #0f172a !important;
+  border-radius: 4px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  line-height: 1.35 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+}
+
+.approval-routing-container textarea:focus,
+.approval-card .field textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 1.5px rgba(37, 99, 235, 0.15) !important;
+}
+
+.approval-card .field-error,
+.approval-form-grid .field-error {
+  font-size: 10px !important;
+  color: #dc2626 !important;
+  margin: 1px 0 0 !important;
+  line-height: 1.2 !important;
+}
+
+.approval-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.approval-form-section-divider {
+  grid-column: 1 / -1;
+  font-size: 10px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-bottom: 3px;
+  margin-top: 4px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.approval-card .field,
+.approval-form-grid .field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  margin: 0 !important;
+}
+
+.approval-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.approval-submit-btn {
+  height: 26px !important;
+  min-height: 26px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  padding: 0 12px !important;
+  border-radius: 4px !important;
+  background: #15803d !important;
+  color: #ffffff !important;
+  border: 1px solid #166534 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+}
+
+.approval-submit-btn:hover:not(:disabled) {
+  background: #166534 !important;
+}
+
+.approval-submit-btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+
+.approval-btn-sm {
+  height: 24px !important;
+  min-height: 24px !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  padding: 0 8px !important;
+  border-radius: 4px !important;
+}
+
+/* --------------------------------------------------------------------------
+   Delegations Tab Specifics
+   -------------------------------------------------------------------------- */
+.approval-delegation-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  background: #ffffff;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.approval-delegation-header {
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 6px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.approval-delegation-body {
+  padding: 8px 10px;
+}
+
+.approval-revoke-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
+.approval-revoke-box .field {
+  flex: 1;
+  min-width: 200px;
+}

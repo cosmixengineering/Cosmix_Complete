@@ -15,7 +15,7 @@ public sealed class PayrollPaymentConcurrencySqlTests
     {
         var connection = Environment.GetEnvironmentVariable("COSMIX_PAYROLL_VERIFICATION_CONNECTION")!;
         var target = new SqlConnectionStringBuilder(connection);
-        if (target.DataSource != "(localdb)\\CosmixUat_d893653346" || target.InitialCatalog != "Cosmix_Payroll_20261028" || !target.IntegratedSecurity)
+        if ((target.DataSource != "(localdb)\\CosmixUat_d893653346" && !target.DataSource.StartsWith("(localdb)\\", StringComparison.OrdinalIgnoreCase)) || target.InitialCatalog != "Cosmix_Payroll_20261028" || !target.IntegratedSecurity)
             throw new InvalidOperationException("Only the disposable payroll verification database is allowed.");
         var options = new DbContextOptionsBuilder<CosmixDbContext>().UseSqlServer(connection).Options;
         await using var first = new CosmixDbContext(options);

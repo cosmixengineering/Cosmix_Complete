@@ -1,0 +1,10 @@
+{
+  "apiBaseUrl": "https://payroll.cosmix-engineering.com",
+  "certificatePins": [
+    "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=",
+    "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI="
+  ],
+  "signingCertificateSha256": "146BD6F0529CCC20DFDE80CE037F54C905EC3274624687187039246873FB1AC4",
+  "versionCode": 1,
+  "versionName": "1.0.0-validation"
+}

@@ -3,13 +3,13 @@
   "RunResult": {
     "RecordsRedacted": 1,
     "AuditPayloadsProcessed": 0,
-    "RunAt": "2026-10-28T09:04:03.5511693+00:00",
+    "RunAt": "2026-10-29T11:11:08.0163371+00:00",
     "Message": "Redacted 1 GPS punch coordinates and processed 0 legacy punch audit payloads older than 180 days."
   },
   "OldPunchRedaction": {
-    "Id": "9850af62-d962-46b7-8a55-80c4ae091304",
-    "PunchEventId": "ba0a6b3f-dfd7-4e87-ac7e-df25713b1345",
-    "RedactedAtUtc": "2026-10-28T09:04:03.5511693+00:00",
+    "Id": "cba4c64b-e534-4e73-9459-385071e5cabe",
+    "PunchEventId": "f23e8df8-1a57-4d3d-8017-d8801de7cccf",
+    "RedactedAtUtc": "2026-10-29T11:11:08.0163371+00:00",
     "ActorUserId": "system",
     "RetentionPolicyDays": 180,
     "Reason": "Automated retention cleanup older than 180 days"

@@ -21,7 +21,7 @@ public sealed record CompreFaceOptions
     public string? TrustedRootCertificatePath { get; init; }
     public string? TrustedRootCertificateSha256 { get; init; }
     public double? MinimumDetectionProbability { get; init; }
-    public int TimeoutSeconds { get; init; } = 10;
+    public int TimeoutSeconds { get; init; } = 30;
     public int MaximumResponseBytes { get; init; } = 65536;
     public override string ToString() => "CompreFaceOptions(redacted)";
 }
@@ -254,7 +254,7 @@ public sealed class CompreFaceClient : IDisposable
             uri.AbsolutePath != "/" || uri.Scheme != "https" && !(uri.Scheme == "http" && options.AllowLoopbackHttpForPoc &&
                 IPAddress.TryParse(uri.IdnHost.Trim('[', ']'), out var loopback) && IPAddress.IsLoopback(loopback)) ||
             options.MinimumDetectionProbability is not double p || !double.IsFinite(p) || p is <= 0 or > 1 ||
-            options.TimeoutSeconds is < 1 or > 30 || options.MaximumResponseBytes is < 256 or > 1048576 ||
+            options.TimeoutSeconds is < 1 or > 60 || options.MaximumResponseBytes is < 256 or > 1048576 ||
             !ValidText(options.DeploymentVersion, 100) || !ValidKey(options.DetectionApiKey) || !ValidKey(options.VerificationApiKey))
             throw new AuthenticationFailure("face_provider_not_configured", 503);
         if (IPAddress.TryParse(uri.IdnHost.Trim('[', ']'), out var address) && !IsPrivateAddress(address, options.AllowLoopbackHttpForPoc))

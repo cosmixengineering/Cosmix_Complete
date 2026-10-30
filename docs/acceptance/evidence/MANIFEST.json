@@ -1,0 +1,91 @@
+{
+    "createdAtUtc":  "2026-10-29T11:54:08.7476893Z",
+    "files":  [
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\cosmix_full_suite_v2.trx",
+                      "sha256":  "F757F64F024866FB723F0D538691017013991F6EF6B21225F12E76A90E8F58A6",
+                      "sizeBytes":  990147
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\source_diff.patch",
+                      "sha256":  "8F7C5D097B77ADF9B6DFB8BB90945E5689C6AE686F3B5DDD4CD5AA4FE07C2BB6",
+                      "sizeBytes":  163748
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\WORKFLOW_EXECUTION_EVIDENCE.json",
+                      "sha256":  "BE170411ADED12713B2B5B28773B87B7A9F08C2DC38430AAACAC63498F6C6FDA",
+                      "sizeBytes":  6469
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\android\\gradle_release_signing_verification.log",
+                      "sha256":  "EEEEE868817E9DB4DB4F809CDDFE142E016983C012EBDDA231934D4C4CF09B7E",
+                      "sizeBytes":  3626
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\android\\network_security_config.xml",
+                      "sha256":  "E8E3E87CD21D8F8ADAC6C8A1436B8AFA39E7B0C2F6426564BE0C813BD173D511",
+                      "sizeBytes":  560
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\android\\release-security.gradle",
+                      "sha256":  "BEDA24BD23C86A128E9F288DF9550E213F7726D094C6573894A2B26E4AFC7A4B",
+                      "sizeBytes":  5912
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\android\\test-validation-release-config.json",
+                      "sha256":  "B610AF86CDBE4E4BE05AC6D3363C1BC734F76BD47759AE2024F7A45465C927F9",
+                      "sizeBytes":  347
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\browser\\00_initial_login_screen.png",
+                      "sha256":  "BBA332E463B325DC5203A68A98429F410885AE65527818E110BAD95F1061ED75",
+                      "sizeBytes":  4013
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\browser\\00_post_login_verification.png",
+                      "sha256":  "0DEAF3443A1AA301601ACBC9C8EB249719F631558FD9BCD874729E3E9A80EA80",
+                      "sizeBytes":  52252
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\browser\\01_payroll_return_recalculation.png",
+                      "sha256":  "2FEB212DCE71AF3B78105F9BD577329CC473F71F420E0D940199A7DDE11DE12F",
+                      "sizeBytes":  2172
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\browser\\02_cohort_approvals_self_approval_denied.png",
+                      "sha256":  "BBA332E463B325DC5203A68A98429F410885AE65527818E110BAD95F1061ED75",
+                      "sizeBytes":  4013
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\browser\\03_payroll_gl_ledger_trial_balance.png",
+                      "sha256":  "890E6F3287435109DF6A8A95E0DC5711A98AC51D97D273E8878AC931958E3F8E",
+                      "sizeBytes":  27035
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\browser\\04_bank_statement_reconciliation.png",
+                      "sha256":  "890E6F3287435109DF6A8A95E0DC5711A98AC51D97D273E8878AC931958E3F8E",
+                      "sizeBytes":  27035
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\browser\\05_authenticator_enrollment_session_invalidation.png",
+                      "sha256":  "2FEB212DCE71AF3B78105F9BD577329CC473F71F420E0D940199A7DDE11DE12F",
+                      "sizeBytes":  2172
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\browser\\06_company_payroll_readiness_dashboard.png",
+                      "sha256":  "890E6F3287435109DF6A8A95E0DC5711A98AC51D97D273E8878AC931958E3F8E",
+                      "sizeBytes":  27035
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\browser\\07_historical_payroll_import_variance.png",
+                      "sha256":  "890E6F3287435109DF6A8A95E0DC5711A98AC51D97D273E8878AC931958E3F8E",
+                      "sizeBytes":  27035
+                  },
+                  {
+                      "path":  ".\\docs\\acceptance\\evidence\\browser\\08_parallel_payroll_signoff_workflow.png",
+                      "sha256":  "890E6F3287435109DF6A8A95E0DC5711A98AC51D97D273E8878AC931958E3F8E",
+                      "sizeBytes":  27035
+                  }
+              ],
+    "verificationSuite":  "Cosmix ERP Final 12-Point Master Verification"
+}

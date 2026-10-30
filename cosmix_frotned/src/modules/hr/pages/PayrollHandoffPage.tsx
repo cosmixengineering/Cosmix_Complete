@@ -1,4 +1,6 @@
 import { useState, useMemo, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import { z } from 'zod';
 import {
   Banknote,
   Calendar,
@@ -13,6 +15,7 @@ import {
   Search,
   ShieldCheck,
   Building,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/forms/TextInput';
@@ -42,6 +45,7 @@ import {
 import { request } from '@/services/api/http-client';
 import { useHrLifetime } from '../hooks/use-hr-lifetime';
 import { financeError } from '../api/finance-messages';
+import { ApiError } from '@/services/api/api-error';
 import '@/styles/payroll-handoff.css';
 import { SalarySources } from '../components/finance/SalarySources';
 import { SalaryImport } from '../components/finance/SalaryImport';
@@ -113,12 +117,57 @@ export function PayrollHandoffPage() {
           <div className="payroll-title-group">
             <h1>
               <Banknote size={24} style={{ color: '#2563eb' }} />
-              Payroll Handoff
+              Payroll Handoff &amp; Financial Settlement
             </h1>
             <p>
               Project immutable payroll handoff lines from attendance periods, freeze batches, and
               generate Bank Advice files for Accounts processing.
             </p>
+          </div>
+        </div>
+
+        {/* 4-Step Payroll Lifecycle Stepper Bar */}
+        <div className="payroll-pipeline-stepper">
+          <Link
+            to="/hr/attendance/month-close"
+            className="payroll-step-item"
+            title="Lock the monthly attendance register"
+          >
+            <span className="payroll-step-num">1</span>
+            <span>Attendance Month Close</span>
+          </Link>
+          <span className="payroll-step-arrow">→</span>
+
+          <div
+            className={`payroll-step-item ${active === 'preview' ? 'active' : ''}`}
+            onClick={() => setTab('preview')}
+            role="button"
+            tabIndex={0}
+            style={{ cursor: 'pointer' }}
+          >
+            <span className="payroll-step-num">2</span>
+            <span>Preview &amp; Calculate Lines</span>
+          </div>
+          <span className="payroll-step-arrow">→</span>
+
+          <div
+            className={`payroll-step-item ${active === 'batches' ? 'active' : ''}`}
+            onClick={() => setTab('batches')}
+            role="button"
+            tabIndex={0}
+            style={{ cursor: 'pointer' }}
+          >
+            <span className="payroll-step-num">3</span>
+            <span>Freeze &amp; Review Batches</span>
+          </div>
+          <span className="payroll-step-arrow">→</span>
+
+          <div
+            className="payroll-step-item"
+            title="Download Bank Advice CSV for Accounts Settlement"
+          >
+            <span className="payroll-step-num">4</span>
+            <span>Bank Advice &amp; Accounts Settlement</span>
           </div>
         </div>
 
@@ -148,6 +197,21 @@ export function PayrollHandoffPage() {
     </div>
   );
 }
+
+const MONTH_OPTIONS = [
+  { value: '1', label: '01 - January' },
+  { value: '2', label: '02 - February' },
+  { value: '3', label: '03 - March' },
+  { value: '4', label: '04 - April' },
+  { value: '5', label: '05 - May' },
+  { value: '6', label: '06 - June' },
+  { value: '7', label: '07 - July' },
+  { value: '8', label: '08 - August' },
+  { value: '9', label: '09 - September' },
+  { value: '10', label: '10 - October' },
+  { value: '11', label: '11 - November' },
+  { value: '12', label: '12 - December' },
+];
 
 function PayrollPreviewPanel({
   canPrepare,
@@ -180,15 +244,37 @@ function PayrollPreviewPanel({
   );
 
   const action = useFinanceAction();
+  const access = useFinanceAccess();
+  const canCheckMonth = access.can('attendance.month-locks.read');
+  const [previewRequested, setPreviewRequested] = useState(false);
+  const periodStart = `${loaded.year.padStart(4, '0')}-${loaded.month.padStart(2, '0')}-01`;
+  const monthStatus = useFinanceQuery(
+    `/attendance/month-locks/${Number(loaded.year)}/${Number(loaded.month)}/preview`,
+    z.object({
+      monthStart: z.literal(periodStart),
+      state: z.enum(['ready', 'not_ready', 'locked']),
+    }),
+    canCheckMonth,
+    canCheckMonth,
+  );
+  const monthLocked =
+    monthStatus.isSuccess && !monthStatus.isFetching && monthStatus.data.state === 'locked';
 
   const preview = useFinanceQuery(
     `/payroll-handoff/preview${queryString({ year: Number(loaded.year), month: Number(loaded.month) })}`,
     payrollPreview,
     true,
-    true,
+    canCheckMonth ? monthLocked : previewRequested,
   );
 
-  const activePreview = !preview.isError ? preview.data : undefined;
+  const isMonthNotLocked =
+    (canCheckMonth && monthStatus.isSuccess && monthStatus.data.state !== 'locked') ||
+    (preview.isError &&
+      preview.error instanceof ApiError &&
+      preview.error.code === 'payroll_handoff_month_not_locked');
+
+  const activePreview =
+    !preview.isError && (!canCheckMonth || monthLocked) ? preview.data : undefined;
   const groupEmployees = activePreview?.employeeTotals ?? [];
   const selectionValid =
     !groupMode ||
@@ -239,8 +325,15 @@ function PayrollPreviewPanel({
       Number(targetMonth) > 12
     )
       return;
-    if (loaded.year === targetYear && loaded.month === targetMonth) void preview.refetch();
-    else setLoaded({ year: targetYear, month: targetMonth });
+    if (loaded.year === targetYear && loaded.month === targetMonth) {
+      if (canCheckMonth) {
+        void monthStatus.refetch().then((result) => {
+          if (result.isSuccess && result.data?.state === 'locked') void preview.refetch();
+        });
+      } else if (previewRequested) void preview.refetch();
+      else setPreviewRequested(true);
+    } else setLoaded({ year: targetYear, month: targetMonth });
+    setPreviewRequested(true);
     setReason(
       `Payroll Settlement for Attendance Period ${targetMonth.padStart(2, '0')}/${targetYear}`,
     );
@@ -295,6 +388,20 @@ function PayrollPreviewPanel({
 
         <div className="payroll-controls-bar">
           <div className="payroll-month-selector">
+            <label>Month</label>
+            <select
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              style={{ minWidth: '130px' }}
+            >
+              {MONTH_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="payroll-month-selector">
             <label>Year</label>
             <input
               type="number"
@@ -302,16 +409,6 @@ function PayrollPreviewPanel({
               max={2099}
               value={year}
               onChange={(e) => setYear(e.target.value)}
-            />
-          </div>
-          <div className="payroll-month-selector">
-            <label>Month (1-12)</label>
-            <input
-              type="number"
-              min={1}
-              max={12}
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
             />
           </div>
           <Button
@@ -324,339 +421,402 @@ function PayrollPreviewPanel({
         </div>
       </section>
 
-      <FinanceNotice>
-        Preview requires a locked attendance month. Bank advice is available from a locked batch and
-        contains employee totals; bank account numbers are not included.
-      </FinanceNotice>
-      <QueryState query={preview}>
-        {activePreview && (
-          <>
-            <FinanceNotice>
-              {activePreview.calculationVersion === 'salary-v2' && activePreview.salaryComplete
-                ? 'Complete salary projection from approved sources.'
-                : 'Adjustment projection; this is not a complete salary run.'}
-            </FinanceNotice>
-            {activePreview.employeeTotals && (
-              <SalaryPayslips
-                batchId=""
-                currency={activePreview.currency}
-                employees={activePreview.employeeTotals}
-                available={false}
-              />
-            )}
-            {/* KPI Summary Cards */}
-            <div className="payroll-kpi-grid">
-              <div className="payroll-kpi-card">
-                <div className="payroll-kpi-icon net">
-                  <Banknote size={22} />
-                </div>
-                <div className="payroll-kpi-info">
-                  <span className="payroll-kpi-label">Projected Net Hand-off</span>
-                  <span className="payroll-kpi-value" style={{ color: '#2563eb' }}>
-                    {money(activePreview.totals.netAmount, activePreview.currency)}
-                  </span>
-                  <span className="payroll-kpi-sub">
-                    {activePreview.lines.length} total entries
-                  </span>
-                </div>
-              </div>
-
-              <div className="payroll-kpi-card">
-                <div className="payroll-kpi-icon ot">
-                  <TrendingUp size={22} />
-                </div>
-                <div className="payroll-kpi-info">
-                  <span className="payroll-kpi-label">Approved Overtime</span>
-                  <span className="payroll-kpi-value" style={{ color: '#059669' }}>
-                    {money(activePreview.totals.overtimeTotal, activePreview.currency)}
-                  </span>
-                  <span className="payroll-kpi-sub">Verified duty calculations</span>
-                </div>
-              </div>
-
-              <div className="payroll-kpi-card">
-                <div className="payroll-kpi-icon alw">
-                  <Coins size={22} />
-                </div>
-                <div className="payroll-kpi-info">
-                  <span className="payroll-kpi-label">Approved Allowances</span>
-                  <span className="payroll-kpi-value" style={{ color: '#16a34a' }}>
-                    {money(activePreview.totals.allowanceTotal, activePreview.currency)}
-                  </span>
-                  <span className="payroll-kpi-sub">Meal, outstation, per-diem</span>
-                </div>
-              </div>
-
-              <div className="payroll-kpi-card">
-                <div className="payroll-kpi-icon ded">
-                  <ArrowDownCircle size={22} />
-                </div>
-                <div className="payroll-kpi-info">
-                  <span className="payroll-kpi-label">Attendance Deductions</span>
-                  <span className="payroll-kpi-value" style={{ color: '#e11d48' }}>
-                    {money(activePreview.totals.attendanceDeductionTotal, activePreview.currency)}
-                  </span>
-                  <span className="payroll-kpi-sub">Late & absence adjustments</span>
-                </div>
-              </div>
-
-              <div className="payroll-kpi-card">
-                <div className="payroll-kpi-icon emp">
-                  <Users size={22} />
-                </div>
-                <div className="payroll-kpi-info">
-                  <span className="payroll-kpi-label">Eligible Staff</span>
-                  <span className="payroll-kpi-value">
-                    {activePreview.employeeCount} Active Staff
-                  </span>
-                  <span className="payroll-kpi-sub">Attendance ledger records</span>
-                </div>
-              </div>
+      {canCheckMonth && (monthStatus.isPending || monthStatus.isError) ? (
+        <QueryState query={monthStatus} title="Attendance month status unavailable">
+          {null}
+        </QueryState>
+      ) : !canCheckMonth && !previewRequested ? (
+        <FinanceNotice>
+          Select a period and load its preview. Payroll handoff requires a finalized attendance
+          month.
+        </FinanceNotice>
+      ) : isMonthNotLocked ? (
+        <div className="payroll-guidance-card">
+          <div className="payroll-guidance-icon">
+            <Lock size={18} />
+          </div>
+          <div className="payroll-guidance-content">
+            <h3>
+              Attendance Month {String(loaded.month).padStart(2, '0')}/{loaded.year} Not Locked Yet
+            </h3>
+            <p>
+              In Cosmix ERP, payroll handoff requires an immutable attendance snapshot. Month{' '}
+              <strong>
+                {MONTH_OPTIONS.find((m) => m.value === loaded.month)?.label.split(' - ')[1] ??
+                  loaded.month}{' '}
+                {loaded.year}
+              </strong>{' '}
+              has not been closed and finalized in the attendance register yet. Please lock the
+              month in Attendance Management before calculating payroll lines.
+            </p>
+            <div className="payroll-guidance-actions">
+              <Link to="/hr/attendance/month-close" className="btn-guidance-primary">
+                <Lock size={13} /> Go to Month Close &amp; Lock Period
+              </Link>
+              <Link to="/hr/attendance/tracking" className="btn-guidance-secondary">
+                <Users size={13} /> Inspect Attendance Register
+              </Link>
+              <button type="button" className="btn-guidance-secondary" onClick={onBatchCreated}>
+                <FileSpreadsheet size={13} /> View Already Frozen Batches
+              </button>
             </div>
-
-            {/* Table of Projected Lines */}
-            <section className="payroll-section-card">
-              <div className="payroll-section-header">
-                <div>
-                  <h2>
-                    <FileCheck2 size={18} style={{ color: '#059669' }} />
-                    Projected Lines ({filteredLines.length} of {activePreview.lines.length})
-                  </h2>
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>
-                    Period: {activePreview.periodStart} to {activePreview.periodEndExclusive}
-                  </span>
-                </div>
-
-                {/* Search & Filter Toolbar */}
-                <div
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}
-                >
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <Search
-                      size={14}
-                      style={{ position: 'absolute', left: '10px', color: '#94a3b8' }}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Search staff, code, component..."
-                      value={searchFilter}
-                      onChange={(e) => setSearchFilter(e.target.value)}
-                      style={{
-                        padding: '6px 12px 6px 30px',
-                        borderRadius: '6px',
-                        border: '1px solid #cbd5e1',
-                        fontSize: '12px',
-                        width: '210px',
-                      }}
-                    />
-                  </div>
-
-                  <select
-                    value={componentFilter}
-                    onChange={(e) => setComponentFilter(e.target.value)}
-                    style={{
-                      padding: '6px 10px',
-                      borderRadius: '6px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '12px',
-                      background: '#ffffff',
-                      color: '#334155',
-                    }}
-                  >
-                    <option value="all">All Components</option>
-                    <option value="overtime">Overtime Only</option>
-                    <option value="allowance">Allowances Only</option>
-                    <option value="deduction">Deductions Only</option>
-                  </select>
-                </div>
-              </div>
-
-              {!filteredLines.length ? (
+          </div>
+        </div>
+      ) : (
+        <>
+          <FinanceNotice>
+            Preview requires a locked attendance month. Bank advice is available from a locked batch
+            and contains employee totals; bank account numbers are not included.
+          </FinanceNotice>
+          <QueryState query={preview}>
+            {activePreview && (
+              <>
                 <FinanceNotice>
-                  {activePreview.lines.length
-                    ? 'No payroll lines match your filter criteria.'
-                    : 'No payroll lines were returned for this locked attendance month.'}
+                  {activePreview.calculationVersion === 'salary-v2' && activePreview.salaryComplete
+                    ? 'Complete salary projection from approved sources.'
+                    : 'Adjustment projection; this is not a complete salary run.'}
                 </FinanceNotice>
-              ) : (
-                <div className="payroll-table-wrapper">
-                  <table className="payroll-table">
-                    <thead>
-                      <tr>
-                        <th>Employee</th>
-                        <th>Component</th>
-                        <th>Source Reference</th>
-                        <th style={{ textAlign: 'right' }}>Amount ({activePreview.currency})</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredLines.map((line: PayrollPreviewLine, idx: number) => {
-                        const emp = employeeMap.get(line.employeeId.toLowerCase());
-                        const name = emp?.name || 'Employee';
-                        const code = emp?.code || line.employeeId.slice(0, 8);
-                        const initials =
-                          emp?.initials ||
-                          name
-                            .replace(/^Engr\.\s+/, '')
-                            .slice(0, 2)
-                            .toUpperCase();
-
-                        const compLower = line.component.toLowerCase();
-                        const isNegative = line.amount < 0;
-
-                        return (
-                          <tr key={`${line.sourceType}-${line.sourceId}-${idx}`}>
-                            <td>
-                              <div className="payroll-emp-cell">
-                                <div className="payroll-emp-avatar">{initials}</div>
-                                <div>
-                                  <div className="payroll-emp-name">{name}</div>
-                                  <div className="payroll-emp-sub">{code}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <span
-                                className={`payroll-comp-badge ${
-                                  compLower.includes('overtime')
-                                    ? 'overtime'
-                                    : compLower.includes('allowance')
-                                      ? 'allowance'
-                                      : compLower.includes('deduction')
-                                        ? 'deduction'
-                                        : 'other'
-                                }`}
-                              >
-                                {line.component}
-                              </span>
-                            </td>
-                            <td style={{ fontSize: '12px', color: '#64748b' }}>
-                              <code>{line.sourceType}</code> &middot; v{line.sourceVersion}
-                            </td>
-                            <td className={`amount-col ${isNegative ? 'negative' : 'positive'}`}>
-                              {money(line.amount, line.currency)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Prepare and Freeze Batch Form */}
-              {canPrepare && (
-                <form
-                  style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}
-                  onSubmit={(event) => void prepare(event)}
-                >
-                  <h3
-                    style={{
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      margin: '0 0 8px',
-                    }}
-                  >
-                    Freeze Batch for Accounts Handoff
-                  </h3>
-                  <p style={{ fontSize: '12.5px', color: '#64748b', margin: '0 0 16px' }}>
-                    Preparing locks this projection digest (Fingerprint:{' '}
-                    <code>{activePreview.previewFingerprint.slice(0, 24)}...</code>) into an
-                    immutable payroll batch for Accounts review. Preparation does not approve or pay
-                    this batch.
-                  </p>
-                  <fieldset
-                    disabled={action.pending}
-                    style={{
-                      border: '1px solid #cbd5e1',
-                      borderRadius: 8,
-                      padding: 16,
-                      marginBottom: 16,
-                    }}
-                  >
-                    <legend>Employees in this batch</legend>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={groupMode}
-                        onChange={(event) => {
-                          setGroupMode(event.target.checked);
-                          setSelectedEmployees([]);
-                        }}
-                      />{' '}
-                      Prepare a selected employee group
-                    </label>
-                    <p>
-                      Place approvers’ salaries in a separate group for independent review. An
-                      employee can belong to only one active payroll batch for this month. Each
-                      group needs its own HR, Management and Finance approvals.
-                    </p>
-                    {groupMode && (
-                      <div style={{ maxHeight: 260, overflowY: 'auto', display: 'grid', gap: 8 }}>
-                        {groupEmployees.map((employee) => (
-                          <label
-                            key={employee.employeeId}
-                            style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedEmployees.includes(employee.employeeId)}
-                              onChange={(event) => {
-                                setSelectedEmployees((current) =>
-                                  event.target.checked
-                                    ? [...current, employee.employeeId]
-                                    : current.filter((id) => id !== employee.employeeId),
-                                );
-                              }}
-                            />
-                            {employeeMap.get(employee.employeeId.toLowerCase())?.name ??
-                              employee.employeeId}
-                            {' — '}
-                            {money(employee.netPay, activePreview.currency)}
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                    <p>
-                      {groupMode ? selectedEmployees.length : groupEmployees.length} employees
-                      selected. Other employees remain outside this batch and require separate
-                      preparation.
-                    </p>
-                  </fieldset>
-                  <TextAreaField
-                    label="Preparation Reason / Memo"
-                    required
-                    value={reason}
-                    onChange={setReason}
-                    disabled={action.pending}
+                {activePreview.employeeTotals && (
+                  <SalaryPayslips
+                    batchId=""
+                    currency={activePreview.currency}
+                    employees={activePreview.employeeTotals}
+                    available={false}
                   />
-                  <div
-                    style={{
-                      marginTop: '14px',
-                      display: 'flex',
-                      justifyContent: 'flex-end',
-                      gap: '10px',
-                    }}
-                  >
-                    <Button
-                      type="submit"
-                      disabled={
-                        action.pending ||
-                        preview.isFetching ||
-                        !activePreview.lines.length ||
-                        !selectionValid ||
-                        !reason.trim()
-                      }
-                    >
-                      {action.pending ? 'Freezing Batch...' : 'Prepare and Freeze Batch'}
-                    </Button>
+                )}
+                {/* KPI Summary Cards */}
+                <div className="payroll-kpi-grid">
+                  <div className="payroll-kpi-card">
+                    <div className="payroll-kpi-icon net">
+                      <Banknote size={22} />
+                    </div>
+                    <div className="payroll-kpi-info">
+                      <span className="payroll-kpi-label">Projected Net Hand-off</span>
+                      <span className="payroll-kpi-value" style={{ color: '#2563eb' }}>
+                        {money(activePreview.totals.netAmount, activePreview.currency)}
+                      </span>
+                      <span className="payroll-kpi-sub">
+                        {activePreview.lines.length} total entries
+                      </span>
+                    </div>
                   </div>
-                </form>
-              )}
-            </section>
-          </>
-        )}
-      </QueryState>
+
+                  <div className="payroll-kpi-card">
+                    <div className="payroll-kpi-icon ot">
+                      <TrendingUp size={22} />
+                    </div>
+                    <div className="payroll-kpi-info">
+                      <span className="payroll-kpi-label">Approved Overtime</span>
+                      <span className="payroll-kpi-value" style={{ color: '#059669' }}>
+                        {money(activePreview.totals.overtimeTotal, activePreview.currency)}
+                      </span>
+                      <span className="payroll-kpi-sub">Verified duty calculations</span>
+                    </div>
+                  </div>
+
+                  <div className="payroll-kpi-card">
+                    <div className="payroll-kpi-icon alw">
+                      <Coins size={22} />
+                    </div>
+                    <div className="payroll-kpi-info">
+                      <span className="payroll-kpi-label">Approved Allowances</span>
+                      <span className="payroll-kpi-value" style={{ color: '#16a34a' }}>
+                        {money(activePreview.totals.allowanceTotal, activePreview.currency)}
+                      </span>
+                      <span className="payroll-kpi-sub">Meal, outstation, per-diem</span>
+                    </div>
+                  </div>
+
+                  <div className="payroll-kpi-card">
+                    <div className="payroll-kpi-icon ded">
+                      <ArrowDownCircle size={22} />
+                    </div>
+                    <div className="payroll-kpi-info">
+                      <span className="payroll-kpi-label">Attendance Deductions</span>
+                      <span className="payroll-kpi-value" style={{ color: '#e11d48' }}>
+                        {money(
+                          activePreview.totals.attendanceDeductionTotal,
+                          activePreview.currency,
+                        )}
+                      </span>
+                      <span className="payroll-kpi-sub">Late & absence adjustments</span>
+                    </div>
+                  </div>
+
+                  <div className="payroll-kpi-card">
+                    <div className="payroll-kpi-icon emp">
+                      <Users size={22} />
+                    </div>
+                    <div className="payroll-kpi-info">
+                      <span className="payroll-kpi-label">Eligible Staff</span>
+                      <span className="payroll-kpi-value">
+                        {activePreview.employeeCount} Active Staff
+                      </span>
+                      <span className="payroll-kpi-sub">Attendance ledger records</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Table of Projected Lines */}
+                <section className="payroll-section-card">
+                  <div className="payroll-section-header">
+                    <div>
+                      <h2>
+                        <FileCheck2 size={18} style={{ color: '#059669' }} />
+                        Projected Lines ({filteredLines.length} of {activePreview.lines.length})
+                      </h2>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>
+                        Period: {activePreview.periodStart} to {activePreview.periodEndExclusive}
+                      </span>
+                    </div>
+
+                    {/* Search & Filter Toolbar */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <Search
+                          size={14}
+                          style={{ position: 'absolute', left: '10px', color: '#94a3b8' }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Search staff, code, component..."
+                          value={searchFilter}
+                          onChange={(e) => setSearchFilter(e.target.value)}
+                          style={{
+                            padding: '6px 12px 6px 30px',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '12px',
+                            width: '210px',
+                          }}
+                        />
+                      </div>
+
+                      <select
+                        value={componentFilter}
+                        onChange={(e) => setComponentFilter(e.target.value)}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '6px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '12px',
+                          background: '#ffffff',
+                          color: '#334155',
+                        }}
+                      >
+                        <option value="all">All Components</option>
+                        <option value="overtime">Overtime Only</option>
+                        <option value="allowance">Allowances Only</option>
+                        <option value="deduction">Deductions Only</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {!filteredLines.length ? (
+                    <FinanceNotice>
+                      {activePreview.lines.length
+                        ? 'No payroll lines match your filter criteria.'
+                        : 'No payroll lines were returned for this locked attendance month.'}
+                    </FinanceNotice>
+                  ) : (
+                    <div className="payroll-table-wrapper">
+                      <table className="payroll-table">
+                        <thead>
+                          <tr>
+                            <th>Employee</th>
+                            <th>Component</th>
+                            <th>Source Reference</th>
+                            <th style={{ textAlign: 'right' }}>
+                              Amount ({activePreview.currency})
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredLines.map((line: PayrollPreviewLine, idx: number) => {
+                            const emp = employeeMap.get(line.employeeId.toLowerCase());
+                            const name = emp?.name || 'Employee';
+                            const code = emp?.code || line.employeeId.slice(0, 8);
+                            const initials =
+                              emp?.initials ||
+                              name
+                                .replace(/^Engr\.\s+/, '')
+                                .slice(0, 2)
+                                .toUpperCase();
+
+                            const compLower = line.component.toLowerCase();
+                            const isNegative = line.amount < 0;
+
+                            return (
+                              <tr key={`${line.sourceType}-${line.sourceId}-${idx}`}>
+                                <td>
+                                  <div className="payroll-emp-cell">
+                                    <div className="payroll-emp-avatar">{initials}</div>
+                                    <div>
+                                      <div className="payroll-emp-name">{name}</div>
+                                      <div className="payroll-emp-sub">{code}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td>
+                                  <span
+                                    className={`payroll-comp-badge ${
+                                      compLower.includes('overtime')
+                                        ? 'overtime'
+                                        : compLower.includes('allowance')
+                                          ? 'allowance'
+                                          : compLower.includes('deduction')
+                                            ? 'deduction'
+                                            : 'other'
+                                    }`}
+                                  >
+                                    {line.component}
+                                  </span>
+                                </td>
+                                <td style={{ fontSize: '12px', color: '#64748b' }}>
+                                  <code>{line.sourceType}</code> &middot; v{line.sourceVersion}
+                                </td>
+                                <td
+                                  className={`amount-col ${isNegative ? 'negative' : 'positive'}`}
+                                >
+                                  {money(line.amount, line.currency)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Prepare and Freeze Batch Form */}
+                  {canPrepare && (
+                    <form
+                      style={{
+                        marginTop: '24px',
+                        paddingTop: '20px',
+                        borderTop: '1px solid #f1f5f9',
+                      }}
+                      onSubmit={(event) => void prepare(event)}
+                    >
+                      <h3
+                        style={{
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          color: '#0f172a',
+                          margin: '0 0 8px',
+                        }}
+                      >
+                        Freeze Batch for Accounts Handoff
+                      </h3>
+                      <p style={{ fontSize: '12.5px', color: '#64748b', margin: '0 0 16px' }}>
+                        Preparing locks this projection digest (Fingerprint:{' '}
+                        <code>{activePreview.previewFingerprint.slice(0, 24)}...</code>) into an
+                        immutable payroll batch for Accounts review. Preparation does not approve or
+                        pay this batch.
+                      </p>
+                      <fieldset
+                        disabled={action.pending}
+                        style={{
+                          border: '1px solid #cbd5e1',
+                          borderRadius: 8,
+                          padding: 16,
+                          marginBottom: 16,
+                        }}
+                      >
+                        <legend>Employees in this batch</legend>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={groupMode}
+                            onChange={(event) => {
+                              setGroupMode(event.target.checked);
+                              setSelectedEmployees([]);
+                            }}
+                          />{' '}
+                          Prepare a selected employee group
+                        </label>
+                        <p>
+                          Place approvers’ salaries in a separate group for independent review. An
+                          employee can belong to only one active payroll batch for this month. Each
+                          group needs its own HR, Management and Finance approvals.
+                        </p>
+                        {groupMode && (
+                          <div
+                            style={{ maxHeight: 260, overflowY: 'auto', display: 'grid', gap: 8 }}
+                          >
+                            {groupEmployees.map((employee) => (
+                              <label
+                                key={employee.employeeId}
+                                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedEmployees.includes(employee.employeeId)}
+                                  onChange={(event) => {
+                                    setSelectedEmployees((current) =>
+                                      event.target.checked
+                                        ? [...current, employee.employeeId]
+                                        : current.filter((id) => id !== employee.employeeId),
+                                    );
+                                  }}
+                                />
+                                {employeeMap.get(employee.employeeId.toLowerCase())?.name ??
+                                  employee.employeeId}
+                                {' — '}
+                                {money(employee.netPay, activePreview.currency)}
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                        <p>
+                          {groupMode ? selectedEmployees.length : groupEmployees.length} employees
+                          selected. Other employees remain outside this batch and require separate
+                          preparation.
+                        </p>
+                      </fieldset>
+                      <TextAreaField
+                        label="Preparation Reason / Memo"
+                        required
+                        value={reason}
+                        onChange={setReason}
+                        disabled={action.pending}
+                      />
+                      <div
+                        style={{
+                          marginTop: '14px',
+                          display: 'flex',
+                          justifyContent: 'flex-end',
+                          gap: '10px',
+                        }}
+                      >
+                        <Button
+                          type="submit"
+                          disabled={
+                            action.pending ||
+                            preview.isFetching ||
+                            !activePreview.lines.length ||
+                            !selectionValid ||
+                            !reason.trim()
+                          }
+                        >
+                          {action.pending ? 'Freezing Batch...' : 'Prepare and Freeze Batch'}
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </section>
+              </>
+            )}
+          </QueryState>
+        </>
+      )}
       <ActionMessage action={action} />
     </div>
   );

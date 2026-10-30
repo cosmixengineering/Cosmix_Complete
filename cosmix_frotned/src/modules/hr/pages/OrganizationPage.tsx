@@ -9,6 +9,15 @@ import {
   RotateCw,
   ChevronLeft,
   ChevronRight,
+  Building2,
+  Briefcase,
+  MapPin,
+  Building,
+  Users,
+  Clock,
+  CalendarDays,
+  Compass,
+  type LucideIcon,
 } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { SelectInput } from '@/components/forms/SelectInput';
@@ -24,16 +33,33 @@ import { OrganizationHistory } from '../components/organization/OrganizationHist
 import { HolidayCalendars } from '../components/organization/HolidayCalendars';
 import { RecordView } from '../components/RecordView';
 
-const groups = [
-  ['departments', 'Departments'],
-  ['designations', 'Designations'],
-  ['cities', 'Cities'],
-  ['branches', 'Offices'],
-  ['staff-categories', 'Staff categories'],
-  ['employment-types', 'Employment types'],
-  ['holiday-calendars', 'Holidays'],
-  ['sites', 'Sites'],
+interface OrgGroupConfig {
+  readonly key: string;
+  readonly label: string;
+  readonly icon: LucideIcon;
+}
+
+const groups: readonly OrgGroupConfig[] = [
+  { key: 'departments', label: 'Departments', icon: Building2 },
+  { key: 'designations', label: 'Designations', icon: Briefcase },
+  { key: 'cities', label: 'Cities', icon: MapPin },
+  { key: 'branches', label: 'Offices', icon: Building },
+  { key: 'staff-categories', label: 'Staff categories', icon: Users },
+  { key: 'employment-types', label: 'Employment types', icon: Clock },
+  { key: 'holiday-calendars', label: 'Holidays', icon: CalendarDays },
+  { key: 'sites', label: 'Sites', icon: Compass },
 ] as const;
+
+const groupIconMap: Record<string, LucideIcon> = {
+  departments: Building2,
+  designations: Briefcase,
+  cities: MapPin,
+  branches: Building,
+  'staff-categories': Users,
+  'employment-types': Clock,
+  'holiday-calendars': CalendarDays,
+  sites: Compass,
+};
 
 const readPermission = (kind: string) =>
   kind === 'sites'
@@ -45,14 +71,14 @@ const readPermission = (kind: string) =>
 export function OrganizationPage() {
   const access = useHrAccess();
   const [params] = useSearchParams();
-  const available = groups.filter(([key]) => access.can(readPermission(key)));
-  const selected = available.find(([key]) => key === params.get('group')) ?? available[0];
+  const available = groups.filter((g) => access.can(readPermission(g.key)));
+  const selected = available.find((g) => g.key === params.get('group')) ?? available[0];
   const [adding, setAdding] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   if (!selected) return <Denied />;
 
-  const kind = selected[0];
+  const kind = selected.key;
   const meta = getMasterMeta(kind);
   const manage = kind !== 'sites' && access.can('hr.organization.manage');
 
@@ -81,25 +107,26 @@ export function OrganizationPage() {
 
       {/* Tabs */}
       <nav className="org-tabs-bar" aria-label="Organization references">
-        {available.map(([key, label]) => (
+        {available.map(({ key, label, icon: Icon }) => (
           <Link
             key={key}
-            className={`org-tab-item ${key === selected[0] ? 'active' : ''}`}
+            className={`org-tab-item ${key === selected.key ? 'active' : ''}`}
             to={'/hr/organization?group=' + key}
           >
-            {label}
+            <Icon size={13} strokeWidth={2} aria-hidden="true" />
+            <span>{label}</span>
           </Link>
         ))}
       </nav>
 
       {/* Master Content */}
-      {selected[0] === 'holiday-calendars' ? (
+      {selected.key === 'holiday-calendars' ? (
         <HolidayCalendars />
       ) : (
         <MasterList
-          key={`${selected[0]}-${refreshTrigger}`}
-          kind={selected[0]}
-          title={selected[1]}
+          key={`${selected.key}-${refreshTrigger}`}
+          kind={selected.key}
+          title={selected.label}
           externalAdd={adding}
           onExternalAddClose={() => setAdding(false)}
           onRefreshNeeded={() => setRefreshTrigger((k) => k + 1)}
@@ -134,6 +161,7 @@ function MasterList({
   const permission = readPermission(kind);
   const manage = kind !== 'sites' && access.can('hr.organization.manage');
   const meta = getMasterMeta(kind);
+  const EntityIcon = groupIconMap[kind] ?? Building2;
 
   const query = useHrQuery(
     kind + queryString({ page, pageSize, search: term, isActive: active }),
@@ -215,19 +243,28 @@ function MasterList({
                   query.data.items.map((r) => (
                     <tr key={r.id}>
                       <td>
-                        <button
-                          type="button"
-                          className="org-table-name-btn"
-                          onClick={() => setDetail(r)}
-                        >
-                          {r.name}
-                        </button>
+                        <div className="org-entity-cell">
+                          <span className="org-entity-icon-box" aria-hidden="true">
+                            <EntityIcon size={14} strokeWidth={2} />
+                          </span>
+                          <button
+                            type="button"
+                            className="org-table-name-btn"
+                            onClick={() => setDetail(r)}
+                          >
+                            {r.name}
+                          </button>
+                        </div>
                       </td>
                       <td>
                         <span className="org-table-code">{r.code}</span>
                       </td>
-                      {kind === 'cities' && <td>{r.province ?? '—'}</td>}
-                      {kind === 'branches' && <td>{r.cityName ?? '—'}</td>}
+                      {kind === 'cities' && (
+                        <td className="org-table-subtext">{r.province ?? '—'}</td>
+                      )}
+                      {kind === 'branches' && (
+                        <td className="org-table-subtext">{r.cityName ?? '—'}</td>
+                      )}
                       <td>
                         <span className={`org-badge-status ${r.isActive ? 'active' : 'inactive'}`}>
                           <span className="org-badge-dot"></span>
@@ -245,7 +282,7 @@ function MasterList({
                                 aria-label={`Edit ${r.name}`}
                                 onClick={() => setEditor({ record: r })}
                               >
-                                <Pencil size={11} />
+                                <Pencil size={13} strokeWidth={2} />
                               </button>
                               <button
                                 type="button"
@@ -254,7 +291,7 @@ function MasterList({
                                 aria-label={`Change ${r.name} status`}
                                 onClick={() => setEditor({ record: r, statusOnly: true })}
                               >
-                                <Power size={11} />
+                                <Power size={13} strokeWidth={2} />
                               </button>
                             </>
                           )}
@@ -266,7 +303,7 @@ function MasterList({
                               aria-label={`${r.name} history`}
                               onClick={() => setHistory(r)}
                             >
-                              <History size={11} />
+                              <History size={13} strokeWidth={2} />
                             </button>
                           )}
                         </div>

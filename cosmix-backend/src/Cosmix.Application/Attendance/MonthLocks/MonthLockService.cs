@@ -98,7 +98,7 @@ public sealed class MonthLockService(AttendanceOperation operation, IMonthLockRe
             var saved = await repository.SummaryAsync(cell.EmployeeId, cell.BusinessDate, ct);
             AttendanceDayResponse day;
             try { day = await summaries.LoadAuthorizedDayAsync(cell.EmployeeId, cell.BusinessDate, ct); }
-            catch (AuthenticationFailure failure) when (failure.StatusCode == 409 && failure.Code == "employee_assignment_unavailable")
+            catch (AuthenticationFailure failure) when (MonthLockSetup.IsMissingConfiguration(failure))
             {
                 // A known missing setup requirement belongs in this global readiness preview.
                 // Authorization, corrupt evidence and unexpected failures must still propagate.
@@ -132,7 +132,10 @@ public sealed class MonthLockService(AttendanceOperation operation, IMonthLockRe
                 if (!await repository.SummaryLinksMatchAsync(saved, frozen.Facts.SessionIds, ct))
                     issues.Add(new("attendance_summary_session_links_unavailable", cell.EmployeeId, cell.BusinessDate));
             }
-            rows.Add(saved);
+            // Unclassified saved evidence is a readiness blocker, not a lockable row.
+            // Entry requires a policy identity; projecting it here would abort the
+            // preview instead of returning the policy_calculation_not_ready issue.
+            if (saved.PolicyVersionId.HasValue) rows.Add(saved);
         }
         var employees = population.Cells.Select(x => x.EmployeeId).Distinct().Order().ToArray();
         var money = financial is null

@@ -640,6 +640,7 @@ export function HiringApprovalsPage() {
       {isAdminReviewer && (
         <Dialog
           open={!!adminSubmission}
+          className="hiring-review-horizontal-dialog"
           onOpenChange={(open) => {
             if (
               !open &&

@@ -1,5 +1,8 @@
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using Cosmix.Application.Attendance.Calculation;
 using Cosmix.Application.Attendance.Common;
@@ -47,6 +50,7 @@ namespace Cosmix.Tests;
 internal sealed class PayrollMonthAcceptanceFixture : IAsyncDisposable
 {
     internal const string EvidenceRoot = "D:/CosmixPayrollAcceptance20261028";
+    internal string ScenarioRoot { get; }
     internal static readonly DateOnly Month = new(2026, 9, 1);
     internal static readonly AuthRequestContext Context = new("127.0.0.1", "synthetic-month-acceptance-20261028");
     internal readonly CosmixDbContext Db;
@@ -69,15 +73,21 @@ internal sealed class PayrollMonthAcceptanceFixture : IAsyncDisposable
     private readonly HashSet<string> permissions = [];
     private readonly Guid session = Guid.NewGuid(), assignment = Guid.NewGuid();
 
-    internal PayrollMonthAcceptanceFixture()
+    internal PayrollMonthAcceptanceFixture(string? ownedConnection = null, string? scenarioRoot = null)
     {
-        var connection = Environment.GetEnvironmentVariable("COSMIX_PAYROLL_ACCEPTANCE_CONNECTION")
+        var connection = ownedConnection ?? Environment.GetEnvironmentVariable("COSMIX_PAYROLL_ACCEPTANCE_CONNECTION")
             ?? throw new InvalidOperationException("Explicit synthetic acceptance target is required.");
         var target = new SqlConnectionStringBuilder(connection);
-        if (target.DataSource != "(localdb)\\CosmixUat_d893653346" || target.InitialCatalog != "Cosmix_Payroll_Acceptance_20261028" || !target.IntegratedSecurity)
+        var freshOwned = ownedConnection is not null && scenarioRoot is not null && target.IntegratedSecurity &&
+            target.DataSource.StartsWith("(localdb)\\", StringComparison.OrdinalIgnoreCase) &&
+            System.Text.RegularExpressions.Regex.IsMatch(target.InitialCatalog, "^Cosmix_Payroll_FinanceSql_[a-f0-9]{32}$");
+        if (!freshOwned && (ownedConnection is not null || target.DataSource != "(localdb)\\CosmixUat_d893653346" || target.InitialCatalog != "Cosmix_Payroll_Acceptance_20261028" || !target.IntegratedSecurity))
             throw new InvalidOperationException("Refusing any target except the dedicated synthetic payroll database.");
+        ScenarioRoot = Path.GetFullPath(scenarioRoot ?? EvidenceRoot);
         Db = new(new DbContextOptionsBuilder<CosmixDbContext>().UseSqlServer(connection).Options);
-        var privateRoot = Path.Combine(EvidenceRoot, "private");
+        var privateRoot = Path.Combine(ScenarioRoot, "private");
+        Directory.CreateDirectory(privateRoot);
+        if (freshOwned && OperatingSystem.IsWindows()) RestrictOwnedPrivateDirectory(privateRoot);
         Directory.CreateDirectory(Path.Combine(privateRoot, "objects"));
         var key = Path.Combine(privateRoot, "storage.key");
         if (!File.Exists(key)) File.WriteAllBytes(key, RandomNumberGenerator.GetBytes(32));
@@ -134,23 +144,25 @@ internal sealed class PayrollMonthAcceptanceFixture : IAsyncDisposable
         Db.Add(PayeeAccount); await Db.SaveChangesAsync();
         Assert.Equal(1, Employee.EmployeeNumber);
         await seedTransaction.CommitAsync();
-        await SaveEvidenceAsync("synthetic-employee.json", new { Employee.Id, Employee.EmployeeNumber, Employee.FullLegalName,
+        await SaveScenarioEvidenceAsync("synthetic-employee.json", new { Employee.Id, Employee.EmployeeNumber, Employee.FullLegalName,
             Employee.ApprovedOnboardingDecisionId, Employee.ApprovedLoginPhoneNumber, Employee.MobileAccessRequested,
             PayeeAccountId = PayeeAccount.Id, Month,
-            PrivateFiles = new { Directory = Path.Combine(EvidenceRoot, "private", "objects"),
-                KeyFile = Path.Combine(EvidenceRoot, "private", "storage.key"), KeyReference = "synthetic-month-v1" },
+            PrivateFiles = new { Directory = Path.Combine(ScenarioRoot, "private", "objects"),
+                KeyFile = Path.Combine(ScenarioRoot, "private", "storage.key"), KeyReference = "synthetic-month-v1" },
             Boundary = "Domain hiring fixture, no real hiring/OTP/provider approval" });
     }
 
     internal async Task ImportAndApproveAsync()
     {
-        var path = Path.Combine(EvidenceRoot, "source-import.xlsx");
-        var upload = await Imports.InspectAsync(new(Path.GetFileName(path), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        var path = Path.Combine(ScenarioRoot, "source-import.xlsx");
+        if (!File.Exists(path)) path = Path.Combine(ScenarioRoot, "source-import.csv");
+        var contentType = path.EndsWith(".csv", StringComparison.Ordinal) ? "text/csv" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        var upload = await Imports.InspectAsync(new(Path.GetFileName(path), contentType,
             Convert.ToBase64String(await File.ReadAllBytesAsync(path)), "SYNTHETIC September source"), Key(), Context, default);
         var sheet = Assert.Single(upload.Sheets);
         var mapping = sheet.Columns.Where(c => PayrollImportService.Targets.Any(t => t.Key == c)).ToDictionary(c => c, c => c);
         var preview = await Imports.PreviewAsync(new(upload.SourceId, sheet.Name, mapping), Context, default);
-        await SaveEvidenceAsync("import-preview.json", preview);
+        await SaveScenarioEvidenceAsync("import-preview.json", preview);
         Assert.True(preview.CanApply, JsonSerializer.Serialize(preview)); Assert.Equal(3, preview.Summary.ValidRowCount);
         var applied = await Imports.ApplyAsync(new(upload.SourceId, sheet.Name, mapping, preview.PreviewFingerprint, "SYNTHETIC canonical requests"), Key(), Context, default);
         Assert.Equal(3, applied.Requests.Count);
@@ -174,10 +186,22 @@ internal sealed class PayrollMonthAcceptanceFixture : IAsyncDisposable
             PayrollGrossTreatment.BaseOnly), null, "SYNTHETIC calendar-day policy"), Key(), Context, default);
         ActorId = Guid.NewGuid();
         await Salary.ReviewPolicyAsync(policy.Id, new(policy.Version, ApprovalState.Approved, "SYNTHETIC independent policy approval"), Key(), Context, default);
-        await SaveEvidenceAsync("import-submission.json", applied);
+        await SaveScenarioEvidenceAsync("import-submission.json", applied);
     }
 
     internal static string Key() => Guid.NewGuid().ToString();
+    [SupportedOSPlatform("windows")]
+    private static void RestrictOwnedPrivateDirectory(string path)
+    {
+        using var identity = WindowsIdentity.GetCurrent();
+        var owner = identity.User!;
+        var acl = new DirectorySecurity();
+        acl.SetAccessRuleProtection(true, false);
+        acl.AddAccessRule(new FileSystemAccessRule(owner, FileSystemRights.FullControl,
+            InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+        new DirectoryInfo(path).SetAccessControl(acl);
+    }
+
     internal async Task<PayrollHandoffService> RetainSyntheticAttendanceAsync()
     {
         Clock.Now = new(2026, 10, 1, 6, 0, 0, TimeSpan.Zero);
@@ -253,7 +277,7 @@ internal sealed class PayrollMonthAcceptanceFixture : IAsyncDisposable
         await Db.SaveChangesAsync();
         var months = new MonthLockRepository(Db);
         var reader = new SyntheticRetainedMonthReader(Files);
-        await SaveEvidenceAsync("synthetic-attendance-manifest.json", new { RevisionId = revision.Id, PeriodId = period.Id, EventId = locked.Id, Count = summaries.Count,
+        await SaveScenarioEvidenceAsync("synthetic-attendance-manifest.json", new { RevisionId = revision.Id, PeriodId = period.Id, EventId = locked.Id, Count = summaries.Count,
             Boundary = "Persisted synthetic upstream evidence, actual time/payroll calculators; no device/biometric/attendance-policy acceptance" });
         return new(Operation, new PayrollHandoffRepository(Db), months, new AttendancePayrollInputLedger(Db), null!, null!, Access, Files,
             reader, salaryRepository: SalaryRepository, salarySources: Salary,
@@ -271,6 +295,7 @@ internal sealed class PayrollMonthAcceptanceFixture : IAsyncDisposable
         }
     }
     internal static Task SaveEvidenceAsync<T>(string name, T value) => File.WriteAllTextAsync(Path.Combine(EvidenceRoot, name), JsonSerializer.Serialize(value, new JsonSerializerOptions { WriteIndented = true }));
+    internal Task SaveScenarioEvidenceAsync<T>(string name, T value) => File.WriteAllTextAsync(Path.Combine(ScenarioRoot, name), JsonSerializer.Serialize(value, new JsonSerializerOptions { WriteIndented = true }));
     private async Task<T> Transaction<T>(Func<CancellationToken, Task<T>> action, CancellationToken ct)
     {
         if (Db.Database.CurrentTransaction is not null || Db.ChangeTracker.HasChanges())
@@ -285,7 +310,7 @@ internal sealed class PayrollMonthAcceptanceFixture : IAsyncDisposable
             {
                 // A repository that wrongly commits its caller's transaction must surface its
                 // original failure, while keeping a separate diagnostic for the failed rollback.
-                try { await File.AppendAllTextAsync(Path.Combine(EvidenceRoot, "rollback-diagnostics.log"),
+                try { await File.AppendAllTextAsync(Path.Combine(ScenarioRoot, "rollback-diagnostics.log"),
                     $"{DateTimeOffset.UtcNow:O} Original: {original}\nRollback: {rollbackFailure}\n"); }
                 catch { /* Preserve the business exception even if diagnostic storage fails. */ }
             }

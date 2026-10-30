@@ -179,7 +179,16 @@ public sealed class AttendanceSummaryService(AttendanceOperation operation, IAtt
             policy = new("schedule_configuration_required", null, null, null, null, null, null,
                 ["No effective employment assignment exists for this business date. Accepted session evidence is factual only; attendance classification requires configuration."]);
         }
-        policy ??= await policies.CalculateAsync(employeeId, date, facts, roster, ct);
+        try
+        {
+            policy ??= await policies.CalculateAsync(employeeId, date, facts, roster, ct);
+        }
+        catch (AuthenticationFailure error) when (allowMissingAssignment && error.StatusCode == 503 &&
+            error.Code == "private_file_storage_unavailable")
+        {
+            policy = new("private_evidence_unavailable", null, null, null, null, null, null,
+                ["Private encrypted evidence storage is unavailable for this business date. Accepted session evidence is factual only; attendance classification requires configuration."]);
+        }
         ValidatePolicy(policy);
         return new(employeeId, date, roster.TimeZone,
             facts.OpenSessions != 0 ? "open_session" : facts.SessionIds.Count != 0 ? "closed_session_evidence" : "no_accepted_session_evidence",

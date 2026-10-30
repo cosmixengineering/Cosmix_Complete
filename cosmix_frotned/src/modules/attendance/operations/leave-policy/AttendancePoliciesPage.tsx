@@ -1,7 +1,19 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Eye, Plus, Replace, X } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Plus,
+  RefreshCw,
+  Replace,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+  X,
+} from 'lucide-react';
 import { z } from 'zod';
+import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/forms/TextInput';
 import {
   Command,
@@ -34,6 +46,7 @@ import { blankRules, canAll, normalizedRules } from './inputs';
 import { Choice, EvidenceRecord, JsonEvidence, MorePages, Reload, RuleErrors } from './Ui';
 import { PolicyRulesFields } from './PolicyRulesFields';
 import { useServerPreview } from './preview';
+import '@/styles/attendance-policies.css';
 
 const root = '/hr/attendance-policies';
 export function AttendancePoliciesPage() {
@@ -72,79 +85,169 @@ function PolicyList() {
     return (
       <Denied>Attendance policies require their own supported configure or publish grant.</Denied>
     );
+
+  const totalCount = query.data?.items.length ?? 0;
+
   return (
-    <>
-      <div className="attendance-heading">
-        <h1>Attendance policies</h1>
-        <div className="attendance-commands">
-          {read && <Reload onClick={reload} disabled={creating || query.isFetching} />}{' '}
+    <div className="attendance-policies-page">
+      <header className="policy-page-header">
+        <div className="policy-header-left">
+          <p className="hr-kicker">HUMAN RESOURCES &bull; ATTENDANCE</p>
+          <div className="policy-title-row">
+            <SlidersHorizontal size={18} style={{ color: '#2563eb' }} />
+            <h1>Attendance Policies</h1>
+            {query.data && (
+              <span className="policy-count-badge">
+                {totalCount} {totalCount === 1 ? 'Definition' : 'Definitions'}
+              </span>
+            )}
+          </div>
+          <p className="policy-header-sub">
+            Configure working hours, late arrival grace thresholds, half-day cuts, and penalty
+            slabs.
+          </p>
+        </div>
+        <div className="policy-header-actions">
+          {read && (
+            <Button
+              variant="secondary"
+              onClick={reload}
+              disabled={creating || query.isFetching}
+              className="policy-action-btn"
+            >
+              <RefreshCw size={13} className={query.isFetching ? 'spin' : ''} />
+              <span>Reload</span>
+            </Button>
+          )}
           {publish && !creating && (
-            <Command icon={Plus} onClick={() => setCreating(true)}>
-              Create definition
-            </Command>
+            <Button onClick={() => setCreating(true)} className="policy-action-btn">
+              <Plus size={14} />
+              <span>Create Definition</span>
+            </Button>
           )}
         </div>
-      </div>
+      </header>
+
       {creating && <CreatePolicyForm onSaved={reload} onCancel={reload} />}
+
       {read ? (
-        <section className="attendance-section">
-          <TextInput
-            label="Search policies"
-            maxLength={100}
-            disabled={creating}
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
+        <div className="policy-card-container">
+          <div className="policy-toolbar">
+            <div className="policy-search-wrap">
+              <Search size={13} className="policy-search-icon" aria-hidden="true" />
+              <input
+                type="text"
+                className="policy-search-input"
+                placeholder="Search policies by code or title..."
+                value={search}
+                disabled={creating}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+              />
+              {search && (
+                <button
+                  type="button"
+                  className="policy-search-clear"
+                  onClick={() => {
+                    setSearch('');
+                    setPage(1);
+                  }}
+                  aria-label="Clear search"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+            <div className="policy-toolbar-meta">
+              Showing page {page} &bull; {totalCount} records
+            </div>
+          </div>
+
           <QueryState query={query} empty={query.data?.items.length === 0} />
+
           {!query.isError && query.data && (
             <>
-              <div className="table-scroll">
-                <table className="attendance-table">
+              <div className="policy-table-scroll">
+                <table className="policy-table">
                   <thead>
                     <tr>
-                      <th>Code</th>
-                      <th>Name</th>
-                      <th>Revision</th>
-                      <th>Detail</th>
+                      <th style={{ width: '240px' }}>Policy Code</th>
+                      <th>Policy Name & Description</th>
+                      <th style={{ width: '120px', textAlign: 'center' }}>Revision</th>
+                      <th style={{ width: '110px', textAlign: 'right' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {query.data.items.map((row) => (
                       <tr key={row.id}>
-                        <td>{row.code}</td>
-                        <td>{row.name}</td>
-                        <td>{row.revision}</td>
                         <td>
-                          <Command
-                            icon={Eye}
-                            variant="secondary"
+                          <span className="policy-code-pill">
+                            <ShieldCheck size={13} />
+                            {row.code}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="policy-name-cell">
+                            <span className="policy-name-title">{row.name}</span>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <span className="policy-rev-pill">Rev {row.revision}</span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            className="policy-open-btn"
                             disabled={creating}
                             onClick={() => navigate(`/hr/attendance/policies/${row.id}`)}
                           >
-                            Open
-                          </Command>
+                            <Eye size={12} />
+                            <span>Open</span>
+                          </button>
                         </td>
                       </tr>
                     ))}
+                    {query.data.items.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="policy-empty-box">
+                          No attendance policies found matching your search.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
-              <MorePages
-                page={page}
-                hasMore={query.data.hasMore}
-                disabled={creating || query.isFetching}
-                onChange={setPage}
-              />
+
+              <div className="policy-pagination-bar">
+                <span>Page {page}</span>
+                <div className="policy-page-buttons">
+                  <Button
+                    variant="secondary"
+                    className="policy-page-nav-btn"
+                    disabled={creating || page === 1}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    <ChevronLeft size={13} /> Previous
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="policy-page-nav-btn"
+                    disabled={creating || !query.data.hasMore}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    Next <ChevronRight size={13} />
+                  </Button>
+                </div>
+              </div>
             </>
           )}
-        </section>
+        </div>
       ) : (
         <Denied>Policy history requires a separate All-scoped configure grant.</Denied>
       )}
-    </>
+    </div>
   );
 }
 function CreatePolicyForm({ onSaved, onCancel }: { onSaved: () => void; onCancel: () => void }) {

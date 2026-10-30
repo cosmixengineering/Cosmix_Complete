@@ -1,0 +1,518 @@
+/* ==========================================================================
+   COSMIX ERP - LEAVE SETTINGS & POLICY CONFIGURATIONS
+   High-Density Professional ERP Layout & Ergonomics
+   ========================================================================== */
+
+.leave-settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 100%;
+  margin: 0;
+  padding: 2px 0 24px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #0f172a;
+}
+
+.leave-settings-container * {
+  box-sizing: border-box;
+}
+
+/* 1. Header Banner */
+.leave-settings-banner {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leave-settings-banner-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.leave-settings-title-group h1 {
+  font-size: 17px;
+  font-weight: 750;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.015em;
+}
+
+.leave-settings-title-group p {
+  font-size: 11px;
+  color: #64748b;
+  margin: 2px 0 0;
+}
+
+/* 2. 4-KPI Grid (56px Sleek Height) */
+.leave-settings-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .leave-settings-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .leave-settings-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leave-settings-kpi-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.15s ease;
+}
+
+.leave-settings-kpi-card:hover {
+  border-color: #cbd5e1;
+}
+
+.leave-kpi-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.leave-kpi-icon.types {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.leave-kpi-icon.active {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.leave-kpi-icon.policies {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.leave-kpi-icon.guard {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.leave-kpi-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.leave-kpi-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.leave-kpi-value {
+  font-size: 14.5px;
+  font-weight: 750;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.leave-kpi-sub {
+  font-size: 9.5px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 3. Actions / Commands Bar */
+.leave-settings-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 4. Publication Status Warning */
+.leave-publication-warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 4px solid #d97706;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: #92400e;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 5. Section Card */
+.leave-settings-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leave-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.leave-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.leave-card-title h2 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.leave-card-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  margin: 1px 0 0;
+}
+
+.leave-search-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 2px 8px;
+  height: 28px;
+}
+
+.leave-search-input input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 11.5px;
+  color: #0f172a;
+  width: 170px;
+}
+
+/* 6. Leave Types Table */
+.leave-types-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  background: #ffffff;
+}
+
+.leave-types-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  text-align: left;
+}
+
+.leave-types-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 650;
+  padding: 6px 10px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.leave-types-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.leave-types-table tr:last-child td {
+  border-bottom: none;
+}
+
+.leave-types-table tr:hover td {
+  background: #f8fafc;
+}
+
+/* Badges & Chips */
+.leave-code-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.leave-kind-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.leave-kind-pill.sick {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.leave-kind-pill.casual {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #93c5fd;
+}
+
+.leave-kind-pill.annual {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.leave-kind-pill.maternity {
+  background: #fce7f3;
+  color: #9d174d;
+  border-color: #fbcfe8;
+}
+
+.leave-kind-pill.unpaid {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.leave-flag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+.leave-flag-badge.yes {
+  color: #047857;
+}
+
+.leave-flag-badge.no {
+  color: #94a3b8;
+}
+
+.leave-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.leave-status-pill.active {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.leave-status-pill.inactive {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.leave-view-btn {
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 10.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.leave-view-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Detail Sub-Row */
+.leave-expanded-row {
+  background: #f8fafc;
+}
+
+.leave-detail-box {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  background: #ffffff;
+  margin: 4px 0;
+  font-size: 11px;
+}
+
+/* 7. Empty State */
+.leave-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  text-align: center;
+  gap: 6px;
+}
+
+.leave-empty-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.leave-empty-state h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.leave-empty-state p {
+  font-size: 11px;
+  color: #64748b;
+  max-width: 480px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* 8. Published Policies List */
+.leave-policies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 8px;
+}
+
+.leave-policy-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s ease;
+}
+
+.leave-policy-card:hover {
+  border-color: #cbd5e1;
+}
+
+.leave-policy-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.leave-policy-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.leave-policy-version {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.leave-policy-dates {
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.leave-policy-rules-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  background: #f8fafc;
+  border-radius: 4px;
+  border: 1px solid #f1f5f9;
+  font-size: 11px;
+  color: #475569;
+}

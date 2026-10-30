@@ -1,8 +1,58 @@
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { X509Certificate } from 'node:crypto';
+import { isIP } from 'node:net';
 import { resolve, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-export function validateReleaseConfig(value) {
+function privateIpv4(host) {
+  if (isIP(host) !== 4) return false;
+  const [first, second] = host.split('.').map(Number);
+  return (
+    first === 10 ||
+    (first === 172 && second >= 16 && second <= 31) ||
+    (first === 192 && second === 168)
+  );
+}
+
+function validateTrustAnchor(value, now) {
+  if (
+    !value ||
+    typeof value.certificatePem !== 'string' ||
+    !/^-----BEGIN CERTIFICATE-----\r?\n[A-Za-z0-9+/=\r\n]+\r?\n-----END CERTIFICATE-----\s*$/.test(
+      value.certificatePem,
+    ) ||
+    typeof value.sha256 !== 'string' ||
+    !/^[a-fA-F0-9]{64}$/.test(value.sha256)
+  ) {
+    throw new Error(
+      'Private trust requires exactly one public PEM CA and its approved SHA-256 certificate fingerprint.',
+    );
+  }
+  const certificate = new X509Certificate(value.certificatePem);
+  const fingerprint = certificate.fingerprint256.replaceAll(':', '');
+  const key = certificate.publicKey;
+  const strongKey =
+    (['rsa', 'rsa-pss'].includes(key.asymmetricKeyType) &&
+      key.asymmetricKeyDetails.modulusLength >= 2048) ||
+    (key.asymmetricKeyType === 'ec' &&
+      ['prime256v1', 'secp384r1', 'secp521r1'].includes(
+        key.asymmetricKeyDetails.namedCurve,
+      ));
+  if (
+    !certificate.ca ||
+    !strongKey ||
+    fingerprint !== value.sha256.toUpperCase() ||
+    now < new Date(certificate.validFrom) ||
+    now >= new Date(certificate.validTo)
+  ) {
+    throw new Error(
+      'Private CA must be valid, use a supported strong key and match the approved certificate fingerprint.',
+    );
+  }
+  return { certificatePem: certificate.toString(), sha256: fingerprint };
+}
+
+export function validateReleaseConfig(value, now = new Date()) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('An approved Android release configuration is required.');
   }
@@ -13,6 +63,12 @@ export function validateReleaseConfig(value) {
     throw new Error('Release API URL is invalid.');
   }
   const host = url.hostname;
+  const networkTrust = value.networkTrust ?? 'system';
+  if (!['system', 'private-ca'].includes(networkTrust)) {
+    throw new Error('Release network trust must be system or private-ca.');
+  }
+  const dnsHost =
+    /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(host);
   if (
     url.protocol !== 'https:' ||
     url.username ||
@@ -21,13 +77,20 @@ export function validateReleaseConfig(value) {
     url.search ||
     url.hash ||
     url.pathname !== '/' ||
-    !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(host) ||
+    !(dnsHost || (networkTrust === 'private-ca' && privateIpv4(host))) ||
     /(?:^|\.)(?:localhost|local|invalid|test)$/.test(host)
   ) {
     throw new Error(
-      'Release requires an HTTPS DNS origin on port 443, without credentials or a path.',
+      'Release requires an HTTPS origin on port 443 without credentials or a path; a private IPv4 origin requires explicit private-ca trust.',
     );
   }
+  if (networkTrust === 'system' && value.privateTrustAnchor !== undefined) {
+    throw new Error('Private trust anchors require explicit private-ca trust.');
+  }
+  const privateTrustAnchor =
+    networkTrust === 'private-ca'
+      ? validateTrustAnchor(value.privateTrustAnchor, now)
+      : undefined;
   const pins = value.certificatePins;
   if (
     !Array.isArray(pins) ||
@@ -70,6 +133,8 @@ export function validateReleaseConfig(value) {
   return {
     apiBaseUrl: url.origin,
     host,
+    networkTrust,
+    privateTrustAnchor,
     certificatePins: pins,
     signingCertificateSha256: value.signingCertificateSha256.toUpperCase(),
     versionCode: value.versionCode,
@@ -86,7 +151,11 @@ export function networkSecurityXml(config) {
   </base-config>
   <domain-config cleartextTrafficPermitted="false">
     <domain includeSubdomains="false">${config.host}</domain>
-    <pin-set>
+${
+  config.networkTrust === 'private-ca'
+    ? '    <trust-anchors><certificates src="@raw/cosmix_release_ca" overridePins="false" /></trust-anchors>\n'
+    : ''
+}    <pin-set>
 ${config.certificatePins
   .map(pin => `      <pin digest="SHA-256">${pin}</pin>`)
   .join('\n')}
@@ -94,6 +163,20 @@ ${config.certificatePins
   </domain-config>
 </network-security-config>
 `;
+}
+
+export function writeNetworkResources(config, outputDirectory) {
+  const output = resolve(outputDirectory, 'xml/network_security_config.xml');
+  const caOutput = resolve(outputDirectory, 'raw/cosmix_release_ca.pem');
+  mkdirSync(dirname(output), { recursive: true });
+  if (config.networkTrust === 'private-ca') {
+    mkdirSync(dirname(caOutput), { recursive: true });
+    writeFileSync(caOutput, config.privateTrustAnchor.certificatePem, 'utf8');
+  } else {
+    // Remove only our generated public CA when switching back to system trust.
+    rmSync(caOutput, { force: true });
+  }
+  writeFileSync(output, networkSecurityXml(config), 'utf8');
 }
 
 if (
@@ -112,12 +195,7 @@ if (
     if (process.argv[2] === '--json')
       process.stdout.write(JSON.stringify(config));
     else if (process.argv[2] === '--resources' && process.argv[3]) {
-      const output = resolve(
-        process.argv[3],
-        'xml/network_security_config.xml',
-      );
-      mkdirSync(dirname(output), { recursive: true });
-      writeFileSync(output, networkSecurityXml(config), 'utf8');
+      writeNetworkResources(config, process.argv[3]);
       process.stdout.write('Android release network policy generated.\n');
     } else
       throw new Error(

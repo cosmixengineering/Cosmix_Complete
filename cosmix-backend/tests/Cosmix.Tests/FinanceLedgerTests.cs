@@ -9,6 +9,16 @@ public sealed class FinanceLedgerTests
     private static readonly DateOnly From = new(2026, 10, 1), Until = new(2026, 11, 1);
 
     [Fact]
+    public void Included_sources_describe_only_actual_selected_journals()
+    {
+        var rows = Journal(From, "SAL", "PAY", 1000m)
+            .Concat(Journal(From, "BANK", "REV", 100m).Select(x => x with { SourceType = "Receivables" }))
+            .Concat(Journal(Until, "EXP", "PAY", 10m).Select(x => x with { SourceType = "Future" })).ToArray();
+        Assert.Equal(new[] { "Payroll", "Receivables" }, FinanceTrialBalanceProjection.Calculate(From, Until, rows).IncludedSources);
+        Assert.Empty(FinanceTrialBalanceProjection.Calculate(From, Until, []).IncludedSources);
+    }
+
+    [Fact]
     public void Trial_balance_includes_opening_payroll_payment_and_reversal_without_mixing_currencies()
     {
         var rows = Journal(From.AddDays(-1), "SAL", "PAY", 1000m)

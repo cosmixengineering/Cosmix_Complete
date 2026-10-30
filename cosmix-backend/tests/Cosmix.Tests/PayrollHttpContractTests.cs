@@ -51,6 +51,39 @@ namespace Cosmix.Tests;
 public sealed class PayrollHttpContractTests
 {
     private static readonly Guid SyntheticActor = Guid.Parse("118f8080-1ee1-4ea6-aee8-3e025a07514d");
+    [Fact]
+    public async Task Company_readiness_requires_current_salary_authority_before_reading_employee_configuration()
+    {
+        await using var server = await Host.CreateAsync();
+        const string path = "/api/v1/hr/payroll/salary/readiness?year=2026&month=10";
+        using var anonymous = await server.Client.GetAsync(path);
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
+        server.Authenticate();
+        using var denied = await server.Client.GetAsync(path);
+        Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("mobile", "true")]
+    [InlineData("web", "false")]
+    public async Task Company_readiness_rejects_mobile_and_non_mfa_sessions_even_with_salary_grant(string client, string mfa)
+    {
+        await using var server = await Host.CreateAsync(grant: true);
+        server.Authenticate(client, mfa);
+        using var response = await server.Client.GetAsync("/api/v1/hr/payroll/salary/readiness?year=2026&month=10");
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Authorized_company_readiness_records_audit_without_mutating_company_configuration()
+    {
+        await using var server = await Host.CreateAsync(grant: true, allowReadiness: true);
+        server.Authenticate();
+        using var response = await server.Client.GetAsync("/api/v1/hr/payroll/salary/readiness?year=2026&month=10");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("payroll.company-readiness.read", Assert.Single(server.Audits).EventType);
+    }
+
     [Theory]
     [InlineData("ledger")]
     [InlineData("trial-balance")]
@@ -206,10 +239,12 @@ public sealed class PayrollHttpContractTests
         return json.RootElement.GetProperty("title").GetString();
     }
 
-    private sealed class Host(WebApplication application, HttpClient client) : IAsyncDisposable
+    private sealed class Host(WebApplication application, HttpClient client,
+        List<Cosmix.Domain.Common.Audit.AuditEvent> audits) : IAsyncDisposable
     {
         internal HttpClient Client { get; } = client;
-        internal static async Task<Host> CreateAsync(bool grant = false, string? failure = null)
+        internal IReadOnlyList<Cosmix.Domain.Common.Audit.AuditEvent> Audits => audits;
+        internal static async Task<Host> CreateAsync(bool grant = false, string? failure = null, bool allowReadiness = false)
         {
             var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = Environments.Production });
             builder.WebHost.UseTestServer(); builder.Logging.ClearProviders();
@@ -230,23 +265,33 @@ public sealed class PayrollHttpContractTests
             builder.Services.AddSingleton(Proxy<IAccountAccessReader>((_, _) => Task.FromResult(grants)));
             builder.Services.AddSingleton(Proxy<IAccessManagementRepository>((method, args) => method.Name switch
             {
-                "InTransactionAsync" => typeof(Host).GetMethod(nameof(Transaction), BindingFlags.Static | BindingFlags.NonPublic)!
-                    .MakeGenericMethod(method.GetGenericArguments()).Invoke(null, args),
+                "InTransactionAsync" or "InReadTransactionAsync" => typeof(Host).GetMethod(nameof(Transaction), BindingFlags.Static | BindingFlags.NonPublic)!
+                    .MakeGenericMethod(method.GetGenericArguments()).Invoke(null, args!.Take(2).ToArray()),
                 "GetAssignmentRoleCodeAsync" => Task.FromResult<string?>("SyntheticFinance"),
                 "IsCurrentAdministratorAsync" => Task.FromResult(true),
                 _ => throw new InvalidOperationException(method.Name)
             }));
-            builder.Services.AddSingleton(Proxy<ISchedulingJournalRepository>((method, _) => method.Name switch
+            var audits = new List<Cosmix.Domain.Common.Audit.AuditEvent>();
+            builder.Services.AddSingleton(Proxy<ISchedulingJournalRepository>((method, args) =>
             {
-                "IsCurrentSessionAsync" => Task.FromResult(true),
-                "FindReceiptAsync" => Task.FromResult<IdempotencyReceipt?>(null),
-                _ => throw new InvalidOperationException("An error-only HTTP fixture must not persist business or audit data.")
+                if (method.Name == "IsCurrentSessionAsync") return Task.FromResult(true);
+                if (method.Name == "FindReceiptAsync") return Task.FromResult<IdempotencyReceipt?>(null);
+                if (allowReadiness && method.Name == "AddAudit")
+                { audits.Add((Cosmix.Domain.Common.Audit.AuditEvent)args![0]!); return null; }
+                if (allowReadiness && method.Name == "SaveChangesAsync") return Task.CompletedTask;
+                throw new InvalidOperationException("This HTTP fixture cannot persist business data.");
             }));
             builder.Services.AddSingleton<IPrivateFileStore, NoPrivateIo>();
             builder.Services.AddScoped(provider => new AttendanceOperation(provider.GetRequiredService<ICurrentAuthentication>(),
                 provider.GetRequiredService<IAccountAccessReader>(), provider.GetRequiredService<IAccessManagementRepository>(),
                 provider.GetRequiredService<ISchedulingJournalRepository>(), null!, provider.GetRequiredService<TimeProvider>(), provider.GetRequiredService<IPrivateFileStore>()));
             builder.Services.AddScoped(provider => new PayrollSalaryService(provider.GetRequiredService<AttendanceOperation>(), null!, provider.GetRequiredService<IPrivateFileStore>()));
+            builder.Services.AddScoped(provider => new CompanyPayrollReadinessService(
+                Proxy<ICompanyPayrollReadinessRepository>((_, _) =>
+                    allowReadiness ? Task.FromResult(new ReadinessAuditData([], new HashSet<Guid>(), new HashSet<Guid>(),
+                        new HashSet<Guid>(), new HashSet<Guid>(), 0, 0, 0)) :
+                        throw new InvalidOperationException("Denied readiness requests must not read employee configuration.")),
+                provider.GetRequiredService<TimeProvider>()));
             builder.Services.AddScoped(provider => new PayrollHandoffService(provider.GetRequiredService<AttendanceOperation>(), null!, null!, null!, null!, null!,
                 provider.GetRequiredService<IAccountAccessReader>(), provider.GetRequiredService<IPrivateFileStore>()));
             builder.Services.AddScoped<SensitiveComplianceOperation>(); builder.Services.AddScoped<PayrollFinanceOperation>();
@@ -276,7 +321,7 @@ public sealed class PayrollHttpContractTests
             builder.Services.AddScoped(provider => new PayrollAccountingService(null!, provider.GetRequiredService<TimeProvider>(),
                 provider.GetRequiredService<SensitiveComplianceOperation>(), provider.GetRequiredService<PayrollFinanceSetupService>()));
             var app = builder.Build(); app.UseExceptionHandler(); app.UseAuthentication(); app.UseAuthorization(); app.MapControllers();
-            await app.StartAsync(); return new(app, app.GetTestClient());
+            await app.StartAsync(); return new(app, app.GetTestClient(), audits);
         }
 
         internal void Authenticate(string client = "web", string mfa = "true")

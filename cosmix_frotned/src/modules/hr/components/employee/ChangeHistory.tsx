@@ -8,7 +8,7 @@ import { changeHistorySchema, changeSummarySchema } from '../../schemas/updates'
 import type { Section } from '../../types/updates';
 import { labelDate } from '../../utils/messages';
 import { QueryState } from '../Feedback';
-import { RecordView } from '../RecordView';
+import { ChangeEvidenceViewer } from './ChangeEvidenceViewer';
 import '@/styles/hr-dashboard.css';
 
 export function ChangeHistory({ employeeId, section }: { employeeId: string; section: Section }) {
@@ -124,18 +124,17 @@ export function ChangeHistory({ employeeId, section }: { employeeId: string; sec
         onOpenChange={(open) => {
           if (!open) setSelected(null);
         }}
-        title="Change evidence"
-        description={section.label}
+        title="Change Evidence & Audit Slip"
+        description={`Audit record for ${section.label}`}
+        className="change-evidence-dialog-wide"
       >
         <QueryState query={detail}>
           {detail.data && (
-            <>
-              <p>{detail.data.reason}</p>
-              <h3>Before</h3>
-              <RecordView value={detail.data.before.data[section.name] ?? {}} />
-              <h3>After</h3>
-              <RecordView value={detail.data.after.data[section.name] ?? {}} />
-            </>
+            <ChangeEvidenceViewer
+              data={detail.data}
+              section={section}
+              onClose={() => setSelected(null)}
+            />
           )}
         </QueryState>
       </Dialog>

@@ -1,0 +1,308 @@
+/* ==========================================================================
+   COSMIX ERP - ATTENDANCE POLICIES STYLING
+   Compact Enterprise Density & Professional Card Layout
+   ========================================================================== */
+
+.attendance-policies-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+/* Header */
+.policy-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.policy-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.policy-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.policy-title-row h1 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.policy-header-sub {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.policy-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 1px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.policy-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.policy-action-btn {
+  height: 28px !important;
+  min-height: 28px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  padding: 0 10px !important;
+  border-radius: 5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+/* Card Container */
+.policy-card-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Toolbar */
+.policy-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.policy-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 280px;
+  max-width: 100%;
+}
+
+.policy-search-icon {
+  position: absolute;
+  left: 8px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.policy-search-input {
+  width: 100%;
+  height: 26px !important;
+  min-height: 26px !important;
+  max-height: 26px !important;
+  font-size: 11px !important;
+  padding: 0 24px 0 26px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 4px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.12s ease !important;
+}
+
+.policy-search-input:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 1.5px rgba(37, 99, 235, 0.15) !important;
+}
+
+.policy-search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: none;
+  background: #e2e8f0;
+  color: #475569;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+}
+
+.policy-search-clear:hover {
+  background: #cbd5e1;
+  color: #0f172a;
+}
+
+.policy-toolbar-meta {
+  font-size: 10.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Policy Table */
+.policy-table-scroll {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.policy-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  text-align: left;
+}
+
+.policy-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 7px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.policy-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.policy-table tr:hover td {
+  background: #f8fafc;
+}
+
+/* Table Elements */
+.policy-code-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.policy-code-pill svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.policy-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.policy-name-title {
+  font-size: 11.5px;
+  font-weight: 650;
+  color: #0f172a;
+}
+
+.policy-rev-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  white-space: nowrap;
+}
+
+.policy-open-btn {
+  height: 24px !important;
+  min-height: 24px !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  padding: 0 8px !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  color: #2563eb !important;
+  background: #eff6ff !important;
+  border: 1px solid #dbeafe !important;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+
+.policy-open-btn:hover {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+/* Pagination Bar */
+.policy-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+.policy-page-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.policy-page-nav-btn {
+  height: 22px !important;
+  min-height: 22px !important;
+  font-size: 10.5px !important;
+  padding: 0 8px !important;
+  border-radius: 3px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+}
+
+.policy-empty-box {
+  padding: 32px 16px;
+  text-align: center;
+  color: #64748b;
+  font-size: 11.5px;
+}

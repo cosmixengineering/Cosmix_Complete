@@ -18,6 +18,9 @@ export default defineConfig(({ mode, command }) => {
     server: {
       host: 'localhost',
       port: 5173,
+      // Editors can truncate and rewrite a TSX file in separate filesystem events.
+      // Wait for the completed write before caching/transmitting the HMR module.
+      watch: { awaitWriteFinish: { stabilityThreshold: 500, pollInterval: 100 } },
       https: pfxPath && passphrase ? { pfx: readFileSync(pfxPath), passphrase } : undefined,
       headers: {
         'Cache-Control': 'no-store',

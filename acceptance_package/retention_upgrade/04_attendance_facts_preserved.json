@@ -1,8 +1,8 @@
 {
-  "PunchId": "ba0a6b3f-dfd7-4e87-ac7e-df25713b1345",
+  "PunchId": "f23e8df8-1a57-4d3d-8017-d8801de7cccf",
   "Action": "CheckIn",
-  "ReceivedAtUtc": "2026-04-21T09:04:01.3242776+00:00",
-  "DeviceCapturedAtUtc": "2026-04-21T09:04:01.3242776+00:00",
+  "ReceivedAtUtc": "2026-04-22T11:11:07.7107218+00:00",
+  "DeviceCapturedAtUtc": "2026-04-22T11:11:07.7107218+00:00",
   "RegisteredDeviceId": "acc-device-1",
   "Latitude": null,
   "Longitude": null,

@@ -95,7 +95,7 @@ public static class SelfHostedFaceConfigurationReadiness
         var silent = Bind<SilentFaceOptions>(SilentFaceOptions.SectionName);
         Selection(SilentFaceOptions.SectionName, silent.Enabled);
         var modelIssuesStart = issues.Count;
-        if (silent.TimeoutSeconds is < 1 or > 30) Issue(SilentFaceOptions.SectionName + ":TimeoutSeconds", "invalid_configuration");
+        if (silent.TimeoutSeconds is < 1 or > 60) Issue(SilentFaceOptions.SectionName + ":TimeoutSeconds", "invalid_configuration");
         if (silent.Models is null || silent.Models.Count is < 1 or > 4)
             Issue(SilentFaceOptions.SectionName + ":Models", "one_to_four_reviewed_models_required");
         else

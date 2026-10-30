@@ -374,3 +374,490 @@
     font-size: 22px;
   }
 }
+
+/* ==========================================================================
+   Attendance Exceptions & Review Workspace Redesign
+   ========================================================================== */
+
+.att-exceptions-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+/* Filter Card */
+.att-exceptions-filter-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.att-filter-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.att-filter-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: #0f172a;
+}
+
+.att-filter-card-title svg {
+  color: #2563eb;
+}
+
+.att-filter-card-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.att-filter-scope-row {
+  margin-bottom: 12px;
+}
+
+.att-filter-hint {
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* Exceptions Panel Card */
+.att-exceptions-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.att-exceptions-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.att-panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.att-exceptions-icon-box {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.att-exceptions-icon-box.amber {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.att-exceptions-icon-box.blue {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.att-panel-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.att-panel-title {
+  font-size: 14px;
+  font-weight: 650;
+  color: #0f172a;
+  margin: 0;
+}
+
+.att-panel-subtitle {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.att-panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.att-count-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.att-count-pill.has-items {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.att-card-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 11.5px;
+  font-weight: 550;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.att-card-action-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.att-card-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Card Table Wrapper */
+.att-card-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.att-card-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.att-card-table th {
+  background: #f8fafc;
+  padding: 9px 16px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.att-card-table td {
+  padding: 10px 16px;
+  font-size: 12px;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.att-card-table tbody tr:hover td {
+  background: #f8fafc;
+}
+
+.att-card-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Table Cells Components */
+.att-date-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.att-emp-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #334155;
+  background: #f1f5f9;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.att-time-cell {
+  font-size: 11.5px;
+  color: #475569;
+}
+
+.att-warn-text {
+  color: #d97706;
+  font-weight: 550;
+  font-size: 11px;
+}
+
+.att-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2.5px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.att-status-pill.amber {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.att-status-pill.rose {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.att-emp-notice-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+}
+
+.att-kind-badge {
+  font-size: 10.5px;
+  font-weight: 550;
+  color: #64748b;
+}
+
+.att-action-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+  transition: all 0.15s ease;
+}
+
+.att-action-link-btn:hover {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.att-action-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 550;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.att-action-pill-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Empty State inside table */
+.att-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px;
+  text-align: center;
+}
+
+.att-empty-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.att-empty-icon-box.green {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.att-empty-icon-box.slate {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.att-empty-title {
+  font-size: 13.5px;
+  font-weight: 650;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.att-empty-desc {
+  font-size: 12px;
+  color: #64748b;
+  max-width: 420px;
+  line-height: 1.4;
+}
+
+/* Card Footer */
+.att-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.att-card-footer-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+/* Evidence Inspector Drawer / Card */
+.att-evidence-inspector {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-top: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.att-inspector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.att-inspector-title {
+  font-size: 13px;
+  font-weight: 650;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.att-inspector-close {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.att-inspector-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Dialog Evidence Inspector Modal */
+.dialog-content.att-exception-dialog {
+  max-width: 680px;
+  width: 95vw;
+}
+
+.att-evidence-modal-body {
+  margin-top: 14px;
+  max-height: 65vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.att-evidence-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.att-evidence-card .attendance-record {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 12px 18px;
+  font-size: 13px;
+}
+
+.att-evidence-card .attendance-record dt {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: capitalize;
+  display: flex;
+  align-items: center;
+}
+
+.att-evidence-card .attendance-record dd {
+  color: #0f172a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  font-weight: 500;
+  background: #ffffff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  overflow-wrap: anywhere;
+}

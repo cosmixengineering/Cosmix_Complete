@@ -1,5 +1,6 @@
 name: Backend verification
 on:
+  workflow_dispatch:
   push:
     branches: [main, develop, 'codex/**']
   pull_request:
@@ -9,6 +10,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -26,6 +28,9 @@ jobs:
       - name: Dependency advisories
         shell: pwsh
         run: ./scripts/Test-DependencyAudit.ps1
+      - name: Operational monitor regression
+        shell: pwsh
+        run: ./scripts/Test-OperationalHealth.Tests.ps1
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -48,6 +53,8 @@ jobs:
           & SqlLocalDB start MSSQLLocalDB
           if ($LASTEXITCODE -ne 0) { throw 'LocalDB start failed.' }
           "COSMIX_CI_SQL_CONNECTION=Server=(localdb)\MSSQLLocalDB;Database=Cosmix_Payroll_CI_${env:GITHUB_RUN_ID}_${env:GITHUB_RUN_ATTEMPT};Integrated Security=true;TrustServerCertificate=true" >> $env:GITHUB_ENV
+          "COSMIX_PAYROLL_VERIFICATION_CONNECTION=Server=(localdb)\MSSQLLocalDB;Database=Cosmix_Payroll_CI_${env:GITHUB_RUN_ID}_${env:GITHUB_RUN_ATTEMPT};Integrated Security=true;TrustServerCertificate=true" >> $env:GITHUB_ENV
+          "COSMIX_DR_SQL_CONNECTION=Server=(localdb)\MSSQLLocalDB;Database=master;Integrated Security=true;TrustServerCertificate=true" >> $env:GITHUB_ENV
       - name: Restore locked tests
         run: dotnet restore tests/Cosmix.Tests/Cosmix.Tests.csproj --locked-mode
       - name: Empty-database migration and SQL boundary checks
@@ -55,6 +62,27 @@ jobs:
           dotnet test tests/Cosmix.Tests/Cosmix.Tests.csproj -c Release --no-restore
           --filter FullyQualifiedName~CiSqlSchemaTests
           --logger 'trx;LogFileName=sql-schema.trx' --results-directory TestResults
+      - name: Disposable backup recovery and company readiness SQL queries
+        run: >-
+          dotnet test tests/Cosmix.Tests/Cosmix.Tests.csproj -c Release --no-build --no-restore
+          --filter 'FullyQualifiedName~BackupDisasterRecoveryTests|FullyQualifiedName~CompanyPayrollReadinessTests.SQL_persistence'
+          --logger 'trx;LogFileName=sql-recovery-readiness.trx' --results-directory TestResults
+      - name: Payroll ledger and project costs on a fresh disposable SQL database
+        env:
+          COSMIX_FINANCE_SQL_CONNECTION: 'Server=(localdb)\MSSQLLocalDB;Database=master;Integrated Security=true;TrustServerCertificate=true'
+          COSMIX_FINANCE_SQL_EVIDENCE: '${{ runner.temp }}/cosmix-finance-sql'
+        run: >-
+          dotnet test tests/Cosmix.Tests/Cosmix.Tests.csproj -c Release --no-build --no-restore
+          --filter FullyQualifiedName~PayrollFinanceSqlIntegrationTests
+          --logger 'trx;LogFileName=sql-finance-integration.trx' --results-directory TestResults
+      - name: Attendance capture and history on a fresh disposable SQL database
+        env:
+          COSMIX_ATTENDANCE_SQL_CONNECTION: 'Server=(localdb)\MSSQLLocalDB;Database=master;Integrated Security=true;TrustServerCertificate=true'
+          COSMIX_ATTENDANCE_SQL_WORKDIR: '${{ runner.temp }}/cosmix-attendance-sql'
+        run: >-
+          dotnet test tests/Cosmix.Tests/Cosmix.Tests.csproj -c Release --no-build --no-restore
+          --filter FullyQualifiedName~AttendanceSqlIntegrationTests
+          --logger 'trx;LogFileName=sql-attendance-integration.trx' --results-directory TestResults
       - uses: actions/upload-artifact@v4
         if: always()
         with:

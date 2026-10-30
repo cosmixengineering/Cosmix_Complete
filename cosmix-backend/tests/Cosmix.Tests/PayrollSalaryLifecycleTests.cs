@@ -84,6 +84,20 @@ public sealed class PayrollSalaryLifecycleTests
     }
 
     [Fact]
+    public async Task Preparer_cannot_return_own_batch_and_processed_batch_cannot_be_returned()
+    {
+        var fixture = await Fixture.CreateAsync(); await fixture.Review();
+        // Preparer cannot return (maker-checker separation)
+        fixture.Actor = Guid.Parse(fixture.Batch.PreparedByUserId);
+        Assert.Equal(403, (await Assert.ThrowsAsync<AuthenticationFailure>(() => fixture.Return())).StatusCode);
+
+        // Batch with downstream processing records cannot be returned
+        fixture.Actor = Guid.NewGuid();
+        fixture.AddProcessingRecord(new PayrollHandoffProcessingRecord(fixture.Batch.Id, "FINANCE-EXT-1", "External Accounts handoff", "synthetic-user", DateTimeOffset.UtcNow));
+        Assert.Equal(409, (await Assert.ThrowsAsync<AuthenticationFailure>(() => fixture.Return())).StatusCode);
+    }
+
+    [Fact]
     public async Task Return_retries_preserve_one_return_and_reject_new_intent_after_return()
     {
         var fixture = await Fixture.CreateAsync(); await fixture.Review();
@@ -222,6 +236,7 @@ public sealed class PayrollSalaryLifecycleTests
         public Task<PayrollHandoffBatchDetail> Cancel() => service.CancelAsync(Batch.Id, new(Version, "Synthetic cancellation"), Guid.NewGuid().ToString(), context, default);
         public Task<PayrollHandoffBatchDetail> Return(string? key = null, string reason = "Correct source before payroll lock")
             => service.ReturnForCorrectionAsync(Batch.Id, new(Version, reason), key ?? Guid.NewGuid().ToString(), context, default);
+        public void AddProcessingRecord(PayrollHandoffProcessingRecord record) => processing.Add(record);
         private object? AddRepository(object?[] args)
         {
             if (args[0] is ApprovalRequest approval) { approvals.Add(approval); decisions.Add((ApprovalDecision)args[1]!); }

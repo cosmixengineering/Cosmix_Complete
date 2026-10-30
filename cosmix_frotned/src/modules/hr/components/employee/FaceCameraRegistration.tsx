@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Camera, CheckCircle2, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ApiError } from '@/services/api/api-error';
+import { Camera, CheckCircle2, X, AlertCircle, RefreshCw } from 'lucide-react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/forms/TextInput';
@@ -10,8 +12,8 @@ import { hrGet } from '../../api/hr-api';
 import { useHrAccess } from '../../hooks/use-hr-access';
 import { useHrAction } from '../../hooks/use-hr-queries';
 import { useHrLifetime } from '../../hooks/use-hr-lifetime';
+import { errorMessage } from '../../utils/messages';
 import { id, pageOf, time, version } from '../../schemas/contracts';
-import { QueryState } from '../Feedback';
 
 const enrollment = z.object({
   id,
@@ -63,7 +65,8 @@ export function FaceCameraRegistration({
     queryKey: ['hr', access.subject, path, 'devices', devicePageNumber],
     queryFn: ({ signal }) =>
       hrGet(`${path}/devices?page=${devicePageNumber}&pageSize=10`, devicePage, signal),
-    gcTime: 0,
+    staleTime: 15000,
+    gcTime: 30000,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -84,15 +87,26 @@ export function FaceCameraRegistration({
           ),
         signal,
       ),
-    gcTime: 0,
+    staleTime: 15000,
+    gcTime: 30000,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
   const active = history.data?.enrollment ? [history.data.enrollment] : [];
+  const employeeSetupRequired =
+    devices.isError &&
+    devices.error instanceof ApiError &&
+    devices.error.code === 'face_employee_ineligible';
   const known = history.isSuccess && !history.isFetching;
   const chosenDevice = devices.data?.items.find((x) => x.id === deviceId);
-  const mayCapture = known && Boolean(chosenDevice) && noticeAccepted && !submitted;
+  const mayCapture =
+    known &&
+    devices.isSuccess &&
+    !devices.isFetching &&
+    Boolean(chosenDevice) &&
+    noticeAccepted &&
+    !submitted;
   function stopCamera() {
     cameraEpoch.current++;
     stream.current?.getTracks().forEach((track) => track.stop());
@@ -276,70 +290,116 @@ export function FaceCameraRegistration({
       </div>
     );
   return (
-    <>
-      <QueryState query={history}>{null}</QueryState>
-      {history.isSuccess && !known && (
-        <p role="alert">
-          Enrollment history is incomplete or conflicting. Registration is blocked until the record
-          can be verified.
-        </p>
+    <div className="bioreg-form-flow">
+      {employeeSetupRequired && (
+        <div className="bio-inline-alert" role="status">
+          <div>
+            <strong>Employee setup required before face registration</strong>
+            <p>{errorMessage(devices.error)}</p>
+            <p>
+              An authorized Admin must check the employee account and hiring setup. The employee
+              then needs a verified mobile device registered to that same account. Camera
+              registration cannot proceed until these requirements pass.
+            </p>
+            <Link to={`/hr/employees/${employeeId}`}>View employee setup</Link>
+            <Button
+              variant="secondary"
+              disabled={devices.isFetching}
+              onClick={() => void devices.refetch()}
+            >
+              Recheck after setup
+            </Button>
+          </div>
+        </div>
       )}
+      {(history.isError || (devices.isError && !employeeSetupRequired)) && (
+        <div className="bio-inline-alert" role="alert">
+          <div className="bio-inline-alert-msg">
+            <AlertCircle size={15} aria-hidden="true" />
+            <span>{errorMessage(history.error || devices.error)}</span>
+          </div>
+          <button
+            type="button"
+            className="bio-inline-retry-btn"
+            onClick={() => {
+              if (history.isError) void history.refetch();
+              if (devices.isError) void devices.refetch();
+            }}
+          >
+            <RefreshCw size={12} aria-hidden="true" /> Retry
+          </button>
+        </div>
+      )}
+
       {known && (
-        <p className="bioreg-state">
-          {active[0]
-            ? 'An active face enrollment exists. A successful new registration will replace it.'
-            : 'No active face enrollment is recorded.'}
-        </p>
+        <div className="bio-enrollment-status-card">
+          <div className="bio-status-badge-wrap">
+            <span className={`bio-status-indicator ${active[0] ? 'is-active' : 'is-none'}`} />
+            <span className="bio-status-text">
+              {active[0] ? 'Active Face Enrollment On File' : 'No Active Face Enrollment'}
+            </span>
+          </div>
+          <span className="bio-status-desc">
+            {active[0]
+              ? 'An active face enrollment exists. A successful new registration will replace it.'
+              : 'No active face enrollment is recorded for this employee.'}
+          </span>
+        </div>
       )}
-      <QueryState query={devices}>
-        {devices.data && (
-          <>
-            <SelectInput
-              label="Employee's registered mobile device"
-              value={deviceId}
-              disabled={submitted || opening || camera}
-              onChange={(e) => {
-                setDeviceId(e.target.value);
+
+      <div className="bioreg-form-grid">
+        <div className="bio-field-wrap">
+          <SelectInput
+            label="Employee's registered mobile device"
+            value={deviceId}
+            disabled={submitted || opening || camera || devices.isPending || devices.isError}
+            onChange={(e) => {
+              setDeviceId(e.target.value);
+              setImage(null);
+            }}
+            options={[
+              {
+                value: '',
+                label: devices.isPending ? 'Loading devices…' : 'Choose a verified device',
+              },
+              ...(devices.data?.items ?? []).map((d) => ({
+                value: d.id,
+                label: `${d.displayName} · ${d.platform}`,
+              })),
+            ]}
+          />
+          {devices.data && devices.data.items.length === 0 && (
+            <p className="bio-field-hint bio-field-hint--warning">
+              No eligible mobile device found. The employee must complete approved mobile device
+              registration first.
+            </p>
+          )}
+          {devices.data && devices.data.totalCount > 10 && !submitted && !camera && !opening && (
+            <Pagination
+              page={devicePageNumber}
+              pageSize={10}
+              total={devices.data.totalCount}
+              onChange={(p) => {
+                setDeviceId('');
                 setImage(null);
+                setDevicePageNumber(p);
               }}
-              options={[
-                { value: '', label: 'Choose a verified device' },
-                ...devices.data.items.map((d) => ({
-                  value: d.id,
-                  label: `${d.displayName} · ${d.platform}`,
-                })),
-              ]}
             />
-            {devices.data.items.length === 0 && (
-              <p className="bioreg-notice">
-                No eligible device found. The employee must complete approved mobile account and
-                device registration first.
-              </p>
-            )}
-            {!submitted && !camera && !opening && (
-              <Pagination
-                page={devicePageNumber}
-                pageSize={10}
-                total={devices.data.totalCount}
-                onChange={(p) => {
-                  setDeviceId('');
-                  setImage(null);
-                  setDevicePageNumber(p);
-                }}
-              />
-            )}
-          </>
-        )}
-      </QueryState>
-      <TextInput
-        label="Registration / replacement reason"
-        value={reason}
-        disabled={submitted}
-        required
-        maxLength={1000}
-        onChange={(e) => setReason(e.target.value)}
-      />
-      <label className="bioreg-consent">
+          )}
+        </div>
+
+        <TextInput
+          label="Registration / replacement reason"
+          value={reason}
+          placeholder="e.g. Initial face registration for attendance"
+          disabled={submitted}
+          required
+          maxLength={1000}
+          onChange={(e) => setReason(e.target.value)}
+        />
+      </div>
+
+      <label className="bio-consent-card">
         <input
           type="checkbox"
           checked={noticeAccepted}
@@ -349,12 +409,16 @@ export function FaceCameraRegistration({
             setImage(null);
           }}
         />
-        <span>
-          I have explained the company's biometric notice and confirmed the employee agrees to this
-          capture. Approved company retention and access rules still apply.
-        </span>
+        <div className="bio-consent-text">
+          <strong>Biometric Capture Notice & Consent</strong>
+          <p>
+            I have explained the company biometric notice and confirmed the employee agrees to this
+            capture. Approved company retention and access rules still apply.
+          </p>
+        </div>
       </label>
-      <div className="bioreg-camera">
+
+      <div className="bio-camera-container">
         <video
           ref={video}
           autoPlay
@@ -366,16 +430,24 @@ export function FaceCameraRegistration({
         {image ? (
           <img src={image} alt="Employee face capture for review before registration" />
         ) : camera ? (
-          <div className="bioreg-guide" aria-hidden="true" />
+          <>
+            <div className="bio-camera-live-badge">
+              <span className="bio-live-dot" />
+              <span>LIVE</span>
+            </div>
+            <div className="bio-oval-guide-frame" aria-hidden="true" />
+            <div className="bio-oval-guide-text">Align face inside the oval</div>
+          </>
         ) : (
-          <div className="bioreg-camera-placeholder">
-            <Camera size={34} />
-            <p>Camera is off</p>
-            <span>Face the camera in even lighting. Only one person should be visible.</span>
+          <div className="bio-camera-offline">
+            <Camera size={38} aria-hidden="true" />
+            <h4>Camera is off</h4>
+            <p>Face the camera in even lighting. Only one person should be visible.</p>
           </div>
         )}
       </div>
-      <div className="bioreg-actions">
+
+      <div className="bio-actions-bar">
         {!camera ? (
           <Button
             variant="secondary"
@@ -416,6 +488,7 @@ export function FaceCameraRegistration({
                 : 'Register face'}
         </Button>
       </div>
+
       {(error || actionError) && (
         <div className="bioreg-error" role="alert">
           <p>{error ?? actionError}</p>
@@ -441,10 +514,11 @@ export function FaceCameraRegistration({
           )}
         </div>
       )}
+
       <p className="bioreg-footnote">
         Photo capture alone is not approval. The server validates liveness, device ownership, access
         and enrollment policy before saving.
       </p>
-    </>
+    </div>
   );
 }

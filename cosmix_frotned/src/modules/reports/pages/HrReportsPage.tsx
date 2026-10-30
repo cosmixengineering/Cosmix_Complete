@@ -452,7 +452,7 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
         <div className="reports-hero-top">
           <div className="reports-hero-title">
             <h1>
-              <FileSpreadsheet size={24} style={{ color: '#2563eb' }} />
+              <FileSpreadsheet size={18} style={{ color: '#2563eb' }} />
               Reports & Executive Analytics
             </h1>
             <p>
@@ -466,8 +466,8 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
               onClick={() => void runPreview()}
               disabled={pending || !reportType}
             >
-              <RefreshCw size={14} className={pending ? 'animate-spin' : ''} />
-              <span style={{ marginLeft: '6px' }}>Run Query</span>
+              <RefreshCw size={13} className={pending ? 'animate-spin' : ''} />
+              <span style={{ marginLeft: '4px' }}>Run Query</span>
             </Button>
           </div>
         </div>
@@ -487,7 +487,7 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
             className={`reports-cat-btn ${activeCategory === 'attendance' ? 'active' : ''}`}
             onClick={() => setActiveCategory('attendance')}
           >
-            <CalendarCheck size={14} />
+            <CalendarCheck size={13} />
             <span>Attendance & Duty</span>
             <span className="reports-cat-badge">5</span>
           </button>
@@ -496,7 +496,7 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
             className={`reports-cat-btn ${activeCategory === 'performance' ? 'active' : ''}`}
             onClick={() => setActiveCategory('performance')}
           >
-            <Clock3 size={14} />
+            <Clock3 size={13} />
             <span>Time & Performance</span>
             <span className="reports-cat-badge">4</span>
           </button>
@@ -505,7 +505,7 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
             className={`reports-cat-btn ${activeCategory === 'workforce' ? 'active' : ''}`}
             onClick={() => setActiveCategory('workforce')}
           >
-            <Users size={14} />
+            <Users size={13} />
             <span>Workforce & Compliance</span>
             <span className="reports-cat-badge">3</span>
           </button>
@@ -514,7 +514,7 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
             className={`reports-cat-btn ${activeCategory === 'operations' ? 'active' : ''}`}
             onClick={() => setActiveCategory('operations')}
           >
-            <Banknote size={14} />
+            <Banknote size={13} />
             <span>Operations & Finance</span>
             <span className="reports-cat-badge">2</span>
           </button>
@@ -523,13 +523,13 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
         {typesError && (
           <div
             style={{
-              marginTop: '12px',
-              padding: '10px 14px',
+              marginTop: '8px',
+              padding: '6px 10px',
               background: '#fffbeb',
               border: '1px solid #fde68a',
-              borderRadius: '8px',
+              borderRadius: '6px',
               color: '#92400e',
-              fontSize: '12px',
+              fontSize: '11.5px',
             }}
           >
             Catalog Notice: {typesError}
@@ -555,13 +555,11 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
                 <div>
                   <div className="report-card-header">
                     <div className="report-card-icon">
-                      <Icon size={18} />
+                      <Icon size={14} />
                     </div>
                     <span className="report-card-title">{item.label}</span>
                   </div>
-                  <p className="report-card-desc" style={{ marginTop: '8px' }}>
-                    {item.desc}
-                  </p>
+                  <p className="report-card-desc">{item.desc}</p>
                 </div>
                 <div className="report-card-footer">
                   <span style={{ textTransform: 'capitalize' }}>{item.category}</span>
@@ -572,10 +570,10 @@ function ReportWorkspace({ canExport, subject }: { canExport: boolean; subject: 
                         fontWeight: 700,
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '4px',
+                        gap: '3px',
                       }}
                     >
-                      <CheckCircle2 size={13} /> Active
+                      <CheckCircle2 size={12} /> Active
                     </span>
                   )}
                 </div>

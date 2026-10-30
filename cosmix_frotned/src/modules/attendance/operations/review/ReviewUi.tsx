@@ -1,6 +1,6 @@
 import { useId, useState, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, RefreshCw, Search, Users } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RefreshCw, Search, Users, ShieldCheck } from 'lucide-react';
 import { z } from 'zod';
 import { TextInput } from '@/components/forms/TextInput';
 import { SelectInput } from '@/components/forms/SelectInput';
@@ -17,6 +17,9 @@ import {
   approvedAttendanceEmployees,
   approvedAttendanceFilter,
 } from '../../schemas/employee-selection';
+import '@/styles/attendance.css';
+import '@/styles/attendance-register.css';
+import '@/styles/attendance-corrections.css';
 
 export function EvidenceField({
   label,
@@ -48,14 +51,44 @@ export function EvidenceField({
 function label(key: string) {
   return key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 }
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const HEX_HASH_REGEX = /^[0-9a-f]{32,}$/i;
+
 export function RecordFacts({ value }: { value: unknown }) {
-  if (value === null || value === undefined) return <span>Unavailable</span>;
-  if (typeof value !== 'object')
+  if (value === null || value === undefined) return <span className="att-fact-muted">—</span>;
+  if (typeof value !== 'object') {
+    if (typeof value === 'boolean') {
+      return (
+        <span className={`att-fact-bool ${value ? 'true' : 'false'}`}>
+          {value ? 'Yes' : 'No'}
+        </span>
+      );
+    }
+    const str = String(value);
+    if (str === 'Unavailable') {
+      return <span className="att-fact-muted">—</span>;
+    }
+    if (UUID_REGEX.test(str)) {
+      return (
+        <span className="att-guid-chip" title={str}>
+          {str.slice(0, 8)}…{str.slice(-4)}
+        </span>
+      );
+    }
+    if (HEX_HASH_REGEX.test(str)) {
+      return (
+        <span className="att-hash-chip" title={str}>
+          {str.slice(0, 10)}…{str.slice(-6)}
+        </span>
+      );
+    }
     return (
-      <span style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-        {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
+      <span className="att-fact-value" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+        {str}
       </span>
     );
+  }
   if (Array.isArray(value))
     return value.length ? (
       <ol className="attendance-manifest">
@@ -66,7 +99,7 @@ export function RecordFacts({ value }: { value: unknown }) {
         ))}
       </ol>
     ) : (
-      <span>No entries returned</span>
+      <span className="att-fact-muted">No entries returned</span>
     );
   return (
     <dl className="attendance-record">
@@ -89,9 +122,17 @@ export function SourceFacts({
   value: unknown;
 }) {
   return (
-    <details className="attendance-section">
-      <summary>{title}</summary>
-      <RecordFacts value={value} />
+    <details className="att-source-facts-details" open>
+      <summary className="att-source-facts-summary">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ShieldCheck size={16} style={{ color: '#2563eb' }} />
+          <span style={{ fontWeight: 650, color: '#0f172a' }}>{title}</span>
+        </div>
+        <span className="att-source-badge">Engine Audited</span>
+      </summary>
+      <div className="att-source-facts-content">
+        <RecordFacts value={value} />
+      </div>
     </details>
   );
 }
@@ -283,49 +324,60 @@ function EmployeeSelection({
       </>
     );
   return (
-    <>
-      <h1>{title}</h1>
-      <EmployeeLookup
-        approvedOnly={approvedOnly}
-        disabled={editing}
-        selected={employee}
-        onSelect={(value) => {
-          setSelection(null);
-          setEmployee(value);
-        }}
-      />
-      <form
-        className="attendance-grid"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (valid && !editing) setSelection({ employee, scope });
-        }}
-      >
-        <TextInput
-          label="Employee ID"
-          required
+    <div className="att-employee-workspace-card">
+      <div className="att-workspace-header">
+        <h1 className="att-workspace-title">{title}</h1>
+        <p className="att-workspace-subtitle">
+          Find employee to review records, submit duty adjustments or request factual corrections.
+        </p>
+      </div>
+      <div className="att-employee-lookup-box">
+        <EmployeeLookup
+          approvedOnly={approvedOnly}
           disabled={editing}
-          value={employee}
-          onChange={(e) => {
+          selected={employee}
+          onSelect={(value) => {
             setSelection(null);
-            setEmployee(e.target.value.trim());
+            setEmployee(value);
           }}
         />
-        <ScopeSelect
-          permission={permission}
-          value={scope}
-          disabled={editing}
-          onChange={(value) => {
-            setSelection(null);
-            setScope(value);
+        <form
+          className="att-employee-scope-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (valid && !editing) setSelection({ employee, scope });
           }}
-        />
-        <Command icon={Search} type="submit" disabled={editing || !valid}>
-          Open employee
-        </Command>
-      </form>
+        >
+          <div className="att-form-row">
+            <TextInput
+              label="Employee ID"
+              required
+              disabled={editing}
+              value={employee}
+              onChange={(e) => {
+                setSelection(null);
+                setEmployee(e.target.value.trim());
+              }}
+            />
+            <ScopeSelect
+              permission={permission}
+              value={scope}
+              disabled={editing}
+              onChange={(value) => {
+                setSelection(null);
+                setScope(value);
+              }}
+            />
+            <div className="att-form-submit-cell">
+              <Command icon={Search} type="submit" disabled={editing || !valid}>
+                Open employee
+              </Command>
+            </div>
+          </div>
+        </form>
+      </div>
       {!id.safeParse(employee).success ? (
-        <p>Select an employee resource.</p>
+        <p className="att-workspace-hint">Select an employee resource from above or enter an ID.</p>
       ) : !valid ? (
         <Denied>
           Choose a matching grant for this employee or historical resource. Membership is checked by
@@ -333,7 +385,7 @@ function EmployeeSelection({
         </Denied>
       ) : null}
       {content}
-    </>
+    </div>
   );
 }
 const employeeChoices = pageOf(

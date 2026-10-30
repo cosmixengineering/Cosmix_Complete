@@ -284,6 +284,21 @@ var locked = new OtFixture { Locked = true };
 await Fails(async () => await locked.Submit(await locked.Proposal()), "overtime_locked_period_adjustment_required");
 var invalidDuty = new OtFixture(); invalidDuty.Sessions[0] = invalidDuty.Sessions[0] with { ValidDutyEvidence = false };
 await Fails(async () => await invalidDuty.Submit(await invalidDuty.Proposal()), "overtime_closed_session_required");
+var missingCheckout = new OtFixture();
+missingCheckout.Sessions[0] = missingCheckout.Sessions[0] with { EndsAtUtc = null };
+await Fails(async () => await missingCheckout.Submit(await missingCheckout.Proposal()), "overtime_closed_session_required");
+Check(missingCheckout.Rows.Count == 0 && missingCheckout.Receipts.Count == 0 && missingCheckout.Notifications.Count == 0,
+    "Open session cannot create an OT request, award, receipt or approval notification even with a claimed end time");
+var threeHours = new OtFixture();
+threeHours.End = threeHours.ScheduleEnd.AddHours(3);
+threeHours.Sessions[0] = threeHours.Sessions[0] with { EndsAtUtc = threeHours.End };
+var threeRequest = await threeHours.Submit(await threeHours.Proposal());
+Check(threeRequest.State == "Pending" && threeRequest.ApprovedMinutes is null,
+    "Three recorded extra hours are requested, not automatically approved OT");
+threeHours.Reviewer();
+var threeDecision = await threeHours.Decide(threeRequest, ApprovalState.Approved);
+Check(threeDecision.State == "Approved" && threeDecision.ApprovedMinutes == 180,
+    "Separate HR approval awards the three evidenced extra hours");
 var transfer = new OtFixture { AssignmentValid = false };
 await Fails(async () => await transfer.Submit(await transfer.Proposal()), "overtime_site_transfer_conflict");
 var mfa = new OtFixture(); mfa.Actor = mfa.Actor with { MfaSatisfied = false };
@@ -319,7 +334,7 @@ denied.Grants.Clear(); await Fails(() => denied.Submit(deniedProposal), "access_
 var moved = new OtFixture(); moved.RestrictToTeam(moved.Team); var movedProposal = await moved.Proposal(); await moved.Submit(movedProposal);
 var oldTeam = moved.Team; moved.Team = Guid.NewGuid(); moved.RestrictToTeam(moved.Team);
 await Fails(() => moved.Submit(movedProposal), "access_denied");
-moved.Grants.Add(new(OvertimePermissions.Submit, false, Guid.NewGuid(), AccessScopeKind.Team, oldTeam));
+moved.Grants.Add(OtFixture.Grant(OvertimePermissions.Submit, false, Guid.NewGuid(), AccessScopeKind.Team, oldTeam));
 Check((await moved.Submit(movedProposal)).Id == moved.Rows[0].Request.Id, "Replay requires both original and current grouped authority");
 var bulk = new OtFixture(); var bulkProposal = await bulk.Proposal();
 await Fails(() => bulk.Service.SubmitBulkAsync(new([new(bulk.Employee, bulkProposal), new(bulk.Employee, bulkProposal)], "Named batch"), "bulk-request-001", bulk.Context, default), "invalid_overtime_named_batch");
@@ -433,6 +448,10 @@ public class OtProxy : DispatchProxy
 }
 public sealed class OtFixture
 {
+    // Explicit synthetic effective authority; do not weaken the production timing guard.
+    public static PermissionGrant Grant(string permission, bool sensitive, Guid assignment, AccessScopeKind scope, Guid? target) =>
+        new(permission, sensitive, assignment, scope, target) { AuthorityTimingKnown = true,
+            ValidFromUtc = new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero) };
     public IReadOnlyList<MonthLockOvertimeDependency> LockDependencies() => Rows.Select(row => {
         var source=Sessions.Single(x=>x.Id==row.Request.WorkSessionId);
         // A persisted header projection for the synthetic source, not a punch/correction write.
@@ -471,7 +490,7 @@ public sealed class OtFixture
         if (realRules) { Date = Date.AddDays(1); Start = Start.AddDays(1); ScheduleEnd = ScheduleEnd.AddDays(1); End = End.AddDays(1); }
         Requester = Actor; var shift = Guid.NewGuid();
         Sessions.Add(new(Guid.NewGuid(), Guid.NewGuid(), 1, Start, End, Site, shift, null, Guid.NewGuid(), Guid.NewGuid(), null, true));
-        foreach (var permission in OvertimePermissions.Definitions) Grants.Add(new(permission.Code, permission.Sensitive, Guid.NewGuid(), AccessScopeKind.All, null));
+        foreach (var permission in OvertimePermissions.Definitions) Grants.Add(Grant(permission.Code, permission.Sensitive, Guid.NewGuid(), AccessScopeKind.All, null));
         var current = OtProxy.Make<ICurrentAuthentication>((m, a) => Actor);
         var access = OtProxy.Make<IAccountAccessReader>((m, a) => Task.FromResult<IReadOnlyList<PermissionGrant>>(Grants.ToArray()));
         var authz = OtProxy.Make<IAccessManagementRepository>((m, a) => m.Name switch {
@@ -540,7 +559,7 @@ public sealed class OtFixture
     public Task<OvertimeResponse> Submit(SubmitOvertimeRequest request) => Service.SubmitAsync(Employee, request, "overtime-submit-001", false, Context, default);
     public Task<OvertimeResponse> Decide(OvertimeResponse row, ApprovalState decision) => Service.DecideAsync(Employee, row.Id, new(row.Version, decision, "Reviewed synthetic evidence"), "overtime-decision-" + decision, Context, default);
     public void Reviewer() => Actor = Actor with { AccountId = Guid.NewGuid(), EmployeeId = Guid.NewGuid(), Client = SessionClient.Web, MfaSatisfied = true };
-    public void RestrictToTeam(Guid team) { Grants.Clear(); foreach (var p in OvertimePermissions.Definitions.Where(x => !x.SelfService)) Grants.Add(new(p.Code, p.Sensitive, Guid.NewGuid(), AccessScopeKind.Team, team)); }
+    public void RestrictToTeam(Guid team) { Grants.Clear(); foreach (var p in OvertimePermissions.Definitions.Where(x => !x.SelfService)) Grants.Add(Grant(p.Code, p.Sensitive, Guid.NewGuid(), AccessScopeKind.Team, team)); }
     public WorkTreatmentCreditEvidence Credit(WorkCreditRole role, DateTimeOffset from, DateTimeOffset to) {
         var id = Guid.NewGuid();
         return new(id, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), new string('C', 64), new string('D', 64),

@@ -2,6 +2,12 @@ import { z } from 'zod';
 import { ApiError } from '@/services/api/api-error';
 
 const leaveWorkflowErrors: Readonly<Record<string, string>> = {
+  staff_taxonomy_category_not_configured:
+    'The employee staff category has no approved mapping for this date. HR must configure and approve Staff Categories before attendance can be finalized.',
+  staff_taxonomy_taxonomy_not_effective:
+    'No approved staff-category policy is effective for this date. Review its effective dates in Staff Categories.',
+  access_temporarily_busy:
+    'Another operation is holding the authorization lock. Wait for it to finish, then reload the preview.',
   locked_attendance_summary_unavailable:
     'This locked date has no retained attendance summary. HR must review the historical records; no attendance or pay can be inferred.',
   leave_policy_year_transition_unavailable:
@@ -69,7 +75,7 @@ export function attendanceError(error: unknown) {
     return 'The response could not be validated. Check the record before retrying.';
   if (error instanceof ApiError) {
     const workflowMessage =
-      (error.status === 400 || error.status === 409) && error.code
+      (error.status === 400 || error.status === 409 || error.status === 503) && error.code
         ? leaveWorkflowErrors[error.code]
         : undefined;
     const message =

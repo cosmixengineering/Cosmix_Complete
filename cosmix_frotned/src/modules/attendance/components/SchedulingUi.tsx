@@ -8,7 +8,6 @@ import { useDirtyForm } from '@/hooks/use-dirty-form';
 import { useAttendanceAccess } from '../hooks/use-attendance-access';
 import { useAttendanceAction } from '../hooks/use-attendance-action';
 import { attendanceError } from '../utils/messages';
-import { ApiError } from '@/services/api/api-error';
 import { freezeBody } from '../utils/roster-intent';
 import '@/styles/attendance.css';
 
@@ -71,9 +70,7 @@ export function QueryState({
           ? 'The attendance read timed out. Check that the API is running and not paused in the debugger, then reload the records.'
           : query.error instanceof TypeError
             ? 'Could not reach the attendance service. Check the API connection, then reload the records.'
-            : query.error instanceof ApiError && query.error.status >= 500
-              ? 'Attendance records could not be loaded. The service is unavailable or returned an error. Try refreshing once the connection is restored.'
-              : attendanceError(query.error)}
+            : attendanceError(query.error)}
       </p>
     );
   if (query.isPending) return <TableSkeleton rows={6} />;

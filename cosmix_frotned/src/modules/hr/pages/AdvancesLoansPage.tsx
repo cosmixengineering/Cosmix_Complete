@@ -94,7 +94,7 @@ export function AdvancesLoansPage() {
       <div className="adv-kpi-grid">
         <div className="adv-kpi-card">
           <div className="adv-kpi-icon-wrap adv-bg-amber">
-            <Clock size={22} />
+            <Clock size={16} />
           </div>
           <div className="adv-kpi-content">
             <span className="adv-kpi-label">Pending Requests</span>
@@ -108,7 +108,7 @@ export function AdvancesLoansPage() {
 
         <div className="adv-kpi-card">
           <div className="adv-kpi-icon-wrap adv-bg-blue">
-            <HandCoins size={22} />
+            <HandCoins size={16} />
           </div>
           <div className="adv-kpi-content">
             <span className="adv-kpi-label">Active Agreements</span>
@@ -122,7 +122,7 @@ export function AdvancesLoansPage() {
 
         <div className="adv-kpi-card">
           <div className="adv-kpi-icon-wrap adv-bg-emerald">
-            <CheckCircle2 size={22} />
+            <CheckCircle2 size={16} />
           </div>
           <div className="adv-kpi-content">
             <span className="adv-kpi-label">Payroll Sync</span>
@@ -133,7 +133,7 @@ export function AdvancesLoansPage() {
 
         <div className="adv-kpi-card">
           <div className="adv-kpi-icon-wrap adv-bg-indigo">
-            <FileSignature size={22} />
+            <FileSignature size={16} />
           </div>
           <div className="adv-kpi-content">
             <span className="adv-kpi-label">Policy Guard</span>
@@ -176,7 +176,13 @@ export function AdvancesLoansPage() {
   );
 }
 
-function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canReview: boolean }) {
+export function AdvanceRequests({
+  canApprove,
+  canReview,
+}: {
+  canApprove: boolean;
+  canReview: boolean;
+}) {
   const [page, setPage] = useState(1);
   const [state, setState] = useState('0'); // 0: Pending by default
   const [employeeId, setEmployeeId] = useState('');
@@ -284,15 +290,15 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
           title="Refresh requests"
           disabled={requests.isFetching}
           style={{
-            height: '32px',
-            padding: '0 10px',
-            fontSize: '12px',
+            height: '28px',
+            padding: '0 8px',
+            fontSize: '11.5px',
             display: 'flex',
             alignItems: 'center',
             gap: '5px',
           }}
         >
-          <RefreshCw size={14} className={requests.isFetching ? 'animate-spin' : ''} />
+          <RefreshCw size={13} className={requests.isFetching ? 'animate-spin' : ''} />
           Refresh
         </Button>
       </div>
@@ -356,7 +362,7 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
                 setEmployeeId('');
                 setPage(1);
               }}
-              style={{ height: '38px', fontSize: '12px' }}
+              style={{ height: '30px', fontSize: '11.5px' }}
             >
               Clear Search
             </Button>
@@ -412,7 +418,7 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
                       <Button
                         variant="success"
                         onClick={() => startApprove(request)}
-                        style={{ height: '32px', fontSize: '12px', padding: '0 12px' }}
+                        style={{ height: '28px', fontSize: '11.5px', padding: '0 10px' }}
                       >
                         Approve Plan
                       </Button>
@@ -421,7 +427,7 @@ function AdvanceRequests({ canApprove, canReview }: { canApprove: boolean; canRe
                       <Button
                         variant="danger"
                         onClick={() => startReject(request)}
-                        style={{ height: '32px', fontSize: '12px', padding: '0 12px' }}
+                        style={{ height: '28px', fontSize: '11.5px', padding: '0 10px' }}
                       >
                         Reject
                       </Button>
@@ -756,15 +762,15 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
           title="Refresh agreements"
           disabled={agreements.isFetching}
           style={{
-            height: '32px',
-            padding: '0 10px',
-            fontSize: '12px',
+            height: '28px',
+            padding: '0 8px',
+            fontSize: '11.5px',
             display: 'flex',
             alignItems: 'center',
             gap: '5px',
           }}
         >
-          <RefreshCw size={14} className={agreements.isFetching ? 'animate-spin' : ''} />
+          <RefreshCw size={13} className={agreements.isFetching ? 'animate-spin' : ''} />
           Refresh
         </Button>
       </div>
@@ -829,7 +835,7 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
                 setEmployeeId('');
                 setPage(1);
               }}
-              style={{ height: '38px', fontSize: '12px' }}
+              style={{ height: '30px', fontSize: '11.5px' }}
             >
               Clear Search
             </Button>
@@ -904,16 +910,16 @@ function AdvanceAgreements({ canRepay }: { canRepay: boolean }) {
                       variant={isSelected ? 'primary' : 'secondary'}
                       onClick={() => setSelectedId(isSelected ? null : agreement.id)}
                       style={{
-                        height: '32px',
-                        fontSize: '12px',
-                        padding: '0 12px',
+                        height: '28px',
+                        fontSize: '11.5px',
+                        padding: '0 10px',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '4px',
                       }}
                     >
                       {isSelected ? 'Hide Details' : 'View Schedule & Ledger'}
-                      {isSelected ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                      {isSelected ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                     </Button>
                   </div>
                 </div>

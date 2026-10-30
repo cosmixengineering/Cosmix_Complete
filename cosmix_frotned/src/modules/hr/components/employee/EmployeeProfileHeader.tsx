@@ -1,86 +1,96 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import { Camera, MoreHorizontal, Navigation, Pencil, Upload, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { request } from '@/services/api/http-client';
 import { useHrAccess } from '../../hooks/use-hr-access';
 import { useHrAction, useHrQuery } from '../../hooks/use-hr-queries';
-import { profileResponse, documentsSchema } from '../../schemas/hiring';
-import { writeResult, pageOf } from '../../schemas/contracts';
-import { masterSchema } from '../../schemas/organization';
+import { documentsSchema } from '../../schemas/hiring';
+import { writeResult, type EmployeeSummary } from '../../schemas/contracts';
+import type { EmployeeProfileValues } from '../../hooks/use-employee-profile';
+import { ActionMessage } from '../Feedback';
 import { employmentLabels, onboardingLabels } from '../../types/contracts';
 
 interface EmployeeProfileHeaderProps {
   employeeId: string;
-  onRefresh?: () => void;
+  employee?: EmployeeSummary;
+  profile: EmployeeProfileValues;
+  approved: boolean;
+  designationName?: string;
+  directoryName?: string | null;
+  refreshing: boolean;
+  onRefresh: () => void;
 }
 
-export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfileHeaderProps) {
+export function EmployeeProfileHeader({
+  employeeId,
+  employee,
+  profile,
+  approved,
+  designationName,
+  directoryName,
+  refreshing,
+  onRefresh,
+}: EmployeeProfileHeaderProps) {
   const access = useHrAccess();
   const action = useHrAction();
-  const cache = useQueryClient();
 
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [photoBlobUrl, setPhotoBlobUrl] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<{ key: string; url: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const canReadDocs = access.can('hr.employees.read', 'hr.employees.documents.read');
-  const canManageDocs = access.can(
-    'hr.employees.read',
-    'hr.employees.documents.manage',
-    'hr.employees.drafts.manage',
-  );
-
-  const profileQuery = useHrQuery(`employees/${employeeId}`, profileResponse, [
-    'hr.employees.read',
-  ]);
+  const canManageDocs =
+    !approved &&
+    employee?.status === 0 &&
+    [0, 3].includes(employee.onboardingStatus) &&
+    access.can('hr.employees.read', 'hr.employees.documents.manage', 'hr.employees.drafts.manage');
 
   const docsQuery = useHrQuery(`employees/${employeeId}/documents`, documentsSchema, [
     'hr.employees.read',
     'hr.employees.documents.read',
   ]);
 
-  const desigsQuery = useHrQuery('designations?pageSize=50', pageOf(masterSchema), [
-    'hr.organization.read',
-  ]);
-
-  const employee = profileQuery.data?.employee;
-  const profile = profileQuery.data?.profile;
-
-  // Find latest active ProfilePhoto document (type = 9) that is verified and available
-  const photoDoc = docsQuery.data?.find((d) => d.type === 9 && d.isAvailable && d.scanStatus === 1);
+  // Display an available, scan-clean profile photo only with document-read permission.
+  const photoDoc =
+    canReadDocs && docsQuery.isSuccess
+      ? docsQuery.data.find((d) => d.type === 9 && d.isAvailable && d.scanStatus === 1)
+      : undefined;
+  const photoKey = photoDoc
+    ? `${access.subject}:${employeeId}:${photoDoc.id}:${photoDoc.version}`
+    : null;
+  const photoBlobUrl = photoKey && photo?.key === photoKey ? photo.url : null;
 
   // Fetch actual image blob for the profile photo
   useEffect(() => {
     let active = true;
     let createdUrl: string | null = null;
 
-    if (photoDoc && canReadDocs) {
+    if (photoDoc && canReadDocs && photoKey) {
       request(`/hr/employees/${employeeId}/documents/${photoDoc.id}/download`, {
         responseType: 'blob',
       })
         .then((blob) => {
           if (!active) return;
           createdUrl = URL.createObjectURL(blob as Blob);
-          setPhotoBlobUrl(createdUrl);
+          setPhoto({ key: photoKey, url: createdUrl });
         })
         .catch(() => {
           // silently fail to initials
         });
     } else {
-      setPhotoBlobUrl(null);
+      setPhoto(null);
     }
 
     return () => {
       active = false;
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
-  }, [photoDoc?.id, employeeId, canReadDocs]);
+  }, [photoDoc?.id, employeeId, canReadDocs, photoKey]);
 
   // Handle local file preview
   useEffect(() => {
@@ -93,20 +103,16 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
     return () => URL.revokeObjectURL(url);
   }, [selectedFile]);
 
-  const fullName = profile?.fullLegalName || employee?.name || 'Employee';
+  const fullName =
+    profile.fullLegalName || employee?.name || directoryName || 'Employee name unavailable';
   const employeeNo = employee?.employeeNumber || null;
 
-  const desigName =
-    desigsQuery.data?.items?.find((d) => d.id === profile?.designationId)?.name || null;
-
-  // Generate initials
-  const initials =
-    fullName
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((word: string) => word[0]?.toUpperCase() ?? '')
-      .join('') || 'EM';
+  const initials = (profile.fullLegalName || employee?.name || directoryName || '')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? '')
+    .join('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -128,7 +134,7 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
 
   const handleUploadPhoto = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile || !employee) return;
+    if (!selectedFile || !employee || !canManageDocs) return;
     setUploadError(null);
 
     const formData = new FormData();
@@ -147,17 +153,19 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
     if (result) {
       setSelectedFile(null);
       setPhotoModalOpen(false);
-      void cache.invalidateQueries({ queryKey: ['hr', access.subject, 'employees', employeeId] });
-      void docsQuery.refetch();
-      void profileQuery.refetch();
-      onRefresh?.();
+      if (canReadDocs) void docsQuery.refetch();
+      onRefresh();
     }
   };
 
-  const statusIndex = employee?.status ?? 0;
-  const statusLabel = employmentLabels[statusIndex] ?? 'Active';
-  const onboardingIndex = employee?.onboardingStatus ?? 0;
-  const onboardingLabel = onboardingLabels[onboardingIndex] ?? 'Draft';
+  const statusIndex = employee?.status;
+  const statusLabel = statusIndex === undefined ? undefined : employmentLabels[statusIndex];
+  const onboardingIndex = employee?.onboardingStatus;
+  const onboardingLabel = approved
+    ? 'Approved current record'
+    : onboardingIndex === undefined
+      ? undefined
+      : onboardingLabels[onboardingIndex];
 
   return (
     <div className="emp-header-card">
@@ -168,7 +176,9 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
             {photoBlobUrl ? (
               <img src={photoBlobUrl} alt={fullName} className="emp-avatar-img" />
             ) : (
-              <span className="emp-avatar-initials">{initials}</span>
+              <span className="emp-avatar-initials">
+                {initials || <User size={24} aria-label="Employee" />}
+              </span>
             )}
           </div>
 
@@ -188,38 +198,46 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
           <h1 className="emp-header-name">{fullName}</h1>
           <div className="emp-badges-row">
             {employeeNo && <span className="emp-badge-code">{employeeNo}</span>}
-            <span className={`emp-badge-status ${statusIndex === 2 ? 'active' : 'inactive'}`}>
-              <span className="emp-badge-dot" />
-              {statusLabel}
-            </span>
-            <span className="emp-badge-onboarding">{onboardingLabel}</span>
-            {desigName && <span className="emp-badge-desig">{desigName}</span>}
+            {statusLabel && (
+              <span className={`emp-badge-status ${statusIndex === 2 ? 'active' : 'inactive'}`}>
+                <span className="emp-badge-dot" />
+                {statusLabel}
+              </span>
+            )}
+            {onboardingLabel && <span className="emp-badge-onboarding">{onboardingLabel}</span>}
+            {designationName && <span className="emp-badge-desig">{designationName}</span>}
           </div>
           <p className="muted">
-            Name and designation are from the hiring profile snapshot and may differ from current
-            approved records. View Identity and Employment for current values.
+            {approved ? 'Current authorized employee details.' : 'Hiring draft details.'}
+            {approved &&
+              !profile.fullLegalName &&
+              directoryName &&
+              ' Name shown from the employee directory; protected identity details remain separate.'}
           </p>
         </div>
       </div>
 
       {/* Right Action Buttons */}
       <div className="emp-header-actions">
-        <Link to="?section=basic&edit=1" className="emp-btn-primary">
-          <Pencil size={12} />
-          Edit details
-        </Link>
-        <Link to="?section=tracking" className="emp-btn-secondary">
-          <Navigation size={12} />
-          Live map
-        </Link>
+        {approved && access.can('hr.employees.read', 'hr.employees.basic.manage') && (
+          <Link to="?section=basic&edit=1" className="emp-btn-primary">
+            <Pencil size={12} />
+            Edit details
+          </Link>
+        )}
+        {approved && (
+          <Link to="?section=tracking" className="emp-btn-secondary">
+            <Navigation size={12} />
+            Live map
+          </Link>
+        )}
         <button
           type="button"
           className="emp-btn-icon"
           title="Refresh profile details"
-          disabled={profileQuery.isFetching || docsQuery.isFetching}
+          disabled={refreshing || docsQuery.isFetching}
           onClick={() => {
-            void profileQuery.refetch();
-            void docsQuery.refetch();
+            if (canReadDocs) void docsQuery.refetch();
             onRefresh?.();
           }}
         >
@@ -348,6 +366,8 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
             </div>
           )}
 
+          <ActionMessage action={action} />
+
           {/* Dialog Action Buttons */}
           <div
             style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}
@@ -363,7 +383,11 @@ export function EmployeeProfileHeader({ employeeId, onRefresh }: EmployeeProfile
             >
               Cancel
             </Button>
-            <Button type="submit" variant="primary" disabled={!selectedFile || action.pending}>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={!selectedFile || action.pending || !canManageDocs}
+            >
               <Upload size={14} style={{ marginRight: '6px' }} />
               {action.pending ? 'Uploading...' : 'Save & Set Photo'}
             </Button>

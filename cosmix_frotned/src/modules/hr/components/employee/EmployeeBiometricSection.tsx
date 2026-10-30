@@ -135,10 +135,13 @@ function BiometricRecords({
           )}
         </div>
       )}
-      <p className="hr-notice" role="status">
-        Use <Link to="/hr/biometrics">Biometric Registration</Link> for camera enrollment. Active
-        enrollment metadata does not confirm check-in eligibility or a successful attendance punch.
-      </p>
+      {!window.location.pathname.includes('/hr/biometrics') && (
+        <p className="hr-notice" role="status">
+          Use <Link to="/hr/biometrics">Biometric Registration</Link> for camera enrollment. Active
+          enrollment metadata does not confirm check-in eligibility or a successful attendance
+          punch.
+        </p>
+      )}
     </section>
   );
 }
@@ -156,7 +159,8 @@ function useFacePage<T extends z.ZodType>(
     queryFn: ({ signal }) =>
       hrGet(`employees/${employeeId}/face-enrollments${suffix}`, schema, signal),
     enabled: allowed,
-    gcTime: 0,
+    staleTime: 15000,
+    gcTime: 30000,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -188,16 +192,29 @@ function EnrollmentHistory({
     allowed,
   );
   return (
-    <section aria-label="Enrollment history">
-      <Button
-        variant="secondary"
-        disabled={!allowed || query.isFetching}
-        onClick={() => {
-          if (allowed) void query.refetch();
-        }}
-      >
-        <RefreshCw size={14} aria-hidden="true" /> Reload enrollments
-      </Button>
+    <section aria-label="Enrollment history" className="bio-history-section">
+      <div className="bio-subhead-row">
+        <div className="bio-subhead-title">
+          <Fingerprint size={16} aria-hidden="true" />
+          <h3>Face Enrollment History</h3>
+        </div>
+        <Button
+          variant="ghost"
+          className="bio-compact-reload"
+          disabled={!allowed || query.isFetching}
+          onClick={() => {
+            if (allowed) void query.refetch();
+          }}
+          title="Refresh enrollments"
+        >
+          <RefreshCw
+            size={12}
+            className={query.isFetching ? 'spin' : undefined}
+            aria-hidden="true"
+          />
+          <span>Refresh</span>
+        </Button>
+      </div>
       <QueryState query={query}>
         {query.isFetching ? (
           <p role="status">Refreshing enrollment records...</p>
@@ -264,17 +281,29 @@ function AttemptHistory({
     allowed,
   );
   return (
-    <section aria-label="Face verification attempts">
-      <h3>Face verification attempts</h3>
-      <Button
-        variant="secondary"
-        disabled={!allowed || query.isFetching}
-        onClick={() => {
-          if (allowed) void query.refetch();
-        }}
-      >
-        <RefreshCw size={14} aria-hidden="true" /> Reload attempts
-      </Button>
+    <section aria-label="Face verification attempts" className="bio-history-section">
+      <div className="bio-subhead-row">
+        <div className="bio-subhead-title">
+          <Fingerprint size={16} aria-hidden="true" />
+          <h3>Face Verification Attempts</h3>
+        </div>
+        <Button
+          variant="ghost"
+          className="bio-compact-reload"
+          disabled={!allowed || query.isFetching}
+          onClick={() => {
+            if (allowed) void query.refetch();
+          }}
+          title="Refresh attempts"
+        >
+          <RefreshCw
+            size={12}
+            className={query.isFetching ? 'spin' : undefined}
+            aria-hidden="true"
+          />
+          <span>Refresh</span>
+        </Button>
+      </div>
       <QueryState query={query}>
         {query.isFetching ? (
           <p role="status">Refreshing verification attempts...</p>
