@@ -50,9 +50,7 @@ export function AttendanceCorrectionsHub({
   const params = useParams<{ employeeId?: string }>();
   const routeEmployeeId = params.employeeId ?? '';
 
-  const [activeTab, setActiveTab] = useState<'queue' | 'new'>(
-    routeEmployeeId ? 'new' : initialTab,
-  );
+  const [activeTab, setActiveTab] = useState<'queue' | 'new'>(routeEmployeeId ? 'new' : initialTab);
   const [selectedRequest, setSelectedRequest] = useState<{ id: string; employeeId: string } | null>(
     null,
   );

@@ -23,7 +23,9 @@ export function employeeProfileEvidenceMessage(error: unknown): string | undefin
     employee_document_manifest_unavailable:
       'The retained approved document list is unavailable. HR must review the protected document history before this section can be displayed.',
   };
-  const message = messages[error.code ?? ''];
+  const message =
+    messages[error.code ?? ''] ??
+    'The server could not provide this profile section because a prerequisite or retained record failed validation. Ask authorized HR to review the support code below; this response alone does not mean another user changed the record.';
   return message
     ? `${message} Code: ${error.code}.${error.correlationId ? ` Reference: ${error.correlationId}` : ''}`
     : undefined;

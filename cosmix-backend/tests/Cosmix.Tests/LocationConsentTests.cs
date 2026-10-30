@@ -125,6 +125,22 @@ public class LocationConsentTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Self_SessionRevokedDuringAuditSaveCannotExposeOrCommitConsent(bool accept)
+    {
+        var f = new Fixture();
+        f.AfterSave = () => f.Session = false;
+        await Assert.ThrowsAsync<AuthenticationFailure>(async () =>
+        {
+            if (accept) await f.Service.AcceptAsync(new(2), Context, default);
+            else await f.Service.GetStatusAsync(Context, default);
+        });
+        Assert.Empty(f.Repository.Consents);
+        Assert.Empty(f.Audits);
+    }
+
+    [Theory]
     [InlineData("mobile")]
     [InlineData("no-mfa")]
     [InlineData("no-grant")]
@@ -160,6 +176,7 @@ public class LocationConsentTests
         public List<AuditEvent> Audits { get; } = [];
         public bool Session = true;
         public int Saves;
+        public Action? AfterSave;
         private bool inTransaction;
 
         public Fixture(string mode = "mobile")
@@ -191,7 +208,7 @@ public class LocationConsentTests
                 {
                     case "IsCurrentSessionAsync": return Task.FromResult(Session);
                     case "AddAudit": Audits.Add((AuditEvent)args[0]!); return null;
-                    case "SaveChangesAsync": Saves++; return Task.CompletedTask;
+                    case "SaveChangesAsync": Saves++; AfterSave?.Invoke(); return Task.CompletedTask;
                     default: throw new InvalidOperationException(method.Name);
                 }
             });
@@ -203,9 +220,15 @@ public class LocationConsentTests
         private async Task<T> Transaction<T>(Func<CancellationToken, Task<T>> action, CancellationToken ct)
         {
             var before = Repository.Consents.ToArray();
+            var auditCount = Audits.Count;
             inTransaction = true;
             try { return await action(ct); }
-            catch { Repository.Consents.Clear(); Repository.Consents.AddRange(before); throw; }
+            catch
+            {
+                Repository.Consents.Clear(); Repository.Consents.AddRange(before);
+                Audits.RemoveRange(auditCount, Audits.Count - auditCount);
+                throw;
+            }
             finally { inTransaction = false; }
         }
     }

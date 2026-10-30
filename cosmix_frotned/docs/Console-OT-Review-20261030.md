@@ -14,13 +14,13 @@ Scope: the supplied employee-profile 404, face-device 409, payroll-preview 409, 
 - Existing signed-in HR session, frontend HTTPS localhost:5173, existing API proxy.
 - September 2026 payroll page displayed “Not Locked Yet”; browser error log was empty for this check. No month was finalized.
 - Overtime Approvals: selected All scope, 1 October inclusive to 31 October exclusive, Pending, Load history. API returned an empty queue. No real request was approved/rejected and decision mutation acceptance is not claimed.
-- The reported approved demo employee opened current basic/contact data instead of failing the whole profile with the original 404. Retained identity evidence was unavailable; this is a source-data limitation.
+- The reported approved demo employee opened current basic/contact data instead of failing the whole profile with the original 404. Its current identity section returned a conflict; the exact failing prerequisite was not established from the live response. The directory subsequently supplied its correct display name. Later profile retries encountered a connection/timeout state, so final complete-profile live acceptance is not claimed.
 - Selecting that demo employee on Biometric Registration displayed setup-required guidance and disabled camera/register controls. No camera access, face capture or identity-provider acceptance was attempted.
 
 ## Remaining limits
 
 - Employees without eligible active accounts/verified devices require the normal authorized setup workflow; the face eligibility 409 is deliberately preserved.
-- Missing retained hiring/identity evidence requires a separately reviewed data correction; no history was fabricated.
+- The identity-section conflict still needs its exact server support code investigated before any source-data repair; no history was fabricated. Known retained-evidence failures have specific messages, and other read conflicts no longer assert that another user changed the record.
 - A real pending OT request and authorized decision are still needed to exercise an approval mutation in this session. Queue wiring alone is not full workflow acceptance.
 - `npm run verify` passed lint but stopped on formatting in four other currently modified files: AttendanceCorrectionsHub.tsx, ReviewUi.tsx, AttendanceTrackingPage.tsx and attendance-tracking.css. Their edits were preserved.
 - The separate final `npm run build` passed TypeScript and the Vite production build (2,518 modules). The existing large-bundle warning remains; this is not full release acceptance.

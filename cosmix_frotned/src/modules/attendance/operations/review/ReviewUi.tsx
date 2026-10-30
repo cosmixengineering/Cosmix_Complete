@@ -60,9 +60,7 @@ export function RecordFacts({ value }: { value: unknown }) {
   if (typeof value !== 'object') {
     if (typeof value === 'boolean') {
       return (
-        <span className={`att-fact-bool ${value ? 'true' : 'false'}`}>
-          {value ? 'Yes' : 'No'}
-        </span>
+        <span className={`att-fact-bool ${value ? 'true' : 'false'}`}>{value ? 'Yes' : 'No'}</span>
       );
     }
     const str = String(value);

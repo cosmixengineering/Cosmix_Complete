@@ -7,6 +7,7 @@ using Cosmix.Domain.Authentication;
 using Cosmix.Domain.Common.Audit;
 using Cosmix.Domain.Common.Idempotency;
 using Cosmix.Domain.HR.Employees;
+using Cosmix.Domain.HR.Onboarding;
 using Xunit;
 
 namespace Cosmix.Tests;
@@ -60,9 +61,33 @@ public class EmployeeAuthorityExpiryTests
         Assert.Equal(kind.Contains("replay") ? 2 : 1, f.Audits.Count);
     }
 
+    [Theory]
+    [InlineData("read", false)]
+    [InlineData("write", false)]
+    [InlineData("read", true)]
+    [InlineData("write", true)]
+    public async Task Fixed_review_authority_is_required_on_the_permission_assignment_until_completion(string kind, bool valid)
+    {
+        var f = new Fixture(valid ? "fixed-valid" : "fixed-role", valid ? null : "audit-save");
+        if (valid)
+        {
+            Assert.NotNull(await f.Execute(kind));
+            Assert.True(f.Committed);
+        }
+        else
+        {
+            await Assert.ThrowsAsync<AuthenticationFailure>(() => f.Execute(kind));
+            Assert.False(f.Committed);
+            Assert.Empty(f.Receipts);
+            Assert.Empty(f.Audits);
+            Assert.Equal(0, f.BusinessRows);
+        }
+    }
+
     private sealed class Fixture
     {
-        private const string Permission = EmployeePermissions.Read;
+        private string Permission => authority is "fixed-role" or "fixed-valid" ? EmployeePermissions.Review : EmployeePermissions.Read;
+        private string? ReviewPermission => authority is "fixed-role" or "fixed-valid" ? Permission : null;
         private static readonly DateTimeOffset Start = new(2026, 10, 30, 10, 0, 0, TimeSpan.Zero);
         private readonly Clock clock = new(Start);
         private readonly string? authority;
@@ -100,6 +125,8 @@ public class EmployeeAuthorityExpiryTests
                     .GetMethod(nameof(Transaction), BindingFlags.Instance | BindingFlags.NonPublic)!
                     .MakeGenericMethod(method.GetGenericArguments()).Invoke(this, args.Take(2).ToArray()),
                 "IsCurrentAdministratorAsync" => Task.FromResult(authority != "session" || (DateTimeOffset)args[1]! < Start.AddMinutes(1)),
+                "IsCurrentSystemRoleAssignmentAsync" => Task.FromResult((Guid)args[1]! == grant.RoleAssignmentId &&
+                    (authority != "fixed-role" || (DateTimeOffset)args[2]! < Start.AddMinutes(1))),
                 "GetAssignmentRoleCodeAsync" => Role(),
                 _ => throw new InvalidOperationException(method.Name)
             });
@@ -122,7 +149,7 @@ public class EmployeeAuthorityExpiryTests
             operation = new(current, access, authorization, repository, clock, files);
         }
 
-        private Task<string?> Role() { Advance("role-read"); return Task.FromResult<string?>("HR"); }
+        private Task<string?> Role() { Advance("role-read"); return Task.FromResult<string?>(ReviewPermission is null ? "HR" : "ADMIN"); }
         private EmployeeWriteResult Result() => new(EmployeeId, "synthetic-version", OnboardingStatus.Approved);
         public Task<EmployeeWriteResult?> Execute(string kind)
         {
@@ -130,9 +157,9 @@ public class EmployeeAuthorityExpiryTests
                 "synthetic-employee-retry", new { value = 42 }, context, default);
             return AsNullable(kind == "read"
                 ? operation.ReadAsync([Permission], "synthetic.read", EmployeeId, context, (_, _) =>
-                    { Actions++; return Task.FromResult(Result()); }, default)
+                    { Actions++; return Task.FromResult(Result()); }, default, fixedAdminPermission: ReviewPermission)
                 : operation.WriteAsync([Permission], "synthetic.write", EmployeeId, "synthetic-employee-retry", new { value = 42 },
-                    context, (_, _) => { Actions++; BusinessRows++; return Task.FromResult(Result()); }, default));
+                    context, (_, _) => { Actions++; BusinessRows++; return Task.FromResult(Result()); }, default, fixedAdminPermission: ReviewPermission));
         }
         private static async Task<EmployeeWriteResult?> AsNullable(Task<EmployeeWriteResult> task) => await task;
         public async Task PrimeReplay() { enabled = false; await Execute("write"); enabled = true; Committed = false; }

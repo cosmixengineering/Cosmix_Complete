@@ -454,28 +454,30 @@ function TrackingWorkspace() {
         </section>
       )}
 
-      {details && selectedDate <= currentDate && (() => {
-        const selectedRow = rows.find((row) => row.employee.id === details);
-        if (!selectedRow) return null;
-        return (
-          <Dialog
-            open={Boolean(details)}
-            onOpenChange={(open) => {
-              if (!open) setDetails(null);
-            }}
-            title={`Daily Attendance Record · ${selectedRow.employee.name ?? 'Employee'}`}
-            description={`Detailed punch sessions, worked hours, and tracking breakdown for ${selectedDate}.`}
-            className="tracking-modal"
-          >
-            <TrackingDayDetails
-              key={`${details}:${selectedDate}`}
-              row={selectedRow}
-              date={selectedDate}
-              onClose={() => setDetails(null)}
-            />
-          </Dialog>
-        );
-      })()}
+      {details &&
+        selectedDate <= currentDate &&
+        (() => {
+          const selectedRow = rows.find((row) => row.employee.id === details);
+          if (!selectedRow) return null;
+          return (
+            <Dialog
+              open={Boolean(details)}
+              onOpenChange={(open) => {
+                if (!open) setDetails(null);
+              }}
+              title={`Daily Attendance Record · ${selectedRow.employee.name ?? 'Employee'}`}
+              description={`Detailed punch sessions, worked hours, and tracking breakdown for ${selectedDate}.`}
+              className="tracking-modal"
+            >
+              <TrackingDayDetails
+                key={`${details}:${selectedDate}`}
+                row={selectedRow}
+                date={selectedDate}
+                onClose={() => setDetails(null)}
+              />
+            </Dialog>
+          );
+        })()}
 
       {directory.data && !directory.isError && (
         <footer className="tracking-pagination">
